@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { getAllCourses } from "@/app/actions/courses";
 import { getPaperSets } from "@/app/actions/paperSets";
 import { createAdminQuiz } from "@/app/actions/admin-quizzes";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function NewMockTestPage() {
     const router = useRouter();
@@ -183,15 +184,15 @@ export default function NewMockTestPage() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="font-bold text-slate-700 ml-2">Exam Header Logo URL (Optional)</Label>
-                                <Input 
-                                    className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold placeholder:text-slate-300"
-                                    placeholder="e.g. https://your-site.com/logo.png"
+                            <div className="space-y-4">
+                                <Label className="font-bold text-slate-700 ml-2">Exam Header Logo</Label>
+                                <ImageUpload 
                                     value={formData.logo}
-                                    onChange={(e) => setFormData({...formData, logo: e.target.value})}
+                                    onChange={(url) => setFormData({...formData, logo: url})}
+                                    label="Upload Exam Logo"
+                                    className="max-w-xs"
                                 />
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-4">If left blank, the default N-GIT logo will be used.</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-2">If left blank, the default N-GIT logo will be used in the exam header.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">

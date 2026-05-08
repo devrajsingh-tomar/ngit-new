@@ -298,6 +298,12 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [fontSize, setFontSize] = useState(16);
   const [bgColor, setBgColor] = useState('#a1c984');
 
+  const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Remington Gail' || settings.language === 'Inscript' || settings.language === 'Phonetic' || settings.language === 'Krutidev Hindi';
+  
+  const typingFont = isHindi 
+    ? "'Mangal', 'Arial Unicode MS', sans-serif" 
+    : "'Times New Roman', Times, serif";
+
   const passageWords = internalPassage.split(' ');
 
   return (
@@ -450,6 +456,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             className="flex-1 relative bg-white border border-gray-400 p-4 overflow-y-auto text-gray-800 leading-relaxed break-words scroll-smooth"
             style={{ 
               fontSize: `${fontSize}px`, 
+              fontFamily: typingFont,
               minHeight: '200px',
               scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'
             }}
@@ -534,6 +541,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             className="flex-1 border-2 border-gray-400 p-4 overflow-y-auto outline-none focus:border-blue-600 text-black font-semibold leading-relaxed resize-none shadow-inner transition-colors duration-300"
             style={{ 
               fontSize: `${fontSize + 2}px`, 
+              fontFamily: typingFont,
               minHeight: '200px', 
               backgroundColor: bgColor,
               scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'

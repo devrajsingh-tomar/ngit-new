@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { mapKeyToHindi } from "@/modules/typing/utils/hindiMapping";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function AdminTypingDashboard() {
   const [passages, setPassages] = useState<any[]>([]);
@@ -46,6 +47,7 @@ export default function AdminTypingDashboard() {
   const [modalSection, setModalSection] = useState("Government");
   const [showSettingModal, setShowSettingModal] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
+  const [modalLogo, setModalLogo] = useState("");
   
   // Edits
   const [editingPassage, setEditingPassage] = useState<any>(null);
@@ -209,6 +211,7 @@ export default function AdminTypingDashboard() {
     
     setShowGovExamModal(false);
     setEditingGovExam(null);
+    setModalLogo("");
     fetchData();
     setSubmitting(false);
   };
@@ -508,7 +511,7 @@ export default function AdminTypingDashboard() {
 
            <TabsContent value="gov-exams" className="mt-0">
               <div className="mb-4 flex justify-end">
-                 <Button onClick={() => setShowGovExamModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Gov Exam</Button>
+                 <Button onClick={() => { setModalLogo(""); setShowGovExamModal(true); }} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Gov Exam</Button>
               </div>
               <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                  <div className="overflow-x-auto">
@@ -534,7 +537,7 @@ export default function AdminTypingDashboard() {
                              </td>
                              <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                   <button onClick={() => { setEditingGovExam(exam); setShowGovExamModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Edit2 className="w-4 h-4"/></button>
+                                   <button onClick={() => { setEditingGovExam(exam); setModalLogo(exam.logo || ""); setShowGovExamModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Edit2 className="w-4 h-4"/></button>
                                    <button onClick={() => handleDeleteGovExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
                                 </div>
                              </td>
@@ -908,7 +911,7 @@ export default function AdminTypingDashboard() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-slate-900">{editingGovExam ? "Edit Government Exam" : "Add Government Exam"}</h2>
-                <button onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+                <button onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); setModalLogo(""); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
              <form onSubmit={handleAddGovExam} className="p-6 space-y-4">
                 <div className="space-y-1.5">
@@ -916,15 +919,20 @@ export default function AdminTypingDashboard() {
                    <input name="title" defaultValue={editingGovExam?.title} required placeholder="e.g. SSC CGL" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Logo URL (Optional)</label>
-                   <input name="logo" defaultValue={editingGovExam?.logo} placeholder="https://..." className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                   <label className="text-xs font-bold text-slate-600 uppercase">Exam Logo</label>
+                   <ImageUpload 
+                      value={modalLogo}
+                      onChange={(url) => setModalLogo(url)}
+                      label="Upload Logo"
+                   />
+                   <input type="hidden" name="logo" value={modalLogo} />
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <input type="checkbox" name="active" id="gov-active" defaultChecked={editingGovExam ? editingGovExam.active : true} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
                     <label htmlFor="gov-active" className="text-sm font-semibold text-slate-700 cursor-pointer">Active / Visible to Students</label>
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); }}>Cancel</Button>
+                   <Button type="button" variant="outline" onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); setModalLogo(""); }}>Cancel</Button>
                    <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Changes</Button>
                 </div>
              </form>
