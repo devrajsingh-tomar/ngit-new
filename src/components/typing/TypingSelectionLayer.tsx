@@ -11,7 +11,10 @@ import {
   ArrowLeft,
   Search,
   Timer,
-  Award
+  Award,
+  Zap,
+  Target,
+  Flame
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -23,6 +26,7 @@ export default function TypingSelectionLayer() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>('English');
   const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>('English');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'Easy' | 'Medium' | 'Hard' | null>(null);
   const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[], current: any[], books: any[]}>({ words: [], essays: [], current: [], books: [] });
   const [loadingTaxonomy, setLoadingTaxonomy] = useState(true);
   const [specialExams, setSpecialExams] = useState<any[]>([]);
@@ -33,7 +37,8 @@ export default function TypingSelectionLayer() {
   useEffect(() => {
     if (selectedModule === 'SPECIAL') {
         setLoadingContent(true);
-        fetch(`/api/typing/exams?category=SPECIAL&lang=${selectedLanguage}`)
+        const diffParam = selectedDifficulty ? `&difficulty=${selectedDifficulty}` : '';
+        fetch(`/api/typing/exams?category=SPECIAL&lang=${selectedLanguage}${diffParam}`)
           .then(res => res.json())
           .then(data => {
               if (Array.isArray(data)) setSpecialExams(data);
@@ -41,7 +46,7 @@ export default function TypingSelectionLayer() {
           })
           .catch(() => setLoadingContent(false));
     }
-  }, [selectedModule, selectedLanguage]);
+  }, [selectedModule, selectedLanguage, selectedDifficulty]);
 
   useEffect(() => {
     if (selectedModule === 'BOOK' && selectedCategory) {
@@ -144,9 +149,9 @@ export default function TypingSelectionLayer() {
     }
     if (moduleId === 'SPECIAL') {
         setSelectedModule(moduleId);
-        // Skip categories, go straight to tests list
         setSelectedCategory('SPECIAL'); 
-        setStep(3);
+        setSelectedDifficulty(null); // Reset difficulty
+        setStep(2); // Go to difficulty selection first
         return;
     }
     setSelectedModule(moduleId);
@@ -252,10 +257,53 @@ export default function TypingSelectionLayer() {
   );
 
   const renderStep2 = () => {
-    // Hard bypass for Special Topics to ensure categories are never shown
     if (selectedModule === 'SPECIAL') {
-        setStep(3);
-        return null;
+        const diffOptions = [
+            { id: 'Easy', icon: Zap, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'hover:border-emerald-500' },
+            { id: 'Medium', icon: Target, color: 'text-amber-500', bg: 'bg-amber-50', border: 'hover:border-amber-500' },
+            { id: 'Hard', icon: Flame, color: 'text-rose-500', bg: 'bg-rose-50', border: 'hover:border-rose-500' }
+        ];
+
+        return (
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <button 
+                  onClick={() => setStep(1)}
+                  className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to Modules
+                </button>
+
+                <div className="text-center space-y-4">
+                    <h3 className="text-3xl font-black text-slate-900">Select Difficulty Level</h3>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Choose the challenge that fits your skill</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {diffOptions.map((diff) => (
+                        <Card 
+                            key={diff.id}
+                            onClick={() => {
+                                setSelectedDifficulty(diff.id as any);
+                                setStep(3);
+                            }}
+                            className={cn(
+                                "p-8 rounded-[2.5rem] cursor-pointer shadow-sm transition-all duration-300 text-center border-2 border-slate-100 group flex flex-col items-center",
+                                diff.border,
+                                "hover:shadow-xl hover:-translate-y-2"
+                            )}
+                        >
+                            <div className={cn("w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-transform group-hover:scale-110", diff.bg)}>
+                                <diff.icon className={cn("w-10 h-10", diff.color)} />
+                            </div>
+                            <h4 className="text-2xl font-black text-slate-900 mb-2">{diff.id}</h4>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                {diff.id === 'Easy' ? '25-35 WPM' : diff.id === 'Medium' ? '35-45 WPM' : '45+ WPM'}
+                            </p>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     if (loadingTaxonomy) {
@@ -326,12 +374,60 @@ export default function TypingSelectionLayer() {
 
       return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <button 
-            onClick={() => setStep(selectedModule === 'SPECIAL' ? 1 : 2)}
-            className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to {selectedModule === 'SPECIAL' ? 'Modules' : 'Categories'}
-          </button>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <button 
+                onClick={() => {
+                    if (selectedModule === 'SPECIAL') setStep(1);
+                    else setStep(2);
+                }}
+                className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+            >
+                <ArrowLeft className="w-4 h-4" /> Back to {selectedModule === 'SPECIAL' ? 'Modules' : 'Categories'}
+            </button>
+
+            {selectedModule === 'SPECIAL' && (
+                <div className="flex flex-wrap items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                    <div className="flex rounded-xl overflow-hidden border border-slate-200">
+                        <button 
+                            onClick={() => setSelectedLanguage('English')}
+                            className={cn(
+                                "px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                                selectedLanguage === 'English' ? "bg-slate-900 text-white" : "bg-white text-slate-400 hover:bg-slate-50"
+                            )}
+                        >
+                            English
+                        </button>
+                        <button 
+                            onClick={() => {
+                                setSelectedLanguage('Hindi');
+                                setSelectedLayout('Remington Gail');
+                            }}
+                            className={cn(
+                                "px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                                selectedLanguage === 'Hindi' ? "bg-slate-900 text-white" : "bg-white text-slate-400 hover:bg-slate-50"
+                            )}
+                        >
+                            Hindi
+                        </button>
+                    </div>
+
+                    <div className="flex rounded-xl overflow-hidden border border-slate-200">
+                        {['Easy', 'Medium', 'Hard'].map((diff) => (
+                            <button 
+                                key={diff}
+                                onClick={() => setSelectedDifficulty(diff as any)}
+                                className={cn(
+                                    "px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                                    selectedDifficulty === diff ? "bg-primary text-white" : "bg-white text-slate-400 hover:bg-slate-50"
+                                )}
+                            >
+                                {diff}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+          </div>
           
           <div className={cn("grid gap-4", isLongLayout ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 md:grid-cols-4 lg:grid-cols-6")}>
              {options.map((opt) => (
@@ -369,7 +465,7 @@ export default function TypingSelectionLayer() {
              ))}
              {options.length === 0 && (
                  <div className="col-span-full py-16 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-slate-200 rounded-[2.5rem]">
-                     No practice content found for this selection.
+                     {loadingContent ? 'Fetching relevant content...' : 'No practice content found for this selection.'}
                  </div>
              )}
           </div>

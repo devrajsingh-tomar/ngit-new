@@ -73,7 +73,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                 if (document.fullscreenElement) {
                     document.exitFullscreen?.().catch(() => { });
                 }
-                router.push(`/student/results`);
+                router.push(`/student/quizzes/${quizId}/analysis?attemptId=${res.data.attemptId}`);
             } else {
                 toast.error(res.error || "Failed to submit test");
                 setIsSubmitting(false);
@@ -235,6 +235,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                 language={language}
                 onLanguageChange={setLanguage}
                 onQuestionSelect={navigateTo}
+                onFinish={handleSubmit}
                 answers={state.answers}
                 flagged={state.flagged}
             >

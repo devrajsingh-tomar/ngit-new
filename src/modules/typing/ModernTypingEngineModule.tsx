@@ -297,7 +297,10 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
             )}
             style={{ 
               fontSize: `${fontSize}px`,
-              scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'
+              scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
+              fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi') 
+                ? "'Mangal', 'Arial Unicode MS', sans-serif" 
+                : "inherit"
             }}
             onCopy={(e) => config.disableCopyPaste !== false && e.preventDefault()}
           >
@@ -385,7 +388,10 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                 style={{ 
                   fontSize: `${fontSize + 2}px`, 
                   backgroundColor: bgColor,
-                  scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'
+                  scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
+                  fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi') 
+                    ? "'Mangal', 'Arial Unicode MS', sans-serif" 
+                    : "inherit"
                 }}
             />
             

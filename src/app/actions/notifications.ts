@@ -19,8 +19,20 @@ export async function getMyNotifications() {
             .select('title message type isRead link createdAt')
             .lean();
 
-        return { success: true, notifications: JSON.parse(JSON.stringify(notifications)) };
+        // Convert to plain objects to ensure serializability
+        const plainNotifications = notifications.map(n => ({
+            _id: n._id.toString(),
+            title: n.title,
+            message: n.message,
+            type: n.type,
+            isRead: n.isRead,
+            link: n.link,
+            createdAt: n.createdAt.toISOString()
+        }));
+
+        return { success: true, notifications: plainNotifications };
     } catch (error) {
+        console.error("getMyNotifications error:", error);
         return { success: false, error: "Failed to fetch notifications" };
     }
 }

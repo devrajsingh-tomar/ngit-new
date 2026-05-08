@@ -24,9 +24,11 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!attemptId) return;
         const fetchAnalysis = async () => {
-            const res = await getQuizAnalysis({ attemptId });
+            const res = await getQuizAnalysis({ 
+                attemptId: attemptId || undefined, 
+                quizId: !attemptId ? quizId : undefined 
+            });
             if (res.success) {
                 setAnalysis(res.data);
             } else {
@@ -35,7 +37,7 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
             setLoading(false);
         };
         fetchAnalysis();
-    }, [attemptId]);
+    }, [attemptId, quizId]);
 
     if (loading) {
         return (

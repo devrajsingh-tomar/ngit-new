@@ -54,6 +54,10 @@ const AttemptSchema = new Schema<IAttempt>(
     { timestamps: true }
 );
 
+// Add indexes for common queries
+AttemptSchema.index({ studentId: 1, createdAt: -1 });
+AttemptSchema.index({ quizId: 1, createdAt: -1 });
+
 const Attempt: Model<IAttempt> = mongoose.models.Attempt || mongoose.model<IAttempt>("Attempt", AttemptSchema);
 
 export default Attempt;

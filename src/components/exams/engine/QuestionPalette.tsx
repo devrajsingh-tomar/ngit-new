@@ -9,6 +9,7 @@ interface Props {
   totalQuestions: number;
   currentQuestionIndex: number;
   onQuestionSelect: (index: number) => void;
+  onFinish?: () => void;
   answers: Record<string, any>;
   flagged: number[];
   questions: any[];
@@ -18,6 +19,7 @@ export default function QuestionPalette({
   totalQuestions,
   currentQuestionIndex,
   onQuestionSelect,
+  onFinish,
   answers,
   flagged,
   questions
@@ -26,7 +28,10 @@ export default function QuestionPalette({
     <div className="w-full border-2 border-slate-400 bg-white flex flex-col h-full select-none overflow-hidden">
       {/* Exam Finished Button */}
       <div className="p-3">
-        <Button className="w-full h-10 md:h-12 rounded-xl bg-[#3B82F6] hover:bg-blue-600 text-white font-bold text-base md:text-lg shadow-sm">
+        <Button 
+          onClick={onFinish}
+          className="w-full h-10 md:h-12 rounded-xl bg-[#3B82F6] hover:bg-blue-600 text-white font-bold text-base md:text-lg shadow-sm"
+        >
             Exam Finished
         </Button>
       </div>

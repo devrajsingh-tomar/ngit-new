@@ -6,10 +6,12 @@ import ResultPublishSetting from "@/models/ResultPublishSetting";
 import Attempt from "@/models/Attempt";
 import Answer from "@/models/Answer";
 import Quiz from "@/models/Quiz";
-import User from "@/models/User";
+import User, { UserRole } from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import mongoose from "mongoose";
+import { z } from "zod";
+import { createSafeAction } from "@/lib/safe-action";
 
 // --- ADMIN ACTIONS ---
 
@@ -329,3 +331,25 @@ export async function getMockTestResultsSummary() {
         return { success: false, error: "Failed to load results summary" };
     }
 }
+
+const LeaderboardSchema = z.object({
+    quizId: z.string().optional()
+});
+
+export const getLeaderboard = createSafeAction(
+    { schema: LeaderboardSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
+    async ({ quizId }) => {
+        await connectDB();
+        
+        const query: any = { publishStatus: "PUBLISHED" };
+        if (quizId) query.mockTestId = new mongoose.Types.ObjectId(quizId);
+
+        const results = await MockTestResult.find(query)
+            .populate("studentId", "name profile email")
+            .populate("mockTestId", "title")
+            .sort({ score: -1, attemptDate: 1 })
+            .lean();
+
+        return JSON.parse(JSON.stringify(results));
+    }
+);

@@ -39,5 +39,9 @@ const TypingResultSchema = new Schema<ITypingResult>(
   { timestamps: true }
 );
 
+// Add indexes for common queries
+TypingResultSchema.index({ userId: 1, createdAt: -1 });
+TypingResultSchema.index({ examId: 1, createdAt: -1 });
+
 const TypingResult = models.TypingResult || model("TypingResult", TypingResultSchema);
 export default TypingResult;

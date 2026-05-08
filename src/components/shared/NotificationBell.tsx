@@ -14,11 +14,14 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export default function NotificationBell() {
+    const [isFetching, setIsFetching] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
     const fetchNotifications = async () => {
+        if (isFetching) return;
         try {
+            setIsFetching(true);
             const res = await getMyNotifications();
             if (res.success && res.notifications) {
                 setNotifications(res.notifications);
@@ -26,14 +29,28 @@ export default function NotificationBell() {
             }
         } catch (error) {
             console.error("Failed to fetch notifications:", error);
+        } finally {
+            setIsFetching(false);
         }
     };
 
     useEffect(() => {
-        fetchNotifications();
-        // Polling every 30 seconds for new notifications
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
+        let isMounted = true;
+        let timeoutId: NodeJS.Timeout;
+
+        const poll = async () => {
+            await fetchNotifications();
+            if (isMounted) {
+                // Polling every 60 seconds instead of 30 to reduce server load
+                timeoutId = setTimeout(poll, 60000);
+            }
+        };
+
+        poll();
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
     }, []);
 
     const handleMarkAsRead = async (id: string) => {

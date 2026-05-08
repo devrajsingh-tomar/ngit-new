@@ -206,6 +206,40 @@ export const submitQuiz = createSafeAction(
         attempt.isPassed = score >= (quiz.settings?.passingMarks || 0);
         await attempt.save();
 
+        // --- NEW: Automatically create a MockTestResult for immediate student visibility ---
+        try {
+            const MockTestResult = (await import("@/models/MockTestResult")).default;
+            const Enrollment = (await import("@/models/Enrollment")).default;
+            
+            // Get course info if available
+            const enrollment = await Enrollment.findOne({ userId: session.user.id, courseId: quiz.courseId }).populate("courseId");
+            
+            await MockTestResult.findOneAndUpdate(
+                { attemptId: attempt._id },
+                {
+                    studentId: session.user.id,
+                    mockTestId: quiz._id,
+                    attemptId: attempt._id,
+                    score,
+                    totalMarks,
+                    attemptDate: new Date(),
+                    course: (enrollment?.courseId as any)?.title || "General",
+                    publishStatus: "PUBLISHED", // Make it visible immediately
+                    analysis: {
+                        correctAnswers: correctCount,
+                        incorrectAnswers: incorrectCount,
+                        unattemptedQuestions: unattemptedCount,
+                        accuracy: (correctCount / (correctCount + incorrectCount)) * 100 || 0,
+                        timeTaken
+                    }
+                },
+                { upsert: true, new: true }
+            );
+        } catch (err) {
+            console.error("Failed to auto-create MockTestResult:", err);
+            // Non-blocking error
+        }
+
         return {
             attemptId: attempt._id.toString(),
             score,
@@ -216,20 +250,32 @@ export const submitQuiz = createSafeAction(
     }
 );
 
-const AttemptIdSchema = z.object({
-    attemptId: z.string().min(1)
+const AnalysisSchema = z.object({
+    attemptId: z.string().optional(),
+    quizId: z.string().optional()
 });
 
 export const getQuizAnalysis = createSafeAction(
-    { schema: AttemptIdSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
-    async ({ attemptId }, session) => {
+    { schema: AnalysisSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
+    async ({ attemptId, quizId }, session) => {
         await connectDB();
-        const attempt = await Attempt.findById(attemptId).populate({
-            path: "quizId",
-            populate: { path: "questions" }
-        }).lean();
+        
+        let attempt;
+        if (attemptId) {
+            attempt = await Attempt.findById(attemptId).populate({
+                path: "quizId",
+                populate: { path: "questions" }
+            }).lean();
+        } else if (quizId) {
+            attempt = await Attempt.findOne({ studentId: session.user.id, quizId })
+                .sort({ createdAt: -1 })
+                .populate({
+                    path: "quizId",
+                    populate: { path: "questions" }
+                }).lean();
+        }
 
-        if (!attempt) throw new Error("Attempt not found");
+        if (!attempt) throw new Error("Result analysis not found for this assessment.");
         if (attempt.studentId.toString() !== session.user.id && session.user.role !== UserRole.ADMIN) {
              throw new Error("Unauthorized access to result analysis");
         }

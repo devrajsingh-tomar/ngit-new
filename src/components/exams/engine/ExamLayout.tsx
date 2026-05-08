@@ -17,6 +17,7 @@ interface Props {
   language: string;
   onLanguageChange: (lang: any) => void;
   onQuestionSelect: (index: number) => void;
+  onFinish?: () => void;
   answers: Record<string, any>;
   flagged: number[];
 }
@@ -30,6 +31,7 @@ export default function ExamLayout({
   timeLeft,
   language,
   onQuestionSelect,
+  onFinish,
   answers,
   flagged
 }: Props) {
@@ -79,6 +81,7 @@ export default function ExamLayout({
                 onQuestionSelect(idx);
                 setShowPalette(false);
             }}
+            onFinish={onFinish}
             answers={answers}
             flagged={flagged}
             questions={exam?.questions || []}
