@@ -308,7 +308,7 @@ export default function HomepageBuilderPage() {
                                                 ? "This module is driven by the global hero slider. To manage background images, headlines, and buttons for these slides, open the slider manager."
                                                 : "To edit the internal blocks, images, and headlines of this module, launch the Matrix Editor."}
                                         </p>
-                                        <Link href={selectedSection.section_type === "HeroSection" ? "/admin/content/homepage/slider" : "/admin/content/pages"}>
+                                        <Link href={selectedSection.section_type === "HeroSection" ? "/admin/content/home-builder/slider" : "/admin/content/pages"}>
                                             <button className="w-full py-4 bg-white text-violet-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-violet-50 transition-all shadow-xl active:scale-95">
                                                 {selectedSection.section_type === "HeroSection" ? "Manage Hero Slides" : "Open Matrix Editor"}
                                             </button>

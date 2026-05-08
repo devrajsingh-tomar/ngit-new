@@ -10,6 +10,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MediaLibraryModal } from "@/components/admin/cms/MediaLibraryModal";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface Slide {
   _id: string;
@@ -164,7 +165,7 @@ export default function HeroSliderAdminPage() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <Link href="/admin/content/homepage" className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
+          <Link href="/admin/content/home-builder" className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div>
@@ -341,30 +342,28 @@ export default function HeroSliderAdminPage() {
               {/* Image URL */}
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1.5">
-                  Background Image URL <span className="text-slate-300 font-normal normal-case tracking-normal">(overrides color above)</span>
+                  Background Image
                 </label>
-                <div className="flex gap-2">
-                  <input
+                <div className="space-y-3">
+                  <ImageUpload 
                     value={form.imageUrl}
-                    onChange={(e) => setForm(f => ({ ...f, imageUrl: e.target.value }))}
-                    placeholder="https://... or leave blank to use gradient"
-                    className="flex-1 px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 font-medium"
+                    onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
+                    label="Upload Hero Slide Image"
                   />
-                  <button 
-                    onClick={() => setIsMediaModalOpen(true)}
-                    className="px-4 bg-slate-100 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2 text-xs font-bold"
-                  >
-                    <Library className="w-4 h-4" /> Library
-                  </button>
-                  {form.imageUrl && (
+                  <div className="flex gap-2">
+                    <input
+                      value={form.imageUrl}
+                      onChange={(e) => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+                      placeholder="Or paste external URL here..."
+                      className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 font-medium"
+                    />
                     <button 
-                      onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}
-                      className="px-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-600 hover:bg-rose-100 transition-all flex items-center justify-center"
-                      title="Remove Image"
+                      onClick={() => setIsMediaModalOpen(true)}
+                      className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"
                     >
-                      <X className="w-4 h-4" />
+                      <Library className="w-3.5 h-3.5" /> Library
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
 
@@ -382,24 +381,34 @@ export default function HeroSliderAdminPage() {
                     placeholder="e.g. Shape Your Future at NGIT"
                     className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 font-medium"
                   />
-                  <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
-                    <div className="flex items-center gap-2 text-indigo-600 font-bold text-[10px] uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3" /> Recommended Image Settings
+                  <div className="mt-4 p-5 bg-blue-50 border border-blue-100 rounded-2xl space-y-3">
+                    <div className="flex items-center gap-2 text-blue-700 font-black text-[11px] uppercase tracking-widest">
+                      <Sparkles className="w-4 h-4" /> Recommended Image Standards
                     </div>
-                    <ul className="text-[10px] text-indigo-900/70 space-y-1.5 font-medium">
-                      <li className="flex gap-2">
-                        <span className="text-indigo-400">•</span>
-                        <span><b>Best Resolution:</b> 1920 x 840 pixels (2.3:1 ratio) for perfect desktop/tablet balance.</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="text-indigo-400">•</span>
-                        <span><b>Safe Area:</b> Keep important text or faces in the <b>center 60%</b> of the image to avoid being cut off on mobile phones.</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="text-indigo-400">•</span>
-                        <span><b>Optimization:</b> Use <b>WebP</b> format if possible to keep page load speed under 2 seconds.</span>
-                      </li>
-                    </ul>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-blue-900 uppercase tracking-wider">Perfect Resolution</p>
+                        <p className="text-[11px] text-blue-800/70 font-medium leading-relaxed">
+                          <b>1920 x 800 pixels</b> (Landscape). This size ensures your image covers the screen width while maintaining a professional height on all monitors.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-blue-900 uppercase tracking-wider">Mobile Safe Zone</p>
+                        <p className="text-[11px] text-blue-800/70 font-medium leading-relaxed">
+                          Keep all text and faces in the <b>Center 1000px</b>. On mobile phones, the sides will be cropped to focus on the middle.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-blue-100 flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="text-[9px] font-black text-slate-500 uppercase">Format: WebP / JPG</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                        <span className="text-[9px] font-black text-slate-500 uppercase">Size: Under 500KB</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

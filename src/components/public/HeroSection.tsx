@@ -73,10 +73,10 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     const aspectRatio = block.aspect_ratio || "none";
                     
                     const heightMap = {
-                        small: "min-h-[300px] md:h-[400px]",
-                        medium: "min-h-[500px] md:h-[600px]",
-                        large: "min-h-[700px] md:h-[800px]",
-                        full: "min-h-[90vh] lg:h-screen"
+                        small: "h-[300px] md:h-[400px]",
+                        medium: "h-[400px] md:h-[600px]",
+                        large: "h-[500px] md:h-[750px]",
+                        full: "h-[45vh] sm:h-[65vh] lg:h-[85vh] xl:h-[90vh]"
                     };
                     const heightClass = heightMap[imageSize as keyof typeof heightMap] || heightMap.full;
 
@@ -105,7 +105,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                     />
                                     {/* Overlays */}
                                     {!isTextEmpty && layout === 'full-background' && image && (
-                                        <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px]" />
+                                        <div className="absolute inset-0 bg-slate-950/40 md:bg-slate-950/50 backdrop-blur-[1px] md:backdrop-blur-[2px]" />
                                     )}
                                     {!isTextEmpty && layout === 'full-background' && (
                                         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/40 to-transparent" />

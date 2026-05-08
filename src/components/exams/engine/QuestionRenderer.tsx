@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 interface Props extends QuestionRendererProps {
   onSave: () => void;
   onReset: () => void;
+  onMark?: () => void;
 }
 
 export default function QuestionRenderer({
@@ -16,15 +17,14 @@ export default function QuestionRenderer({
   value,
   onChange,
   onSave,
-  onReset
+  onReset,
+  onMark
 }: Props) {
-  
-
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative h-full flex flex-col overflow-hidden">
       {/* Watermark */}
       <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none z-0">
-          <div className="relative w-[500px] h-[500px]">
+          <div className="relative w-[300px] h-[300px] md:w-[500px] md:h-[500px]">
               <Image 
                 src="/watermark.png" 
                 alt="Watermark" 
@@ -35,16 +35,16 @@ export default function QuestionRenderer({
       </div>
 
       {/* Question Content */}
-      <div className="flex-1 overflow-y-auto no-scrollbar relative z-10 p-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar relative z-10 p-4 md:p-10">
         {(!question.content.hi || question.content.hi === question.content.en) ? (
-            /* Single Column Layout (English/Standard) */
-            <div className="max-w-4xl mx-auto space-y-8">
-                <div className="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+            /* Single Column Layout */
+            <div className="max-w-4xl mx-auto space-y-6 md:space-y-10">
+                <div className="text-xl md:text-3xl font-black text-slate-900 leading-tight">
                     <div dangerouslySetInnerHTML={{ __html: question.content.en }} />
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-5">
                     {question.options?.map((opt: any, i: number) => (
-                        <div key={i} className="text-lg md:text-xl font-bold text-slate-700 flex gap-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100/50">
+                        <div key={i} className="text-base md:text-xl font-bold text-slate-700 flex gap-3 md:gap-4 bg-slate-50/80 p-4 md:p-6 rounded-2xl border border-slate-200/50">
                             <span className="text-primary">({String.fromCharCode(65 + i)})</span>
                             <div dangerouslySetInnerHTML={{ __html: opt.text.en || opt.text.hi || "" }} />
                         </div>
@@ -52,16 +52,16 @@ export default function QuestionRenderer({
                 </div>
             </div>
         ) : (
-            /* Dual Column Layout (Side-by-Side) */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            /* Dual Column Layout */
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
                 {/* Hindi Side */}
-                <div className="space-y-6">
-                    <div className="text-xl md:text-2xl font-black text-slate-900 leading-tight bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                <div className="space-y-4 md:space-y-8">
+                    <div className="text-lg md:text-2xl font-black text-slate-900 leading-tight bg-slate-50/50 p-4 md:p-6 rounded-3xl border border-slate-100">
                         <div dangerouslySetInnerHTML={{ __html: question.content.hi }} />
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-4">
                         {question.options?.map((opt: any, i: number) => (
-                            <div key={i} className="text-base md:text-lg font-bold text-slate-700 flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                            <div key={i} className="text-sm md:text-lg font-bold text-slate-700 flex gap-3 p-3 md:p-4 rounded-xl hover:bg-slate-50 transition-colors">
                                 <span className="text-primary/40">({String.fromCharCode(65 + i)})</span>
                                 <div dangerouslySetInnerHTML={{ __html: opt.text.hi || "" }} />
                             </div>
@@ -70,13 +70,13 @@ export default function QuestionRenderer({
                 </div>
 
                 {/* English Side */}
-                <div className="space-y-6 border-l border-slate-100 md:pl-10">
-                    <div className="text-xl md:text-2xl font-black text-slate-900 leading-tight bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                <div className="space-y-4 md:space-y-8 lg:border-l lg:border-slate-100 lg:pl-10">
+                    <div className="text-lg md:text-2xl font-black text-slate-900 leading-tight bg-slate-50/50 p-4 md:p-6 rounded-3xl border border-slate-100">
                         <div dangerouslySetInnerHTML={{ __html: question.content.en }} />
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-4">
                         {question.options?.map((opt: any, i: number) => (
-                            <div key={i} className="text-base md:text-lg font-bold text-slate-700 flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                            <div key={i} className="text-sm md:text-lg font-bold text-slate-700 flex gap-3 p-3 md:p-4 rounded-xl hover:bg-slate-50 transition-colors">
                                 <span className="text-primary/40">({String.fromCharCode(65 + i)})</span>
                                 <div dangerouslySetInnerHTML={{ __html: opt.text.en || "" }} />
                             </div>
@@ -87,12 +87,11 @@ export default function QuestionRenderer({
         )}
       </div>
 
-      {/* Answer Selection (At the bottom) */}
-      <div className="mt-auto border-t border-slate-100 bg-white/80 backdrop-blur-sm pt-6 pb-6 flex flex-col items-center gap-6 relative z-10 shrink-0">
-        <div className="flex items-center gap-8 md:gap-12">
+      {/* Answer Selection & Footer Buttons */}
+      <div className="mt-auto border-t-2 border-slate-400 bg-white p-4 md:p-6 flex flex-col items-center gap-4 md:gap-6 relative z-20 shrink-0">
+        <div className="flex items-center justify-center gap-6 md:gap-12 w-full max-w-2xl">
           {["A", "B", "C", "D"].map((choice) => (
-            <label key={choice} className="flex items-center gap-2 md:gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
+            <label key={choice} className="flex flex-col md:flex-row items-center gap-1 md:gap-3 cursor-pointer group">
                 <input
                   type="radio"
                   name="answer"
@@ -100,28 +99,38 @@ export default function QuestionRenderer({
                   checked={value === choice}
                   onChange={() => onChange(choice)}
                 />
-                <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-slate-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-all flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-white opacity-0 peer-checked:opacity-100" />
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-slate-300 peer-checked:border-[#3B82F6] peer-checked:bg-[#3B82F6] transition-all flex items-center justify-center shadow-sm">
+                    <div className="w-3 h-3 rounded-full bg-white opacity-0 peer-checked:opacity-100" />
                 </div>
-              </div>
-              <span className="text-base md:text-lg font-black text-slate-700 group-hover:text-slate-900">({choice})</span>
+              <span className="text-xs md:text-lg font-black text-slate-500 peer-checked:text-[#3B82F6]">({choice})</span>
             </label>
           ))}
         </div>
 
-        <div className="flex items-center gap-4 md:gap-6">
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between w-full gap-2 md:gap-4 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2">
+                <Button 
+                    variant="outline"
+                    onClick={onMark}
+                    className="h-10 md:h-12 px-3 md:px-8 border-2 border-slate-400 rounded-lg text-slate-700 font-bold text-[10px] md:text-sm uppercase tracking-wider"
+                >
+                    Mark & Next
+                </Button>
+                <Button 
+                    variant="outline"
+                    onClick={onReset}
+                    className="h-10 md:h-12 px-3 md:px-8 border-2 border-slate-400 rounded-lg text-slate-700 font-bold text-[10px] md:text-sm uppercase tracking-wider"
+                >
+                    Clear
+                </Button>
+            </div>
+            
             <Button 
                 onClick={onSave}
-                className="h-12 md:h-14 px-8 md:px-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base md:text-lg shadow-lg shadow-emerald-200"
+                className="h-10 md:h-12 px-6 md:px-12 rounded-lg bg-[#3B82F6] hover:bg-blue-600 text-white font-bold text-[11px] md:text-base uppercase tracking-widest shadow-md shadow-blue-500/20"
             >
-                Submit Answer
-            </Button>
-            <Button 
-                variant="destructive"
-                onClick={onReset}
-                className="h-12 md:h-14 px-8 md:px-12 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-base md:text-lg shadow-lg shadow-rose-200"
-            >
-                Reset Answer
+                Save & Next
             </Button>
         </div>
       </div>

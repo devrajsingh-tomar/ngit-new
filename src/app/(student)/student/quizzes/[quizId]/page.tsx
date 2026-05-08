@@ -34,6 +34,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     });
 
     const [warnings, setWarnings] = useState(0);
+    const lastWarnedRef = useRef(0);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -45,9 +46,6 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                     timer: (res.data.settings?.timeLimit || 30) * 60,
                     visited: [res.data.questions?.[0]?._id].filter(Boolean)
                 }));
-                if (res.data.settings?.availableLanguages?.includes("hi")) {
-                    // setLanguage("hi"); // Optional: default based on user preference
-                }
             } else {
                 setError(res.error || "Failed to load quiz");
                 toast.error(res.error || "Failed to load quiz");
@@ -63,8 +61,6 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         const timeLimitSecs = (quiz?.settings?.timeLimit || 30) * 60;
         const timeTaken = timeLimitSecs - state.timer;
 
-        // Transform answers back to the format backend expects (if needed)
-        // Backend currently expects { [questionId]: value } based on previous code
         const formattedAnswers: Record<string, any> = {};
         Object.entries(state.answers).forEach(([qId, data]: [string, any]) => {
             formattedAnswers[qId] = data.value;
@@ -134,17 +130,18 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     useEffect(() => {
         if (!quiz) return;
         
-        // Don't trigger warnings if we are in the "Start Exam / Fullscreen Required" screen
         const isEntryScreen = quiz.security?.requireFullscreen && !isFullscreen;
         if (!quiz.security?.preventTabSwitch || isSubmitting || isEntryScreen) return;
 
-        if (warnings >= 3) {
+        if (warnings >= 3 && lastWarnedRef.current < 3) {
+            lastWarnedRef.current = 3;
             toast.error("Max tab switches reached. Auto-submitting exam.");
             handleSubmit();
-        } else if (warnings > 0) {
+        } else if (warnings > 0 && warnings < 3 && lastWarnedRef.current !== warnings) {
+            lastWarnedRef.current = warnings;
             toast.warning(`Warning ${warnings}/3: Do not switch tabs!`);
         }
-    }, [warnings, quiz, isSubmitting, handleSubmit]);
+    }, [warnings, quiz, isSubmitting, isFullscreen, handleSubmit]);
 
     const requestFullscreen = async () => {
         try {
@@ -189,12 +186,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 gap-6">
-                <div className="relative">
-                    <Loader2 className="w-16 h-16 text-primary animate-spin" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-8 bg-white rounded-full" />
-                    </div>
-                </div>
+                <Loader2 className="w-16 h-16 text-primary animate-spin" />
                 <p className="font-black text-slate-400 uppercase tracking-[0.3em] text-xs">Initializing Secure Engine...</p>
             </div>
         );
@@ -203,18 +195,14 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     if (error || !quiz) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8 text-center animate-in fade-in duration-500">
-                <div className="w-24 h-24 bg-red-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-red-100">
-                    <AlertCircle className="w-12 h-12 text-red-500" />
-                </div>
+                <AlertCircle className="w-20 h-20 text-red-500 mb-6" />
                 <h2 className="text-3xl font-black text-slate-900 mb-2">Access Issue</h2>
-                <p className="max-w-md text-slate-500 font-medium mb-8 leading-relaxed">
-                    {error || "We couldn't locate this specific mock test. It might be unpublished or you might have used an invalid link."}
+                <p className="max-w-md text-slate-500 font-medium mb-8">
+                    {error || "We couldn't locate this specific mock test."}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <Button onClick={() => router.back()} variant="outline" className="h-12 px-8 rounded-xl font-bold border-2 border-slate-100 hover:bg-slate-50">
-                        Go Back
-                    </Button>
-                </div>
+                <Button onClick={() => router.back()} variant="outline" className="h-12 px-8 rounded-xl font-bold">
+                    Go Back
+                </Button>
             </div>
         );
     }
@@ -225,8 +213,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                 <Maximize className="w-20 h-20 text-primary mb-6 animate-pulse" />
                 <h2 className="text-3xl font-black mb-4">Fullscreen Required</h2>
                 <p className="text-slate-400 max-w-lg mx-auto font-medium mb-8">
-                    This is a highly secured examination. You must be in full-screen mode to take this exam.
-                    Exiting full-screen during the exam may lead to automatic submission.
+                    You must be in full-screen mode to take this exam.
                 </p>
                 <Button size="lg" className="h-14 px-10 text-lg font-black" onClick={requestFullscreen}>
                     Enter Fullscreen & Start Exam
@@ -238,7 +225,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     const currentQuestion = quiz.questions[state.currentQuestionIndex];
 
     return (
-        <div ref={containerRef} className="select-none">
+        <div ref={containerRef} className="select-none h-full w-full fixed inset-0 overflow-hidden bg-white">
             <ExamLayout
                 exam={quiz}
                 user={{ name: "Student", loginId: "A13DE8BF" }}
@@ -248,26 +235,6 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                 language={language}
                 onLanguageChange={setLanguage}
                 onQuestionSelect={navigateTo}
-                onPrev={() => navigateTo(Math.max(0, state.currentQuestionIndex - 1))}
-                onNext={() => {
-                    if (state.currentQuestionIndex < quiz.questions.length - 1) {
-                        navigateTo(state.currentQuestionIndex + 1);
-                    } else {
-                        handleSubmit();
-                    }
-                }}
-                onReset={() => {
-                    setState(prev => {
-                        const newAnswers = { ...prev.answers };
-                        delete newAnswers[currentQuestion._id];
-                        return {
-                            ...prev,
-                            answers: newAnswers,
-                            attempted: prev.attempted.filter(id => id !== currentQuestion._id)
-                        };
-                    });
-                }}
-                onSubmit={handleSubmit}
                 answers={state.answers}
                 flagged={state.flagged}
             >
@@ -294,6 +261,23 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                                 attempted: prev.attempted.filter(id => id !== currentQuestion._id)
                             };
                         });
+                    }}
+                    onMark={() => {
+                        setState(prev => {
+                            const isCurrentlyFlagged = prev.flagged.includes(state.currentQuestionIndex);
+                            const newFlagged = isCurrentlyFlagged
+                                ? prev.flagged.filter(idx => idx !== state.currentQuestionIndex)
+                                : [...prev.flagged, state.currentQuestionIndex];
+                            
+                            return {
+                                ...prev,
+                                flagged: newFlagged
+                            };
+                        });
+                        
+                        if (state.currentQuestionIndex < quiz.questions.length - 1) {
+                            navigateTo(state.currentQuestionIndex + 1);
+                        }
                     }}
                 />
             </ExamLayout>

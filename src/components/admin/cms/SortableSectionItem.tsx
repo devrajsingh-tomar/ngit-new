@@ -103,7 +103,7 @@ export function SortableSectionItem({
                     </button>
                     
                     <Link 
-                        href={section.section_type === "HeroSection" ? "/admin/content/homepage/slider" : `/admin/content/pages`}
+                        href={section.section_type === "HeroSection" ? "/admin/content/home-builder/slider" : `/admin/content/pages`}
                         className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
                         title="Edit Content"
                     >

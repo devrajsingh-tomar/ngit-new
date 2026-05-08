@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getHeaderFooterData } from "@/app/actions/layoutContent";
 import {
     GraduationCap, ArrowRight, Eye, EyeOff,
     BookOpen, Trophy, BarChart2, Loader2, Sparkles, ShieldCheck, Zap
@@ -19,7 +20,16 @@ const features = [
 ];
 
 export default function StudentLoginForm() {
+    const { data: session } = useSession();
+    const [headerData, setHeaderData] = useState<any>(null);
     const [email, setEmail] = useState("");
+    // ...
+    
+    useEffect(() => {
+        getHeaderFooterData().then(res => {
+            if (res.success) setHeaderData(res.header);
+        });
+    }, []);
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -69,12 +79,16 @@ export default function StudentLoginForm() {
             {/* Navigation / Header */}
             <header className="flex items-center justify-between px-8 py-6 md:px-12 relative z-50">
                 <Link href="/" className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
-                        <GraduationCap className="w-6 h-6 text-white" />
-                    </div>
+                    {headerData?.logoImage ? (
+                        <img src={headerData.logoImage} alt="Logo" className="h-16 w-auto object-contain" />
+                    ) : (
+                        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
+                            <GraduationCap className="w-6 h-6 text-white" />
+                        </div>
+                    )}
                     <div>
                         <p className="text-xl font-black text-slate-900 leading-none tracking-tight">Student <span className="text-primary">Portal</span></p>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">NGIT Education</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{headerData?.logoText || "NGIT Education"}</p>
                     </div>
                 </Link>
                 <Link href="/" className="hidden md:flex items-center gap-2 text-[10px] font-black text-slate-500 hover:text-primary transition-all uppercase tracking-widest bg-white px-5 py-2.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md">

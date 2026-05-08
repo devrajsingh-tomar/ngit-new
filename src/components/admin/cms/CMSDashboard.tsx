@@ -43,7 +43,7 @@ import {
 
 const cmsNav = [
   { label: "Website Overview", href: "/admin/content", icon: LayoutDashboard },
-  { label: "Homepage Builder", href: "/admin/content/homepage", icon: Layers },
+  { label: "Homepage Builder", href: "/admin/content/home-builder", icon: Layers },
   { label: "Pages", href: "/admin/content/pages", icon: FileText },
   { label: "Blogs & Articles", href: "/admin/blogs", icon: BookOpen },
   { label: "Media Library", href: "/admin/gallery", icon: ImageIcon },
@@ -232,7 +232,7 @@ export default function CMSDashboard() {
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
           <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Quick Actions</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
-            <QuickAction label="Edit Homepage" href="/admin/content/homepage" icon={Layers} color="bg-violet-100 text-violet-600" />
+            <QuickAction label="Edit Homepage" href="/admin/content/home-builder" icon={Layers} color="bg-violet-100 text-violet-600" />
             <QuickAction label="New Blog Post" href="/admin/blogs/new" icon={PenLine} color="bg-emerald-100 text-emerald-600" />
             <QuickAction label="Upload Media" href="/admin/gallery" icon={UploadCloud} color="bg-blue-100 text-blue-600" />
             <QuickAction label="Post Notice" href="/admin/notices" icon={Megaphone} color="bg-amber-100 text-amber-600" />
@@ -315,7 +315,7 @@ export default function CMSDashboard() {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">All Website Sections</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
             {[
-              { label: "Homepage Builder", desc: "Hero, banners, sections", href: "/admin/content/homepage", icon: Layers, color: "text-violet-600 bg-violet-50" },
+              { label: "Homepage Builder", desc: "Hero, banners, sections", href: "/admin/content/home-builder", icon: Layers, color: "text-violet-600 bg-violet-50" },
               { label: "All Pages", desc: "Create & manage pages", href: "/admin/content/pages", icon: FileText, color: "text-blue-600 bg-blue-50" },
               { label: "Blogs", desc: "Articles & posts", href: "/admin/blogs", icon: BookOpen, color: "text-emerald-600 bg-emerald-50" },
               { label: "Media Library", desc: "Images, videos, docs", href: "/admin/gallery", icon: ImageIcon, color: "text-cyan-600 bg-cyan-50" },

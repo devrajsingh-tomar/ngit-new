@@ -64,7 +64,6 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     startTest,
     timeLeft,
     isFullScreen,
-    toggleFullScreen
   } = useTypingStore();
 
   const { resetIdleTimer } = useTimer();
@@ -92,7 +91,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         }
       })
       .catch(e => console.error("Failed to load passages", e));
-  }, [showExerciseSwitcher]);
+  }, [showExerciseSwitcher, passage]);
 
   useEffect(() => {
     setInternalPassage(passage);
@@ -164,9 +163,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
       sourcePosition: config.sourcePosition || 'top',
     });
-    // Removed startTest() from here so it only starts when user types
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [internalPassage, internalDuration, config]);
+  }, [internalPassage, internalDuration, config, resetTest, setPassage, updateSettings]);
 
   useEffect(() => {
     if (isFinished) {
@@ -184,7 +182,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         passageId: passagesList[currentPassageIndex]?._id
       });
     }
-  }, [isFinished]);
+  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, settings.duration, timeLeft, typedText.length, typedText, wpm]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {
@@ -237,11 +235,11 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   const passageWords = internalPassage.split(' ');
 
   return (
-    <div ref={containerRef} className={cn("flex flex-col bg-white font-sans", isFullScreen ? 'h-screen' : 'min-h-screen')}>
+    <div ref={containerRef} className="flex flex-col bg-white font-sans h-screen overflow-hidden">
       
-      {/* Header */}
-      <div className="bg-[#007bff] text-white px-6 py-3 flex justify-between items-center shadow-md z-20">
-         <div className="flex items-center gap-4">
+      {/* Header - Fixed Height to prevent shaking */}
+      <div className="h-16 md:h-20 bg-[#007bff] text-white px-6 flex justify-between items-center shadow-md z-20 shrink-0">
+          <div className="flex items-center gap-4">
             <h2 className="font-black text-lg uppercase tracking-tighter">{config.title}</h2>
             <div className="h-6 w-px bg-white/20" />
             <div className="flex items-center gap-2">
@@ -249,8 +247,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                <span className="text-xs font-bold w-6 text-center">{fontSize}</span>
                <button onClick={() => setFontSize(f => Math.min(32, f + 2))} className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold">+</button>
             </div>
-         </div>
-         <div className="flex items-center gap-6">
+          </div>
+          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/10">
                <span className="text-[10px] font-black uppercase opacity-60">Layout:</span>
                <span className="text-xs font-bold">{settings.layout}</span>
@@ -264,11 +262,11 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                   <p className="text-xs font-bold leading-none">{userName}</p>
                </div>
             </div>
-         </div>
+          </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden max-w-[1920px] mx-auto w-full relative">
-        <div className="hidden lg:flex w-80 bg-slate-50 border-r border-slate-200 p-6 flex-col gap-6 overflow-y-auto">
+        <div className="hidden lg:flex w-80 bg-slate-50 border-r border-slate-200 p-6 flex-col gap-6 overflow-y-auto shrink-0">
           <TimerDisplay />
           <Speedometer />
           <LiveDashboard />
@@ -294,7 +292,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
           <div 
             ref={passageContainerRef}
             className={cn(
-              "relative bg-slate-50 border border-slate-200 rounded-[2rem] p-8 overflow-y-auto text-slate-800 leading-relaxed break-words scroll-smooth shadow-sm",
+              "relative bg-slate-50 border border-slate-200 rounded-[2rem] p-8 overflow-y-auto text-slate-800 leading-[2.5] break-words scroll-smooth shadow-sm",
               (settings.sourcePosition === 'left' || settings.sourcePosition === 'right') ? "w-1/2 h-full" : "w-full h-1/2"
             )}
             style={{ 
@@ -400,13 +398,13 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         </div>
       </div>
 
-      <div className="bg-white p-6 border-t border-slate-200 flex justify-center items-center shadow-2xl relative z-20">
+      <div className="bg-white p-6 border-t border-slate-200 flex justify-center items-center shadow-2xl relative z-20 shrink-0">
         <div className="flex items-center gap-4 max-w-[1920px] mx-auto w-full justify-between">
           <button 
             onClick={() => router.back()}
             className="flex items-center gap-2 text-slate-400 font-black text-xs uppercase tracking-widest hover:text-rose-600 transition-colors"
           >
-            <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:border-rose-100">
+            <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center">
                &larr;
             </div>
             Exit Exam

@@ -1,17 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { registerUser } from "@/app/actions/registration";
 import { GraduationCap, ArrowRight, Eye, EyeOff, Loader2, User, Mail, Lock, Phone, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getHeaderFooterData } from "@/app/actions/layoutContent";
 
 export default function RegisterPage() {
+    const [headerData, setHeaderData] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        getHeaderFooterData().then(res => {
+            if (res.success) setHeaderData(res.header);
+        });
+    }, []);
 
     const [form, setForm] = useState({
         name: "",
@@ -66,12 +74,16 @@ export default function RegisterPage() {
             {/* Navigation / Header */}
             <header className="flex items-center justify-between px-8 py-6 md:px-12 relative z-50">
                 <Link href="/" className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
-                        <GraduationCap className="w-6 h-6 text-white" />
-                    </div>
+                    {headerData?.logoImage ? (
+                        <img src={headerData.logoImage} alt="Logo" className="h-16 w-auto object-contain" />
+                    ) : (
+                        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
+                            <GraduationCap className="w-6 h-6 text-white" />
+                        </div>
+                    )}
                     <div>
                         <p className="text-xl font-black text-slate-900 leading-none tracking-tight">NGIT <span className="text-primary">Academy</span></p>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Create Identity</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{headerData?.logoText || "Create Identity"}</p>
                     </div>
                 </Link>
                 <Link href="/student/login" className="hidden md:flex items-center gap-2 text-[10px] font-black text-slate-500 hover:text-primary transition-all uppercase tracking-widest bg-white px-5 py-2.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md">

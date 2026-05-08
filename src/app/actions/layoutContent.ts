@@ -16,51 +16,55 @@ export async function getHeaderFooterData() {
             CMSContent.findOne({ key: "FOOTER" }),
         ]);
 
+        const defaultHeader = {
+            logoImage: "",
+            logoText: "NGIT",
+            navigation: [
+                { label: "Home", href: "/" },
+                { label: "Courses", href: "/courses" },
+                { label: "Mock Tests", href: "/exams" },
+                { label: "Results", href: "/results" },
+                { label: "Gallery", href: "/gallery" },
+                { label: "Faculty", href: "/faculty" },
+                { label: "About", href: "/about" },
+                { label: "Contact", href: "/contact" },
+            ],
+            ctaButton: { label: "Login", href: "/student/login" },
+        };
+
+        const defaultFooter = {
+            logoImage: "",
+            logoText: "NGIT",
+            description: "Leading coaching institute providing quality education.",
+            sections: [
+                {
+                    title: "Quick Links",
+                    links: [
+                        { label: "About Us", href: "/about" },
+                        { label: "Courses", href: "/courses" },
+                        { label: "Contact", href: "/contact" },
+                    ],
+                },
+                {
+                    title: "Contact",
+                    links: [
+                        { label: "Email: info@ngit.edu", href: "mailto:info@ngit.edu" },
+                        { label: "Phone: +91 1234567890", href: "tel:+911234567890" },
+                    ],
+                },
+            ],
+            social: [
+                { platform: "Facebook", url: "#" },
+                { platform: "Twitter", url: "#" },
+                { platform: "Instagram", url: "#" },
+            ],
+            copyright: "© 2024 NGIT Institute. All rights reserved.",
+        };
+
         return {
             success: true,
-            header: header?.data || {
-                logoImage: "", // URL to logo image
-                logoText: "NGIT", // Fallback text if no image
-                navigation: [
-                    { label: "Home", href: "/" },
-                    { label: "Courses", href: "/courses" },
-                    { label: "Mock Tests", href: "/exams" },
-                    { label: "Results", href: "/results" },
-                    { label: "Gallery", href: "/gallery" },
-                    { label: "Faculty", href: "/faculty" },
-                    { label: "About", href: "/about" },
-                    { label: "Contact", href: "/contact" },
-                ],
-                ctaButton: { label: "Login", href: "/student/login" },
-            },
-            footer: footer?.data || {
-                logoImage: "", // URL to logo image
-                logoText: "NGIT", // Fallback text if no image
-                description: "Leading coaching institute providing quality education.",
-                sections: [
-                    {
-                        title: "Quick Links",
-                        links: [
-                            { label: "About Us", href: "/about" },
-                            { label: "Courses", href: "/courses" },
-                            { label: "Contact", href: "/contact" },
-                        ],
-                    },
-                    {
-                        title: "Contact",
-                        links: [
-                            { label: "Email: info@ngit.edu", href: "mailto:info@ngit.edu" },
-                            { label: "Phone: +91 1234567890", href: "tel:+911234567890" },
-                        ],
-                    },
-                ],
-                social: [
-                    { platform: "Facebook", url: "#" },
-                    { platform: "Twitter", url: "#" },
-                    { platform: "Instagram", url: "#" },
-                ],
-                copyright: "© 2024 NGIT Institute. All rights reserved.",
-            },
+            header: { ...defaultHeader, ...(header?.data || {}) },
+            footer: { ...defaultFooter, ...(footer?.data || {}) },
         };
     } catch (error) {
         console.error("Error fetching header/footer data:", error);

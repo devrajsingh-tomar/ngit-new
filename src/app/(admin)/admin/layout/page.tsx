@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getHeaderFooterData, updateHeaderData, updateFooterData } from "@/app/actions/layoutContent";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Layout, Menu, Link as LinkIcon } from "lucide-react";
+import { Save, Plus, Trash2, Layout, Menu, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function LayoutManagementPage() {
     const [loading, setLoading] = useState(true);
@@ -159,15 +160,13 @@ export default function LayoutManagementPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-600 mb-2">Logo Image URL</label>
-                                <input
-                                    type="text"
+                                <label className="block text-xs font-bold text-slate-600 mb-2">Logo Image</label>
+                                <ImageUpload 
                                     value={headerLogoImage}
-                                    onChange={(e) => setHeaderLogoImage(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium"
-                                    placeholder="https://example.com/logo.png"
+                                    onChange={(url) => setHeaderLogoImage(url)}
+                                    label="Upload Header Logo"
                                 />
-                                <p className="text-xs text-slate-500 mt-1">Enter the URL of your logo image</p>
+                                <p className="text-xs text-slate-500 mt-1">Recommended size: 200x80px (PNG/SVG preferred)</p>
                             </div>
 
                             <div>
@@ -323,15 +322,13 @@ export default function LayoutManagementPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-600 mb-2">Logo Image URL</label>
-                                <input
-                                    type="text"
+                                <label className="block text-xs font-bold text-slate-600 mb-2">Logo Image</label>
+                                <ImageUpload 
                                     value={footerLogoImage}
-                                    onChange={(e) => setFooterLogoImage(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium"
-                                    placeholder="https://example.com/logo.png"
+                                    onChange={(url) => setFooterLogoImage(url)}
+                                    label="Upload Footer Logo"
                                 />
-                                <p className="text-xs text-slate-500 mt-1">Enter the URL of your footer logo image</p>
+                                <p className="text-xs text-slate-500 mt-1">Recommended size: 200x80px (PNG/SVG preferred)</p>
                             </div>
 
                             <div>

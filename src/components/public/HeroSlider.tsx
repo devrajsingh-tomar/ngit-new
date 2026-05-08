@@ -84,7 +84,7 @@ export default function HeroSlider() {
     }
 
     return (
-        <div className="relative w-full h-[85vh] md:h-[90vh] overflow-hidden bg-gray-900">
+        <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[85vh] lg:h-[90vh] min-h-[400px] overflow-hidden bg-slate-950">
             {/* Slides */}
             {slides.map((slide, index) => (
                 <div
@@ -97,10 +97,13 @@ export default function HeroSlider() {
                     {/* Background */}
                     {slide.imageUrl ? (
                         <div
-                            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                            style={{ backgroundImage: `url(${slide.imageUrl})` }}
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[10000ms] ease-linear"
+                            style={{ 
+                                backgroundImage: `url(${slide.imageUrl})`,
+                                transform: index === currentSlide ? 'scale(1.1)' : 'scale(1)'
+                            }}
                         >
-                            <div className="absolute inset-0 bg-black/50" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent" />
                         </div>
                     ) : (
                         <div className={cn("absolute inset-0 bg-gradient-to-br", slide.bgColor || "from-primary via-primary to-indigo-900")}>
@@ -117,7 +120,7 @@ export default function HeroSlider() {
                                         {slide.subtitle}
                                     </p>
                                 )}
-                                <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold text-white mb-8 leading-tight">
+                                <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold text-white mb-6 leading-[1.1] tracking-tight">
                                     {slide.title}
                                 </h1>
                                 {slide.description && (
