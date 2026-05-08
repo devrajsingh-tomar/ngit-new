@@ -11,7 +11,12 @@ import {
     CheckCircle2,
     QrCode,
     CalendarCheck,
-    Keyboard
+    Keyboard,
+    Sparkles,
+    ArrowRight,
+    Zap,
+    FileText,
+    TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,26 +67,29 @@ export default function StudentDashboard() {
 
     return (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700 max-w-7xl mx-auto pb-20">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-white/40 backdrop-blur-xl p-10 rounded-[3rem] border border-slate-100 shadow-sm">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                        <Sparkles className="w-3.5 h-3.5" /> Learning Workspace
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 leading-none italic">
                         Welcome back, <span className="text-gradient">{userName?.split(' ')[0]}</span>! 👋
                     </h1>
-                    <p className="text-slate-500 mt-4 font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary" />
-                        You have <span className="text-slate-900 font-black">{stats.activeCourses} active courses</span> in your learning path.
+                    <p className="text-slate-500 mt-6 font-bold flex items-center gap-3">
+                        <span className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                        You have <span className="text-slate-900 font-black px-2 py-0.5 bg-slate-100 rounded-lg">{stats.activeCourses} active courses</span> in your learning path.
                     </p>
                 </div>
-                <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex -space-x-3 overflow-hidden ml-2">
+                <div className="flex items-center gap-6 bg-white p-4 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50">
+                    <div className="flex -space-x-4 overflow-hidden ml-2">
                         {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="inline-block h-9 w-9 rounded-full ring-4 ring-white bg-slate-100 border border-slate-200 shadow-sm" />
+                            <div key={i} className="inline-block h-12 w-12 rounded-2xl ring-4 ring-white bg-slate-100 border border-slate-200 shadow-sm" />
                         ))}
                     </div>
-                    <div className="h-9 w-px bg-slate-100 mx-1" />
+                    <div className="h-12 w-px bg-slate-100 mx-2" />
                     <Link href="/student/courses">
-                        <Button variant="ghost" className="h-10 px-4 rounded-xl font-black text-xs uppercase tracking-widest gap-2">
-                            Enter Classroom <ChevronRight className="w-3.5 h-3.5" />
+                        <Button className="btn-primary h-14 px-8 rounded-2xl font-black text-xs uppercase tracking-widest gap-3 shadow-lg shadow-primary/20">
+                            Enter Classroom <ArrowRight className="w-4 h-4" />
                         </Button>
                     </Link>
                 </div>
@@ -95,26 +103,28 @@ export default function StudentDashboard() {
                     { label: "Active Courses", val: stats.activeCourses.toString(), icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50/50", border: "border-indigo-100/50" },
                     { label: "Tests Passed", val: stats.testsCompleted.toString(), icon: Trophy, color: "text-amber-600", bg: "bg-amber-50/50", border: "border-amber-100/50" },
                 ].map((stat, i) => (
-                    <div key={i} className={cn("bg-white p-8 rounded-[2.5rem] border shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group", stat.border)}>
-                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-                            <stat.icon className="w-5.5 h-5.5" />
+                    <div key={i} className={cn("bg-white p-8 rounded-[2.8rem] border shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 group relative overflow-hidden", stat.border)}>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 opacity-50 group-hover:scale-150 transition-transform duration-700" />
+                        <div className={cn("w-14 h-14 rounded-[1.2rem] flex items-center justify-center mb-8 shadow-sm transition-transform group-hover:scale-110 relative z-10", stat.bg, stat.color)}>
+                            <stat.icon className="w-6 h-6" />
                         </div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">{stat.label}</p>
-                        <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.val}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 relative z-10">{stat.label}</p>
+                        <p className="text-4xl font-black text-slate-900 tracking-tighter relative z-10">{stat.val}</p>
                     </div>
                 ))}
 
                 {/* Digital identity / Quick Action */}
-                <div className="bg-slate-950 p-1 rounded-[2.5rem] shadow-2xl shadow-indigo-500/10 group cursor-pointer" onClick={() => setQrOpen(true)}>
-                    <div className="bg-slate-900 h-full rounded-[2.3rem] p-8 relative overflow-hidden flex flex-col justify-between">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-primary/40 transition-colors" />
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center mb-6 text-white group-hover:bg-primary group-hover:scale-110 transition-all">
+                <div className="relative group cursor-pointer" onClick={() => setQrOpen(true)}>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-[2.8rem] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                    <div className="relative bg-slate-950 h-full rounded-[2.8rem] p-8 overflow-hidden flex flex-col justify-between shadow-2xl">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/40 transition-colors" />
+                        <div className="w-14 h-14 rounded-[1.2rem] bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center mb-8 text-white group-hover:bg-primary group-hover:scale-110 transition-all duration-500">
                             <QrCode className="w-6 h-6" />
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Identity</p>
-                            <p className="text-xl font-black text-white flex items-center gap-2">
-                                Student ID <ArrowUpRight className="w-4 h-4 text-primary" />
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Digital Identity</p>
+                            <p className="text-2xl font-black text-white flex items-center gap-3 italic">
+                                Student ID <Zap className="w-5 h-5 text-primary" />
                             </p>
                         </div>
                     </div>

@@ -183,9 +183,17 @@ export default function TypingResultsAdminPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-8">
-                                            <Badge className={res.wpm >= 30 ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"}>
-                                                {res.wpm >= 30 ? "QUALIFIED" : "DISQUALIFIED"}
-                                            </Badge>
+                                            {(() => {
+                                                const lang = res.examId?.language?.toLowerCase() || "";
+                                                const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
+                                                const passingWpm = isHindi ? 25 : 30;
+                                                const isQualified = res.wpm >= passingWpm;
+                                                return (
+                                                    <Badge className={isQualified ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"}>
+                                                        {isQualified ? "QUALIFIED" : "DISQUALIFIED"}
+                                                    </Badge>
+                                                );
+                                            })()}
                                         </TableCell>
                                         <TableCell className="py-8 text-right pr-10">
                                             <DropdownMenu>

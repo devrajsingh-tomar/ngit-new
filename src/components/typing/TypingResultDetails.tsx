@@ -80,8 +80,12 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const netWpm = timeTakenMins > 0 ? (netCorrectWords / timeTakenMins).toFixed(2) : "0.00";
   
-  const minKeystrokes = Math.round((timeDurationMins * 30 * 5) / 2);
-  const isQualified = parseFloat(netWpm) >= 30;
+  const lang = result.examId?.language?.toLowerCase() || "";
+  const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
+  const passingWpm = isHindi ? 25 : 30;
+
+  const minKeystrokes = Math.round((timeDurationMins * passingWpm * 5) / 2);
+  const isQualified = parseFloat(netWpm) >= passingWpm;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

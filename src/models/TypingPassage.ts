@@ -27,8 +27,8 @@ const TypingPassageSchema = new Schema<ITypingPassage>(
   { timestamps: true }
 );
 
-if (models.TypingPassage) {
+if (process.env.NODE_ENV !== "production" && models.TypingPassage) {
   delete (models as any).TypingPassage;
 }
-const TypingPassage = model<ITypingPassage>("TypingPassage", TypingPassageSchema);
+const TypingPassage = models.TypingPassage || model<ITypingPassage>("TypingPassage", TypingPassageSchema);
 export default TypingPassage;

@@ -995,7 +995,9 @@ export default function AdminTypingDashboard() {
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
                      <select name="language" defaultValue={editingPassage?.language || "English"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi (Mangal)</option>
+                        <option value="Krutidev Hindi">Hindi (Krutidev)</option>
                      </select>
                    </div>
                    <div className="space-y-1.5">
@@ -1116,7 +1118,9 @@ export default function AdminTypingDashboard() {
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
                      <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi (Mangal)</option>
+                        <option value="Krutidev Hindi">Hindi (Krutidev)</option>
                      </select>
                    </div>
                 </div>

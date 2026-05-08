@@ -1,11 +1,11 @@
 "use client";
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { registerUser } from "@/app/actions/registration";
-import { GraduationCap, ArrowRight, Eye, EyeOff, Loader2, User, Mail, Lock, Phone } from "lucide-react";
+import { GraduationCap, ArrowRight, Eye, EyeOff, Loader2, User, Mail, Lock, Phone, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
@@ -27,12 +27,12 @@ export default function RegisterPage() {
         e.preventDefault();
         
         if (form.password.length < 8) {
-            toast.error("Password must be at least 8 characters");
+            toast.error("Security policy: Password must be at least 8 characters");
             return;
         }
 
         if (form.mobile.length < 10) {
-            toast.error("Please enter a valid mobile number");
+            toast.error("Invalid mobile signature detected");
             return;
         }
 
@@ -45,148 +45,161 @@ export default function RegisterPage() {
                 mobile: form.mobile,
             });
             if (result.success) {
-                toast.success("Account created successfully!");
+                toast.success("Identity Created. Welcome to the ecosystem.");
                 router.push("/student/login");
             } else {
-                toast.error(result.error || "Registration failed.");
+                toast.error(result.error || "Registration sequence failed.");
             }
         } catch {
-            toast.error("Something went wrong. Please try again.");
+            toast.error("System synchronization error. Please retry.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full -mr-96 -mt-96 blur-[150px] opacity-50" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full -ml-64 -mb-64 blur-[120px] opacity-30" />
+        <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden font-sans">
+            {/* Soft background accents */}
+            <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-primary/5 rounded-full -mr-96 -mt-96 blur-[200px] opacity-50" />
+            <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-secondary/5 rounded-full -ml-96 -mb-96 blur-[150px] opacity-30" />
             
-            <header className="flex items-center justify-between px-8 py-8 md:px-12 relative z-10">
+            {/* Navigation / Header */}
+            <header className="flex items-center justify-between px-8 py-6 md:px-12 relative z-50">
                 <Link href="/" className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 group-hover:scale-110 transition-all duration-500">
-                        <GraduationCap className="w-7 h-7 text-white" />
+                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
+                        <GraduationCap className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <p className="text-xl font-black text-white leading-none tracking-tight">NGIT <span className="text-primary">Hub</span></p>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Education Platform</p>
+                        <p className="text-xl font-black text-slate-900 leading-none tracking-tight">NGIT <span className="text-primary">Academy</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Create Identity</p>
                     </div>
                 </Link>
-                <Link href="/" className="text-[10px] font-black text-slate-500 hover:text-white transition-all uppercase tracking-widest bg-white/5 px-6 py-3 rounded-full border border-white/5 hover:bg-white/10">
-                    ← Back to Home
+                <Link href="/student/login" className="hidden md:flex items-center gap-2 text-[10px] font-black text-slate-500 hover:text-primary transition-all uppercase tracking-widest bg-white px-5 py-2.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md">
+                    Access Portal
+                    <ArrowRight className="w-3.5 h-3.5" /> 
                 </Link>
             </header>
 
-            <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
-                <div className="w-full max-w-[450px]">
-                    <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                        <h1 className="text-5xl font-black text-white tracking-tighter mb-4 leading-none">
-                            Create <span className="text-gradient">Account</span>
+            {/* Main Workspace */}
+            <main className="flex-1 flex flex-col items-center justify-center px-6 py-4 relative z-10">
+                <div className="w-full max-w-[500px]">
+                    {/* Welcome Experience */}
+                    <div className="text-center mb-6 space-y-2">
+                        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-primary/5 border border-primary/10">
+                            <Sparkles className="w-3 h-3 text-primary" />
+                            <span className="text-primary font-black uppercase tracking-widest text-[9px]">New Enrollment</span>
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none italic">
+                            Create Your <span className="text-primary">Identity.</span>
                         </h1>
-                        <p className="text-slate-500 font-bold text-base tracking-tight max-w-sm mx-auto">
-                            Join our platform to access learning materials and track your progress.
-                        </p>
                     </div>
 
-                    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-2xl animate-in zoom-in-95 fade-in duration-700">
-                        <form onSubmit={handleSubmit} className="space-y-8">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Full Name</label>
-                                <div className="relative group">
-                                    <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-primary transition-colors" />
-                                    <input
-                                        type="text"
-                                        placeholder="Enter your full name"
-                                        value={form.name}
-                                        onChange={(e) => set("name", e.target.value)}
-                                        required
-                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl pl-14 pr-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
-                                    />
-                                </div>
+                    {/* Registration Card */}
+                    <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-slate-200/50 relative overflow-hidden">
+                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <User className="w-3 h-3 text-primary" /> Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter legal name"
+                                    value={form.name}
+                                    onChange={(e) => set("name", e.target.value)}
+                                    required
+                                    className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-4 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
+                                />
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Email Address</label>
-                                <div className="relative group">
-                                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-primary transition-colors" />
-                                    <input
-                                        type="email"
-                                        placeholder="you@example.com"
-                                        value={form.email}
-                                        onChange={(e) => set("email", e.target.value)}
-                                        required
-                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl pl-14 pr-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <Mail className="w-3 h-3 text-primary" /> Email
+                                </label>
+                                <input
+                                    type="email"
+                                    placeholder="your@email.com"
+                                    value={form.email}
+                                    onChange={(e) => set("email", e.target.value)}
+                                    required
+                                    className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-4 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
+                                />
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Mobile Number</label>
-                                <div className="relative group">
-                                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-primary transition-colors" />
-                                    <input
-                                        type="tel"
-                                        placeholder="Enter your mobile number"
-                                        value={form.mobile}
-                                        onChange={(e) => set("mobile", e.target.value)}
-                                        required
-                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl pl-14 pr-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <Phone className="w-3 h-3 text-primary" /> Mobile
+                                </label>
+                                <input
+                                    type="tel"
+                                    placeholder="+91 ••••• •••••"
+                                    value={form.mobile}
+                                    onChange={(e) => set("mobile", e.target.value)}
+                                    required
+                                    className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-4 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
+                                />
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Secure Password</label>
-                                <div className="relative group">
-                                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-primary transition-colors" />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <Lock className="w-3 h-3 text-primary" /> Security Key
+                                </label>
+                                <div className="relative">
                                     <input
                                         type={showPassword ? "text" : "password"}
-                                        placeholder="Min. 8 characters"
+                                        placeholder="••••••••"
                                         value={form.password}
                                         onChange={(e) => set("password", e.target.value)}
                                         required
-                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-700 rounded-3xl pl-14 pr-14 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
+                                        className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-4 pr-10 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(v => !v)}
-                                        className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors p-1"
                                     >
-                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                     </button>
                                 </div>
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full h-18 bg-primary hover:bg-slate-50 hover:text-slate-950 text-white font-black rounded-[1.5rem] flex items-center justify-center gap-3 text-lg shadow-2xl shadow-primary/20 transition-all duration-500 active:scale-95 disabled:opacity-50 mt-4 group"
-                            >
-                                {loading ? (
-                                    <><Loader2 className="w-6 h-6 animate-spin text-white" /> Creating Account...</>
-                                ) : (
-                                    <>Join Platform <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>
-                                )}
-                            </button>
+                            <div className="md:col-span-2 pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full h-14 bg-primary text-white hover:bg-primary-dark font-black rounded-xl flex items-center justify-center gap-3 text-sm shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {loading ? (
+                                        <><Loader2 className="w-5 h-5 animate-spin" /> Creating Profile...</>
+                                    ) : (
+                                        <>Complete Registration <Zap className="w-4 h-4" /></>
+                                    )}
+                                </button>
+                            </div>
                         </form>
 
-                        <div className="flex items-center gap-4 my-10">
-                            <div className="flex-1 h-px bg-white/5" />
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Already registered?</span>
-                            <div className="flex-1 h-px bg-white/5" />
+                        <div className="flex items-center gap-4 my-6 opacity-20">
+                            <div className="flex-1 h-px bg-slate-900" />
+                            <span className="text-[8px] font-black text-slate-900 uppercase tracking-widest">or</span>
+                            <div className="flex-1 h-px bg-slate-900" />
                         </div>
 
                         <div className="text-center">
                             <Link href="/student/login">
-                                <Button variant="outline" className="h-12 border-2 border-white/5 bg-transparent text-white font-black hover:bg-white/10 px-8 rounded-2xl w-full">
-                                    Login to Account
-                                </Button>
+                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest hover:text-primary transition-colors">
+                                    Already have an account? <span className="text-primary underline underline-offset-4 ml-1">Login here</span>
+                                </span>
                             </Link>
                         </div>
                     </div>
                 </div>
             </main>
+
+            <footer className="py-6 flex justify-center items-center relative z-50">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                    NGIT Academy • Enrollment Portal • 2025
+                </p>
+            </footer>
         </div>
+
     );
 }

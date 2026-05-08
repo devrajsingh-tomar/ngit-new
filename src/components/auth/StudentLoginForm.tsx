@@ -9,13 +9,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
     GraduationCap, ArrowRight, Eye, EyeOff,
-    BookOpen, Trophy, BarChart2, Loader2
+    BookOpen, Trophy, BarChart2, Loader2, Sparkles, ShieldCheck, Zap
 } from "lucide-react";
 
 const features = [
-    { icon: BookOpen, label: "Access all course materials" },
-    { icon: Trophy, label: "Take exams & mock tests" },
-    { icon: BarChart2, label: "Track your results & progress" },
+    { icon: BookOpen, label: "Premium Materials" },
+    { icon: Trophy, label: "Live Assessments" },
+    { icon: BarChart2, label: "Growth Analytics" },
 ];
 
 export default function StudentLoginForm() {
@@ -40,8 +40,7 @@ export default function StudentLoginForm() {
                     toast.error("Invalid email or password. Please try again.");
                 }
             } else {
-                toast.success("Welcome back!");
-                // Refresh server state first, then read updated session
+                toast.success("Welcome back to your workspace!");
                 router.refresh();
                 const response = await fetch("/api/auth/session");
                 const session = await response.json();
@@ -62,137 +61,134 @@ export default function StudentLoginForm() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full -mr-96 -mt-96 blur-[150px] opacity-50" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full -ml-64 -mb-64 blur-[120px] opacity-30" />
+        <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden font-sans">
+            {/* Dynamic Background Elements */}
+            <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-primary/5 rounded-full -mr-96 -mt-96 blur-[200px] opacity-50" />
+            <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-secondary/5 rounded-full -ml-96 -mb-96 blur-[150px] opacity-30" />
             
-            {/* Top bar */}
-            <header className="flex items-center justify-between px-8 py-8 md:px-12 relative z-10">
+            {/* Navigation / Header */}
+            <header className="flex items-center justify-between px-8 py-6 md:px-12 relative z-50">
                 <Link href="/" className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 group-hover:scale-110 transition-all duration-500">
-                        <GraduationCap className="w-7 h-7 text-white" />
+                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
+                        <GraduationCap className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <p className="text-xl font-black text-white leading-none tracking-tight">Student <span className="text-primary">Portal</span></p>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">NGIT Education Hub</p>
+                        <p className="text-xl font-black text-slate-900 leading-none tracking-tight">Student <span className="text-primary">Portal</span></p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">NGIT Education</p>
                     </div>
                 </Link>
-                <Link href="/" className="text-[10px] font-black text-slate-500 hover:text-white transition-all uppercase tracking-widest bg-white/5 px-6 py-3 rounded-full border border-white/5 hover:bg-white/10">
-                    ← Back to Platform
+                <Link href="/" className="hidden md:flex items-center gap-2 text-[10px] font-black text-slate-500 hover:text-primary transition-all uppercase tracking-widest bg-white px-5 py-2.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md">
+                    <ArrowRight className="w-3.5 h-3.5 rotate-180" /> 
+                    Back to Home
                 </Link>
             </header>
 
-            {/* Main Content Area */}
-            <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
+            {/* Main Workspace */}
+            <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 relative z-10">
                 <div className="w-full max-w-[450px]">
-                    {/* Welcome Header */}
-                    <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                        <h1 className="text-5xl font-black text-white tracking-tighter mb-4 leading-none">
-                            Welcome <span className="text-gradient">Back</span>
+                    {/* Welcome Experience */}
+                    <div className="text-center mb-8 space-y-3">
+                        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-primary/5 border border-primary/10">
+                            <Sparkles className="w-3 h-3 text-primary" />
+                            <span className="text-primary font-black uppercase tracking-widest text-[9px]">Student Login</span>
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none italic">
+                            Ignite Your <span className="text-primary">Future.</span>
                         </h1>
-                        <p className="text-slate-500 font-bold text-base tracking-tight max-w-sm mx-auto">
-                            Unlock your educational potential. Log in to your personal learning dashboard.
+                        <p className="text-slate-500 font-bold text-sm tracking-tight opacity-80">
+                            Access your academic dashboard
                         </p>
                     </div>
 
-                    {/* Premium Login Card */}
-                    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-2xl animate-in zoom-in-95 fade-in duration-700">
-                        <form onSubmit={handleSubmit} className="space-y-8">
-                            {/* Email */}
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Secure Account Identifier</label>
-                                <div className="relative group">
-                                    <input
-                                        type="email"
-                                        placeholder="Enter your student email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl px-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
-                                    />
-                                </div>
+                    {/* Login Card */}
+                    <div className="bg-white border border-slate-100 rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-slate-200/50 relative overflow-hidden">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <ShieldCheck className="w-3 h-3 text-primary" /> Registered Email
+                                </label>
+                                <input
+                                    type="email"
+                                    placeholder="yourname@email.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="w-full h-14 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-6 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
+                                />
                             </div>
 
-                            {/* Password */}
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <div className="flex items-center justify-between ml-2">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Security Access Key</label>
-                                    <Link href="#" className="text-[10px] text-primary font-black hover:text-white uppercase tracking-widest">Forgot Access?</Link>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Secret Key</label>
+                                    <Link href="#" className="text-[10px] text-primary font-black hover:text-slate-900 uppercase tracking-widest transition-colors">Recover</Link>
                                 </div>
-                                <div className="relative group">
+                                <div className="relative">
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
-                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-700 rounded-3xl px-6 pr-14 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
+                                        className="w-full h-14 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-6 pr-14 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(v => !v)}
-                                        className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors p-2"
                                     >
-                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full h-18 bg-primary hover:bg-slate-50 hover:text-slate-950 text-white font-black rounded-[1.5rem] flex items-center justify-center gap-3 text-lg shadow-2xl shadow-primary/20 transition-all duration-500 active:scale-95 disabled:opacity-50 mt-4 group"
+                                className="w-full h-16 bg-primary text-white hover:bg-primary-dark font-black rounded-xl flex items-center justify-center gap-3 text-sm shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 mt-2"
                             >
                                 {loading ? (
-                                    <><Loader2 className="w-6 h-6 animate-spin text-white" /> Accessing Portal...</>
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Authorizing...</>
                                 ) : (
-                                    <>Enter Classroom <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>
+                                    <>Open Dashboard <ArrowRight className="w-4 h-4" /></>
                                 )}
                             </button>
                         </form>
 
-                        <div className="flex items-center gap-4 my-10">
-                            <div className="flex-1 h-px bg-white/5" />
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Credentials Required</span>
-                            <div className="flex-1 h-px bg-white/5" />
+                        <div className="flex items-center gap-4 my-8 opacity-20">
+                            <div className="flex-1 h-px bg-slate-900" />
+                            <span className="text-[8px] font-black text-slate-900 uppercase tracking-widest">or</span>
+                            <div className="flex-1 h-px bg-slate-900" />
                         </div>
 
                         <div className="text-center">
-                            <p className="text-sm text-slate-500 font-bold mb-4">Don't have an account?</p>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-4">New to NGIT?</p>
                             <Link href="/register">
-                                <Button variant="outline" className="h-12 border-2 border-white/5 bg-transparent text-white font-black hover:bg-white/10 px-8 rounded-2xl w-full">
-                                    Create New Account
+                                <Button variant="outline" className="h-12 border-2 border-slate-100 bg-transparent text-slate-600 font-black hover:bg-slate-50 px-8 rounded-xl w-full transition-all text-xs">
+                                    Create Student Account
                                 </Button>
                             </Link>
                         </div>
                     </div>
 
-                    {/* Features section */}
-                    <div className="grid grid-cols-3 gap-4 mt-12 opacity-60">
+                    {/* Features ecosystem */}
+                    <div className="flex items-center justify-center gap-8 mt-12 opacity-50">
                         {features.map((f, i) => (
-                            <div key={i} className="flex flex-col items-center text-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400">
-                                    <f.icon className="w-5 h-5" />
-                                </div>
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">{f.label.split(' ')[0]} {f.label.split(' ')[1]}</span>
+                            <div key={i} className="flex items-center gap-2">
+                                <f.icon className="w-3.5 h-3.5 text-primary" />
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{f.label}</span>
                             </div>
                         ))}
                     </div>
                 </div>
             </main>
 
-            {/* Sticky Footer */}
-            <footer className="px-12 py-10 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-white/[0.02]">
-                <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">
-                    NGIT Academy · Secure Portal Environment · 2025
+            {/* System Footer */}
+            <footer className="px-12 py-8 flex justify-center items-center relative z-50">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    NGIT Academy • 2025 • Educational Portal
                 </p>
-                <div className="flex items-center gap-6 text-[10px] font-black text-slate-700 uppercase tracking-widest">
-                    <Link href="#" className="hover:text-primary transition-colors">Privacy Framework</Link>
-                    <Link href="#" className="hover:text-primary transition-colors">Security Protocol</Link>
-                </div>
             </footer>
         </div>
+
     );
 }

@@ -91,7 +91,10 @@ export default function StudentResultsPage() {
                     </Button>
                     <Button 
                         variant="ghost" 
-                        onClick={() => setActiveTab("typing")}
+                        onClick={() => {
+                            setActiveTab("typing");
+                            loadResults();
+                        }}
                         className={`rounded-xl px-6 font-bold ${activeTab === "typing" ? "bg-white shadow-sm" : "text-slate-400"}`}
                     >
                         Typing Tests
@@ -184,7 +187,10 @@ export default function StudentResultsPage() {
                         </div>
                     ) : (
                         typingResults.map((res) => {
-                            const isQualified = (res.wpm || 0) >= 30;
+                            const lang = res.examId?.language?.toLowerCase() || "";
+                            const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
+                            const passingWpm = isHindi ? 25 : 30;
+                            const isQualified = (res.wpm || 0) >= passingWpm;
                             return (
                                 <div key={res._id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:shadow-2xl hover:border-primary/20 transition-all group flex flex-col lg:flex-row gap-10 items-center">
                                     <div className="flex-1 w-full lg:w-auto">

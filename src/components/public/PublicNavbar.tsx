@@ -128,9 +128,10 @@ export default function PublicNavbar() {
                                         </Link>
                                     )}
 
+                                <div className="relative">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <button className="flex items-center gap-3 hover:bg-slate-50 p-1.5 rounded-2xl transition-all group border border-transparent hover:border-slate-100">
+                                            <button type="button" className="flex items-center gap-3 hover:bg-slate-50 p-1.5 rounded-2xl transition-all group border border-transparent hover:border-slate-100 outline-none">
                                                 <div className="text-right hidden xl:block">
                                                     <p className="text-xs font-black text-slate-900 leading-none group-hover:text-primary transition-colors">
                                                         {session.user.name}
@@ -144,7 +145,7 @@ export default function PublicNavbar() {
                                                 </div>
                                             </button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-64 rounded-2xl p-2 mt-2" align="end" forceMount>
+                                        <DropdownMenuContent className="w-64 rounded-2xl p-2" align="end" sideOffset={8}>
                                             <DropdownMenuLabel className="font-normal p-4">
                                                 <div className="flex flex-col space-y-1">
                                                     <p className="text-sm font-black leading-none text-slate-900">{session.user.name}</p>
@@ -163,6 +164,7 @@ export default function PublicNavbar() {
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
+                                </div>
                                 </div>
                             ) : (
                                 <Link href="/student/login">

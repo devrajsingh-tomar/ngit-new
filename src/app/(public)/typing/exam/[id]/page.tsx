@@ -27,7 +27,9 @@ export default function TypingExamPage() {
   const initialLayout = searchParams?.get("layout") || "English";
 
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>(initialLang as any);
-  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>(initialLayout as any);
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic' | 'Krutidev' | 'Unicode'>(
+    (initialLayout || (initialLang === 'Hindi' ? 'Remington Gail' : 'English')) as any
+  );
 
   useEffect(() => {
     if (initialLang) setSelectedLanguage(initialLang as any);
@@ -114,7 +116,7 @@ export default function TypingExamPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          examId: id,
+          examId: results.examId || id,
           ...results
         })
       });
@@ -254,22 +256,27 @@ export default function TypingExamPage() {
                             Select Keyboard
                         </h4>
                         <div className="grid grid-cols-1 gap-3">
-                            {['Remington Gail', 'Remington CBI', 'Inscript', 'Krutidev', 'Unicode'].map((lay) => (
+                            {[
+                                { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' },
+                                { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard' },
+                                { id: 'Unicode', name: 'Unicode (Standard)', sub: 'Modern Typing' },
+                                { id: 'Krutidev', name: 'Krutidev 010', sub: 'Legacy Font' }
+                            ].map((lay) => (
                                 <button 
-                                    key={lay}
-                                    onClick={() => setSelectedLayout(lay as any)}
+                                    key={lay.id}
+                                    onClick={() => setSelectedLayout(lay.id as any)}
                                     className={cn(
                                         "p-4 rounded-xl border-2 text-left transition-all flex justify-between items-center",
-                                        selectedLayout === lay ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
+                                        selectedLayout === lay.id ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
                                     )}
                                 >
                                     <div>
-                                        <p className="font-black text-sm">{lay}</p>
+                                        <p className="font-black text-sm">{lay.name}</p>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase">
-                                            {lay === 'Remington Gail' ? 'Professional' : lay === 'Inscript' ? 'Government' : lay === 'Unicode' ? 'Standard' : 'Official'}
+                                            {lay.sub}
                                         </p>
                                     </div>
-                                    {selectedLayout === lay && <div className="w-2 h-2 rounded-full bg-slate-900" />}
+                                    {selectedLayout === lay.id && <div className="w-2 h-2 rounded-full bg-slate-900" />}
                                 </button>
                             ))}
                         </div>

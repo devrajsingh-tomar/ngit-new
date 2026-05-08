@@ -199,19 +199,22 @@ export default function TypingSelectionLayer() {
           <ArrowLeft className="w-4 h-4" /> Back to Language
         </button>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {['Remington Gail', 'Inscript', 'Phonetic'].map((layout) => (
+          {[
+            { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' },
+            { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard' },
+            { id: 'Phonetic', name: 'Mangal Phonetic', sub: 'Transliteration' }
+          ].map((layout) => (
             <Card 
-              key={layout}
+              key={layout.id}
               onClick={() => {
-                  setSelectedLayout(layout as any);
+                  setSelectedLayout(layout.id as any);
                   setStep(1);
               }}
               className="p-8 rounded-[2rem] cursor-pointer hover:shadow-xl transition-all text-center border-slate-100 group hover:border-primary/50"
             >
-              <h4 className="text-xl font-black text-slate-900 mb-2">{layout}</h4>
+              <h4 className="text-xl font-black text-slate-900 mb-2">{layout.name}</h4>
               <p className="text-xs font-bold text-slate-400">
-                {layout === 'Remington Gail' ? 'Professional Standard' : 
-                 layout === 'Inscript' ? 'Government Standard' : 'Transliteration'}
+                {layout.sub}
               </p>
             </Card>
           ))}

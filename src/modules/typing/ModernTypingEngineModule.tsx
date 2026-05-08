@@ -180,6 +180,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         backspaces: backspaceCount,
         submittedText: typedText,
         timeTaken: (settings.duration * 60) - timeLeft,
+        examId: passagesList[currentPassageIndex]?._id,
         passageId: passagesList[currentPassageIndex]?._id
       });
     }

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { mapKeyToHindi } from './utils/hindiMapping';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
+import { cn } from '@/lib/utils';
 
 interface ClassicTypingEngineModuleProps {
   exam?: any;
@@ -77,6 +78,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
   const [internalPassage, setInternalPassage] = useState(passage);
   const [internalDuration, setInternalDuration] = useState(config.duration);
+  const [internalLanguage, setInternalLanguage] = useState(config.language || 'English');
+  const [internalLayout, setInternalLayout] = useState(config.layout || 'English');
+  const [currentExam, setCurrentExam] = useState(exam);
 
   const isBookPractice = exam?.category === 'BOOK';
 
@@ -94,7 +98,10 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                const sorted = data.sort((a: any, b: any) => a.title.localeCompare(b.title));
                setPassagesList(sorted);
                const foundIdx = sorted.findIndex((p: any) => p._id?.toString() === exam._id?.toString());
-               if (foundIdx !== -1) setCurrentPassageIndex(foundIdx);
+               if (foundIdx !== -1) {
+                   setCurrentPassageIndex(foundIdx);
+                   setCurrentExam(sorted[foundIdx]);
+               }
             }
           })
           .catch(e => console.error("Failed to load book chapters", e));
@@ -120,7 +127,10 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
            const sorted = data.sort((a,b) => a.title.localeCompare(b.title));
            setPassagesList(sorted);
            const foundIdx = sorted.findIndex(e => e._id === exam?._id);
-           if (foundIdx !== -1) setCurrentPassageIndex(foundIdx);
+           if (foundIdx !== -1) {
+               setCurrentPassageIndex(foundIdx);
+               setCurrentExam(sorted[foundIdx]);
+           }
         }
       })
       .catch(e => console.error("Failed to load related exercises", e));
@@ -131,7 +141,10 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   useEffect(() => {
     setInternalPassage(passage);
     setInternalDuration(config.duration);
-  }, [passage, config.duration]);
+    setInternalLanguage(config.language || 'English');
+    setInternalLayout(config.layout || 'English');
+    setCurrentExam(exam);
+  }, [passage, config.duration, config.language, config.layout, exam]);
   
   // Handle Fullscreen natively
   useEffect(() => {
@@ -162,14 +175,14 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   // Prevent accidental page leave during official exams
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        if (exam && isActive && !isFinished) {
+        if (currentExam && isActive && !isFinished) {
             e.preventDefault();
             e.returnValue = '';
         }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [exam, isActive, isFinished]);
+  }, [currentExam, isActive, isFinished]);
 
   // Calculate current word based on spaces typed
   const activeWordIndex = typedText === '' ? 0 : typedText.split(' ').length - 1;
@@ -196,8 +209,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
-      language: config.language || 'English',
-      layout: config.layout || 'English',
+      language: internalLanguage,
+      layout: internalLayout,
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
@@ -206,7 +219,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     });
     // Scroll window to top so the exam starts from the top area
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [internalPassage, internalDuration, config]);
+  }, [internalPassage, internalDuration, internalLanguage, internalLayout, config]);
 
   // Handle Completion
   useEffect(() => {
@@ -221,10 +234,11 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         backspaces: backspaceCount,
         submittedText: typedText,
         timeTaken: (settings.duration * 60) - timeLeft,
-        passageId: passagesList[currentPassageIndex]?._id
+        examId: currentExam?._id,
+        passageId: isBookPractice ? currentExam?._id : currentExam?.passageId?._id
       });
     }
-  }, [isFinished]);
+  }, [isFinished, currentExam, wpm, rawWpm, accuracy, errorCount, typedText.length, backspaceCount, settings.duration, timeLeft, isBookPractice, onComplete]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {
@@ -290,20 +304,21 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     <div ref={containerRef} className={`flex flex-col bg-[#f0f0f0] font-sans ${isFullScreen ? 'h-screen' : 'min-h-screen'}`}>
       {/* Top Blue Header */}
       <div className="bg-[#007bff] text-white text-center py-2 text-sm font-bold shadow-sm">
-        Typing Test Id {exam?.passageId?._id?.substring(0, 5) || '31848'} - {config.title}
+        Typing Test Id {currentExam?.passageId?._id?.substring(0, 5) || '31848'} - {config.title}
       </div>
 
       {/* Second Black Header */}
       <div className="bg-black text-white px-4 py-1 text-xs font-bold">
-        {exam?.title || 'Official Typing Test'}
+        {currentExam?.title || 'Official Typing Test'}
       </div>
 
       {/* Third Header (Controls & Timer) */}
       <div className="bg-white px-6 py-2 flex justify-between items-center border-b border-gray-300 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 border border-gray-300 rounded px-2 py-1">
-            <button onClick={toggleFullScreen} className="text-sm font-bold px-2 hover:bg-gray-100 flex items-center justify-center text-gray-700" title="Toggle Fullscreen">
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleFullScreen} className="text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-all flex items-center gap-2 shadow-sm shadow-slate-200" title={isFullScreen ? "Exit Exam Mode" : "Activate Exam Mode"}>
+               <div className={cn("w-2 h-2 rounded-full animate-pulse", isFullScreen ? "bg-rose-500" : "bg-emerald-500")} />
+               {isFullScreen ? "Exit Exam Mode" : "Exam Mode"}
             </button>
           </div>
           <div className="hidden sm:flex items-center gap-2 border border-gray-300 rounded px-2 py-1 bg-gray-50">
@@ -372,7 +387,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                           const newIdx = currentPassageIndex - 1;
                           setCurrentPassageIndex(newIdx);
                           const newItem = passagesList[newIdx];
+                          setCurrentExam(newItem);
                           setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                          setInternalLanguage(newItem.language || config.language || 'English');
                           updateSettings({ duration: internalDuration, language: newItem.language || config.language });
                        }
                     }}
@@ -385,9 +402,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                        const newIdx = Number(e.target.value);
                        setCurrentPassageIndex(newIdx);
                         const newItem = passagesList[newIdx];
-
+                        setCurrentExam(newItem);
                         setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
-
+                        setInternalLanguage(newItem.language || config.language || 'English');
                         updateSettings({ duration: internalDuration, language: newItem.language || config.language });
 
                     }}
@@ -411,7 +428,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                           const newIdx = currentPassageIndex + 1;
                           setCurrentPassageIndex(newIdx);
                            const newItem = passagesList[newIdx];
+                           setCurrentExam(newItem);
                            setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                           setInternalLanguage(newItem.language || config.language || 'English');
                            updateSettings({ duration: internalDuration, language: newItem.language || config.language });
                        }
                     }}

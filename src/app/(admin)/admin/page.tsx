@@ -61,28 +61,28 @@ export default async function AdminDashboard() {
                 <MetricCard
                     label="Active Students"
                     value={s.totalStudents}
-                    icon={<Users className="w-5 h-5 text-blue-600" />}
+                    icon={<Users className="w-6 h-6 text-blue-600" />}
                     trend="+12%"
                     color="blue"
                 />
                 <MetricCard
                     label="Published Courses"
                     value={s.activeCourses}
-                    icon={<BookOpen className="w-5 h-5 text-indigo-600" />}
+                    icon={<BookOpen className="w-6 h-6 text-indigo-600" />}
                     trend="Stable"
                     color="indigo"
                 />
                 <MetricCard
                     label="Total Revenue"
                     value={`₹${s.totalRevenue.toLocaleString()}`}
-                    icon={<Wallet className="w-5 h-5 text-emerald-600" />}
+                    icon={<Wallet className="w-6 h-6 text-emerald-600" />}
                     trend="+18%"
                     color="emerald"
                 />
                 <MetricCard
                     label="Pending Actions"
                     value={s.pendingApprovals}
-                    icon={<AlertCircle className="w-5 h-5 text-rose-600" />}
+                    icon={<AlertCircle className="w-6 h-6 text-rose-600" />}
                     trend="Needs Review"
                     color="rose"
                     alert={true}
@@ -90,32 +90,35 @@ export default async function AdminDashboard() {
             </div>
 
             {/* Premium Assessment Hub Widget */}
-            <div className="bg-slate-900 rounded-[2.5rem] p-1 shadow-2xl shadow-indigo-500/10 overflow-hidden group">
-                <div className="bg-white/95 backdrop-blur-sm rounded-[2.3rem] p-10 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[40%] h-full bg-slate-50 -skew-x-12 translate-x-1/2 opacity-50" />
-                    
-                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 relative z-10">
-                        <div className="space-y-3">
-                            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-100/50">
-                                <BrainCircuit className="w-3.5 h-3.5" /> Assessment Engine
+            <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-[3rem] blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                <div className="relative bg-white rounded-[2.8rem] p-1 shadow-2xl overflow-hidden border border-slate-100">
+                    <div className="bg-slate-50/50 backdrop-blur-sm rounded-[2.6rem] p-10 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-[40%] h-full bg-indigo-50 -skew-x-12 translate-x-1/2 opacity-30" />
+                        
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 relative z-10">
+                            <div className="space-y-4">
+                                <div className="inline-flex items-center gap-2 bg-indigo-100/50 text-indigo-700 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.25em] border border-indigo-200/50">
+                                    <BrainCircuit className="w-4 h-4" /> Intelligence Hub
+                                </div>
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter italic">
+                                    Mock Test <span className="text-gradient">Performance.</span>
+                                </h2>
+                                <p className="text-slate-500 font-bold max-w-md leading-relaxed">System-wide diagnostic metrics and student growth analytics portal.</p>
                             </div>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-                                Mock Test Performance Hub
-                            </h2>
-                            <p className="text-slate-500 font-medium max-w-md">Track global student progress and assessment health in real-time.</p>
+                            <Link href="/admin/results">
+                                <Button className="btn-primary h-20 px-12 rounded-[1.8rem] gap-4 shadow-2xl shadow-primary/30 group/btn">
+                                    Global Analytics <TrendingUp className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </Link>
                         </div>
-                        <Link href="/admin/results">
-                            <Button className="btn-primary h-16 px-10 rounded-2xl gap-3 shadow-2xl shadow-primary/30">
-                                Global Analytics <TrendingUp className="w-5 h-5" />
-                            </Button>
-                        </Link>
-                    </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mt-12 relative z-10">
-                        <StatItem label="Conducted" value={s.mockMetrics?.totalTests || 0} icon={<Award className="w-5 h-5 text-amber-500" />} />
-                        <StatItem label="Total Attempts" value={s.mockMetrics?.totalAttempts || 0} icon={<Users className="w-5 h-5 text-blue-500" />} />
-                        <StatItem label="Highest Score" value={s.mockMetrics?.highestScore || 0} icon={<Trophy className="w-5 h-5 text-indigo-500" />} unit="pts" />
-                        <StatItem label="Average Score" value={s.mockMetrics?.avgScore || 0} icon={<TrendingUp className="w-5 h-5 text-emerald-500" />} unit="%" />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mt-16 relative z-10 border-t border-slate-100 pt-12">
+                            <StatItem label="Exams Conducted" value={s.mockMetrics?.totalTests || 0} icon={<Award className="w-6 h-6 text-amber-500" />} />
+                            <StatItem label="Global Attempts" value={s.mockMetrics?.totalAttempts || 0} icon={<Users className="w-6 h-6 text-blue-500" />} />
+                            <StatItem label="Zenith Score" value={s.mockMetrics?.highestScore || 0} icon={<Trophy className="w-6 h-6 text-indigo-500" />} unit="pts" />
+                            <StatItem label="Performance Mean" value={s.mockMetrics?.avgScore || 0} icon={<TrendingUp className="w-6 h-6 text-emerald-500" />} unit="%" />
+                        </div>
                     </div>
                 </div>
             </div>
