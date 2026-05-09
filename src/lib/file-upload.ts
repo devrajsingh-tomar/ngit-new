@@ -11,8 +11,8 @@ type UploadResult = {
 };
 
 // Configuration
-// Configuration - Store in public directory so Next.js can serve them directly
-const UPLOAD_BASE = path.join(process.cwd(), "public");
+// Configuration - Store in root directory as expected by the /api/uploads route
+const UPLOAD_BASE = process.cwd();
 const UPLOAD_REL_PATH = path.join("uploads", "gallery");
 const UPLOAD_DIR = path.join(UPLOAD_BASE, UPLOAD_REL_PATH);
 
@@ -57,8 +57,8 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
  */
 const ensureUploadDir = async () => {
     try {
-        const folders = ["public", "uploads", "gallery"];
-        let currentPath = process.cwd();
+        const folders = ["uploads", "gallery"];
+        let currentPath = /* turbopackIgnore: true */ process.cwd();
 
         for (const folder of folders) {
             currentPath = path.join(currentPath, folder);

@@ -12,6 +12,7 @@ export async function GET(
 
     try {
         if (!fs.existsSync(filePath)) {
+            console.error(`[Upload Service] File not found at: ${filePath}`);
             return new NextResponse("File not found", { status: 404 });
         }
 
@@ -26,6 +27,8 @@ export async function GET(
             ".gif": "image/gif",
             ".svg": "image/svg+xml",
             ".bmp": "image/bmp",
+            ".pdf": "application/pdf",
+            ".mp4": "video/mp4",
         };
 
         return new NextResponse(fileBuffer, {
@@ -34,7 +37,8 @@ export async function GET(
                 "Cache-Control": "public, max-age=31536000, immutable",
             },
         });
-    } catch (error) {
+    } catch (error: any) {
+        console.error(`[Upload Service] Internal error serving file ${filePath}:`, error);
         return new NextResponse("Internal Server Error", { status: 500 });
     }
 }

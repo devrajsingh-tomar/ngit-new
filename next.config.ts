@@ -20,6 +20,16 @@ const nextConfig = {
             },
             {
                 protocol: "https",
+                hostname: "ngitedu.com",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "www.ngitedu.com",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
                 hostname: "img.freepik.com",
                 pathname: "/**",
             },
@@ -73,7 +83,7 @@ const nextConfig = {
         },
     },
     turbopack: {
-        root: process.cwd(),
+        root: /* turbopackIgnore: true */ process.cwd(),
     },
 } as any;
 
