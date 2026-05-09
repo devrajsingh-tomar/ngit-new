@@ -17,6 +17,19 @@ export interface TypingMetrics {
 }
 
 /**
+ * Normalizes characters to ensure common symbols (quotes, apostrophes, commas) 
+ * match regardless of whether they are "smart/curly" or "straight".
+ */
+export const normalizeChar = (char: string): string => {
+  if (!char) return "";
+  return char
+    .replace(/[\u2018\u2019\u201B\u2032\u2035]/g, "'")
+    .replace(/[\u201C\u201D\u201F\u2033\u2036]/g, '"')
+    .replace(/[\uFF0C]/g, ",")
+    .replace(/[\u00A0]/g, " ");
+};
+
+/**
  * Calculates typing metrics based on the provided input and original passage
  * @param typedText The text entered by the user
  * @param passage The original text to compare against
@@ -40,15 +53,18 @@ export const calculateMetrics = (
   let passageIdx = 0;
   typedWords.forEach((word, idx) => {
     if (passageIdx < originalWords.length) {
+      const normTyped = word.split('').map(normalizeChar).join('');
+      const normOriginal = originalWords[passageIdx].split('').map(normalizeChar).join('');
+      const normNextOriginal = originalWords[passageIdx + 1]?.split('').map(normalizeChar).join('');
+
       // Direct Match
-      if (word === originalWords[passageIdx]) {
+      if (normTyped === normOriginal) {
         passageIdx++;
       } 
-      // Skip-Detection: If this word matches the NEXT word in the passage, 
-      // we assume the student skipped a word.
-      else if (passageIdx + 1 < originalWords.length && word === originalWords[passageIdx + 1]) {
-        errors++; // Count the skipped word as a full mistake
-        passageIdx += 2; // Jump ahead to stay synced
+      // Skip-Detection
+      else if (passageIdx + 1 < originalWords.length && normTyped === normNextOriginal) {
+        errors++; 
+        passageIdx += 2; 
       }
       // Traditional Error
       else {
@@ -56,27 +72,18 @@ export const calculateMetrics = (
         passageIdx++;
       }
     } else {
-      // Extra words typed
       errors++;
     }
   });
 
   // NEW: Extra Space Penalty (Double spaces count as half mistake)
-  // Each instance of consecutive spaces (2 or more) adds a 0.5 penalty
   const consecutiveSpaceMatches = typedText.match(/\s{2,}/g) || [];
   const extraSpacesPenalty = consecutiveSpaceMatches.reduce((acc, match) => acc + (match.length - 1) * 0.5, 0);
   errors += extraSpacesPenalty;
 
-
-
-  // Gross WPM (Raw Speed): (Total Characters / 5) / Time
   const grossWpm = Math.round((totalCharacters / 5) / timeMinutes);
-
-  // Net WPM (Adjusted Speed): Gross WPM - (Errors / Time)
-  // Standard Government Formula: Net WPM = ((Total Characters / 5) - Errors) / Time
   const netWpm = Math.round(((totalCharacters / 5) - errors) / timeMinutes);
 
-  // Accuracy: ((Correct Characters) / Total Characters) * 100
   const accuracy = totalCharacters > 0 
     ? Math.max(0, Math.round(((totalCharacters - errors) / totalCharacters) * 100)) 
     : 100;
@@ -99,11 +106,10 @@ export const calculateMetrics = (
 
 /**
  * Detailed Character Comparison for highlighting
- * Returns state for each character in the current word
  */
 export const compareCharacters = (original: string, typed: string) => {
   return original.split('').map((char, index) => {
     if (index >= typed.length) return 'pending';
-    return char === typed[index] ? 'correct' : 'incorrect';
+    return normalizeChar(char) === normalizeChar(typed[index]) ? 'correct' : 'incorrect';
   });
 };

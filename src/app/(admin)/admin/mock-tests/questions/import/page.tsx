@@ -79,7 +79,6 @@ export default function ImportQuestionsPage() {
                     const header = headers[colNumber];
                     if (header) {
                         let value = cell.value;
-                        // Handle cases where value might be an object
                         if (value && typeof value === 'object') {
                             if ('result' in (value as any)) value = (value as any).result;
                             else if ('richText' in (value as any)) value = (value as any).richText.map((rt: any) => rt.text).join("");
@@ -138,44 +137,33 @@ export default function ImportQuestionsPage() {
                 throw new Error("The Excel file seems to be empty or has no data rows.");
             }
 
-            const validExamCodes = ["M1-R5.1", "M2-R5.1", "M3-R5.1", "M4-R5.1"];
+            const validExamCodes = ["M1-R5.1", "M2-R5.1", "M3-R5.1", "M4-R5.1", "M1-R5", "M2-R5", "M3-R5", "M4-R5"];
             
-            // Map Excel columns to Question model
             const formattedQuestions = data.map((row, index) => {
-                const rowNum = index + 2; // Row number in Excel
+                const rowNum = index + 2;
                 
-                // Flexible mapping for various header names
-                const questionText = getValueCaseInsensitive(row, ["Question", "Content", "Q", "Problem"]);
-                const typeRaw = getValueCaseInsensitive(row, ["Type", "QuestionType", "QType", "Format"]);
-                let examCodeRaw = getValueCaseInsensitive(row, ["ExamCode", "Exam Code", "Code", "Module"]);
+                const questionText = getValueCaseInsensitive(row, ["Question", "Content", "Q"]);
+                const typeRaw = getValueCaseInsensitive(row, ["Type", "QuestionType", "QType"]);
+                let examCodeRaw = getValueCaseInsensitive(row, ["ExamCode", "Exam Code", "Code"]);
                 const subject = getValueCaseInsensitive(row, ["Subject", "Sub"]);
                 const topic = getValueCaseInsensitive(row, ["Topic", "Unit"]);
-                const difficulty = getValueCaseInsensitive(row, ["Difficulty", "Level", "Diff"]);
-                const marks = getValueCaseInsensitive(row, ["Marks", "Weightage"]);
-                const negMarks = getValueCaseInsensitive(row, ["NegativeMarks", "NegMarks", "Negative Marks"]);
-                const explanation = getValueCaseInsensitive(row, ["Explanation", "Solution", "Reasoning"]);
-                const correctAnswer = getValueCaseInsensitive(row, ["CorrectAnswer", "Correct Answer", "Answer", "Key"]);
+                const difficulty = getValueCaseInsensitive(row, ["Difficulty", "Level"]);
+                const marks = getValueCaseInsensitive(row, ["Marks"]);
+                const negMarks = getValueCaseInsensitive(row, ["NegativeMarks", "Negative Marks"]);
+                const explanation = getValueCaseInsensitive(row, ["Explanation", "Solution"]);
+                const correctAnswer = getValueCaseInsensitive(row, ["CorrectAnswer", "Correct Answer", "Answer"]);
                 
-                if (!questionText) {
-                    throw new Error(`Row ${rowNum}: Question content is missing.`);
-                }
+                if (!questionText) throw new Error(`Row ${rowNum}: Question content is missing.`);
 
-                // Clean and validate Exam Code
                 let finalExamCode = undefined;
                 if (examCodeRaw) {
-                    const cleanedCode = examCodeRaw.toString().toUpperCase().trim().replace(/[^A-Z0-9-]/g, '');
-                    // Try to match with or without hyphen
+                    const cleanedCode = examCodeRaw.toString().toUpperCase().trim().replace(/[^A-Z0-9-.]/g, '');
                     finalExamCode = validExamCodes.find(v => 
                         v === cleanedCode || 
                         v.replace('-', '') === cleanedCode || 
                         v === cleanedCode.replace(/(\D)(\d)/, '$1-$2')
                     );
                 }
-
-                // Only allow exam codes if the target course is an O Level course
-                const selectedCourse = courses.find(c => c._id === selectedCourseId);
-                const isOLevel = selectedCourse?.title?.toLowerCase().includes("o level");
-                if (!isOLevel) finalExamCode = undefined;
 
                 const questType = mapType(typeRaw?.toString());
 
@@ -187,17 +175,40 @@ export default function ImportQuestionsPage() {
                     type: questType,
                     difficulty: (difficulty?.toString() || "MEDIUM").toUpperCase(),
                     content: { en: questionText.toString() },
-                    marks: Number(marks) || 4,
-                    negativeMarks: Number(negMarks) || 1,
+                    marks: Number(marks) || 1,
+                    negativeMarks: Number(negMarks) || 0,
                     explanation: { en: explanation?.toString() || "" },
+                    assertion: { en: getValueCaseInsensitive(row, ["Assertion", "A_Stmt"])?.toString() || "" },
+                    reason: { en: getValueCaseInsensitive(row, ["Reason", "R_Stmt"])?.toString() || "" },
+                    shortAnswer: getValueCaseInsensitive(row, ["ShortAnswer", "Passage", "AnswerText"])?.toString() || "",
+                    numericAnswer: Number(getValueCaseInsensitive(row, ["NumericAnswer", "Value"])) || undefined,
                     options: [
-                        { text: { en: getValueCaseInsensitive(row, ["OptionA", "Option A", "A"])?.toString() }, isCorrect: checkCorrect(row, "A", correctAnswer) },
-                        { text: { en: getValueCaseInsensitive(row, ["OptionB", "Option B", "B"])?.toString() }, isCorrect: checkCorrect(row, "B", correctAnswer) },
-                        { text: { en: getValueCaseInsensitive(row, ["OptionC", "Option C", "C"])?.toString() }, isCorrect: checkCorrect(row, "C", correctAnswer) },
-                        { text: { en: getValueCaseInsensitive(row, ["OptionD", "Option D", "D"])?.toString() }, isCorrect: checkCorrect(row, "D", correctAnswer) },
-                        { text: { en: getValueCaseInsensitive(row, ["OptionE", "Option E", "E"])?.toString() }, isCorrect: checkCorrect(row, "E", correctAnswer) },
+                        { 
+                            text: { en: getValueCaseInsensitive(row, ["OptionA", "Option A", "A"])?.toString() }, 
+                            pair: { en: getValueCaseInsensitive(row, ["MatchPairA", "PairA", "MatchA"])?.toString() },
+                            isCorrect: checkCorrect(row, "A", correctAnswer) 
+                        },
+                        { 
+                            text: { en: getValueCaseInsensitive(row, ["OptionB", "Option B", "B"])?.toString() }, 
+                            pair: { en: getValueCaseInsensitive(row, ["MatchPairB", "PairB", "MatchB"])?.toString() },
+                            isCorrect: checkCorrect(row, "B", correctAnswer) 
+                        },
+                        { 
+                            text: { en: getValueCaseInsensitive(row, ["OptionC", "Option C", "C"])?.toString() }, 
+                            pair: { en: getValueCaseInsensitive(row, ["MatchPairC", "PairC", "MatchC"])?.toString() },
+                            isCorrect: checkCorrect(row, "C", correctAnswer) 
+                        },
+                        { 
+                            text: { en: getValueCaseInsensitive(row, ["OptionD", "Option D", "D"])?.toString() }, 
+                            pair: { en: getValueCaseInsensitive(row, ["MatchPairD", "PairD", "MatchD"])?.toString() },
+                            isCorrect: checkCorrect(row, "D", correctAnswer) 
+                        },
+                        { 
+                            text: { en: getValueCaseInsensitive(row, ["OptionE", "Option E", "E"])?.toString() }, 
+                            pair: { en: getValueCaseInsensitive(row, ["MatchPairE", "PairE", "MatchE"])?.toString() },
+                            isCorrect: checkCorrect(row, "E", correctAnswer) 
+                        },
                     ].filter(o => o.text.en),
-                    numericAnswer: getValueCaseInsensitive(row, ["NumericAnswer", "Numeric Answer", "Value", "Numeric"]) ? Number(getValueCaseInsensitive(row, ["NumericAnswer", "Numeric Answer", "Value", "Numeric"])) : undefined,
                 };
             });
 
@@ -206,7 +217,7 @@ export default function ImportQuestionsPage() {
                 toast.success(`${res.count} questions imported successfully!`);
                 router.push("/admin/mock-tests/questions");
             } else {
-                toast.error(res.error || "Failed to import questions. Check for duplicate or invalid data.");
+                toast.error(res.error);
             }
         } catch (err: any) {
             toast.error(err.message);
@@ -224,73 +235,105 @@ export default function ImportQuestionsPage() {
         if (t.includes("NUMERIC") || t.includes("NUMBER")) return "NUMERIC";
         if (t.includes("MATCH")) return "MATCH_THE_FOLLOWING";
         if (t.includes("ASSERTION")) return "ASSERTION_REASON";
+        if (t.includes("SHORT")) return "SHORT_ANSWER";
+        if (t.includes("DESCRIPTIVE")) return "DESCRIPTIVE";
+        if (t.includes("TYPING")) return "TYPING";
         return "MCQ_SINGLE";
     };
 
     const checkCorrect = (row: any, label: string, providedAnswer?: any) => {
-        const answer = providedAnswer || getValueCaseInsensitive(row, ["CorrectAnswer", "Correct Answer", "Answer", "Key"]);
+        const answer = providedAnswer || getValueCaseInsensitive(row, ["CorrectAnswer", "Correct Answer", "Answer"]);
         if (!answer) return false;
-        
         const correctStr = String(answer).toUpperCase();
-        // Handle cases where the answer is just "A" or "Option A" or "A, B"
-        return correctStr.includes(label) || 
-               (correctStr === label) || 
-               (correctStr.startsWith(label) && (correctStr.length === 1 || !/^[A-Z]$/.test(correctStr[1])));
+        return correctStr.includes(label) || (correctStr === label);
     };
 
 
     const downloadSample = async () => {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Sample");
+        const worksheet = workbook.addWorksheet("Universal Template");
 
         worksheet.columns = [
             { header: "Question", key: "Question", width: 40 },
-            { header: "Type", key: "Type", width: 15 },
+            { header: "Type", key: "Type", width: 18 },
             { header: "Option A", key: "OptionA", width: 20 },
             { header: "Option B", key: "OptionB", width: 20 },
             { header: "Option C", key: "OptionC", width: 20 },
             { header: "Option D", key: "OptionD", width: 20 },
-            { header: "Option E", key: "OptionE", width: 20 },
+            { header: "MatchPairA", key: "MatchPairA", width: 20 },
+            { header: "MatchPairB", key: "MatchPairB", width: 20 },
+            { header: "MatchPairC", key: "MatchPairC", width: 20 },
+            { header: "MatchPairD", key: "MatchPairD", width: 20 },
+            { header: "Assertion", key: "Assertion", width: 30 },
+            { header: "Reason", key: "Reason", width: 30 },
             { header: "Correct Answer", key: "CorrectAnswer", width: 15 },
-            { header: "Explanation", key: "Explanation", width: 40 },
-            { header: "Marks (+)", key: "Marks", width: 12 },
-            { header: "Negative Marks (-)", key: "NegativeMarks", width: 18 },
-            { header: "Course ID", key: "Course", width: 15 },
-            { header: "Exam Code", key: "ExamCode", width: 15 },
+            { header: "ShortAnswer", key: "ShortAnswer", width: 30 },
+            { header: "NumericAnswer", key: "NumericAnswer", width: 15 },
+            { header: "Explanation", key: "Explanation", width: 30 },
+            { header: "Marks", key: "Marks", width: 10 },
+            { header: "Negative Marks", key: "NegMarks", width: 15 },
             { header: "Subject", key: "Subject", width: 15 },
             { header: "Topic", key: "Topic", width: 15 },
             { header: "Difficulty", key: "Difficulty", width: 12 },
+            { header: "Exam Code", key: "ExamCode", width: 12 },
         ];
 
+        // 1. MCQ Single
         worksheet.addRow({
-            Question: "What is the unit of Force?",
+            Question: "Which of the following is an input device?",
             Type: "MCQ_SINGLE",
-            OptionA: "Newton",
-            OptionB: "Joule",
-            OptionC: "Watt",
-            OptionD: "Pascal",
-            CorrectAnswer: "A",
-            Explanation: "Newton (N) is the SI unit of force.",
-            Marks: 4,
-            NegativeMarks: 1,
-            Subject: "Physics",
-            Topic: "Mechanics",
-            Difficulty: "EASY",
-            ExamCode: "M1-R5.1"
+            OptionA: "Monitor", OptionB: "Keyboard", OptionC: "Printer", OptionD: "Speaker",
+            CorrectAnswer: "B",
+            Explanation: "Keyboard is used to input text and commands.",
+            Marks: 1, NegMarks: 0.25, Subject: "Computer", Topic: "Hardware", Difficulty: "EASY"
         });
 
-        // Style the header
+        // 2. True/False
+        worksheet.addRow({
+            Question: "RAM is a volatile memory.",
+            Type: "TRUE_FALSE",
+            CorrectAnswer: "True",
+            Explanation: "RAM loses its data when power is turned off.",
+            Marks: 1, NegMarks: 0.25, Subject: "Computer", Topic: "Memory", Difficulty: "EASY"
+        });
+
+        // 3. Assertion/Reason
+        worksheet.addRow({
+            Question: "Analyze the Assertion and Reason below:",
+            Type: "ASSERTION_REASON",
+            Assertion: "Cloud computing is cost-effective for startups.",
+            Reason: "It eliminates the need for heavy initial investment in hardware.",
+            CorrectAnswer: "A",
+            Explanation: "Both are true and R explains A.",
+            Marks: 1, NegMarks: 0.25, Subject: "IT", Topic: "Cloud", Difficulty: "MEDIUM"
+        });
+
+        // 4. Match the Following
+        worksheet.addRow({
+            Question: "Match the following Operating Systems with their Developers:",
+            Type: "MATCH_THE_FOLLOWING",
+            OptionA: "Windows", OptionB: "macOS", OptionC: "Android", OptionD: "Linux",
+            MatchPairA: "Microsoft", MatchPairB: "Apple", MatchPairC: "Google", MatchPairD: "Open Source",
+            CorrectAnswer: "A-1, B-2, C-3, D-4",
+            Explanation: "Standard matching of OS to vendors.",
+            Marks: 4, NegMarks: 1, Subject: "IT", Topic: "OS", Difficulty: "MEDIUM"
+        });
+
+        // 5. Typing Test
+        worksheet.addRow({
+            Question: "Type the following passage exactly as shown.",
+            Type: "TYPING",
+            ShortAnswer: "The quick brown fox jumps over the lazy dog. Programming is the art of algorithm design.",
+            Marks: 10, Subject: "Skill", Topic: "Typing", Difficulty: "HARD"
+        });
+
         worksheet.getRow(1).font = { bold: true };
-        worksheet.getRow(1).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFE0E0E0' }
-        };
+        worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const saveAs = (await import("file-saver")).default;
-        saveAs(blob, "question_import_sample.xlsx");
+        saveAs(blob, "universal_question_import_sample.xlsx");
     };
 
     return (

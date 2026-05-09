@@ -38,7 +38,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
     // Form State
     const [formData, setFormData] = useState<any>({
         courseId: "",
-        examCode: "M1-R5",
+        examCode: "",
         subject: "",
         topic: "",
         type: "MCQ_SINGLE",
@@ -114,8 +114,6 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
 
     const handleSubmit = async () => {
         if (!formData.courseId) return toast.error("Please select a Course");
-        if (!formData.examCode) return toast.error("Please select an Exam Code");
-        if (!formData.topic) return toast.error("Please enter a Topic Tag");
         if (!formData.content.en) return toast.error("Please enter the Question Content");
 
         setSubmitting(true);

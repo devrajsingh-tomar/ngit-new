@@ -118,8 +118,6 @@ export default function NewQuestionPage() {
 
     const handleSubmit = async () => {
         if (!formData.courseId) return toast.error("Please select a Course");
-        if (!formData.examCode) return toast.error("Please select an Exam Code");
-        if (!formData.topic) return toast.error("Please enter a Topic Tag");
         if (!formData.content.en) return toast.error("Please enter the Question Content");
 
         setSubmitting(true);

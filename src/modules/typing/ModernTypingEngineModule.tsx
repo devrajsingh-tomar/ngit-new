@@ -11,6 +11,7 @@ import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
 import { Keyboard } from 'lucide-react';
+import { normalizeChar } from './utils/calculations';
 
 interface ModernTypingEngineModuleProps {
   exam?: any;
@@ -470,8 +471,9 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                   if (index === activeWordIndex) {
                       className += "text-indigo-600 font-bold active-word underline decoration-indigo-300 decoration-4 underline-offset-8";
                   } else if (index < activeWordIndex) {
-                      const typedWord = typedWordsArray[index];
-                      if (typedWord !== word) {
+                      const normTypedWord = typedWordsArray[index].split('').map(normalizeChar).join('');
+                      const normOriginalWord = word.split('').map(normalizeChar).join('');
+                      if (normTypedWord !== normOriginalWord) {
                           className += "text-rose-600 font-bold underline decoration-rose-400";
                       }
                   }
@@ -486,7 +488,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                               {word.split('').map((char, charIdx) => {
                                   let charClass = "";
                                   if (charIdx < currentTyped.length) {
-                                      charClass = char === currentTyped[charIdx] ? "text-emerald-600" : "text-rose-600 bg-rose-50";
+                                    charClass = normalizeChar(char) === normalizeChar(currentTyped[charIdx]) ? "text-emerald-600" : "text-rose-600 bg-rose-50";
                                   }
                                   return <span key={charIdx} className={charClass}>{char}</span>;
                               })}
@@ -505,7 +507,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                               {word.split('').map((char, charIdx) => {
                                   let charClass = "text-slate-400";
                                   if (charIdx < currentTyped.length) {
-                                      charClass = char === currentTyped[charIdx] ? "text-emerald-600" : "text-rose-600 underline";
+                                    charClass = normalizeChar(char) === normalizeChar(currentTyped[charIdx]) ? "text-emerald-600" : "text-rose-600 underline";
                                   } else if (charIdx === currentTyped.length) {
                                       charClass = "text-white bg-indigo-600 rounded-sm ring-4 ring-indigo-100";
                                   }

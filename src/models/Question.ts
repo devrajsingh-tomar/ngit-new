@@ -53,11 +53,10 @@ const QuestionSchema = new Schema<IQuestion>(
     {
         courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
         examCode: { 
-            type: String, 
-            enum: ["M1-R5", "M2-R5", "M3-R5", "M4-R5"],
+            type: String
         },
-        subject: { type: String, required: true },
-        topic: { type: String, required: true },
+        subject: { type: String },
+        topic: { type: String },
         type: {
             type: String,
             enum: Object.values(QuestionType),

@@ -10,6 +10,7 @@ import { mapKeyToHindi } from './utils/hindiMapping';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
+import { normalizeChar } from './utils/calculations';
 
 interface ClassicTypingEngineModuleProps {
   exam?: any;
@@ -478,7 +479,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     className += "text-blue-600 font-bold active-word underline decoration-blue-300 decoration-2 underline-offset-4";
                 } else if (index < activeWordIndex) {
                     const typedWord = typedWordsArray[index];
-                    if (typedWord !== word) {
+                    const normTypedWord = typedWord.split('').map(normalizeChar).join('');
+                    const normOriginalWord = word.split('').map(normalizeChar).join('');
+                    if (normTypedWord !== normOriginalWord) {
                         className += "text-red-600 font-bold underline decoration-red-400";
                     }
                 }
@@ -493,7 +496,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                             {word.split('').map((char, charIdx) => {
                                 let charClass = "";
                                 if (charIdx < currentTyped.length) {
-                                    charClass = char === currentTyped[charIdx] ? "text-emerald-600" : "text-rose-600 bg-rose-50";
+                                    charClass = normalizeChar(char) === normalizeChar(currentTyped[charIdx]) ? "text-emerald-600" : "text-rose-600 bg-rose-50";
                                 }
                                 return <span key={charIdx} className={charClass}>{char}</span>;
                             })}
@@ -512,7 +515,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                             {word.split('').map((char, charIdx) => {
                                 let charClass = "text-gray-400";
                                 if (charIdx < currentTyped.length) {
-                                    charClass = char === currentTyped[charIdx] ? "text-emerald-600" : "text-rose-600 underline";
+                                    charClass = normalizeChar(char) === normalizeChar(currentTyped[charIdx]) ? "text-emerald-600" : "text-rose-600 underline";
                                 } else if (charIdx === currentTyped.length) {
                                     charClass = "text-white bg-blue-600 rounded-sm ring-2 ring-blue-300";
                                 }
