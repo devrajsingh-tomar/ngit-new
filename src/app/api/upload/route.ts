@@ -32,26 +32,30 @@ export async function POST(req: NextRequest) {
         // 4. Save Metadata to Database
         await connectDB();
 
-        const newMedia = await Media.create({
-            filename: result.filename,
-            url: result.url,
-            mimeType: file.type,
-            size: file.size,
-            uploadedBy: session.user.id
-        });
+        try {
+            const newMedia = await Media.create({
+                filename: result.filename,
+                url: result.url,
+                mimeType: file.type,
+                size: file.size,
+                uploadedBy: session.user.id
+            });
 
-        // 5. Return Success Response
-        // Using relative URL is more portable and avoids issues with hardcoded localhost URLs
-        const relativeUrl = result.url;
-
-        return NextResponse.json({
-            success: true,
-            url: relativeUrl,
-            mediaId: newMedia._id
-        }, { status: 201 });
-
+            return NextResponse.json({
+                success: true,
+                url: result.url,
+                mediaId: newMedia._id
+            }, { status: 201 });
+        } catch (dbError: any) {
+            console.error("Database save error for media:", dbError);
+            return NextResponse.json({ 
+                error: "Image saved but metadata failed", 
+                url: result.url,
+                details: dbError.message 
+            }, { status: 201 }); // Return 201 because image IS saved
+        }
     } catch (error: any) {
         console.error("Upload handler error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
     }
 }

@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import Image from "next/image";
 
 interface ImageUploadProps {
     value: string;
@@ -80,11 +79,10 @@ export function ImageUpload({
 
             {value ? (
                 <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-inner group">
-                    <Image
+                    <img
                         src={value}
-                        alt="Uploaded logo"
-                        fill
-                        className="object-contain p-4 bg-slate-50"
+                        alt="Uploaded preview"
+                        className="w-full h-full object-contain p-4 bg-slate-50"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Button
