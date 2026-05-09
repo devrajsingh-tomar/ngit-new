@@ -73,7 +73,7 @@ export async function GET(req: Request) {
           TypingBook.find().select('_id name').lean(),
           // Aggregate languages for each book
           TypingPassage.aggregate([
-            { $match: { section: 'Book', bookId: { $exists: true } } },
+            { $match: { bookId: { $exists: true } } },
             { $group: { _id: '$bookId', languages: { $addToSet: '$language' } } }
           ])
         ]);

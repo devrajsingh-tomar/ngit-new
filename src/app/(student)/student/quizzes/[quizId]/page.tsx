@@ -251,6 +251,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                     onChange={handleAnswerChange}
                     language={language}
                     userName="Student"
+                    isLastQuestion={state.currentQuestionIndex === quiz.questions.length - 1}
                     onSave={() => {
                         if (state.currentQuestionIndex < quiz.questions.length - 1) {
                             navigateTo(state.currentQuestionIndex + 1);

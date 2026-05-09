@@ -93,7 +93,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     if (isBookPractice && exam?.bookId) {
         // For Book Practice: fetch sibling chapters from the passages API
         const bId = typeof exam.bookId === 'object' ? exam.bookId._id : exam.bookId;
-        fetch(`/api/typing/practice?type=BOOK&bookId=${bId}`)
+        const langParam = internalLanguage ? `&lang=${internalLanguage}` : '';
+        fetch(`/api/typing/practice?type=BOOK&bookId=${bId}${langParam}`)
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data)) {

@@ -77,28 +77,69 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
   const [internalPassage, setInternalPassage] = useState(passage);
   const [internalDuration, setInternalDuration] = useState(config.duration);
+  const [internalLanguage, setInternalLanguage] = useState(config.language || 'English');
+  const [internalLayout, setInternalLayout] = useState(config.layout || 'English');
+  const [currentExam, setCurrentExam] = useState(exam);
+
+  const isBookPractice = exam?.section === 'Book' || exam?.category === 'BOOK';
 
   useEffect(() => {
     if (!showExerciseSwitcher) return;
-    fetch('/api/admin/typing/passages')
+    
+    if (isBookPractice && exam?.bookId) {
+        const bId = typeof exam.bookId === 'object' ? exam.bookId._id : exam.bookId;
+        const langParam = internalLanguage ? `&lang=${internalLanguage}` : '';
+        fetch(`/api/typing/practice?type=BOOK&bookId=${bId}${langParam}`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+               const sorted = data.sort((a: any, b: any) => a.title.localeCompare(b.title));
+               setPassagesList(sorted);
+               const foundIdx = sorted.findIndex((p: any) => p._id?.toString() === exam._id?.toString());
+               if (foundIdx !== -1) {
+                   setCurrentPassageIndex(foundIdx);
+                   setCurrentExam(sorted[foundIdx]);
+               }
+            }
+          })
+          .catch(e => console.error("Failed to load book chapters", e));
+        return;
+    }
+
+    let query = '';
+    if (exam) {
+        const queryLang = exam.language || config.language;
+        if (exam.govExamId) {
+            query = `?govExamId=${exam.govExamId}&language=${queryLang}`;
+            if (exam.difficulty) query += `&difficulty=${exam.difficulty}`;
+        } else if (exam.category === 'SPECIAL') {
+            query = `?category=SPECIAL&language=${queryLang}`;
+        }
+    }
+
+    fetch(`/api/typing/exams${query}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-           const sorted = data.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+           const sorted = data.sort((a,b) => a.title.localeCompare(b.title));
            setPassagesList(sorted);
-           const foundIdx = sorted.findIndex(p => p.content === passage);
+           const foundIdx = sorted.findIndex(e => e._id === exam?._id);
            if (foundIdx !== -1) {
-             setCurrentPassageIndex(foundIdx);
+               setCurrentPassageIndex(foundIdx);
+               setCurrentExam(sorted[foundIdx]);
            }
         }
       })
-      .catch(e => console.error("Failed to load passages", e));
-  }, [showExerciseSwitcher, passage]);
+      .catch(e => console.error("Failed to load related exercises", e));
+  }, [showExerciseSwitcher, isBookPractice, exam, config.language, internalLanguage]);
 
   useEffect(() => {
     setInternalPassage(passage);
     setInternalDuration(config.duration);
-  }, [passage, config.duration]);
+    setInternalLanguage(config.language || 'English');
+    setInternalLayout(config.layout || 'English');
+    setCurrentExam(exam);
+  }, [passage, config.duration, config.language, config.layout, exam]);
   
   useEffect(() => {
     if (!containerRef.current) return;
@@ -157,8 +198,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
-      language: config.language || 'English',
-      layout: config.layout || 'English',
+      language: internalLanguage,
+      layout: internalLayout,
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
@@ -166,7 +207,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       sourcePosition: config.sourcePosition || 'top',
     });
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [internalPassage, internalDuration, config, resetTest, setPassage, updateSettings]);
+  }, [internalPassage, internalDuration, internalLanguage, internalLayout, config, resetTest, setPassage, updateSettings]);
 
   useEffect(() => {
     if (isFinished) {
@@ -321,16 +362,91 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
           </div>
         </div>
 
-        <div 
-          className={cn(
-            "flex-1 p-4 md:p-6 flex gap-6 overflow-hidden bg-white",
-            settings.sourcePosition === 'top' && "flex-col",
-            settings.sourcePosition === 'bottom' && "flex-col-reverse",
-            settings.sourcePosition === 'left' && "flex-row",
-            settings.sourcePosition === 'right' && "flex-row-reverse"
-          )}
-          onContextMenu={(e) => config.disableRightClick !== false && e.preventDefault()}
+        <div className={cn(
+          "flex-1 p-4 md:p-6 flex gap-6 overflow-hidden bg-white",
+          settings.sourcePosition === 'top' && "flex-col",
+          settings.sourcePosition === 'bottom' && "flex-col-reverse",
+          settings.sourcePosition === 'left' && "flex-row",
+          settings.sourcePosition === 'right' && "flex-row-reverse"
+        )}
+        onContextMenu={(e) => config.disableRightClick !== false && e.preventDefault()}
         >
+          {showExerciseSwitcher && (
+            <div className="bg-slate-50 border border-slate-200 rounded-3xl p-4 flex flex-wrap items-center gap-6 text-sm font-bold text-slate-600 mb-2">
+              <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-black uppercase opacity-60">Duration:</span>
+                  <select 
+                    value={internalDuration} 
+                    onChange={(e) => setInternalDuration(Number(e.target.value))}
+                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-4 focus:ring-indigo-100 transition-all cursor-pointer font-bold text-slate-900"
+                    disabled={isActive && !isFinished && typedText.length > 0}
+                  >
+                    {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
+                      <option key={min} value={min}>{min} Minutes</option>
+                    ))}
+                  </select>
+              </div>
+              <div className="flex items-center gap-3 flex-1">
+                  <span className="text-[10px] font-black uppercase opacity-60">Exercise:</span>
+                  <div className="flex items-center gap-2 flex-1">
+                    <button 
+                        onClick={() => {
+                          if (currentPassageIndex > 0) {
+                              const newIdx = currentPassageIndex - 1;
+                              setCurrentPassageIndex(newIdx);
+                              const newItem = passagesList[newIdx];
+                              setCurrentExam(newItem);
+                              setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                              setInternalLanguage(newItem.language || config.language || 'English');
+                              updateSettings({ duration: internalDuration, language: newItem.language || config.language });
+                          }
+                        }}
+                        disabled={currentPassageIndex <= 0 || (isActive && !isFinished && typedText.length > 0)}
+                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-50 transition-all font-black"
+                    >&larr;</button>
+                    <select 
+                        value={currentPassageIndex}
+                        onChange={(e) => {
+                          const newIdx = Number(e.target.value);
+                          setCurrentPassageIndex(newIdx);
+                          const newItem = passagesList[newIdx];
+                          setCurrentExam(newItem);
+                          setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                          setInternalLanguage(newItem.language || config.language || 'English');
+                          updateSettings({ duration: internalDuration, language: newItem.language || config.language });
+                        }}
+                        disabled={isActive && !isFinished && typedText.length > 0}
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-4 focus:ring-indigo-100 transition-all cursor-pointer font-bold text-slate-900 truncate"
+                    >
+                        {passagesList.length > 0 ? (
+                          passagesList.map((p, i) => (
+                            <option key={p._id || i} value={i}>
+                                {isBookPractice ? `Chapter ${i + 1}: ${p.title}` : `Exercise ${i + 1}: ${p.title}`}
+                            </option>
+                          ))
+                        ) : (
+                          <option value={0}>Loading Exercises...</option>
+                        )}
+                    </select>
+                    <button 
+                        onClick={() => {
+                          if (currentPassageIndex < passagesList.length - 1) {
+                              const newIdx = currentPassageIndex + 1;
+                              setCurrentPassageIndex(newIdx);
+                              const newItem = passagesList[newIdx];
+                              setCurrentExam(newItem);
+                              setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                              setInternalLanguage(newItem.language || config.language || 'English');
+                              updateSettings({ duration: internalDuration, language: newItem.language || config.language });
+                          }
+                        }}
+                        disabled={currentPassageIndex >= passagesList.length - 1 || (isActive && !isFinished && typedText.length > 0)}
+                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-50 transition-all font-black"
+                    >&rarr;</button>
+                  </div>
+              </div>
+            </div>
+          )}
           <div 
             ref={passageContainerRef}
             className={cn(

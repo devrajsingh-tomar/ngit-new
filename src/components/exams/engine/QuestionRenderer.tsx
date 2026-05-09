@@ -10,6 +10,7 @@ interface Props extends QuestionRendererProps {
   onSave: () => void;
   onReset: () => void;
   onMark?: () => void;
+  isLastQuestion?: boolean;
 }
 
 export default function QuestionRenderer({
@@ -18,7 +19,8 @@ export default function QuestionRenderer({
   onChange,
   onSave,
   onReset,
-  onMark
+  onMark,
+  isLastQuestion
 }: Props) {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
@@ -128,9 +130,14 @@ export default function QuestionRenderer({
             
             <Button 
                 onClick={onSave}
-                className="h-10 md:h-12 px-6 md:px-12 rounded-lg bg-[#3B82F6] hover:bg-blue-600 text-white font-bold text-[11px] md:text-base uppercase tracking-widest shadow-md shadow-blue-500/20"
+                className={cn(
+                  "h-10 md:h-12 px-6 md:px-12 rounded-lg text-white font-bold text-[11px] md:text-base uppercase tracking-widest shadow-md transition-all",
+                  isLastQuestion 
+                    ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" 
+                    : "bg-[#3B82F6] hover:bg-blue-600 shadow-blue-500/20"
+                )}
             >
-                Save & Next
+                {isLastQuestion ? "Submit Exam" : "Save & Next"}
             </Button>
         </div>
       </div>

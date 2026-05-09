@@ -117,11 +117,9 @@ export default function TypingSelectionLayer() {
   // Compute dynamic categories
   const dynamicBookCategories = taxonomy.books
     .filter(b => {
-      if (!b.languages || b.languages.length === 0) return true; // Show if no data
-      if (selectedLanguage === 'Hindi') {
-        return b.languages.some((l: string) => l.includes('Hindi'));
-      }
-      return b.languages.includes(selectedLanguage);
+      if (!b.languages || b.languages.length === 0) return true;
+      const searchLang = selectedLanguage.toLowerCase();
+      return b.languages.some((l: any) => String(l).toLowerCase().includes(searchLang));
     })
     .map(b => ({
       id: b._id,
@@ -162,6 +160,11 @@ export default function TypingSelectionLayer() {
         setStep(2); // Go to difficulty selection first
         return;
     }
+    if (moduleId === 'BOOK') {
+        setSelectedModule(moduleId);
+        setStep(0); 
+        return;
+    }
     setSelectedModule(moduleId);
     setStep(2);
   };
@@ -177,7 +180,7 @@ export default function TypingSelectionLayer() {
         onClick={() => {
             setSelectedLanguage('English');
             setSelectedLayout('English');
-            setStep(1);
+            setStep(selectedModule ? 2 : 1);
         }}
         className="p-10 rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all text-center border-slate-100 group"
       >
@@ -191,7 +194,7 @@ export default function TypingSelectionLayer() {
         onClick={() => {
             setSelectedLanguage('Hindi');
             setSelectedLayout('Remington Gail');
-            setStep(1);
+            setStep(selectedModule ? 2 : 1);
         }}
         className="p-10 rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all text-center border-slate-100 group"
       >
@@ -220,7 +223,7 @@ export default function TypingSelectionLayer() {
               key={layout.id}
               onClick={() => {
                   setSelectedLayout(layout.id as any);
-                  setStep(1);
+                  setStep(selectedModule ? 2 : 1);
               }}
               className="p-8 rounded-[2rem] cursor-pointer hover:shadow-xl transition-all text-center border-slate-100 group hover:border-primary/50"
             >
@@ -349,9 +352,9 @@ export default function TypingSelectionLayer() {
             <div className="col-span-full py-16 text-center space-y-6 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
               <div className="space-y-2">
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
-                  No {selectedLanguage} {selectedModule?.toLowerCase()} content available yet.
+                  {selectedLanguage} {selectedModule?.toLowerCase()} content Not available, come back after latter.
                 </p>
-                <p className="text-slate-500 text-sm font-medium">The content you are looking for might be in a different language.</p>
+                <p className="text-slate-500 text-sm font-medium">The content you are looking for might be added soon.</p>
               </div>
               <Button 
                 onClick={() => setStep(0)} 
@@ -491,9 +494,9 @@ export default function TypingSelectionLayer() {
                  <div className="col-span-full py-20 text-center space-y-6 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
                      <div className="space-y-2">
                          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
-                             {loadingContent ? 'Fetching relevant content...' : `No ${selectedLanguage} content found for this selection.`}
+                             {loadingContent ? 'Fetching relevant content...' : `${selectedLanguage} content Not available, come back after latter.`}
                          </p>
-                         {!loadingContent && <p className="text-slate-500 text-sm font-medium">This book or category might only have content in another language.</p>}
+                         {!loadingContent && <p className="text-slate-500 text-sm font-medium">This book or category might be added soon.</p>}
                      </div>
                      {!loadingContent && (
                         <Button 
