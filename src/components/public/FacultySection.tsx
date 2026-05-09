@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight, GraduationCap, ShieldCheck, Zap, ArrowRight,
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 
 interface Faculty {
@@ -139,11 +138,10 @@ export default function FacultySection({ members, data }: { members?: any[], dat
                                     {/* Visual Identity */}
                                     <div className="relative w-full aspect-square mb-10 rounded-[2.5rem] overflow-hidden bg-slate-50 border-8 border-slate-50 group-hover:border-white transition-all duration-700 shadow-inner">
                                         {faculty.image ? (
-                                            <Image 
+                                            <img 
                                                 src={faculty.image} 
                                                 alt={faculty.name} 
-                                                fill
-                                                className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-200">

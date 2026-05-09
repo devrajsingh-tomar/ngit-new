@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Laptop, Award, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -52,12 +51,10 @@ export default function AboutSection({ data, blocks }: { data?: any, blocks?: an
                         className="relative"
                     >
                         <div className="relative aspect-[4/5] md:aspect-square rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white group">
-                            <Image 
+                            <img 
                                 src={about.image || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071"} 
                                 alt="NGIT Learning Environment" 
-                                fill 
-                                sizes="(max-width: 768px) 100vw, 50vw"
-                                className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                             />
                             {/* Overlay Card */}
                             {certifications.length > 0 && (
@@ -133,7 +130,7 @@ export default function AboutSection({ data, blocks }: { data?: any, blocks?: an
                                 <div className="flex -space-x-3">
                                     {[1, 2, 3, 4].map((i) => (
                                         <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 overflow-hidden">
-                                            <Image src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Student" width={40} height={40} />
+                                            <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Student" className="w-full h-full object-cover" />
                                         </div>
                                     ))}
                                     <div className="w-10 h-10 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[10px] font-black text-white">

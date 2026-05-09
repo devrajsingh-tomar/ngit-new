@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, Sparkles, Download, ChevronLeft, ChevronRight, TrendingUp, Users, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 // Swiper imports
@@ -73,10 +72,10 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     const aspectRatio = block.aspect_ratio || "none";
                     
                     const heightMap = {
-                        small: "h-[300px] md:h-[400px]",
-                        medium: "h-[400px] md:h-[600px]",
-                        large: "h-[500px] md:h-[750px]",
-                        full: "h-[45vh] sm:h-[65vh] lg:h-[85vh] xl:h-[90vh]"
+                        small: "h-auto aspect-[4/3] md:h-[400px]",
+                        medium: "h-auto aspect-video md:h-[600px]",
+                        large: "h-auto aspect-video md:h-[750px]",
+                        full: "h-auto aspect-[16/10] sm:h-[65vh] lg:h-[85vh] xl:h-[90vh]"
                     };
                     const heightClass = heightMap[imageSize as keyof typeof heightMap] || heightMap.full;
 
@@ -91,12 +90,14 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                             )}>
                                 {/* Background Image */}
                                 <div className="absolute inset-0 z-0">
-                                    <Image
+                                    <img
                                         src={image || defaultBlock.image}
                                         alt={block.title || "Hero Image"}
-                                        fill
-                                        priority={idx === 0}
-                                        className={cn("transition-transform [transition-duration:10s] ease-out", objectFit, imagePos)}
+                                        className={cn(
+                                            "absolute inset-0 w-full h-full transition-transform [transition-duration:10s] ease-out", 
+                                            "object-contain md:object-cover", // Use contain on mobile, cover on desktop
+                                            imagePos
+                                        )}
                                         style={{ 
                                             objectFit: objectFit as any, 
                                             objectPosition: imagePos,
@@ -190,7 +191,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                                     whileInView={{ opacity: 1, scale: 1 }}
                                                     className="relative aspect-square rounded-[4rem] overflow-hidden border border-white/10 shadow-2xl group"
                                                 >
-                                                    <Image src={block.image || defaultBlock.image} alt="Visual" fill className="object-cover transition-transform [transition-duration:10s] group-hover:scale-110" />
+                                                    <img src={block.image || defaultBlock.image} alt="Visual" className="absolute inset-0 w-full h-full object-cover transition-transform [transition-duration:10s] group-hover:scale-110" />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
                                                 </motion.div>
                                             </div>

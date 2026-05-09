@@ -4,7 +4,6 @@ import GovExam from "@/models/GovExam";
 import TypingExam from "@/models/TypingExam";
 import Link from "next/link";
 import { ChevronRight, Award } from "lucide-react";
-import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +71,7 @@ export default async function TypingExamsPage({ searchParams: searchParamsPromis
                   {/* Mega Logo */}
                   <div className="w-28 h-28 sm:w-32 sm:h-32 mb-6 rounded-3xl bg-white border-2 border-slate-100 shadow-md flex items-center justify-center p-4 group-hover:shadow-xl group-hover:border-indigo-100 transition-all duration-300 group-hover:scale-105">
                     {exam.logo ? (
-                      <Image src={exam.logo} alt={exam.title} width={96} height={96} className="object-contain w-full h-full drop-shadow-sm" />
+                      <img src={exam.logo} alt={exam.title} className="object-contain w-full h-full drop-shadow-sm" />
                     ) : (
                       <Award className="w-14 h-14 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
                     )}

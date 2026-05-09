@@ -4,7 +4,6 @@ import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, Zap, Maximize2, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 
 interface GalleryImage {
@@ -80,12 +79,10 @@ export default function GallerySection({ images = [], data }: { images?: Gallery
                             )}
                         >
                             {image.url ? (
-                                <Image 
+                                <img 
                                     src={image.url} 
                                     alt={image.title} 
-                                    fill
-                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                                 />
                             ) : (
                                 <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-300">
@@ -147,12 +144,10 @@ export default function GallerySection({ images = [], data }: { images?: Gallery
 
                             <div className="flex-1 relative aspect-video rounded-[3rem] overflow-hidden bg-slate-900 shadow-2xl border border-white/10">
                                 {selectedImg.url ? (
-                                    <Image 
+                                    <img 
                                         src={selectedImg.url} 
                                         alt={selectedImg.title} 
-                                        fill
-                                        sizes="100vw"
-                                        className="object-contain" 
+                                        className="w-full h-full object-contain" 
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-slate-700">
