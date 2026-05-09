@@ -11,8 +11,8 @@ type UploadResult = {
 };
 
 // Configuration
-// Configuration - Store in root directory as expected by the /api/uploads route
-const UPLOAD_BASE = process.cwd();
+// Configuration - Store in public directory so Next.js can serve them directly
+const UPLOAD_BASE = path.join(process.cwd(), "public");
 const UPLOAD_REL_PATH = path.join("uploads", "gallery");
 const UPLOAD_DIR = path.join(UPLOAD_BASE, UPLOAD_REL_PATH);
 
@@ -57,23 +57,31 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
  */
 const ensureUploadDir = async () => {
     try {
-        const folders = ["uploads", "gallery"];
-        let currentPath = UPLOAD_BASE;
+        const folders = ["public", "uploads", "gallery"];
+        let currentPath = process.cwd();
 
         for (const folder of folders) {
             currentPath = path.join(currentPath, folder);
-            await mkdir(currentPath, { recursive: true });
             
-            // Set directory permissions to 755 (drwxr-xr-x) for web access
             try {
-                const { chmod } = await import("fs/promises");
-                await chmod(currentPath, 0o755);
-            } catch (e) {
-                // Ignore chmod errors on Windows
+                await mkdir(currentPath, { recursive: true });
+                // Set directory permissions to 755 (drwxr-xr-x) for web access
+                try {
+                    const { chmod } = await import("fs/promises");
+                    await chmod(currentPath, 0o755);
+                } catch (e) {
+                    // Windows or permission issue
+                }
+            } catch (err: any) {
+                if (err.code !== 'EEXIST') {
+                    console.error(`Failed to create directory ${currentPath}:`, err);
+                    throw err;
+                }
             }
         }
     } catch (error) {
-        console.error("Error creating upload directory:", error);
+        console.error("Error in ensureUploadDir:", error);
+        throw error;
     }
 };
 
