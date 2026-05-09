@@ -11,8 +11,8 @@ type UploadResult = {
 };
 
 // Configuration
-// Configuration - Store in public directory so Next.js can serve them directly
-const UPLOAD_BASE = path.join(process.cwd(), "public");
+// Configuration - Store in root directory as expected by the /api/uploads route
+const UPLOAD_BASE = process.cwd();
 const UPLOAD_REL_PATH = path.join("uploads", "gallery");
 const UPLOAD_DIR = path.join(UPLOAD_BASE, UPLOAD_REL_PATH);
 

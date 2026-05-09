@@ -24,6 +24,8 @@ export async function GET(
             ".jpeg": "image/jpeg",
             ".webp": "image/webp",
             ".gif": "image/gif",
+            ".svg": "image/svg+xml",
+            ".bmp": "image/bmp",
         };
 
         return new NextResponse(fileBuffer, {
