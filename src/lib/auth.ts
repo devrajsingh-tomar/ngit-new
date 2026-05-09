@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
                 await connectDB();
                 // Fetch only the fields needed for authentication
                 const user = await User.findOne({ email: credentials.email })
-                    .select("name email password role isActive");
+                    .select("name email password role isActive image");
 
                 if (!user || !user.password) {
                     throw new Error("Invalid Credentials");
@@ -41,6 +41,7 @@ export const authOptions: NextAuthOptions = {
                     email: user.email,
                     name: user.name,
                     role: user.role,
+                    image: user.image,
                 };
             },
         }),
@@ -51,9 +52,11 @@ export const authOptions: NextAuthOptions = {
                 token.id = user.id;
                 token.role = (user as any).role;
                 token.name = user.name;
+                token.image = (user as any).image;
             }
-            if (trigger === "update" && session?.name) {
-                token.name = session.name;
+            if (trigger === "update") {
+                if (session?.name) token.name = session.name;
+                if (session?.image) token.image = session.image;
             }
             return token;
         },
@@ -62,6 +65,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id as string;
                 session.user.role = token.role as UserRole;
                 session.user.name = token.name as string;
+                session.user.image = token.image as string;
             }
             return session;
         },

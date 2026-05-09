@@ -126,7 +126,7 @@ export function ImageUpload({
                             </div>
                             <div className="text-center px-4">
                                 <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{label}</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">PNG, JPG up to 5MB</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">PNG, JPG, WEBP, GIF, SVG up to 10MB</p>
                             </div>
                         </>
                     )}
