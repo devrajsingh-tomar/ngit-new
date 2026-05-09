@@ -15,11 +15,13 @@ import {
     BookOpen,
     HelpCircle,
     BarChart3,
-    Calendar
+    Calendar,
+    User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
 import { getDetailedResult } from "@/app/actions/mockTestResults";
 import { sanitizeHtml } from "@/lib/sanitizer";
@@ -81,8 +83,23 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                         <Calendar className="w-4 h-4" /> Attempted on {new Date(data.result.attemptDate).toLocaleDateString(undefined, { dateStyle: 'long' })}
                     </p>
                 </div>
-                <div className="flex items-center gap-4">
-                     <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-2xl shadow-slate-200">
+                <div className="flex items-center gap-6">
+                    {/* Candidate Info Card */}
+                    <div className="hidden lg:flex items-center gap-4 bg-white p-3 pr-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden relative shadow-inner">
+                            {data.result.studentId?.image ? (
+                                <Image src={data.result.studentId.image} alt="Candidate" fill className="object-cover" />
+                            ) : (
+                                <User className="w-6 h-6 text-slate-300" />
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Candidate</p>
+                            <p className="text-base font-black text-slate-900 leading-none">{data.result.studentId?.name || "Student"}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-2xl shadow-slate-200">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
                                 <Trophy className="w-6 h-6 text-white" />
@@ -92,7 +109,7 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                                 <p className="text-3xl font-black">#{data.result.rank || "--"}</p>
                             </div>
                         </div>
-                     </div>
+                    </div>
                 </div>
             </div>
 

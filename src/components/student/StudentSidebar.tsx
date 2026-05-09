@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
     Home, PlayCircle, BookOpen, Trophy, TrendingUp,
     ClipboardList, Award, UserCircle, CreditCard,
-    GraduationCap, X, Menu, Keyboard
+    GraduationCap, X, Menu, Keyboard, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -99,6 +99,30 @@ export default function StudentSidebar({ isOpen, onClose }: StudentSidebarProps)
                         );
                     })}
                 </nav>
+                
+                {/* Profile Section at Bottom */}
+                <div className="p-4 border-t border-white/5">
+                    <Link 
+                        href="/student/settings"
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 group"
+                        onClick={onClose}
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-white/10 overflow-hidden relative shrink-0">
+                            {session?.user?.image ? (
+                                <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-500 font-black text-sm">
+                                    {session?.user?.name?.[0] || "S"}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-black text-white truncate leading-none mb-1">{session?.user?.name || "Student"}</p>
+                            <p className="text-[10px] font-bold text-slate-500 truncate leading-none uppercase tracking-widest">View Profile</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    </Link>
+                </div>
 
             </aside>
         </>

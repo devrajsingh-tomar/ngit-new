@@ -10,7 +10,7 @@ import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 
 const UpdateUserSchema = z.object({
     name: z.string().min(2).max(100).optional(),
-    image: z.string().url().optional(),
+    image: z.string().optional(),
 });
 
 export const updateUserDetails = createSafeAction(

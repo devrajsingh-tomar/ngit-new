@@ -110,13 +110,6 @@ export default function StudentMaterialsPage() {
                                     </div>
 
                                     <div className="pt-2 flex flex-col xl:flex-row gap-3">
-                                        {m.type === "PDF" && (
-                                            <a href={m.url} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                                <Button className="w-full h-12 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
-                                                    Download PDF <Download className="ml-2 w-4 h-4" />
-                                                </Button>
-                                            </a>
-                                        )}
                                         <Button
                                             variant="outline"
                                             onClick={() => m.type === "PDF" ? openViewer(m) : window.open(m.url, "_blank")}

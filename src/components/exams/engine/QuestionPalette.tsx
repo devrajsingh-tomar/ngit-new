@@ -32,7 +32,7 @@ export default function QuestionPalette({
           onClick={onFinish}
           className="w-full h-10 md:h-12 rounded-xl bg-[#3B82F6] hover:bg-blue-600 text-white font-bold text-base md:text-lg shadow-sm"
         >
-            Exam Finished
+            Submit Exam
         </Button>
       </div>
 

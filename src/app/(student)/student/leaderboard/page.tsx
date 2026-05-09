@@ -119,8 +119,12 @@ export default function LeaderboardPage() {
                         {topThree[1] && (
                             <div className="order-2 md:order-1 flex flex-col items-center">
                                 <div className="relative mb-6">
-                                    <div className="w-24 h-24 rounded-[2rem] bg-slate-100 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden rotate-3">
-                                        <User className="w-12 h-12 text-slate-300" />
+                                    <div className="w-24 h-24 rounded-[2rem] bg-slate-100 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden rotate-3 relative">
+                                        {topThree[1].studentId?.image ? (
+                                            <Image src={topThree[1].studentId.image} alt="Profile" fill className="object-cover" />
+                                        ) : (
+                                            <User className="w-12 h-12 text-slate-300" />
+                                        )}
                                     </div>
                                     <div className="absolute -bottom-3 -right-3 w-10 h-10 bg-slate-200 rounded-xl border-4 border-white flex items-center justify-center text-slate-600 font-black">2</div>
                                 </div>
@@ -140,8 +144,12 @@ export default function LeaderboardPage() {
                                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce">
                                         <Crown className="w-12 h-12 text-amber-400 fill-amber-400" />
                                     </div>
-                                    <div className="w-32 h-32 rounded-[2.5rem] bg-amber-50 border-4 border-amber-200 shadow-2xl shadow-amber-200/50 flex items-center justify-center overflow-hidden -rotate-3 transition-transform hover:rotate-0 duration-500">
-                                        <User className="w-16 h-16 text-amber-200" />
+                                    <div className="w-32 h-32 rounded-[2.5rem] bg-amber-50 border-4 border-amber-200 shadow-2xl shadow-amber-200/50 flex items-center justify-center overflow-hidden -rotate-3 transition-transform hover:rotate-0 duration-500 relative">
+                                        {topThree[0].studentId?.image ? (
+                                            <Image src={topThree[0].studentId.image} alt="Profile" fill className="object-cover" />
+                                        ) : (
+                                            <User className="w-16 h-16 text-amber-200" />
+                                        )}
                                     </div>
                                     <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-amber-400 rounded-2xl border-4 border-white flex items-center justify-center text-white font-black shadow-lg">1</div>
                                 </div>
@@ -166,8 +174,12 @@ export default function LeaderboardPage() {
                         {topThree[2] && (
                             <div className="order-3 md:order-3 flex flex-col items-center">
                                 <div className="relative mb-6">
-                                    <div className="w-24 h-24 rounded-[2rem] bg-orange-50 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden -rotate-6">
-                                        <User className="w-12 h-12 text-orange-200" />
+                                    <div className="w-24 h-24 rounded-[2rem] bg-orange-50 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden -rotate-6 relative">
+                                        {topThree[2].studentId?.image ? (
+                                            <Image src={topThree[2].studentId.image} alt="Profile" fill className="object-cover" />
+                                        ) : (
+                                            <User className="w-12 h-12 text-orange-200" />
+                                        )}
                                     </div>
                                     <div className="absolute -bottom-3 -right-3 w-10 h-10 bg-orange-100 rounded-xl border-4 border-white flex items-center justify-center text-orange-600 font-black">3</div>
                                 </div>
@@ -222,8 +234,12 @@ export default function LeaderboardPage() {
                                                 </td>
                                                 <td className="px-8 py-6">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
-                                                            <User className="w-6 h-6 text-slate-300" />
+                                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden relative">
+                                                            {res.studentId?.image ? (
+                                                                <Image src={res.studentId.image} alt="Profile" fill className="object-cover" />
+                                                            ) : (
+                                                                <User className="w-6 h-6 text-slate-300" />
+                                                            )}
                                                         </div>
                                                         <div>
                                                             <p className="font-black text-slate-900 group-hover:text-primary transition-colors">{res.studentId?.name}</p>

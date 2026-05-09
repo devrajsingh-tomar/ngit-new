@@ -36,17 +36,38 @@ export const calculateMetrics = (
   let errors = 0;
   const totalCharacters = typedText.length;
 
-  // Word-by-word error detection
+  // Word-by-word error detection with skip-resilience
+  let passageIdx = 0;
   typedWords.forEach((word, idx) => {
-    if (idx < originalWords.length) {
-      if (word !== originalWords[idx]) {
+    if (passageIdx < originalWords.length) {
+      // Direct Match
+      if (word === originalWords[passageIdx]) {
+        passageIdx++;
+      } 
+      // Skip-Detection: If this word matches the NEXT word in the passage, 
+      // we assume the student skipped a word.
+      else if (passageIdx + 1 < originalWords.length && word === originalWords[passageIdx + 1]) {
+        errors++; // Count the skipped word as a full mistake
+        passageIdx += 2; // Jump ahead to stay synced
+      }
+      // Traditional Error
+      else {
         errors++;
+        passageIdx++;
       }
     } else {
-      // Extra words typed are also counted as errors
+      // Extra words typed
       errors++;
     }
   });
+
+  // NEW: Extra Space Penalty (Double spaces count as half mistake)
+  // Each instance of consecutive spaces (2 or more) adds a 0.5 penalty
+  const consecutiveSpaceMatches = typedText.match(/\s{2,}/g) || [];
+  const extraSpacesPenalty = consecutiveSpaceMatches.reduce((acc, match) => acc + (match.length - 1) * 0.5, 0);
+  errors += extraSpacesPenalty;
+
+
 
   // Gross WPM (Raw Speed): (Total Characters / 5) / Time
   const grossWpm = Math.round((totalCharacters / 5) / timeMinutes);

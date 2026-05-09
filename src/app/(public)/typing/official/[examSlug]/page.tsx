@@ -26,9 +26,7 @@ export default async function LanguageSelectionPage({ params: paramsPromise }: {
 
   const allLanguages = [
     { id: "English", name: "English Typing", icon: "⌨️", description: "Standard QWERTY layout practice" },
-    { id: "Hindi", name: "Hindi (Mangal)", icon: "अ", description: "Standard government Mangal layout" },
-    { id: "Unicode Hindi", name: "Unicode Hindi", icon: "U", description: "Standard Unicode-based practice" },
-    { id: "Krutidev Hindi", name: "Krutidev Hindi", icon: "K", description: "Krutidev 010 layout practice" }
+    { id: "Hindi", name: "Hindi (Mangal)", icon: "अ", description: "Standard government Mangal layout" }
   ];
 
   const languages = allLanguages.filter(lang => availableLanguages.includes(lang.id));

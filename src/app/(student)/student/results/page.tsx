@@ -195,8 +195,8 @@ export default function StudentResultsPage() {
                                 <div key={res._id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:shadow-2xl hover:border-primary/20 transition-all group flex flex-col lg:flex-row gap-10 items-center">
                                     <div className="flex-1 w-full lg:w-auto">
                                         <div className="flex items-center gap-3 mb-4">
-                                            <Badge className={`${isQualified ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-500"} border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest`}>
-                                                {isQualified ? "Qualified" : "Practice Record"}
+                                            <Badge className={`${isQualified ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"} border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest`}>
+                                                {isQualified ? "Qualified" : "Not Qualified"}
                                             </Badge>
                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                 <Calendar className="w-3.5 h-3.5" /> {new Date(res.createdAt).toLocaleDateString()}

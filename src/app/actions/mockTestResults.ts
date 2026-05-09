@@ -58,7 +58,7 @@ export async function publishMockTestResults(quizId: string, settings: any) {
         // But for now, we process all attempts for the quiz and filter them during result generation if needed
 
         const attempts = await Attempt.find(attemptQuery)
-            .populate("studentId", "name email profile")
+            .populate("studentId", "name email image")
             .sort({ totalScore: -1 })
             .lean();
 
@@ -213,6 +213,7 @@ export async function getDetailedResult(resultId: string) {
         if (!session?.user) throw new Error("Unauthorized");
 
         const result = await MockTestResult.findById(resultId)
+            .populate("studentId", "name image email")
             .populate("mockTestId")
             .populate("attemptId")
             .lean();
@@ -262,7 +263,7 @@ export async function getPublicMockTestResults(filters: any = {}) {
         // Add more filters if needed
 
         const results = await MockTestResult.find(query)
-            .populate("studentId", "name")
+            .populate("studentId", "name image")
             .populate("mockTestId", "title")
             .sort({ score: -1 })
             .lean();
@@ -345,7 +346,7 @@ export const getLeaderboard = createSafeAction(
         if (quizId) query.mockTestId = new mongoose.Types.ObjectId(quizId);
 
         const results = await MockTestResult.find(query)
-            .populate("studentId", "name profile email")
+            .populate("studentId", "name image email")
             .populate("mockTestId", "title")
             .sort({ score: -1, attemptDate: 1 })
             .lean();

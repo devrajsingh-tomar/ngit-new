@@ -125,7 +125,7 @@ function TypingPracticeContent() {
     <div className="min-h-screen bg-white">
       {isBook ? (
           <ClassicTypingEngineModule 
-            exam={content?.rawExamData} // Passed if available
+            exam={content} 
             passage={content?.content || ""} 
             config={engineConfig}
             onComplete={handleComplete}

@@ -114,7 +114,15 @@ export default function CreateMaterialPage() {
                         <Input
                             required
                             value={formData.url}
-                            onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                let newType = formData.type;
+                                if (val.includes("drive.google.com") && formData.type !== "PDF") {
+                                    newType = "PDF";
+                                    toast.info("Google Drive link detected. Automatically set to PDF mode.");
+                                }
+                                setFormData({ ...formData, url: val, type: newType });
+                            }}
                             placeholder="https://drive.google.com/..."
                             className="h-11 border-slate-200 focus:border-primary font-mono text-xs"
                         />

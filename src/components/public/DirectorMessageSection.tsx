@@ -48,7 +48,7 @@ export default function DirectorMessageSection({ data, director }: { data?: any,
                             {/* Decorative Badge */}
                             <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-white flex flex-col items-center justify-center text-slate-950 z-20 shadow-2xl border-4 border-slate-950/10 rotate-12 group-hover:rotate-0 transition-transform duration-700">
                                 <Sparkles className="w-8 h-8 text-primary mb-1 animate-pulse" />
-                                <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-none">Established<br/>2009</span>
+                                <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-none">Established<br/>{director.establishedYear || "2009"}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -74,13 +74,16 @@ export default function DirectorMessageSection({ data, director }: { data?: any,
                             <h3 className="text-xl md:text-2xl text-primary font-black uppercase font-serif tracking-widest leading-none">
                                 {director.position || "Head of Institution"}
                             </h3>
+                            {director.qualification && (
+                                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em]">{director.qualification}</p>
+                            )}
                         </div>
 
                         <div className="relative group max-w-xl">
                             <Quote className="w-32 h-32 text-primary opacity-5 absolute -top-16 -left-12 group-hover:scale-110 transition-transform duration-1000" />
                             <div className="relative pt-6">
                                 <p className="text-2xl md:text-3xl text-slate-300 font-medium leading-relaxed italic relative z-10 tracking-tight">
-                                    "{director.bio || "In an era of rapid digital evolution, we don't just teach technology; we architect the next generation of industrial leaders with a paradigm of excellence."}"
+                                    "{director.message || director.bio || "In an era of rapid digital evolution, we don't just teach technology; we architect the next generation of industrial leaders with a paradigm of excellence."}"
                                 </p>
                                 
                                 <div className="mt-12 flex items-center gap-6">

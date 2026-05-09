@@ -5,7 +5,8 @@ import WordSet, { IWordSet } from "@/models/WordSet";
 import PracticeEssay, { IPracticeEssay } from "@/models/PracticeEssay";
 import CurrentPassage, { ICurrentPassage } from "@/models/CurrentPassage";
 import TypingPassage from "@/models/TypingPassage";
-import "@/models/TypingBook";
+import TypingBook from "@/models/TypingBook";
+import "@/models/TypingBook"; // Side-effect to ensure model is registered
 
 export async function GET(req: Request) {
   try {
@@ -19,9 +20,24 @@ export async function GET(req: Request) {
     await connectDB();
 
     if (type === 'BOOK' && bookId) {
-        const query: any = { bookId };
-        if (lang) query.language = lang;
+        // Ensure bookId is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(bookId)) {
+            return NextResponse.json({ error: "Invalid Book ID" }, { status: 400 });
+        }
+        
+        const query: any = { bookId: new mongoose.Types.ObjectId(bookId) };
+        if (lang) {
+            if (lang === 'Hindi') {
+                query.language = { $in: ['Hindi', 'Unicode Hindi', 'Krutidev Hindi'] };
+            } else {
+                query.language = lang;
+            }
+        }
+        
+        console.log(`Fetching chapters for book: ${bookId}, lang: ${lang}`);
         const passages = await TypingPassage.find(query).sort({ createdAt: 1 }).lean();
+        console.log(`Found ${passages.length} chapters`);
+        
         return NextResponse.json(passages);
     }
 
@@ -50,13 +66,28 @@ export async function GET(req: Request) {
     }
 
     if (type === 'TAXONOMY') {
-        const [words, essays, current, books] = await Promise.all([
+        const [words, essays, current, books, bookStats] = await Promise.all([
           WordSet.find().select('_id category value name language').lean(),
           PracticeEssay.find().select('_id topic title language').lean(),
           CurrentPassage.find().select('_id title language createdAt').sort({ createdAt: -1 }).lean(),
-          require("@/models/TypingBook").default.find().select('_id name').lean()
+          TypingBook.find().select('_id name').lean(),
+          // Aggregate languages for each book
+          TypingPassage.aggregate([
+            { $match: { section: 'Book', bookId: { $exists: true } } },
+            { $group: { _id: '$bookId', languages: { $addToSet: '$language' } } }
+          ])
         ]);
-        return NextResponse.json({ words, essays, current, books });
+
+        // Merge stats into books
+        const booksWithStats = books.map((b: any) => {
+            const stats = bookStats.find(s => s._id.toString() === b._id.toString());
+            return {
+                ...b,
+                languages: stats ? stats.languages : []
+            };
+        });
+
+        return NextResponse.json({ words, essays, current, books: booksWithStats });
     }
 
     if (type === 'WORD') {

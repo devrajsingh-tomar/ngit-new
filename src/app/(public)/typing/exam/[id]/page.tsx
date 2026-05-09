@@ -378,6 +378,7 @@ export default function TypingExamPage() {
           config={engineConfig}
           onComplete={handleComplete}
           userName={session?.user?.name || "STUDENT"}
+          userImage={session?.user?.image || undefined}
         />
       ) : (
         <ClassicTypingEngineModule 
@@ -386,6 +387,7 @@ export default function TypingExamPage() {
           config={engineConfig}
           onComplete={handleComplete}
           userName={session?.user?.name || "STUDENT"}
+          userImage={session?.user?.image || undefined}
         />
       )}
     </div>

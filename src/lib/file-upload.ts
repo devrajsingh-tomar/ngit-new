@@ -11,7 +11,8 @@ type UploadResult = {
 };
 
 // Configuration
-const UPLOAD_DIR = path.join(process.cwd(), "uploads/gallery");
+// Configuration - Store in public directory so Next.js can serve them directly
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "gallery");
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -39,10 +40,20 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
 
 const ensureUploadDir = async () => {
     try {
+        // Create the full path
         await mkdir(UPLOAD_DIR, { recursive: true });
-        // Ensure directory is searchable and readable on VPS
+        
+        // Ensure parent and child directories are searchable and readable on VPS
         const { chmod } = await import("fs/promises");
-        await chmod(UPLOAD_DIR, 0o755);
+        
+        // Try to set permissions for the 'uploads' and 'gallery' directories
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        try {
+            await chmod(uploadsDir, 0o755);
+            await chmod(UPLOAD_DIR, 0o755);
+        } catch (chmodErr) {
+            console.warn("Could not set directory permissions (may be on Windows):", chmodErr);
+        }
     } catch (error) {
         console.error("Error creating upload directory:", error);
     }

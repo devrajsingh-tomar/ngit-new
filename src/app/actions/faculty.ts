@@ -36,7 +36,9 @@ export async function deleteFaculty(id: string) {
 export async function getFaculty() {
     try {
         await connectDB();
-        const faculty = await Faculty.find().sort({ createdAt: -1 }).lean();
+        const faculty = await Faculty.find({
+            position: { $not: /Director|MD|Chairman|Managing Director|Principal/i }
+        }).sort({ createdAt: -1 }).lean();
         return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
     } catch (error) {
         console.error("Failed to load faculty", error);

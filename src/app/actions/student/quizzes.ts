@@ -137,6 +137,7 @@ export const submitQuiz = createSafeAction(
             securityLogs: { tabSwitchCount: 0, violations: [] }
         });
 
+        const answersToCreate = [];
         for (const question of (quiz.questions as any[])) {
             if (!question) continue;
             const userAnswer = answers[question._id?.toString()];
@@ -157,23 +158,15 @@ export const submitQuiz = createSafeAction(
                 } else if (question.type === "NUMERIC") {
                     isCorrect = parseFloat(userAnswer) === question.numericAnswer;
                 } else if (question.type === "TRUE_FALSE") {
-                    // Normalize boolean or string comparison
                     const correctOption = question.options.find((o: any) => o.isCorrect);
                     const isCorrectVal = correctOption?.text.en.toLowerCase() === "true";
                     isCorrect = String(userAnswer) === String(isCorrectVal);
                 } else if (question.type === "ASSERTION_REASON") {
                     isCorrect = parseInt(userAnswer) === question.numericAnswer;
                 } else if (question.type === "MATCH_THE_FOLLOWING") {
-                    // userAnswer is { [optionId]: matchId }
-                    // Each option in question has a 'pair' that it should match with
-                    // In our current MatchFollowing component, we match optionId to matchId
-                    // We need to verify if the pair of optionId matches the matchId's pair text or ID
-                    // Actually, the simplest way is to check if each selection in userAnswer is correct
                     const matches = Object.entries(userAnswer as Record<string, string>);
                     if (matches.length === question.options.length) {
-                        isCorrect = matches.every(([optId, matchId]) => {
-                            return optId === matchId; // Simplified: currently the UI matches IDs
-                        });
+                        isCorrect = matches.every(([optId, matchId]) => optId === matchId);
                     }
                 }
 
@@ -188,7 +181,7 @@ export const submitQuiz = createSafeAction(
                 }
             }
 
-            await Answer.create({
+            answersToCreate.push({
                 attemptId: attempt._id,
                 questionId: question._id,
                 selectedOptionIds: Array.isArray(userAnswer) ? userAnswer : (userAnswer ? [userAnswer] : []),
@@ -200,6 +193,11 @@ export const submitQuiz = createSafeAction(
                     marksAwarded
                 }
             });
+        }
+
+        // Bulk insert all answers at once for high performance
+        if (answersToCreate.length > 0) {
+            await Answer.insertMany(answersToCreate);
         }
 
         attempt.totalScore = score;

@@ -30,6 +30,7 @@ interface ClassicTypingEngineModuleProps {
   };
   onComplete: (results: any) => void;
   userName?: string;
+  userImage?: string;
   /** When true (default), shows the Duration & Exercise switcher bar.
    *  Set to false for practice sessions (Word/Special/Current) where
    *  the passage is already pre-selected from the selection screen. */
@@ -42,6 +43,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   config,
   onComplete,
   userName = "STUDENT",
+  userImage,
   showExerciseSwitcher = true
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [internalLayout, setInternalLayout] = useState(config.layout || 'English');
   const [currentExam, setCurrentExam] = useState(exam);
 
-  const isBookPractice = exam?.category === 'BOOK';
+  const isBookPractice = exam?.section === 'Book' || exam?.category === 'BOOK';
 
   // Load available exams/passages matching current criteria
   useEffect(() => {
@@ -185,8 +187,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   }, [currentExam, isActive, isFinished]);
 
   // Calculate current word based on spaces typed
-  const activeWordIndex = typedText === '' ? 0 : typedText.split(' ').length - 1;
-  const typedWordsArray = typedText.split(' ');
+  const typedWordsArray = typedText.split(/\s+/);
+  const activeWordIndex = typedText === '' ? 0 : typedWordsArray.length - 1;
 
   // Auto-scroll passage area and textarea
   useEffect(() => {
@@ -301,7 +303,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Remington Gail' || settings.language === 'Inscript' || settings.language === 'Phonetic' || settings.language === 'Krutidev Hindi';
   
   const typingFont = isHindi 
-    ? "'Mangal', 'Arial Unicode MS', sans-serif" 
+    ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
     : "'Times New Roman', Times, serif";
 
   const passageWords = internalPassage.split(' ');
@@ -354,8 +356,12 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             Time left:- <span className="text-lg">{formatTime(timeLeft)}</span>
           </div>
           <div className="flex flex-col items-center">
-             <div className="w-10 h-10 bg-gray-200 rounded border border-gray-400 overflow-hidden flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-500 mt-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+             <div className="w-10 h-10 bg-gray-200 rounded border border-gray-400 overflow-hidden flex items-center justify-center relative">
+                {userImage ? (
+                   <img src={userImage} alt="Candidate" className="w-full h-full object-cover" />
+                ) : (
+                   <svg className="w-8 h-8 text-gray-500 mt-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                )}
              </div>
              <span className="text-[10px] font-bold uppercase mt-1">{userName}</span>
           </div>
@@ -563,7 +569,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             onClick={() => endTest()}
             className="bg-[#337ab7] text-white px-10 py-2 rounded text-sm font-bold hover:bg-[#286090] transition-colors"
           >
-            Submit
+            Submit Exam
           </button>
           
           <button 

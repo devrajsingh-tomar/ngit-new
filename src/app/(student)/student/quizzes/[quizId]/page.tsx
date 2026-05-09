@@ -6,6 +6,7 @@ import { getQuiz, submitQuiz } from "@/app/actions/student/quizzes";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 
 import ExamLayout from "@/components/exams/engine/ExamLayout";
 import QuestionRenderer from "@/components/exams/engine/QuestionRenderer";
@@ -14,6 +15,7 @@ import { ExamState } from "@/components/exams/engine/types";
 export default function StudentQuizLivePage({ params }: { params: Promise<{ quizId: string }> }) {
     const { quizId } = use(params);
     const router = useRouter();
+    const { data: session } = useSession();
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [quiz, setQuiz] = useState<any>(null);
@@ -228,7 +230,11 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         <div ref={containerRef} className="select-none h-full w-full fixed inset-0 overflow-hidden bg-white">
             <ExamLayout
                 exam={quiz}
-                user={{ name: "Student", loginId: "A13DE8BF" }}
+                user={{ 
+                    name: session?.user?.name || "Student", 
+                    loginId: session?.user?.id?.substring(0, 8).toUpperCase() || "A13DE8BF",
+                    image: session?.user?.image
+                }}
                 currentQuestionIndex={state.currentQuestionIndex}
                 totalQuestions={quiz.questions.length}
                 timeLeft={state.timer}

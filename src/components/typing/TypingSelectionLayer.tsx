@@ -115,11 +115,19 @@ export default function TypingSelectionLayer() {
   ];
 
   // Compute dynamic categories
-  const dynamicBookCategories = taxonomy.books.map(b => ({
-    id: b._id,
-    title: b.name,
-    description: `Practice chapters from ${b.name}.`
-  }));
+  const dynamicBookCategories = taxonomy.books
+    .filter(b => {
+      if (!b.languages || b.languages.length === 0) return true; // Show if no data
+      if (selectedLanguage === 'Hindi') {
+        return b.languages.some((l: string) => l.includes('Hindi'));
+      }
+      return b.languages.includes(selectedLanguage);
+    })
+    .map(b => ({
+      id: b._id,
+      title: b.name,
+      description: `Practice chapters from ${b.name}.`
+    }));
   const dynamicWordCategories = Array.from(new Set(taxonomy.words.filter(w => w.language === selectedLanguage).map(w => w.category))).map(cat => ({
     id: cat,
     title: cat === 'A-Z' ? 'A to Z Words' : cat === 'Length' ? 'Word Length' : String(cat),
@@ -182,7 +190,8 @@ export default function TypingSelectionLayer() {
       <Card 
         onClick={() => {
             setSelectedLanguage('Hindi');
-            setStep(0.5);
+            setSelectedLayout('Remington Gail');
+            setStep(1);
         }}
         className="p-10 rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all text-center border-slate-100 group"
       >
@@ -205,9 +214,7 @@ export default function TypingSelectionLayer() {
         </button>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' },
-            { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard' },
-            { id: 'Phonetic', name: 'Mangal Phonetic', sub: 'Transliteration' }
+            { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' }
           ].map((layout) => (
             <Card 
               key={layout.id}
@@ -230,10 +237,10 @@ export default function TypingSelectionLayer() {
   const renderStep1 = () => (
     <div className="space-y-8">
       <button 
-          onClick={() => setStep(selectedLanguage === 'Hindi' ? 0.5 : 0)}
+          onClick={() => setStep(0)}
           className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
         >
-          <ArrowLeft className="w-4 h-4" /> Change Language/Layout
+          <ArrowLeft className="w-4 h-4" /> Change Language Selection
       </button>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {modules.map((m) => (
@@ -338,6 +345,23 @@ export default function TypingSelectionLayer() {
               </div>
             </Card>
           ))}
+          {categories.length === 0 && (
+            <div className="col-span-full py-16 text-center space-y-6 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+              <div className="space-y-2">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
+                  No {selectedLanguage} {selectedModule?.toLowerCase()} content available yet.
+                </p>
+                <p className="text-slate-500 text-sm font-medium">The content you are looking for might be in a different language.</p>
+              </div>
+              <Button 
+                onClick={() => setStep(0)} 
+                variant="outline"
+                className="rounded-xl border-2 border-slate-100 hover:border-primary hover:text-primary font-bold"
+              >
+                Change Language Selection
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -464,8 +488,22 @@ export default function TypingSelectionLayer() {
                  </button>
              ))}
              {options.length === 0 && (
-                 <div className="col-span-full py-16 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-slate-200 rounded-[2.5rem]">
-                     {loadingContent ? 'Fetching relevant content...' : 'No practice content found for this selection.'}
+                 <div className="col-span-full py-20 text-center space-y-6 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+                     <div className="space-y-2">
+                         <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
+                             {loadingContent ? 'Fetching relevant content...' : `No ${selectedLanguage} content found for this selection.`}
+                         </p>
+                         {!loadingContent && <p className="text-slate-500 text-sm font-medium">This book or category might only have content in another language.</p>}
+                     </div>
+                     {!loadingContent && (
+                        <Button 
+                            onClick={() => setStep(0)} 
+                            variant="outline"
+                            className="rounded-xl border-2 border-slate-100 hover:border-primary hover:text-primary font-bold"
+                        >
+                            Change Language Selection
+                        </Button>
+                     )}
                  </div>
              )}
           </div>

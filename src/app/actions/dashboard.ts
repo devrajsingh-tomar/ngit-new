@@ -143,6 +143,7 @@ export async function getStudentDashboardData() {
             typingResults: JSON.parse(JSON.stringify(typingResults)),
             typingExams: JSON.parse(JSON.stringify(typingExams)),
             userName: session.user.name,
+            userImage: session.user.image,
             userId: session.user.id,
             progressTrend: [65, 72, 68, 85, 90, 88, 92] // Placeholder for chart until more data exists
         };

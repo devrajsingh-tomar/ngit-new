@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
         });
 
         // 5. Return Success Response
-        // Construct full URL if needed (optional, relative is usually better for portability)
-        const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}${result.url}`;
+        // Using relative URL is more portable and avoids issues with hardcoded localhost URLs
+        const relativeUrl = result.url;
 
         return NextResponse.json({
             success: true,
-            url: fullUrl,
+            url: relativeUrl,
             mediaId: newMedia._id
         }, { status: 201 });
 

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle, Award } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -196,6 +196,7 @@ export default function AdminTypingDashboard() {
     const fd = new FormData(e.currentTarget);
     const data: any = Object.fromEntries(fd.entries());
     data.active = fd.get('active') === 'on';
+    data.logo = modalLogo; // Ensure the uploaded logo URL is used
 
     if (editingGovExam) {
       await fetch(`/api/admin/typing/gov-exams/${editingGovExam._id}`, {
@@ -518,6 +519,7 @@ export default function AdminTypingDashboard() {
                      <table className="w-full text-left border-collapse text-sm">
                        <thead>
                          <tr className="bg-slate-50 border-b border-slate-200">
+                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase text-center w-16">Logo</th>
                            <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Exam Title</th>
                            <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Slug</th>
                            <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Status</th>
@@ -527,7 +529,17 @@ export default function AdminTypingDashboard() {
                        <tbody>
                          {govExams.map(exam => (
                            <tr key={exam._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                             <td className="px-6 py-4 font-semibold text-slate-900">{exam.title}</td>
+                                                           <td className="px-6 py-4">
+                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                                  {exam.logo ? (
+                                    <img src={exam.logo} alt="" className="w-full h-full object-contain p-1" />
+                                  ) : (
+                                    <Award className="w-5 h-5 text-slate-300" />
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 font-semibold text-slate-900">{exam.title}</td>
+
                              <td className="px-6 py-4 text-slate-600 font-medium">{exam.slug}</td>
                              <td className="px-6 py-4">
                                 <span className={cn("px-2.5 py-1 rounded-md text-[11px] font-bold flex w-max items-center gap-1", exam.active ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700')}>
@@ -1005,7 +1017,6 @@ export default function AdminTypingDashboard() {
                      <select name="language" defaultValue={editingPassage?.language || "English"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="English">English</option>
                         <option value="Hindi">Hindi (Mangal)</option>
-                        <option value="Krutidev Hindi">Hindi (Krutidev)</option>
                      </select>
                    </div>
                    <div className="space-y-1.5">
@@ -1128,7 +1139,6 @@ export default function AdminTypingDashboard() {
                      <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="English">English</option>
                         <option value="Hindi">Hindi (Mangal)</option>
-                        <option value="Krutidev Hindi">Hindi (Krutidev)</option>
                      </select>
                    </div>
                 </div>

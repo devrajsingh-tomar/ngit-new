@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { User, Lock, Bell, LogOut, Loader2, Save } from "lucide-react";
+import { User, Lock, Bell, LogOut, Loader2, Save, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { signOut, useSession } from "next-auth/react";
 import { updateUserDetails, updateUserPassword } from "@/app/actions/user";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
     Dialog,
     DialogContent,
@@ -22,6 +23,7 @@ export default function StudentSettingsPage() {
     const { data: session, update } = useSession();
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState(session?.user?.name || "");
+    const [image, setImage] = useState(session?.user?.image || "");
     const [notifications, setNotifications] = useState(true);
     const [isPassOpen, setIsPassOpen] = useState(false);
     const [passData, setPassData] = useState({ current: "", new: "", confirm: "" });
@@ -29,14 +31,15 @@ export default function StudentSettingsPage() {
 
     useEffect(() => {
         if (session?.user?.name) setName(session.user.name);
+        if (session?.user?.image) setImage(session.user.image);
     }, [session]);
 
     const handleSave = async () => {
         if (!name) return toast.error("Name cannot be empty");
         setLoading(true);
-        const res = await updateUserDetails({ name });
+        const res = await updateUserDetails({ name, image });
         if (res.success) {
-            await update({ name });
+            await update({ name, image });
             toast.success("Settings updated successfully!");
         } else {
             toast.error(res.error || "Failed to update settings");
@@ -71,7 +74,7 @@ export default function StudentSettingsPage() {
             <div className="space-y-6">
                 {/* Profile Section */}
                 <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-4 mb-8">
+                    <div className="flex items-center gap-4 mb-10">
                         <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                             <User className="w-6 h-6" />
                         </div>
@@ -81,25 +84,51 @@ export default function StudentSettingsPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full h-12 px-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all outline-none font-bold text-slate-900"
-                                placeholder="Enter your name"
+                    <div className="flex flex-col md:flex-row gap-10">
+                        {/* Image Upload Area */}
+                        <div className="flex flex-col items-center gap-4 shrink-0">
+                            <div className="relative group">
+                                <div className="w-32 h-32 rounded-[2rem] bg-slate-100 border-4 border-white shadow-xl overflow-hidden">
+                                    {image ? (
+                                        <img src={image} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                                            <User className="w-12 h-12 text-slate-200" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="absolute inset-0 bg-black/40 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <Camera className="w-6 h-6 text-white" />
+                                </div>
+                            </div>
+                            <ImageUpload 
+                                value={image} 
+                                onChange={(url) => setImage(url)}
+                                label="Upload Photo"
+                                className="w-40"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
-                            <input
-                                type="email"
-                                defaultValue={session?.user?.email || ""}
-                                disabled
-                                className="w-full h-12 px-4 rounded-xl bg-slate-100 border-2 border-transparent text-slate-400 font-medium cursor-not-allowed"
-                            />
+
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-1 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full h-14 px-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all outline-none font-bold text-slate-900"
+                                    placeholder="Enter your name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
+                                <input
+                                    type="email"
+                                    defaultValue={session?.user?.email || ""}
+                                    disabled
+                                    className="w-full h-14 px-5 rounded-2xl bg-slate-100 border-2 border-transparent text-slate-400 font-medium cursor-not-allowed"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -220,3 +249,4 @@ export default function StudentSettingsPage() {
         </div>
     );
 }
+

@@ -31,6 +31,7 @@ interface ModernTypingEngineModuleProps {
   };
   onComplete: (results: any) => void;
   userName?: string;
+  userImage?: string;
   showExerciseSwitcher?: boolean;
 }
 
@@ -40,6 +41,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   config,
   onComplete,
   userName = "STUDENT",
+  userImage,
   showExerciseSwitcher = true
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -133,8 +135,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [exam, isActive, isFinished]);
 
-  const activeWordIndex = typedText === '' ? 0 : typedText.split(' ').length - 1;
-  const typedWordsArray = typedText.split(' ');
+  const typedWordsArray = typedText.split(/\s+/);
+  const activeWordIndex = typedText === '' ? 0 : (typedText.endsWith(' ') ? typedWordsArray.length - 1 : typedWordsArray.length - 1);
 
   useEffect(() => {
     if (settings.autoScroll && passageContainerRef.current) {
@@ -234,14 +236,50 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
 
   const passageWords = internalPassage.split(' ');
 
+  const [instituteLogo, setInstituteLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    import('@/app/actions/layoutContent').then(({ getHeaderFooterData }) => {
+      getHeaderFooterData().then(res => {
+        if (res.success && res.header.logoImage) {
+          setInstituteLogo(res.header.logoImage);
+        }
+      });
+    });
+  }, []);
+
   return (
     <div ref={containerRef} className="flex flex-col bg-white font-sans h-screen overflow-hidden">
       
       {/* Header - Fixed Height to prevent shaking */}
       <div className="h-16 md:h-20 bg-[#007bff] text-white px-6 flex justify-between items-center shadow-md z-20 shrink-0">
           <div className="flex items-center gap-4">
-            <h2 className="font-black text-lg uppercase tracking-tighter">{config.title}</h2>
-            <div className="h-6 w-px bg-white/20" />
+            <div className="flex items-center gap-3">
+              {/* Institute Logo */}
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl overflow-hidden relative p-1">
+                {instituteLogo ? (
+                  <img src={instituteLogo} alt="Logo" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                    <span className="text-[10px] text-slate-400">LOGO</span>
+                  </div>
+                )}
+              </div>
+              {/* Exam Logo */}
+              {exam?.logo && (
+                <div className="flex items-center gap-3">
+                  <div className="w-px h-8 bg-white/20" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl overflow-hidden relative p-1">
+                    <img src={exam.logo} alt="Exam Logo" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="ml-2">
+              <h2 className="font-black text-sm md:text-lg uppercase tracking-tighter leading-none">{config.title}</h2>
+              <p className="text-[10px] font-medium opacity-60 mt-1 uppercase tracking-widest hidden md:block">NGIT Examination Portal</p>
+            </div>
+            <div className="h-6 w-px bg-white/20 mx-2" />
             <div className="flex items-center gap-2">
                <button onClick={() => setFontSize(f => Math.max(12, f - 2))} className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold">-</button>
                <span className="text-xs font-bold w-6 text-center">{fontSize}</span>
@@ -254,8 +292,12 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                <span className="text-xs font-bold">{settings.layout}</span>
             </div>
             <div className="flex items-center gap-3">
-               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  <Keyboard className="w-5 h-5 text-white" />
+               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden relative border border-white/20 shadow-inner">
+                  {userImage ? (
+                      <img src={userImage} alt="Candidate" className="w-full h-full object-cover" />
+                   ) : (
+                      <Keyboard className="w-5 h-5 text-white" />
+                   )}
                </div>
                <div className="text-right">
                   <p className="text-[8px] font-black opacity-60 uppercase leading-none mb-1">Student</p>
@@ -299,7 +341,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
               fontSize: `${fontSize}px`,
               scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
               fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi') 
-                ? "'Mangal', 'Arial Unicode MS', sans-serif" 
+                ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
                 : "inherit"
             }}
             onCopy={(e) => config.disableCopyPaste !== false && e.preventDefault()}
@@ -390,7 +432,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                   backgroundColor: bgColor,
                   scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
                   fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi') 
-                    ? "'Mangal', 'Arial Unicode MS', sans-serif" 
+                    ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
                     : "inherit"
                 }}
             />
@@ -421,7 +463,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                 onClick={() => endTest()}
                 className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center gap-3"
             >
-                Submit Performance
+                Submit Exam
                 <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                    &check;
                 </div>

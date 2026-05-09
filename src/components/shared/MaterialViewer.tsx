@@ -24,21 +24,38 @@ interface MaterialViewerProps {
 export default function MaterialViewer({ isOpen, onClose, title, url }: MaterialViewerProps) {
     const [fullScreen, setFullScreen] = useState(false);
 
+    // Sanitize URL for Google Drive
+    const getEmbedUrl = (rawUrl: string) => {
+        if (!rawUrl) return "";
+        if (rawUrl.includes("drive.google.com")) {
+            // Convert /view or /edit to /preview for embedding
+            return rawUrl.replace(/\/view(\?.*)?$/, "/preview").replace(/\/edit(\?.*)?$/, "/preview");
+        }
+        return rawUrl;
+    };
+
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "auto";
+            // Prevent right-click on the entire document when viewer is open
+            const preventDefault = (e: MouseEvent) => e.preventDefault();
+            document.addEventListener("contextmenu", preventDefault);
+            return () => {
+                document.body.style.overflow = "auto";
+                document.removeEventListener("contextmenu", preventDefault);
+            };
         }
-        return () => {
-            document.body.style.overflow = "auto";
-        };
     }, [isOpen]);
 
     if (!isOpen) return null;
 
+    const embedUrl = getEmbedUrl(url);
+
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+        <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 select-none"
+            onContextMenu={(e) => e.preventDefault()}
+        >
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
@@ -57,8 +74,8 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                             <Maximize2 className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-slate-900 leading-tight">{title}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">PDF Document • 4.2 MB</p>
+                            <h2 className="font-bold text-slate-900 leading-tight line-clamp-1">{title}</h2>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure PDF Document</p>
                         </div>
                     </div>
 
@@ -71,7 +88,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                     <div className="flex items-center gap-3">
                         <div className="hidden sm:flex items-center gap-2">
                             <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 text-slate-400 hover:text-primary"><Share2 className="w-5 h-5" /></Button>
-                            <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 text-slate-400 hover:text-primary"><Download className="w-5 h-5" /></Button>
+                            {/* Download button removed as per security request */}
                         </div>
                         <div className="w-px h-8 bg-slate-200 mx-2" />
                         <Button
@@ -88,22 +105,30 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                 {/* Content Area */}
                 <main className="flex-1 bg-slate-100 flex items-center justify-center overflow-auto relative">
                     <iframe
-                        src={`${url}#toolbar=0`}
+                        src={`${embedUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                         className="w-full h-full border-none"
                         title={title}
+                        onLoad={(e) => {
+                            // Basic attempts to obscure iframe content from standard print/save
+                        }}
                     />
+
+                    {/* Watermark Overlay to discourage screenshots */}
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg]">
+                        <p className="text-9xl font-black text-slate-900 select-none uppercase">Confidential • NGIT</p>
+                    </div>
 
                     {/* Floating Controls Overlay */}
                     <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-900/90 backdrop-blur-xl p-3 rounded-2xl shadow-2xl border border-white/10 opacity-0 hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-xl"><ChevronLeft className="w-5 h-5" /></Button>
-                        <span className="text-white text-sm font-bold px-4 border-l border-r border-white/10 uppercase tracking-widest">Page 1 of 12</span>
+                        <span className="text-white text-sm font-bold px-4 border-l border-r border-white/10 uppercase tracking-widest">Protected View</span>
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-xl"><ChevronRight className="w-5 h-5" /></Button>
                     </div>
                 </main>
 
                 {/* Footer / Meta */}
                 <footer className="h-10 bg-white border-t px-8 flex items-center justify-center shrink-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Protected Content • National Genius Institute of Technology</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Protected Content • Download and Screenshot prohibited</p>
                 </footer>
             </div>
         </div>

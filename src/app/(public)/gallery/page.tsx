@@ -31,9 +31,11 @@ export default async function PublicGalleryPage() {
     ]);
     
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
-    const galleryImages = galleryRes.success 
-        ? galleryRes.images.filter((img: any) => img.category !== "Banners") 
-        : [];
+    const ALLOWED_GALLERY_CATEGORIES = ["Campus", "Events", "Students", "Faculty"];
+    const galleryImages = (galleryRes.success ? galleryRes.images : [])
+        .filter((img: any) => 
+            img.category && ALLOWED_GALLERY_CATEGORIES.some(cat => cat.toLowerCase() === img.category.toLowerCase())
+        );
 
     return (
         <div className="min-h-screen">

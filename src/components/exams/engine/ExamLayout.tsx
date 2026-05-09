@@ -51,6 +51,7 @@ export default function ExamLayout({
         totalTime={exam?.settings?.timeLimit || 90}
         currentMark={exam?.questions?.[currentQuestionIndex]?.marks || 1}
         logo={exam?.logo}
+        userImage={user?.image || user?.profileImage}
       />
 
       <main className="flex-1 flex w-full border-x-0 md:border-x-2 border-b-2 border-slate-400 mx-auto max-w-[1400px] overflow-hidden relative">

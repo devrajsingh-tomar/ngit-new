@@ -42,7 +42,7 @@ export default async function PublicHomePage() {
     } catch (e) {
         console.warn("Home page session fetch suppressed:", e);
     }
-    const [slidesRes, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes, feedbackRes] = await Promise.all([
+    const [slidesRes, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes, feedbackRes, directorInfo] = await Promise.all([
         getHeroSlides(),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
@@ -56,13 +56,17 @@ export default async function PublicHomePage() {
         getPublicExams(),
         listBlogPosts({ status: "PUBLISHED", limit: 3, page: 1 }),
         getPublicFeedback({ limit: 6 }),
+        getCMSContent("DIRECTOR_INFO"),
     ]);
 
     const heroSlides = slidesRes.success ? slidesRes.slides : [];
     const facultyMembers = (facultyRes.success ? facultyRes.faculty : []).slice(0, 6);
     const publicCourses = (coursesRes.success ? coursesRes.courses : []).slice(0, 6);
     const publicEvents = (eventsRes.success ? eventsRes.events : []).slice(0, 6);
-    const galleryImages = (galleryRes.success ? galleryRes.images : []).slice(0, 6);
+    const ALLOWED_GALLERY_CATEGORIES = ["Campus", "Events", "Students", "Faculty"];
+    const galleryImages = (galleryRes.success ? galleryRes.images : [])
+        .filter((img: any) => img.category && ALLOWED_GALLERY_CATEGORIES.some(cat => cat.toLowerCase() === img.category.toLowerCase()))
+        .slice(0, 6);
     const publicResultsGrouped = resultsRes.success ? (resultsRes as any).sections : {};
     const firstSectionResults = (Object.values(publicResultsGrouped)[0] as any[] || []).slice(0, 6);
     const publicExams = ((examsRes as any)?.success ? (examsRes as any).exams : []).slice(0, 6);
@@ -95,6 +99,7 @@ export default async function PublicHomePage() {
                     feedback: publicFeedback,
                     notices: noticesRes.success ? noticesRes.notices : [],
                     heroSlides: heroSlides,
+                    director: directorInfo,
                     session: session
                 }}
                 session={session}
@@ -125,11 +130,7 @@ export default async function PublicHomePage() {
 
                         {/* Director's Message Section Component */}
                         <DirectorMessageSection 
-                            director={facultyMembers.find((f: any) => 
-                                f.position?.toLowerCase().includes("director") || 
-                                f.position?.toLowerCase().includes("md") ||
-                                f.name?.toLowerCase().includes("javed")
-                            ) || facultyMembers[0]} 
+                            director={directorInfo} 
                             data={{ bg_color: "bg-slate-950 rounded-[4rem] mb-20 mx-4" }} 
                         />
 

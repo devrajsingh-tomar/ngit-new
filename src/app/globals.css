@@ -255,3 +255,13 @@ html {
   background-color: hsl(var(--primary) / 0.2);
   color: hsl(var(--primary-dark));
 }
+
+/* Security - Prevent Printing of Study Materials */
+@media print {
+  .fixed.inset-0.z-\[100\] {
+    display: none !important;
+  }
+  body {
+    display: none !important;
+  }
+}

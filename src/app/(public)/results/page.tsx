@@ -13,6 +13,7 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 export default function PublicResultsPage() {
     const [sections, setSections] = useState<Record<string, any[]>>({});
@@ -210,7 +211,11 @@ export default function PublicResultsPage() {
                                                         <TableCell className="py-8">
                                                             <div className="flex items-center gap-5">
                                                                 <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-lg overflow-hidden relative shadow-lg">
-                                                                    {r.studentId?.photoUrl ? <img src={r.studentId.photoUrl} className="w-full h-full object-cover" /> : r.studentId?.name?.[0]}
+                                                                    {r.studentId?.image ? (
+                                                                        <Image src={r.studentId.image} alt="Profile" fill className="object-cover" />
+                                                                    ) : (
+                                                                        <span>{r.studentId?.name?.[0]}</span>
+                                                                    )}
                                                                 </div>
                                                                 <div>
                                                                     <p className="font-black text-slate-900 text-lg uppercase tracking-tight">{r.studentId?.name}</p>

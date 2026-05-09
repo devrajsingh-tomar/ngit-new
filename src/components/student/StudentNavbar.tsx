@@ -104,7 +104,11 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                 <button className="flex items-center gap-3 hover:bg-white group p-1 pr-4 rounded-2xl transition-all border-2 border-transparent hover:border-slate-100 hover:shadow-xl hover:shadow-slate-200/50">
                                     <div className="w-10 h-10 rounded-xl bg-slate-900 shadow-lg flex items-center justify-center text-white font-black text-sm group-hover:scale-110 transition-transform overflow-hidden relative">
                                         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20" />
-                                        <span className="relative z-10">{session?.user?.name?.[0] || "S"}</span>
+                                        {session?.user?.image ? (
+                                            <img src={session.user.image} alt="Profile" className="w-full h-full object-cover relative z-10" />
+                                        ) : (
+                                            <span className="relative z-10">{session?.user?.name?.[0] || "S"}</span>
+                                        )}
                                     </div>
                                     <div className="text-left hidden lg:block">
                                         <p className="text-sm font-black text-slate-900 leading-none group-hover:text-primary transition-colors flex items-center gap-1.5">
@@ -121,8 +125,12 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                 <DropdownMenuLabel className="font-normal p-6 bg-slate-950 rounded-[2rem] mb-4 text-white relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-3xl" />
                                     <div className="flex items-center gap-4 relative z-10">
-                                        <div className="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center text-slate-900 font-black text-xl shrink-0 border-2 border-white/20">
-                                            {session?.user?.name?.[0]}
+                                        <div className="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center text-slate-900 font-black text-xl shrink-0 border-2 border-white/20 overflow-hidden">
+                                            {session?.user?.image ? (
+                                                <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                session?.user?.name?.[0]
+                                            )}
                                         </div>
                                         <div className="flex flex-col min-w-0">
                                             <p className="text-base font-black leading-none text-white tracking-tight">{session?.user?.name}</p>

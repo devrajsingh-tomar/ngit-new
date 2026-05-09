@@ -42,20 +42,23 @@ export default function TypingResultDetails({ params }: { params: { id: string }
     </div>
   );
 
-  if (!result || !result.examId || !result.examId.passageId) {
+  if (!result) {
     return (
       <div className="p-20 text-center">
-        <h2 className="text-xl font-bold">Result Data Incomplete</h2>
-        <p className="text-slate-500 mt-2">Some information about this exam or passage is no longer available.</p>
-        <Link href="/student/results" className="text-blue-600 underline mt-4 inline-block">Back to Results</Link>
+        <h2 className="text-xl font-bold">Result Not Found</h2>
+        <p className="text-slate-500 mt-2">We couldn't locate this specific typing attempt.</p>
+        <Link href="/student/typing" className="text-blue-600 underline mt-4 inline-block font-bold">Back to Typing Results</Link>
       </div>
     );
   }
 
-  const originalWords = result.examId.passageId.content?.trim().split(/\s+/) || [];
+  // Handle case where exam or passage might have been deleted but result exists
+  const hasPassageData = !!(result.examId && result.examId.passageId);
+  const passageContent = result.examId?.passageId?.content || "";
+  const originalWords = passageContent ? passageContent.trim().split(/\s+/) : [];
   const submittedWords = result.submittedText?.trim().split(/\s+/) || [];
 
-  const totalKeystrokesGiven = result.examId.passageId.content?.length || 0;
+  const totalKeystrokesGiven = passageContent?.length || 0;
   const keystrokesTyped = result.submittedText?.length || 0;
   const wordsTyped = submittedWords.length > 0 && submittedWords[0] !== "" ? submittedWords.length : 0;
 
@@ -76,7 +79,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const totalWrongWords = fullMistakes + halfMistakes;
   const netWrongWords = fullMistakes + (halfMistakes / 2);
   const netCorrectWords = Math.max(0, wordsTyped - netWrongWords);
-  const timeDurationMins = result.examId.duration || 10;
+  const timeDurationMins = result.examId?.duration || 10;
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const netWpm = timeTakenMins > 0 ? (netCorrectWords / timeTakenMins).toFixed(2) : "0.00";
   
@@ -126,22 +129,39 @@ export default function TypingResultDetails({ params }: { params: { id: string }
           
           <div className={cn(
             "p-10 text-white relative overflow-hidden",
-            isQualified ? "bg-emerald-600" : "bg-slate-900"
+            isQualified ? "bg-emerald-600" : "bg-rose-600"
           )}>
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full -ml-32 -mb-32 blur-2xl" />
             
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                <div className="text-center md:text-left">
-                    <p className="text-white/70 font-black uppercase tracking-[0.3em] text-[10px] mb-2">Performance Report</p>
-                    <h1 className="text-5xl font-black tracking-tight mb-2">{result.examId?.title || "Exam Result"}</h1>
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                        <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
-                            <Calendar className="w-3.5 h-3.5 mr-2" /> {format(new Date(result.createdAt), "PPP")}
-                        </Badge>
-                        <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
-                            <Globe className="w-3.5 h-3.5 mr-2" /> {result.examId?.language}
-                        </Badge>
+                <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                    {/* Candidate Info */}
+                    <div className="flex flex-col items-center gap-4 bg-white/10 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/20 shadow-xl min-w-[200px]">
+                        <div className="w-20 h-20 rounded-3xl bg-white/20 border-2 border-white/40 flex items-center justify-center overflow-hidden relative shadow-inner">
+                            {result.studentId?.image ? (
+                                <img src={result.studentId.image} alt="Candidate" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-2xl font-black text-white/50">{result.studentId?.name?.[0] || "S"}</span>
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.3em] mb-1 leading-none text-center">Candidate Identity</p>
+                            <p className="text-lg font-black text-white leading-none text-center">{result.studentId?.name || "Student"}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p className="text-white/70 font-black uppercase tracking-[0.3em] text-[10px] mb-2">Performance Report</p>
+                        <h1 className="text-5xl font-black tracking-tight mb-2">{result.examId?.title || "Exam Result"}</h1>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
+                            <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
+                                <Calendar className="w-3.5 h-3.5 mr-2" /> {format(new Date(result.createdAt), "PPP")}
+                            </Badge>
+                            <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
+                                <Globe className="w-3.5 h-3.5 mr-2" /> {result.examId?.language}
+                            </Badge>
+                        </div>
                     </div>
                 </div>
 
@@ -152,7 +172,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     </div>
                     <div className={cn(
                         "mt-4 px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-lg",
-                        isQualified ? "bg-white text-emerald-600" : "bg-white text-slate-900"
+                        isQualified ? "bg-white text-emerald-600" : "bg-white text-rose-600"
                     )}>
                         {isQualified ? "QUALIFIED" : "NOT QUALIFIED"}
                     </div>
@@ -227,46 +247,53 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                             <div className="h-[2px] flex-1 bg-slate-100" />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center px-4">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Master Passage</span>
-                                    <Badge variant="outline" className="text-[9px] font-black uppercase">Original</Badge>
+                        {hasPassageData ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center px-4">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Master Passage</span>
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase">Original</Badge>
+                                    </div>
+                                    <div className="p-8 bg-slate-900 rounded-[2rem] shadow-xl text-slate-300 min-h-[300px]">
+                                        <p className="text-lg leading-loose opacity-60" style={{ fontFamily: getFontFamily() }}>
+                                            {originalWords.map((word: string, i: number) => (
+                                                <span key={i}>{word} </span>
+                                            ))}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="p-8 bg-slate-900 rounded-[2rem] shadow-xl text-slate-300 min-h-[300px]">
-                                    <p className="text-lg leading-loose opacity-60" style={{ fontFamily: getFontFamily() }}>
-                                        {originalWords.map((word: string, i: number) => (
-                                            <span key={i}>{word} </span>
-                                        ))}
-                                    </p>
-                                </div>
-                            </div>
 
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center px-4">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Performance</span>
-                                    <Badge variant="outline" className="text-[9px] font-black uppercase border-emerald-200 text-emerald-600">Typed</Badge>
-                                </div>
-                                <div className="p-8 bg-white border border-slate-100 rounded-[2rem] shadow-xl text-slate-800 min-h-[300px]">
-                                    <p className="text-lg leading-loose" style={{ fontFamily: getFontFamily() }}>
-                                        {submittedWords.map((word: string, i: number) => {
-                                            const isCorrect = word === originalWords[i];
-                                            return (
-                                                <span 
-                                                    key={i} 
-                                                    className={cn(
-                                                        "transition-colors",
-                                                        isCorrect ? "text-slate-900" : "text-rose-500 font-bold bg-rose-50 px-1 rounded ring-1 ring-rose-100 decoration-rose-300 underline underline-offset-4"
-                                                    )}
-                                                >
-                                                    {word}{' '}
-                                                </span>
-                                            );
-                                        })}
-                                    </p>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center px-4">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Performance</span>
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase border-emerald-200 text-emerald-600">Typed</Badge>
+                                    </div>
+                                    <div className="p-8 bg-white border border-slate-100 rounded-[2rem] shadow-xl text-slate-800 min-h-[300px]">
+                                        <p className="text-lg leading-loose" style={{ fontFamily: getFontFamily() }}>
+                                            {submittedWords.map((word: string, i: number) => {
+                                                const isCorrect = word === originalWords[i];
+                                                return (
+                                                    <span 
+                                                        key={i} 
+                                                        className={cn(
+                                                            "transition-colors",
+                                                            isCorrect ? "text-slate-900" : "text-rose-500 font-bold bg-rose-50 px-1 rounded ring-1 ring-rose-100 decoration-rose-300 underline underline-offset-4"
+                                                        )}
+                                                    >
+                                                        {word}{' '}
+                                                    </span>
+                                                );
+                                            })}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="p-12 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-center">
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Passage Analysis Unavailable</p>
+                                <p className="text-slate-500 text-sm mt-2 font-medium">The original master text for this exam is no longer available in the system.</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
