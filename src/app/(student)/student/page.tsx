@@ -86,8 +86,8 @@ export default function StudentDashboard() {
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
                             <Sparkles className="w-3.5 h-3.5" /> Learning Workspace
                         </div>
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 leading-none italic">
-                            Welcome back, <span className="text-gradient">{userName?.split(' ')[0]}</span>! 👋
+                        <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 leading-tight italic">
+                            Welcome back, <span className="text-gradient inline-block">{userName?.split(' ')[0]}!</span> <span className="inline-block">👋</span>
                         </h1>
                         <p className="text-slate-500 mt-6 font-bold flex items-center gap-3">
                             <span className="w-3 h-3 rounded-full bg-primary animate-pulse" />
