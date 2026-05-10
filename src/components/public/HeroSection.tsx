@@ -75,7 +75,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                         small: "h-auto aspect-[4/3] md:h-[400px]",
                         medium: "h-auto aspect-video md:h-[600px]",
                         large: "h-auto aspect-video md:h-[750px]",
-                        full: "h-auto aspect-[16/10] sm:h-[65vh] lg:h-[85vh] xl:h-[90vh]"
+                        full: "h-auto aspect-[16/10] sm:h-[65vh] lg:h-[70vh] xl:h-[75vh]"
                     };
                     const heightClass = heightMap[imageSize as keyof typeof heightMap] || heightMap.full;
 
@@ -84,32 +84,24 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     return (
                         <SwiperSlide key={block._id || idx}>
                             <div className={cn(
-                                "relative flex items-center transition-all pt-20 pb-16", 
+                                "relative flex items-center transition-all", 
                                 heightClass,
                                 !image && (block.bgColor?.includes(' ') ? `bg-gradient-to-r ${block.bgColor}` : block.bgColor || "bg-slate-950")
                             )}>
-                                {/* Background Image */}
-                                <div className="absolute inset-0 z-0">
+                                {/* Background Image - Centered and Fully Visible */}
+                                <div className="absolute inset-0 z-0 flex items-center justify-center bg-slate-950">
                                     <img
                                         src={image || defaultBlock.image}
                                         alt={block.title || "Hero Image"}
                                         className={cn(
-                                            "absolute inset-0 w-full h-full transition-transform [transition-duration:10s] ease-out", 
-                                            "object-contain md:object-cover", // Use contain on mobile, cover on desktop
-                                            imagePos
+                                            "w-full h-full transition-transform [transition-duration:10s] ease-out", 
+                                            "object-contain", // GUARANTEE: No cropping, complete image visible
+                                            "object-center"   // Keep it perfectly centered
                                         )}
-                                        style={{ 
-                                            objectFit: objectFit as any, 
-                                            objectPosition: imagePos,
-                                            aspectRatio: aspectRatio !== 'none' ? aspectRatio.replace(':', '/') : 'auto'
-                                        }}
                                     />
-                                    {/* Overlays */}
+                                    {/* Subtle Overlays (only if there is text) */}
                                     {!isTextEmpty && layout === 'full-background' && image && (
-                                        <div className="absolute inset-0 bg-slate-950/40 md:bg-slate-950/50 backdrop-blur-[1px] md:backdrop-blur-[2px]" />
-                                    )}
-                                    {!isTextEmpty && layout === 'full-background' && (
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/40 to-transparent" />
+                                        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]" />
                                     )}
                                 </div>
 
