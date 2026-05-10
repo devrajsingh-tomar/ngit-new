@@ -139,15 +139,15 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     {/* Candidate Info */}
                     <div className="flex flex-col items-center gap-4 bg-white/10 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/20 shadow-xl min-w-[200px]">
                         <div className="w-20 h-20 rounded-3xl bg-white/20 border-2 border-white/40 flex items-center justify-center overflow-hidden relative shadow-inner">
-                            {result.studentId?.image ? (
-                                <img src={result.studentId.image} alt="Candidate" className="w-full h-full object-cover" />
+                            {result.userId?.image ? (
+                                <img src={result.userId.image} alt="Candidate" className="w-full h-full object-cover" />
                             ) : (
-                                <span className="text-2xl font-black text-white/50">{result.studentId?.name?.[0] || "S"}</span>
+                                <span className="text-2xl font-black text-white/50">{result.userId?.name?.[0] || "S"}</span>
                             )}
                         </div>
                         <div>
                             <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.3em] mb-1 leading-none text-center">Candidate Identity</p>
-                            <p className="text-lg font-black text-white leading-none text-center">{result.studentId?.name || "Student"}</p>
+                            <p className="text-lg font-black text-white leading-none text-center">{result.userId?.name || "Student"}</p>
                         </div>
                     </div>
 

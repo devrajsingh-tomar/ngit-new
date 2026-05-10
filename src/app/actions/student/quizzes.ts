@@ -168,6 +168,27 @@ export const submitQuiz = createSafeAction(
                     if (matches.length === question.options.length) {
                         isCorrect = matches.every(([optId, matchId]) => optId === matchId);
                     }
+                } else if (question.type === "TYPING") {
+                    const originalText = question.shortAnswer || question.content.en || "";
+                    const typedText = typeof userAnswer === "string" ? userAnswer : "";
+                    
+                    if (!typedText.trim()) {
+                        isCorrect = false;
+                    } else {
+                        const originalWords = originalText.trim().split(/\s+/);
+                        const typedWords = typedText.trim().split(/\s+/);
+                        
+                        let correctWords = 0;
+                        for (let i = 0; i < Math.min(originalWords.length, typedWords.length); i++) {
+                            if (originalWords[i] === typedWords[i]) {
+                                correctWords++;
+                            }
+                        }
+                        const accuracy = (correctWords / Math.max(1, originalWords.length)) * 100;
+                        
+                        // Mark as correct if accuracy is 80% or higher
+                        isCorrect = accuracy >= 80;
+                    }
                 }
 
                 if (isCorrect) {

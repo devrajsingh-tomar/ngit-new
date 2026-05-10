@@ -14,7 +14,7 @@ export async function GET(
     const { id } = await params;
     await connectDB();
     const result = await TypingResult.findById(id)
-      .populate("studentId", "name image email")
+      .populate("userId", "name image email")
       .populate({
         path: "examId",
         populate: { path: "passageId" }
