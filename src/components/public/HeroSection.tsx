@@ -59,72 +59,42 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                 className="w-full"
             >
                 {sliderBlocks.map((block, idx) => {
-                    const primaryText = block.cta1Text || block.button_text || block.buttons?.[0]?.label;
-                    const primaryLink = block.cta1Link || block.button_link || block.buttons?.[0]?.link;
-                    const secondaryText = block.cta2Text || block.secondary_button_text || block.buttons?.[1]?.label;
-                    const secondaryLink = block.cta2Link || block.secondary_button_link || block.buttons?.[1]?.link;
+                    const primaryText = block.cta1Text || block.button_text;
+                    const primaryLink = block.cta1Link || block.button_link;
+                    const secondaryText = block.cta2Text || block.secondary_button_text;
+                    const secondaryLink = block.cta2Link || block.secondary_button_link;
                     const image = block.imageUrl || block.image;
                     
-                    const layout = block.layout || "full-background";
-                    const imageSize = block.image_size || "full";
-                    const objectFit = block.object_fit || "cover";
-                    const imagePos = block.image_position || "center";
-                    const aspectRatio = block.aspect_ratio || "none";
-                    
-                    const heightMap = {
-                        small: "min-h-[300px] md:min-h-[400px]",
-                        medium: "min-h-[400px] md:min-h-[600px]",
-                        large: "min-h-[500px] md:min-h-[750px]",
-                        full: "min-h-[40vh] sm:min-h-[60vh] lg:min-h-[80vh]"
-                    };
-                    const heightClass = heightMap[imageSize as keyof typeof heightMap] || heightMap.full;
-
                     const isTextEmpty = !block.title?.trim() && !block.subtitle?.trim() && !block.description?.trim() && !primaryText && !secondaryText;
 
                     return (
                         <SwiperSlide key={block._id || idx}>
-                            <div className={cn(
-                                "relative w-full flex items-center transition-all overflow-hidden", 
-                                heightClass,
-                                !image && (block.bgColor?.includes(' ') ? `bg-gradient-to-r ${block.bgColor}` : block.bgColor || "bg-slate-950")
-                            )}>
+                            <div className="relative w-full min-h-[40vh] sm:min-h-[50vh] lg:min-h-[65vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-slate-950">
                                 {/* Background Image - Edge to Edge */}
                                 <div className="absolute inset-0 z-0">
                                     <img
                                         src={image || defaultBlock.image}
                                         alt={block.title || "Hero Image"}
-                                        className={cn(
-                                            "absolute inset-0 w-full h-full transition-transform [transition-duration:10s] ease-out", 
-                                            "object-cover md:object-fill lg:object-cover", // Adaptive fitting
-                                            "object-center"
-                                        )}
+                                        className="w-full h-full object-cover md:object-fill lg:object-cover object-center transition-transform duration-700"
                                     />
-                                    {/* Overlays */}
-                                    {!isTextEmpty && layout === 'full-background' && image && (
+                                    {/* Only show overlay if there is custom text to show */}
+                                    {!isTextEmpty && (
                                         <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]" />
                                     )}
                                 </div>
 
-                                <div className="container relative z-10 px-6 mx-auto">
-                                    <div className={cn(
-                                        "grid gap-8 lg:gap-12 items-center",
-                                        layout === "centered" ? "grid-cols-1" : "lg:grid-cols-12"
-                                    )}>
-                                        {/* Content Area */}
-                                        <div className={cn(
-                                            "space-y-8 flex flex-col justify-center",
-                                            layout === "centered" ? "max-w-4xl mx-auto text-center" : "lg:col-span-7",
-                                            layout === "right-content" ? "lg:col-start-6 lg:text-left" : "text-center lg:text-left",
-                                            isTextEmpty && "hidden"
-                                        )}>
+                                {/* Content Overlay (Only if not empty) */}
+                                {!isTextEmpty && (
+                                    <div className="container relative z-10 px-6 mx-auto">
+                                        <div className="max-w-4xl space-y-8 text-center lg:text-left">
                                             <motion.div
                                                 initial={{ opacity: 0, y: 30 }}
                                                 whileInView={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.6, delay: 0.2 }}
+                                                transition={{ duration: 0.6 }}
                                                 className="space-y-6"
                                             >
                                                 {block.subtitle && (
-                                                    <div className={cn("inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl", layout === "centered" ? "mx-auto" : "")}>
+                                                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10">
                                                         <Sparkles className="w-5 h-5 text-amber-400" />
                                                         <span className="text-white font-black uppercase tracking-[0.2em] text-[10px]">
                                                             {block.subtitle}
@@ -133,28 +103,24 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                                 )}
 
                                                 {block.title && (
-                                                    <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[1.1] md:leading-[1] italic drop-shadow-2xl">
-                                                        {block.title.split(' ').map((word: string, i: number) => (
-                                                            <span key={i} className={i % 3 === 2 ? "text-gradient" : ""}>
-                                                                {word}{" "}
-                                                            </span>
-                                                        ))}
+                                                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter leading-tight italic drop-shadow-2xl">
+                                                        {block.title}
                                                     </h1>
                                                 )}
 
                                                 {block.description && (
                                                     <div 
-                                                        className={cn("text-lg md:text-xl text-slate-400 font-medium leading-relaxed max-w-2xl prose prose-invert prose-p:leading-relaxed", layout === "centered" ? "mx-auto" : "lg:mx-0")}
+                                                        className="text-lg md:text-xl text-slate-300 font-medium leading-relaxed max-w-2xl"
                                                         dangerouslySetInnerHTML={{ __html: block.description }}
                                                     />
                                                 )}
 
                                                 {(primaryText || secondaryText) && (
-                                                    <div className={cn("flex flex-col sm:flex-row items-center gap-5 pt-4", layout === "centered" ? "justify-center" : "justify-center lg:justify-start")}>
+                                                    <div className="flex flex-col sm:flex-row items-center gap-5 pt-4 justify-center lg:justify-start">
                                                         {primaryText && (
                                                             <Link href={primaryLink || "/register"} className="w-full sm:w-auto">
-                                                                <Button className="w-full sm:w-auto h-16 px-10 rounded-2xl text-lg font-black bg-white text-slate-900 hover:bg-slate-100 shadow-xl transition-all hover:scale-105 group">
-                                                                    <UserPlus className="w-6 h-6 mr-3 transition-transform group-hover:rotate-12" />
+                                                                <Button className="w-full sm:w-auto h-16 px-10 rounded-2xl text-lg font-black bg-white text-slate-900 hover:bg-slate-100 shadow-xl transition-all hover:scale-105">
+                                                                    <UserPlus className="w-6 h-6 mr-3" />
                                                                     {primaryText}
                                                                 </Button>
                                                             </Link>
@@ -171,25 +137,8 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                                 )}
                                             </motion.div>
                                         </div>
-
-                                        {/* Optional Side Visual (for Split Layouts) */}
-                                        {(layout === "left-content" || layout === "right-content") && (
-                                            <div className={cn(
-                                                "lg:col-span-5 hidden lg:block",
-                                                layout === "right-content" ? "lg:col-start-1 lg:row-start-1" : ""
-                                            )}>
-                                                <motion.div 
-                                                    initial={{ opacity: 0, scale: 0.8 }}
-                                                    whileInView={{ opacity: 1, scale: 1 }}
-                                                    className="relative aspect-square rounded-[4rem] overflow-hidden border border-white/10 shadow-2xl group"
-                                                >
-                                                    <img src={block.image || defaultBlock.image} alt="Visual" className="absolute inset-0 w-full h-full object-cover transition-transform [transition-duration:10s] group-hover:scale-110" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
-                                                </motion.div>
-                                            </div>
-                                        )}
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </SwiperSlide>
                     );
