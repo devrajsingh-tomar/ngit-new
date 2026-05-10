@@ -219,7 +219,8 @@ export async function getDetailedResult(resultId: string) {
             .lean();
 
         if (!result) return { success: false, error: "Result not found" };
-        if (result.studentId.toString() !== session.user.id && session.user.role !== "ADMIN") {
+        const resultStudentId = result.studentId._id ? result.studentId._id.toString() : result.studentId.toString();
+        if (resultStudentId !== session.user.id && session.user.role !== "ADMIN") {
             return { success: false, error: "Unauthorized" };
         }
 
