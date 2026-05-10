@@ -72,10 +72,10 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     const aspectRatio = block.aspect_ratio || "none";
                     
                     const heightMap = {
-                        small: "h-auto aspect-[4/3] md:h-[400px]",
-                        medium: "h-auto aspect-video md:h-[600px]",
-                        large: "h-auto aspect-video md:h-[750px]",
-                        full: "h-auto aspect-[16/10] sm:h-[65vh] lg:h-[70vh] xl:h-[75vh]"
+                        small: "min-h-[300px] md:min-h-[400px]",
+                        medium: "min-h-[400px] md:min-h-[600px]",
+                        large: "min-h-[500px] md:min-h-[750px]",
+                        full: "min-h-[40vh] sm:min-h-[60vh] lg:min-h-[80vh]"
                     };
                     const heightClass = heightMap[imageSize as keyof typeof heightMap] || heightMap.full;
 
@@ -84,24 +84,24 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     return (
                         <SwiperSlide key={block._id || idx}>
                             <div className={cn(
-                                "relative flex items-center transition-all", 
+                                "relative w-full flex items-center transition-all overflow-hidden", 
                                 heightClass,
                                 !image && (block.bgColor?.includes(' ') ? `bg-gradient-to-r ${block.bgColor}` : block.bgColor || "bg-slate-950")
                             )}>
-                                {/* Background Image - Centered and Fully Visible */}
-                                <div className="absolute inset-0 z-0 flex items-center justify-center bg-slate-950">
+                                {/* Background Image - Edge to Edge */}
+                                <div className="absolute inset-0 z-0">
                                     <img
                                         src={image || defaultBlock.image}
                                         alt={block.title || "Hero Image"}
                                         className={cn(
-                                            "w-full h-full transition-transform [transition-duration:10s] ease-out", 
-                                            "object-contain", // GUARANTEE: No cropping, complete image visible
-                                            "object-center"   // Keep it perfectly centered
+                                            "absolute inset-0 w-full h-full transition-transform [transition-duration:10s] ease-out", 
+                                            "object-cover md:object-fill lg:object-cover", // Adaptive fitting
+                                            "object-center"
                                         )}
                                     />
-                                    {/* Subtle Overlays (only if there is text) */}
+                                    {/* Overlays */}
                                     {!isTextEmpty && layout === 'full-background' && image && (
-                                        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]" />
+                                        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]" />
                                     )}
                                 </div>
 
