@@ -11,13 +11,21 @@ export async function GET(
     const filePath = path.join(process.cwd(), "uploads", ...pathSegments);
 
     try {
-        if (!fs.existsSync(filePath)) {
-            console.error(`[Upload Service] File not found at: ${filePath}`);
-            return new NextResponse("File not found", { status: 404 });
+        let finalPath = filePath;
+        
+        if (!fs.existsSync(finalPath)) {
+            // Try fallback to public/uploads
+            const fallbackPath = path.join(process.cwd(), "public", "uploads", ...pathSegments);
+            if (fs.existsSync(fallbackPath)) {
+                finalPath = fallbackPath;
+            } else {
+                console.error(`[Upload Service] File not found at root OR public fallback: ${filePath}`);
+                return new NextResponse("File not found", { status: 404 });
+            }
         }
 
-        const fileBuffer = fs.readFileSync(filePath);
-        const extension = path.extname(filePath).toLowerCase();
+        const fileBuffer = fs.readFileSync(finalPath);
+        const extension = path.extname(finalPath).toLowerCase();
         
         const mimeTypes: Record<string, string> = {
             ".png": "image/png",
