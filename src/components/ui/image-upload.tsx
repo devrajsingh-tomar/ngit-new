@@ -50,15 +50,15 @@ export function ImageUpload({
 
             const data = await res.json();
 
-            if (data.success) {
+            if (data.success && data.url) {
                 onChange(data.url);
                 toast.success("Image uploaded successfully");
             } else {
-                toast.error(data.error || "Upload failed");
+                toast.error(data.error || "Upload failed - no URL returned");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Upload error:", error);
-            toast.error("An error occurred during upload");
+            toast.error(error.message || "An error occurred during upload");
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) {

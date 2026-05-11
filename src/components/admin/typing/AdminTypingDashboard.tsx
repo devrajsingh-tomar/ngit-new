@@ -198,23 +198,36 @@ export default function AdminTypingDashboard() {
     data.active = fd.get('active') === 'on';
     data.logo = modalLogo; // Ensure the uploaded logo URL is used
 
-    if (editingGovExam) {
-      await fetch(`/api/admin/typing/gov-exams/${editingGovExam._id}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-      });
-      toast.success("Updated Gov Exam!");
-    } else {
-      await fetch("/api/admin/typing/gov-exams", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-      });
-      toast.success("Added Gov Exam!");
+    try {
+      if (editingGovExam) {
+        const res = await fetch(`/api/admin/typing/gov-exams/${editingGovExam._id}`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: "Update failed" }));
+          throw new Error(err.error || "Update failed");
+        }
+        toast.success("Updated Gov Exam!");
+      } else {
+        const res = await fetch("/api/admin/typing/gov-exams", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: "Creation failed" }));
+          throw new Error(err.error || "Creation failed");
+        }
+        toast.success("Added Gov Exam!");
+      }
+      
+      setShowGovExamModal(false);
+      setEditingGovExam(null);
+      setModalLogo("");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setSubmitting(false);
     }
-    
-    setShowGovExamModal(false);
-    setEditingGovExam(null);
-    setModalLogo("");
-    fetchData();
-    setSubmitting(false);
   };
 
   const handleDeleteGovExam = async (id: string) => {
@@ -820,7 +833,11 @@ export default function AdminTypingDashboard() {
                 <h2 className="text-xl font-bold text-slate-900">{editingExam ? "Edit Exam Settings" : "Configure New Exam"}</h2>
                 <button onClick={() => { setShowExamModal(false); setEditingExam(null); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
-             <form onSubmit={handleAddExam} className="p-6 space-y-5">
+             <form 
+               key={editingExam?._id || 'new-exam'}
+               onSubmit={handleAddExam} 
+               className="p-6 space-y-5"
+             >
                 <div className="grid grid-cols-2 gap-5">
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Exam Mode</label>
@@ -925,10 +942,23 @@ export default function AdminTypingDashboard() {
                 <h2 className="text-xl font-bold text-slate-900">{editingGovExam ? "Edit Government Exam" : "Add Government Exam"}</h2>
                 <button onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); setModalLogo(""); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
-             <form onSubmit={handleAddGovExam} className="p-6 space-y-4">
+             <form 
+               key={editingGovExam?._id || 'new-gov-exam'}
+               onSubmit={handleAddGovExam} 
+               className="p-6 space-y-4"
+             >
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Exam Title</label>
                    <input name="title" defaultValue={editingGovExam?.title} required placeholder="e.g. SSC CGL" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Description</label>
+                   <textarea 
+                     name="description" 
+                     defaultValue={editingGovExam?.description} 
+                     placeholder="Short description for students..." 
+                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none min-h-[80px]"
+                   />
                 </div>
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Exam Logo</label>

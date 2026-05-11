@@ -13,7 +13,7 @@ type UploadResult = {
 // Configuration
 // Configuration - Store in root directory as expected by the /api/uploads route
 const UPLOAD_BASE = process.cwd();
-const UPLOAD_REL_PATH = path.join("uploads", "gallery");
+const UPLOAD_REL_PATH = path.join("public", "uploads", "gallery");
 const UPLOAD_DIR = path.join(UPLOAD_BASE, UPLOAD_REL_PATH);
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // Increased to 10MB for larger profile pics/materials

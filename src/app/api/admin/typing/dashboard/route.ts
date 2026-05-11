@@ -54,11 +54,22 @@ export async function GET() {
       difficulties = await TypingDifficulty.find().sort({ name: 1 });
     }
 
-    // Auto-seed GovExams if empty or missing requested ones
+    // Auto-seed GovExams and cleanup duplicates
     const requestedGovExams = ["AHC", "SSC", "UP Police", "UPSSSC", "KVS", "Railways", "CPCT", "Court Typing", "Steno"];
     for (const title of requestedGovExams) {
-      const exists = await GovExam.findOne({ title });
-      if (!exists) {
+      const matches = await GovExam.find({ title: { $regex: new RegExp(`^${title}$`, 'i') } });
+      
+      if (matches.length > 1) {
+        // Keep the one with a logo, otherwise keep the first one
+        const toKeep = matches.find(m => m.logo) || matches[0];
+        const toDeleteIds = matches.filter(m => m._id.toString() !== toKeep._id.toString()).map(m => m._id);
+        
+        // RE-LINK: Move all tests from deleted exams to the one we are keeping
+        await TypingExam.updateMany({ govExamId: { $in: toDeleteIds } }, { $set: { govExamId: toKeep._id } });
+        
+        // Now safe to delete duplicates
+        await GovExam.deleteMany({ _id: { $in: toDeleteIds } });
+      } else if (matches.length === 0) {
         await GovExam.create({ 
           title, 
           slug: title.toLowerCase().replace(/\s+/g, '-'),

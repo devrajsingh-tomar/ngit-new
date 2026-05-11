@@ -97,7 +97,7 @@ export default function HeroSlider() {
                     {/* Background */}
                     {slide.imageUrl ? (
                         <div
-                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[10000ms] ease-linear"
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform [transition-duration:10000ms] ease-linear"
                             style={{ 
                                 backgroundImage: `url(${slide.imageUrl})`,
                                 transform: index === currentSlide ? 'scale(1.1)' : 'scale(1)'
