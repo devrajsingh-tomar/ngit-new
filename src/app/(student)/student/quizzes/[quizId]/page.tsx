@@ -59,6 +59,10 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
 
     const handleSubmit = useCallback(async () => {
         if (isSubmitting) return;
+
+        const confirmSubmit = window.confirm("Are you sure you want to submit the exam? You will not be able to change your answers after submission.");
+        if (!confirmSubmit) return;
+
         setIsSubmitting(true);
         const timeLimitSecs = (quiz?.settings?.timeLimit || 30) * 60;
         const timeTaken = timeLimitSecs - state.timer;
@@ -71,10 +75,11 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         try {
             const res = await submitQuiz({ quizId, answers: formattedAnswers, timeTaken });
             if (res.success) {
-                toast.success("Test submitted successfully!");
+                toast.success("Exam submitted successfully!");
                 if (document.fullscreenElement) {
                     document.exitFullscreen?.().catch(() => { });
                 }
+                // Redirect to results analysis page
                 router.push(`/student/quizzes/${quizId}/analysis?attemptId=${res.data.attemptId}`);
             } else {
                 toast.error(res.error || "Failed to submit test");

@@ -199,7 +199,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
-      language: internalLanguage,
+      language: (internalLanguage === 'Krutidev Hindi' || internalLanguage === 'Unicode Hindi') ? 'Hindi' : internalLanguage,
       layout: internalLayout,
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
@@ -237,7 +237,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     let val = e.target.value;
     const isDeletion = val.length < typedText.length;
 
-    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
+    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi';
     if (isHindi && !isDeletion && val.length > typedText.length) {
         const lastChar = val.slice(-1);
         if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
@@ -457,7 +457,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
             style={{ 
               fontSize: `${fontSize}px`,
               scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
-              fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi') 
+              fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi' || settings.language === 'Unicode Hindi') 
                 ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
                 : "inherit"
             }}
@@ -549,7 +549,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                   fontSize: `${fontSize + 2}px`, 
                   backgroundColor: bgColor,
                   scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
-                  fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi') 
+                  fontFamily: (settings.layout === 'Remington Gail' || settings.layout === 'Inscript' || settings.language === 'Hindi' || settings.language === 'Unicode Hindi') 
                     ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
                     : "inherit"
                 }}

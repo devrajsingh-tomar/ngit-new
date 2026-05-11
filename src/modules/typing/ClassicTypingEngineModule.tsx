@@ -213,7 +213,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
-      language: internalLanguage,
+      language: (internalLanguage === 'Krutidev Hindi' || internalLanguage === 'Unicode Hindi') ? 'Hindi' : internalLanguage,
       layout: internalLayout,
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
@@ -254,7 +254,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     const isDeletion = val.length < typedText.length;
 
     // 0. HINDI MAPPING LOGIC
-    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
+    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi';
     if (isHindi && !isDeletion && val.length > typedText.length) {
         const lastChar = val.slice(-1);
         if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
@@ -302,7 +302,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [fontSize, setFontSize] = useState(16);
   const [bgColor, setBgColor] = useState('#a1c984');
 
-  const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Remington Gail' || settings.language === 'Inscript' || settings.language === 'Phonetic' || settings.language === 'Krutidev Hindi';
+  const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Remington Gail' || settings.language === 'Inscript' || settings.language === 'Phonetic';
   
   const typingFont = isHindi 
     ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 

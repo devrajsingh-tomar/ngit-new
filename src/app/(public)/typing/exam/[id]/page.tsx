@@ -27,7 +27,7 @@ export default function TypingExamPage() {
   const initialLayout = searchParams?.get("layout") || "English";
 
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>(initialLang as any);
-  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic' | 'Krutidev' | 'Unicode'>(
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic' | 'Unicode'>(
     (initialLayout || (initialLang === 'Hindi' ? 'Remington Gail' : 'English')) as any
   );
 
@@ -259,8 +259,7 @@ export default function TypingExamPage() {
                             {[
                                 { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' },
                                 { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard' },
-                                { id: 'Unicode', name: 'Unicode (Standard)', sub: 'Modern Typing' },
-                                { id: 'Krutidev', name: 'Krutidev 010', sub: 'Legacy Font' }
+                                { id: 'Unicode', name: 'Unicode (Standard)', sub: 'Modern Typing' }
                             ].map((lay) => (
                                 <button 
                                     key={lay.id}

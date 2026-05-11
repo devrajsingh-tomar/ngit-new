@@ -233,6 +233,9 @@ export const submitQuiz = createSafeAction(
             // Get course info if available
             const enrollment = await Enrollment.findOne({ userId: session.user.id, courseId: quiz.courseId }).populate("courseId");
             
+            // Explicitly set attempt date to now
+            const now = new Date();
+
             await MockTestResult.findOneAndUpdate(
                 { attemptId: attempt._id },
                 {
@@ -241,14 +244,14 @@ export const submitQuiz = createSafeAction(
                     attemptId: attempt._id,
                     score,
                     totalMarks,
-                    attemptDate: new Date(),
+                    attemptDate: now,
                     course: (enrollment?.courseId as any)?.title || "General",
                     publishStatus: "PUBLISHED", // Make it visible immediately
                     analysis: {
                         correctAnswers: correctCount,
                         incorrectAnswers: incorrectCount,
                         unattemptedQuestions: unattemptedCount,
-                        accuracy: (correctCount / (correctCount + incorrectCount)) * 100 || 0,
+                        accuracy: ((correctCount / Math.max(1, (correctCount + incorrectCount))) * 100) || 0,
                         timeTaken
                     }
                 },
@@ -256,7 +259,6 @@ export const submitQuiz = createSafeAction(
             );
         } catch (err) {
             console.error("Failed to auto-create MockTestResult:", err);
-            // Non-blocking error
         }
 
         return {
