@@ -39,16 +39,19 @@ export const normalizeChar = (char: string): string => {
 export const calculateMetrics = (
   typedText: string,
   passage: string,
-  timeMinutes: number
+  timeMinutes: number,
+  examMode?: string
 ): TypingMetrics => {
   if (timeMinutes <= 0) timeMinutes = 0.01; // Avoid division by zero
-
+  
+  const isUPSSSC = examMode === "UPSSSC";
+  
   const originalWords = passage.trim().split(/\s+/);
   const typedWords = typedText.trim().split(/\s+/);
   
   let errors = 0;
   const totalCharacters = typedText.length;
-
+  
   // Word-by-word error detection with skip-resilience
   let passageIdx = 0;
   typedWords.forEach((word, idx) => {
@@ -81,11 +84,19 @@ export const calculateMetrics = (
   const extraSpacesPenalty = consecutiveSpaceMatches.reduce((acc, match) => acc + (match.length - 1) * 0.5, 0);
   errors += extraSpacesPenalty;
 
-  const grossWpm = Math.round((totalCharacters / 5) / timeMinutes);
-  const netWpm = Math.round(((totalCharacters / 5) - errors) / timeMinutes);
+  // SEPARATE LOGIC: 
+  // 1. General Practice & UP Police (ASI/CO) use actual word count (1 Word = 1 Word).
+  // 2. Govt Exams (SSC, UPSSSC, AHC) use official Keystrokes/5 standard.
+  let wordCountBase = totalCharacters / 5;
+  if (examMode === "General" || examMode === "UP_POLICE" || !examMode) {
+    wordCountBase = typedWords.length > 0 && typedWords[0] !== "" ? typedWords.length : 0;
+  }
+
+  const grossWpm = Math.round(wordCountBase / timeMinutes);
+  const netWpm = Math.round((wordCountBase - errors) / timeMinutes);
 
   const accuracy = totalCharacters > 0 
-    ? Math.max(0, Math.round(((totalCharacters - errors) / totalCharacters) * 100)) 
+    ? Math.max(0, Math.round(((totalCharacters - (errors * 5)) / totalCharacters) * 100)) 
     : 100;
 
   const progress = Math.min(100, Math.round((typedWords.length / originalWords.length) * 100));

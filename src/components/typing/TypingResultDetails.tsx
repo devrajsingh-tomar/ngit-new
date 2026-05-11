@@ -78,14 +78,24 @@ export default function TypingResultDetails({ params }: { params: { id: string }
 
   const totalWrongWords = fullMistakes + halfMistakes;
   const netWrongWords = fullMistakes + (halfMistakes / 2);
-  const netCorrectWords = Math.max(0, wordsTyped - netWrongWords);
+  const isUPSSSC = result.examId?.examMode === "UPSSSC";
+  const isAHC = result.examId?.examMode === "AHC";
+  const isUPPolice = result.examId?.examMode === "UP_POLICE";
+  
+  // Official Formula: Net Words = (Total Keystrokes / 5) - Mistakes
+  // standardWpm uses Keystrokes/5 which is most government standards
+  const standardWordsTyped = (keystrokesTyped / 5);
+  const netCorrectWords = (isUPSSSC || isAHC)
+    ? Math.max(0, standardWordsTyped - totalWrongWords) // Govt subtracts full mistakes from weighted words
+    : (isUPPolice ? Math.max(0, wordsTyped - totalWrongWords) : Math.max(0, wordsTyped - netWrongWords));
+    
   const timeDurationMins = result.examId?.duration || 10;
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const netWpm = timeTakenMins > 0 ? (netCorrectWords / timeTakenMins).toFixed(2) : "0.00";
   
   const lang = result.examId?.language?.toLowerCase() || "";
   const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
-  const passingWpm = isHindi ? 25 : 30;
+  const passingWpm = isHindi ? 25 : (isUPPolice ? 35 : 30);
 
   const minKeystrokes = Math.round((timeDurationMins * passingWpm * 5) / 2);
   const isQualified = parseFloat(netWpm) >= passingWpm;
@@ -230,11 +240,17 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                         <AlertCircle className="w-5 h-5" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">Calculation Logic</p>
+                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">
+                          Calculation Logic {(isUPSSSC || isAHC || isUPPolice) && `(${isAHC ? "AHC" : isUPPolice ? "UP Police ASI/CO" : "Junior Assistant"} Standard)`}
+                        </p>
                         <p className="text-sm font-bold text-indigo-900 leading-relaxed">
-                            {keystrokesTyped < minKeystrokes 
-                                ? `Notice: Low volume attempt (< ${minKeystrokes} keys). Net Correct Words = Total Typed (${wordsTyped}) - Weighted Errors (${netWrongWords.toFixed(1)})`
-                                : `Standard Calculation: Net Correct Words = Total Typed (${wordsTyped}) - [ Full Mistakes (${fullMistakes}) + (Half Mistakes (${halfMistakes}) × 0.5) ]`
+                            {isUPPolice 
+                                ? `UP Police Formula: Net Speed = [ Total Words Typed (${wordsTyped}) - Wrong Words (${totalWrongWords}) ] / Time (${timeTakenMins.toFixed(1)} min)`
+                                : (isUPSSSC || isAHC)
+                                    ? `${isAHC ? "AHC" : "UPSSSC"} Formula: Net Speed = [ (Total Keystrokes (${keystrokesTyped}) / 5) - Wrong Words (${totalWrongWords}) ] / Time (${timeTakenMins.toFixed(1)} min)`
+                                    : (keystrokesTyped < minKeystrokes 
+                                        ? `Notice: Low volume attempt (< ${minKeystrokes} keys). Net Correct Words = Total Typed (${wordsTyped}) - Weighted Errors (${netWrongWords.toFixed(1)})`
+                                        : `Standard Calculation: Net Correct Words = Total Typed (${wordsTyped}) - [ Full Mistakes (${fullMistakes}) + (Half Mistakes (${halfMistakes}) × 0.5) ]`)
                             }
                         </p>
                     </div>

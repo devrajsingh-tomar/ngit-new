@@ -23,7 +23,7 @@ export const useTypingEngine = () => {
       const elapsedMinutes = elapsedSeconds / 60;
 
       // Run core calculations
-      const metrics = calculateMetrics(typedText, passage, elapsedMinutes);
+      const metrics = calculateMetrics(typedText, passage, elapsedMinutes, (settings as any).examMode);
 
       // Update the global store with live stats
       updateMetrics({

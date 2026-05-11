@@ -22,7 +22,7 @@ export interface ITypingRulePreset {
   // Word Processing Rules
   allowTabs: boolean;
   allowParagraphs: boolean;
-  examMode: "General" | "SSC" | "CPCT" | "Court" | "Steno";
+  examMode: "General" | "SSC" | "CPCT" | "Court" | "Steno" | "UPSSSC" | "AHC" | "UP_POLICE";
   
   // Timer Rules
   autoStart: boolean;
@@ -58,7 +58,7 @@ const TypingRulePresetSchema = new Schema<ITypingRulePreset>(
     
     allowTabs: { type: Boolean, default: false },
     allowParagraphs: { type: Boolean, default: false },
-    examMode: { type: String, enum: ["General", "SSC", "CPCT", "Court", "Steno"], default: "General" },
+    examMode: { type: String, enum: ["General", "SSC", "CPCT", "Court", "Steno", "UPSSSC", "AHC", "UP_POLICE"], default: "General" },
     
     autoStart: { type: Boolean, default: false },
     pauseOnIdle: { type: Boolean, default: false },

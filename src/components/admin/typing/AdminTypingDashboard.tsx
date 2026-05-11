@@ -1280,6 +1280,18 @@ export default function AdminTypingDashboard() {
                        <option value="current">Current Only</option>
                     </select>
                   </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <label className="text-xs font-bold text-slate-600 uppercase">Exam Calculation Mode</label>
+                    <select name="examMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                       <option value="General">General Practice (Words)</option>
+                       <option value="SSC">SSC Standard (Keys/5)</option>
+                       <option value="UPSSSC">UPSSSC / Junior Assistant (Official Formula)</option>
+                       <option value="AHC">AHC / Allahabad High Court (Official Formula)</option>
+                       <option value="UP_POLICE">UP Police (ASI / Computer Operator - 1 Word = 1 Word)</option>
+                       <option value="CPCT">CPCT Standard</option>
+                       <option value="Court">High Court Standard</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <input type="checkbox" name="disableCopyPaste" id="disableCopyPaste" defaultChecked className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
