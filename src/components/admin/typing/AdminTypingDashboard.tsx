@@ -1044,9 +1044,10 @@ export default function AdminTypingDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                     <select name="language" defaultValue={editingPassage?.language || "English"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                     <select name="language" defaultValue={editingPassage?.language || "Unicode Hindi"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="English">English</option>
-                        <option value="Hindi">Hindi (Mangal)</option>
+                        <option value="Unicode Hindi">Hindi (Unicode / Mangal)</option>
+                        <option value="Krutidev Hindi">Hindi (Krutidev / Legacy)</option>
                      </select>
                    </div>
                    <div className="space-y-1.5">
@@ -1079,8 +1080,14 @@ export default function AdminTypingDashboard() {
                    )}
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Passage Content</label>
-                   <textarea name="content" defaultValue={editingPassage?.content} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-40 resize-none" />
+                    <label className="text-xs font-bold text-slate-600 uppercase">Passage Content (Paste Unicode Hindi here)</label>
+                    <textarea 
+                      name="content" 
+                      defaultValue={editingPassage?.content} 
+                      required 
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-40 resize-none"
+                      style={{ fontFamily: "'Mangal', 'Arial Unicode MS', sans-serif" }}
+                    />
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
                    <Button type="button" variant="outline" onClick={() => setShowPassageModal(false)}>Cancel</Button>

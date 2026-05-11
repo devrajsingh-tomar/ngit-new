@@ -3,7 +3,7 @@ import mongoose, { Schema, model, models, connection } from "mongoose";
 export interface ITypingExam {
   title: string;
   category: string; // SSC, UP Police, KVS, etc.
-  language: "English" | "Hindi";
+  language: "English" | "Hindi" | "Unicode Hindi" | "Krutidev Hindi";
   passageId: mongoose.Types.ObjectId;
   duration: number; // in minutes
   wordLimit: number;
@@ -30,7 +30,7 @@ const TypingExamSchema = new Schema<ITypingExam>(
   {
     title: { type: String, required: true },
     category: { type: String, required: true },
-    language: { type: String, enum: ["English", "Hindi", "Unicode Hindi", "Krutidev Hindi"], default: "English" },
+    language: { type: String, enum: ["English", "Hindi", "Unicode Hindi", "Krutidev Hindi"], default: "Unicode Hindi" },
     passageId: { type: Schema.Types.ObjectId, ref: "TypingPassage", required: true },
     duration: { type: Number, required: true },
     wordLimit: { type: Number, default: 0 },

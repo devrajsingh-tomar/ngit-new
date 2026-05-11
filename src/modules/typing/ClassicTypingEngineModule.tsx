@@ -213,8 +213,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
-      language: (internalLanguage === 'Krutidev Hindi' || internalLanguage === 'Unicode Hindi') ? 'Hindi' : internalLanguage,
-      layout: internalLayout,
+      language: (internalLanguage === 'Krutidev Hindi' || internalLanguage === 'Unicode Hindi' || internalLanguage === 'Hindi') ? 'Hindi' : internalLanguage,
+      layout: internalLayout || (internalLanguage?.includes('Hindi') ? 'English' : 'English'),
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
@@ -254,12 +254,15 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     const isDeletion = val.length < typedText.length;
 
     // 0. HINDI MAPPING LOGIC
-    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi';
+    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
     if (isHindi && !isDeletion && val.length > typedText.length) {
-        const lastChar = val.slice(-1);
-        if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
-            const mapped = mapKeyToHindi(lastChar, settings.layout);
-            val = val.slice(0, -1) + mapped;
+        // ONLY apply mapping if layout is NOT English (meaning no browser IME is being used)
+        if (settings.layout !== 'English') {
+            const lastChar = val.slice(-1);
+            if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
+                const mapped = mapKeyToHindi(lastChar, settings.layout);
+                val = val.slice(0, -1) + mapped;
+            }
         }
     }
 
@@ -300,13 +303,14 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   };
 
   const [fontSize, setFontSize] = useState(16);
-  const [bgColor, setBgColor] = useState('#a1c984');
+  const [bgColor, setBgColor] = useState('#ffffff');
 
-  const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Remington Gail' || settings.language === 'Inscript' || settings.language === 'Phonetic';
+  const isUnicodeHindi = settings.language === 'Unicode Hindi' || settings.language === 'Hindi';
+  const isKrutidev = settings.language === 'Krutidev Hindi';
   
-  const typingFont = isHindi 
+  const typingFont = isUnicodeHindi 
     ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
-    : "'Times New Roman', Times, serif";
+    : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
 
   const passageWords = internalPassage.split(' ');
 
@@ -551,10 +555,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             className="flex-1 border-2 border-gray-400 p-4 overflow-y-auto outline-none focus:border-blue-600 text-black font-semibold leading-relaxed resize-none shadow-inner transition-colors duration-300"
             style={{ 
               fontSize: `${fontSize + 2}px`, 
-              fontFamily: typingFont,
-              minHeight: '200px', 
               backgroundColor: bgColor,
-              scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'
+              scrollbarWidth: settings.showScrollbar ? 'auto' : 'none',
+              fontFamily: typingFont
             }}
         />
       </div>
