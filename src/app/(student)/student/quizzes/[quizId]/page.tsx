@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { getQuiz, submitQuiz } from "@/app/actions/student/quizzes";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
@@ -57,6 +57,9 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         fetchQuiz();
     }, [quizId]);
 
+    const searchParams = useSearchParams();
+    const courseId = searchParams.get("courseId");
+
     const handleSubmit = useCallback(async () => {
         if (isSubmitting) return;
 
@@ -80,7 +83,8 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                     document.exitFullscreen?.().catch(() => { });
                 }
                 // Redirect to results analysis page
-                router.push(`/student/quizzes/${quizId}/analysis?attemptId=${res.data.attemptId}`);
+                const analysisUrl = `/student/quizzes/${quizId}/analysis?attemptId=${res.data.attemptId}${courseId ? `&courseId=${courseId}` : ""}`;
+                router.push(analysisUrl);
             } else {
                 toast.error(res.error || "Failed to submit test");
                 setIsSubmitting(false);

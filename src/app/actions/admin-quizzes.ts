@@ -44,8 +44,8 @@ export async function createAdminQuiz(data: any) {
 
         const quiz = await Quiz.create({
             ...data,
-            isMockTest: true, // Ensure it's always a mock test when created via this portal
-            isPublished: true,
+            isMockTest: data.isMockTest ?? true,
+            isPublished: data.isPublished ?? true,
         });
 
         revalidatePath("/admin/mock-tests/list");

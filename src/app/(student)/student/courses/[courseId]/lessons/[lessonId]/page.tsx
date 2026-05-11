@@ -28,6 +28,7 @@ interface Lesson {
     scheduledDate?: string;
     scheduledTime?: string;
     status?: "upcoming" | "live" | "completed";
+    quizId?: string;
 }
 
 export default function LessonPage({
@@ -293,11 +294,15 @@ export default function LessonPage({
                                 Take this quiz to test your understanding of the material.
                             </p>
                         </div>
-                        <Link href={`/student/quizzes`}>
-                            <Button size="lg" className="rounded-2xl font-bold gap-2 h-12 px-8 bg-indigo-600 hover:bg-indigo-700">
-                                <Brain className="w-4 h-4" /> Start Quiz
-                            </Button>
-                        </Link>
+                        {lesson.quizId ? (
+                            <Link href={`/student/quizzes/${lesson.quizId}?courseId=${courseId}`}>
+                                <Button size="lg" className="rounded-2xl font-bold gap-2 h-12 px-8 bg-indigo-600 hover:bg-indigo-700">
+                                    <Brain className="w-4 h-4" /> Start Quiz
+                                </Button>
+                            </Link>
+                        ) : (
+                            <p className="text-rose-500 text-xs font-black uppercase">No quiz attached to this lesson yet.</p>
+                        )}
                     </div>
                 )}
             </div>

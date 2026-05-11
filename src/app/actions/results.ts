@@ -111,7 +111,7 @@ export async function getPublicResults() {
 export async function getPublicExams() {
     try {
         await connectDB();
-        const exams = await Quiz.find({ isPublished: true, isMockTest: true })
+        const exams = await Quiz.find({ isPublished: true, isMockTest: true, isPublic: true })
             .populate("courseId", "title")
             .sort({ createdAt: -1 })
             .limit(10)

@@ -19,6 +19,7 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
     const { quizId } = use(params);
     const searchParams = useSearchParams();
     const attemptId = searchParams.get("attemptId");
+    const courseId = searchParams.get("courseId");
 
     const [analysis, setAnalysis] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -149,12 +150,20 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                     })}
                 </div>
 
-                <div className="flex justify-center pt-8">
-                    <Link href="/student/quizzes">
-                        <Button size="lg" className="h-14 px-8 rounded-2xl font-bold shadow-xl shadow-primary/20">
-                            Take Another Test
-                        </Button>
-                    </Link>
+                <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
+                    {courseId ? (
+                        <Link href={`/student/courses/${courseId}`}>
+                            <Button size="lg" className="h-14 px-8 rounded-2xl font-bold shadow-xl shadow-primary/20 gap-2">
+                                <ArrowLeft className="w-5 h-5" /> Back to Course
+                            </Button>
+                        </Link>
+                    ) : (
+                        <Link href="/student/quizzes">
+                            <Button size="lg" className="h-14 px-8 rounded-2xl font-bold shadow-xl shadow-primary/20">
+                                Take Another Test
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

@@ -116,6 +116,11 @@ export default function AdminQuizzesPage() {
                                                         ) : (
                                                             <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none text-[8px] px-1.5 h-3.5">REGULAR</Badge>
                                                         )}
+                                                        {quiz.isPublic ? (
+                                                            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none text-[8px] px-1.5 h-3.5">PUBLIC</Badge>
+                                                        ) : (
+                                                            <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100 border-none text-[8px] px-1.5 h-3.5">PRIVATE</Badge>
+                                                        )}
                                                         {quiz.isPublished ? <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[8px] px-1.5 h-3.5">LIVE</Badge> : <Badge className="bg-slate-100 text-slate-400 hover:bg-slate-100 border-none text-[8px] px-1.5 h-3.5">DRAFT</Badge>}
                                                     </div>
                                                 </div>

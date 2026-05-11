@@ -45,6 +45,7 @@ export default function NewMockTestPage() {
         courseId: "",
         examCode: "M1-R5",
         isMockTest: false,
+        isPublic: true,
         paperSetId: "",
         pricing: {
             type: "FREE",
@@ -75,8 +76,14 @@ export default function NewMockTestPage() {
         }
     });
 
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+
     useEffect(() => {
         loadData();
+        const cid = searchParams?.get("courseId");
+        if (cid) {
+            setFormData((prev: any) => ({ ...prev, courseId: cid, isPublic: false }));
+        }
     }, []);
 
     const loadData = async () => {
@@ -241,6 +248,18 @@ export default function NewMockTestPage() {
                                     <Switch 
                                         checked={formData.isMockTest} 
                                         onCheckedChange={(val) => setFormData({...formData, isMockTest: val})} 
+                                        className="data-[state=checked]:bg-primary"
+                                    />
+                                </div>
+
+                                <div className="space-y-4 lg:col-span-2 p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                                    <div>
+                                        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Public Visibility</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">If OFF, this quiz will only be visible within the assigned course</p>
+                                    </div>
+                                    <Switch 
+                                        checked={formData.isPublic} 
+                                        onCheckedChange={(val) => setFormData({...formData, isPublic: val})} 
                                         className="data-[state=checked]:bg-primary"
                                     />
                                 </div>

@@ -27,7 +27,7 @@ export const getAvailableQuizzes = createSafeAction(
             Quiz.find({
                 $or: [
                     { courseId: { $in: enrolledCourseIds } },
-                    { isMockTest: true }
+                    { isMockTest: true, isPublic: true }
                 ],
                 isPublished: true
             }).sort({ createdAt: -1 }),

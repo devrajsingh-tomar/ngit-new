@@ -39,6 +39,7 @@ export interface IQuiz extends Document {
     };
     isMockTest: boolean;
     isPublished: boolean;
+    isPublic: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -83,6 +84,7 @@ const QuizSchema = new Schema<IQuiz>(
         },
         isMockTest: { type: Boolean, default: false },
         isPublished: { type: Boolean, default: false },
+        isPublic: { type: Boolean, default: true },
     },
     { timestamps: true }
 );

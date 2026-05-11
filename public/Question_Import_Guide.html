@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Question Import Guide - NGI Study Zone</title>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #f8fafc;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #2563eb;
+            margin-top: 40px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eff6ff;
+        }
+        .type-box {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border-left: 6px solid #94a3b8;
+        }
+        .type-title {
+            font-weight: 900;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #475569;
+            margin-bottom: 12px;
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 700;
+        }
+        code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .note {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            padding: 16px;
+            border-radius: 12px;
+            color: #92400e;
+            font-size: 0.9rem;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .card { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Excel Import Guide</h1>
+        <p class="subtitle">Complete instructions for bulk uploading questions to NGI Study Zone.</p>
+
+        <div class="note">
+            <strong>Important:</strong> Always use the <code>.xlsx</code> format. Ensure headers match the sample file exactly (case-insensitive).
+        </div>
+
+        <h2>Supported Question Types</h2>
+
+        <!-- MCQ Single -->
+        <div class="type-box" style="border-color: #2563eb;">
+            <span class="type-title">1. MCQ Single (MCQ_SINGLE)</span>
+            <p>Standard multiple-choice question with one correct answer.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>Question</td><td>What is the capital of France?</td></tr>
+                <tr><td>Type</td><td>MCQ_SINGLE</td></tr>
+                <tr><td>Option A-D</td><td>Paris, London, Berlin, Madrid</td></tr>
+                <tr><td>Correct Answer</td><td>A</td></tr>
+            </table>
+        </div>
+
+        <!-- MCQ Multiple -->
+        <div class="type-box" style="border-color: #7c3aed;">
+            <span class="type-title">2. MCQ Multiple (MCQ_MULTIPLE)</span>
+            <p>Multiple-choice question where more than one answer can be correct.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>Type</td><td>MCQ_MULTIPLE</td></tr>
+                <tr><td>Correct Answer</td><td>A, C (Comma separated labels)</td></tr>
+            </table>
+        </div>
+
+        <!-- True/False -->
+        <div class="type-box" style="border-color: #10b981;">
+            <span class="type-title">3. True / False (TRUE_FALSE)</span>
+            <p>Simple Boolean questions.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>Type</td><td>TRUE_FALSE</td></tr>
+                <tr><td>Correct Answer</td><td>True (or A for True, B for False)</td></tr>
+            </table>
+        </div>
+
+        <!-- Match the Following -->
+        <div class="type-box" style="border-color: #f59e0b;">
+            <span class="type-title">4. Match the Following (MATCH_THE_FOLLOWING)</span>
+            <p>Connecting items from two columns.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>Option A-D</td><td>Left side items (e.g. "Mouse", "Monitor")</td></tr>
+                <tr><td>MatchPair A-D</td><td>Right side items (e.g. "Input", "Output")</td></tr>
+                <tr><td>Correct Answer</td><td>A-1, B-2, C-3, D-4</td></tr>
+            </table>
+        </div>
+
+        <!-- Assertion Reason -->
+        <div class="type-box" style="border-color: #ef4444;">
+            <span class="type-title">5. Assertion & Reason (ASSERTION_REASON)</span>
+            <p>Classic competitive exam format.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>Assertion</td><td>Plants are green.</td></tr>
+                <tr><td>Reason</td><td>They contain chlorophyll.</td></tr>
+                <tr><td>Correct Answer</td><td>A (Both true, R is correct explanation)</td></tr>
+            </table>
+        </div>
+
+        <!-- Numeric -->
+        <div class="type-box" style="border-color: #06b6d4;">
+            <span class="type-title">6. Numeric (NUMERIC)</span>
+            <p>Questions requiring a specific number as an answer.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>NumericAnswer</td><td>42.5</td></tr>
+            </table>
+        </div>
+
+        <!-- Typing -->
+        <div class="type-box" style="border-color: #6366f1;">
+            <span class="type-title">7. Typing / Descriptive (TYPING)</span>
+            <p>For typing tests or long-form answers.</p>
+            <table>
+                <tr><th>Column</th><th>Value Example</th></tr>
+                <tr><td>ShortAnswer</td><td>Paste the full passage or target text here.</td></tr>
+            </table>
+        </div>
+
+        <h2>Global Fields</h2>
+        <ul>
+            <li><strong>Marks:</strong> Default is <code>1</code>.</li>
+            <li><strong>Negative Marks:</strong> Use positive values (e.g., <code>0.25</code>).</li>
+            <li><strong>Difficulty:</strong> <code>EASY</code>, <code>MEDIUM</code>, or <code>HARD</code>.</li>
+            <li><strong>Explanation:</strong> Text shown to students after the test.</li>
+        </ul>
+
+        <div class="footer">
+            &copy; 2026 NGI Study Zone. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

@@ -8,7 +8,8 @@ import {
     CheckCircle2, 
     Database,
     Table as TableIcon,
-    Loader2
+    Loader2,
+    FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -344,9 +345,16 @@ export default function ImportQuestionsPage() {
                         <ChevronLeft className="w-5 h-5" /> Back to Bank
                     </Button>
                 </Link>
-                <Button variant="outline" className="rounded-xl gap-2 font-bold" onClick={downloadSample}>
-                    <Download className="w-5 h-5" /> Download Sample File
-                </Button>
+                <div className="flex gap-3">
+                    <a href="/Question_Import_Guide.html" target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="rounded-xl gap-2 font-bold text-slate-600 border-slate-200">
+                            <FileText className="w-5 h-5" /> Instruction Guide (PDF)
+                        </Button>
+                    </a>
+                    <Button variant="outline" className="rounded-xl gap-2 font-bold" onClick={downloadSample}>
+                        <Download className="w-5 h-5" /> Download Sample File
+                    </Button>
+                </div>
             </div>
 
             <div className="bg-white rounded-[3rem] p-12 border border-slate-100 shadow-xl space-y-10">

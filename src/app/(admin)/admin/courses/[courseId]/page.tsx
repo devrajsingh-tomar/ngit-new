@@ -701,7 +701,7 @@ export default function CourseContentPage() {
                                             <p className="text-sm font-bold text-slate-600">No quizzes found for this course</p>
                                             <p className="text-xs text-slate-400 mt-1">Create a quiz first, then come back to link it.</p>
                                             <Link
-                                                href="/admin/mock-tests/new"
+                                                href={`/admin/mock-tests/new?courseId=${courseId}`}
                                                 target="_blank"
                                                 className="inline-flex items-center gap-1 mt-3 text-xs font-black text-purple-600 hover:text-purple-800 underline"
                                             >
@@ -734,6 +734,7 @@ export default function CourseContentPage() {
                                                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{quiz.timeLimit} min</span>
                                                             <span>{quiz.totalMarks} marks</span>
                                                             <span>Pass: {quiz.passingMarks}</span>
+                                                            {quiz.isMockTest && <span className="text-purple-600 bg-purple-50 px-1.5 rounded">Mock</span>}
                                                             {quiz.isPublished
                                                                 ? <span className="text-emerald-600 bg-emerald-50 px-1.5 rounded">Published</span>
                                                                 : <span className="text-amber-600 bg-amber-50 px-1.5 rounded">Draft</span>
