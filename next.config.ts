@@ -82,7 +82,6 @@ const nextConfig = {
             bodySizeLimit: "10mb",
         },
     },
-    },
 } as any;
 
 export default nextConfig as NextConfig;
