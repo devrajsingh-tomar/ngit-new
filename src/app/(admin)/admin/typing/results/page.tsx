@@ -85,6 +85,8 @@ export default function TypingResultsAdminPage() {
                         <Keyboard className="w-4 h-4" />
                         Monitor student typing performance across all exams
                     </p>
+                </div>
+                
                 <div className="flex items-center gap-3">
                     <Button onClick={() => setIsBulkDeleteOpen(true)} variant="ghost" className="rounded-2xl h-14 font-black gap-2 px-8 text-rose-600 hover:bg-rose-50 border-2 border-transparent hover:border-rose-100 transition-all">
                         <Trash2 className="w-5 h-5" />
