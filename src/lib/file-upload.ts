@@ -11,10 +11,7 @@ type UploadResult = {
 };
 
 // Configuration
-// Configuration - Store in root directory as expected by the /api/uploads route
-const UPLOAD_BASE = /* turbopackIgnore: true */ process.cwd();
-const UPLOAD_REL_PATH = path.join("public", "uploads", "gallery");
-const UPLOAD_DIR = path.join(UPLOAD_BASE, UPLOAD_REL_PATH);
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "gallery");
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // Increased to 10MB for larger profile pics/materials
 const ALLOWED_TYPES = [
@@ -58,10 +55,11 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
 const ensureUploadDir = async () => {
     try {
         const folders = ["uploads", "gallery"];
-        let currentPath = /* turbopackIgnore: true */ process.cwd();
+        const base = process.cwd();
 
         for (const folder of folders) {
-            currentPath = path.join(currentPath, folder);
+            // Static scope helps Turbopack
+            const currentPath = path.join(/* turbopackIgnore: true */ base, "public", folder);
             
             try {
                 await mkdir(currentPath, { recursive: true });
