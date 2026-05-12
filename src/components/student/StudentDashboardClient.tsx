@@ -72,7 +72,7 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
                             <Sparkles className="w-3.5 h-3.5" /> Learning Workspace
                         </div>
                         <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 leading-tight italic">
-                            Welcome back, <span className="text-gradient inline-block">{userName?.split(' ')[0]}!</span> <span className="inline-block">👋</span>
+                            Welcome back, <span className="text-gradient inline-block">{(userName || 'Student').split(' ')[0]}!</span> <span className="inline-block">👋</span>
                         </h1>
                         <p className="text-slate-500 mt-6 font-bold flex items-center gap-3">
                             <span className="w-3 h-3 rounded-full bg-primary animate-pulse" />
@@ -156,19 +156,21 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
                                         <div className="flex-1 flex flex-col justify-center gap-4">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <h3 className="font-black text-xl text-slate-900 tracking-tight">{en.courseId.title}</h3>
+                                                    <h3 className="font-black text-xl text-slate-900 tracking-tight">{en.courseId?.title || 'Untitled Course'}</h3>
                                                     <div className="flex items-center gap-2 mt-2">
                                                         <div className="px-2 py-0.5 rounded-md bg-indigo-50 text-[10px] font-black text-indigo-600 uppercase tracking-wider">Premium Course</div>
                                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                            {en.courseId.category}
+                                                            {en.courseId?.category || 'General'}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <Link href={`/student/courses/${en.courseId._id}`}>
-                                                    <Button variant="outline" className="w-12 h-12 rounded-2xl p-0 hover:bg-primary hover:text-white transition-all">
-                                                        <ArrowUpRight className="w-5 h-5" />
-                                                    </Button>
-                                                </Link>
+                                                {en.courseId?._id && (
+                                                    <Link href={`/student/courses/${en.courseId._id}`}>
+                                                        <Button variant="outline" className="w-12 h-12 rounded-2xl p-0 hover:bg-primary hover:text-white transition-all">
+                                                            <ArrowUpRight className="w-5 h-5" />
+                                                        </Button>
+                                                    </Link>
+                                                )}
                                             </div>
                                             
                                             <div className="space-y-3 pt-2">

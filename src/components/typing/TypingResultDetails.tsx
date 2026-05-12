@@ -153,6 +153,22 @@ export default function TypingResultDetails({ params }: { params: { id: string }
 
   return (
     <div className="min-h-screen bg-[#f1f5f9] py-8 md:py-12 print:py-0 print:bg-white font-sans">
+      {/* Print Specific Styles */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page { size: A4; margin: 1cm; }
+          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print-bg-none { background: none !important; }
+          .print-text-black { color: black !important; }
+          .print-border { border: 1px solid #e2e8f0 !important; }
+          .print-no-shadow { box-shadow: none !important; }
+          .print-p-0 { padding: 0 !important; }
+          .print-m-0 { margin: 0 !important; }
+          .print-hidden { display: none !important; }
+          .print-force-visible { display: block !important; opacity: 1 !important; visibility: visible !important; }
+        }
+      `}} />
+
       <div className="max-w-6xl mx-auto px-4 print:px-0">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 print:hidden">
@@ -175,13 +191,13 @@ export default function TypingResultDetails({ params }: { params: { id: string }
           </div>
         </div>
 
-        <div className="bg-white rounded-[3rem] border border-slate-200 shadow-2xl shadow-slate-200/40 overflow-hidden print:border-none print:shadow-none print:rounded-none">
+        <div className="bg-white rounded-[3rem] border border-slate-200 shadow-2xl shadow-slate-200/40 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0">
           <div className={cn(
-            "p-12 text-white relative overflow-hidden",
+            "p-12 text-white relative overflow-hidden print:bg-slate-50 print:text-slate-900 print:border-b print:border-slate-200",
             isQualified ? "bg-gradient-to-br from-emerald-600 to-teal-700" : "bg-gradient-to-br from-rose-600 to-red-700"
           )}>
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full -mr-64 -mt-64 blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/20 rounded-full -ml-32 -mb-32 blur-3xl opacity-50" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full -mr-64 -mt-64 blur-3xl print:hidden" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/20 rounded-full -ml-32 -mb-32 blur-3xl opacity-50 print:hidden" />
             
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12">
                 <div className="flex flex-col md:flex-row items-center gap-10">
@@ -246,7 +262,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     <div className="h-px flex-1 bg-slate-100" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 gap-0 border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm bg-white print:shadow-none print:border-slate-300">
                     <MetricRow label="Candidate Name" value={result.userId?.name || "N/A"} icon={User} />
                     <MetricRow label="Examination" value={result.examId?.title || "N/A"} icon={Keyboard} />
                     <MetricRow label="Test Date" value={format(new Date(result.createdAt), "dd/MM/yyyy")} icon={Calendar} />
@@ -302,14 +318,14 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     <div className="h-px flex-1 bg-slate-100" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-1 gap-10 print:gap-8">
                     <div className="space-y-4">
                         <div className="flex justify-between items-center px-6">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Original Text</span>
-                            <div className="w-3 h-3 rounded-full bg-slate-200" />
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] print:text-slate-500">Original Text</span>
+                            <div className="w-3 h-3 rounded-full bg-slate-200 print:hidden" />
                         </div>
-                        <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100 min-h-[400px]">
-                            <p className="text-xl leading-[2.5] opacity-60 italic" style={{ fontFamily: getFontFamily() }}>
+                        <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100 min-h-[400px] print:p-6 print:rounded-2xl print:min-h-0 print:bg-white print:border-slate-200">
+                            <p className="text-xl leading-[2.5] opacity-60 italic print:text-slate-900 print:text-sm print:opacity-100" style={{ fontFamily: getFontFamily() }}>
                                 {originalWords.map((word: string, i: number) => (
                                     <span key={i}>{word} </span>
                                 ))}
@@ -319,11 +335,11 @@ export default function TypingResultDetails({ params }: { params: { id: string }
 
                     <div className="space-y-4">
                         <div className="flex justify-between items-center px-6">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Your Transcript</span>
-                            <div className="w-3 h-3 rounded-full bg-primary" />
+                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] print:text-slate-900">Your Transcript</span>
+                            <div className="w-3 h-3 rounded-full bg-primary print:hidden" />
                         </div>
-                        <div className="p-10 bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-slate-200/40 min-h-[400px]">
-                            <p className="text-xl leading-[2.5] font-semibold" style={{ fontFamily: getFontFamily() }}>
+                        <div className="p-10 bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-slate-200/40 min-h-[400px] print:p-6 print:rounded-2xl print:min-h-0 print:border-slate-200 print:shadow-none">
+                            <p className="text-xl leading-[2.5] font-semibold print:text-slate-900 print:text-sm" style={{ fontFamily: getFontFamily() }}>
                                 {submittedWords.map((word: string, i: number) => {
                                     const isCorrect = word === originalWords[i];
                                     return (
@@ -331,7 +347,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                                             key={i} 
                                             className={cn(
                                                 "transition-colors",
-                                                isCorrect ? "text-slate-900" : "text-rose-500 font-black bg-rose-50 px-1 rounded-lg ring-1 ring-rose-100 underline decoration-rose-300 underline-offset-[12px] decoration-4"
+                                                isCorrect ? "text-slate-900" : "text-rose-500 font-black bg-rose-50 px-1 rounded-lg ring-1 ring-rose-100 underline decoration-rose-300 underline-offset-[12px] decoration-4 print:bg-transparent print:ring-0 print:underline"
                                             )}
                                         >
                                             {word}{' '}
@@ -365,23 +381,23 @@ function MetricRow({ label, value, icon: Icon, color, highlight }: any) {
 
     return (
         <div className={cn(
-            "flex flex-col p-6 border-b border-r border-slate-100 group transition-all",
-            highlight ? "bg-slate-950 text-white border-slate-800" : "hover:bg-slate-50/50"
+            "flex flex-col p-6 border-b border-r border-slate-100 group transition-all print:border-slate-200 print:p-4",
+            highlight ? "bg-slate-950 text-white border-slate-800 print:bg-white print:text-slate-900 print:border-slate-200" : "hover:bg-slate-50/50"
         )}>
             <div className="flex items-center gap-3 mb-3">
                 <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110",
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 print:hidden",
                     highlight ? "bg-white/10 text-primary" : (colorClasses[color || 'default'])
                 )}>
                     <Icon className="w-4 h-4" />
                 </div>
                 <p className={cn(
-                    "text-[10px] font-black uppercase tracking-[0.2em]",
+                    "text-[10px] font-black uppercase tracking-[0.2em] print:text-slate-500",
                     highlight ? "text-slate-500" : "text-slate-400"
                 )}>{label}</p>
             </div>
             <p className={cn(
-                "text-xl font-black tracking-tight",
+                "text-xl font-black tracking-tight print:text-slate-900 print:text-lg",
                 highlight ? "text-white" : "text-slate-900"
             )}>{value}</p>
         </div>

@@ -82,8 +82,6 @@ const nextConfig = {
             bodySizeLimit: "10mb",
         },
     },
-    turbopack: {
-        root: /* turbopackIgnore: true */ process.cwd(),
     },
 } as any;
 

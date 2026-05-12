@@ -12,7 +12,7 @@ type UploadResult = {
 
 // Configuration
 // Configuration - Store in root directory as expected by the /api/uploads route
-const UPLOAD_BASE = process.cwd();
+const UPLOAD_BASE = /* turbopackIgnore: true */ process.cwd();
 const UPLOAD_REL_PATH = path.join("public", "uploads", "gallery");
 const UPLOAD_DIR = path.join(UPLOAD_BASE, UPLOAD_REL_PATH);
 

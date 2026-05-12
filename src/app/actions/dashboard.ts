@@ -104,7 +104,7 @@ export async function getStudentDashboardData() {
             Attempt.find({ studentId: userId }).lean(),
             Attendance.find({ studentId: userId }).lean(),
             TypingResult.find({ userId }).populate("examId", "title duration").sort({ createdAt: -1 }).limit(5).lean(),
-            TypingExam.find({ isPublished: true }).limit(5).lean()
+            TypingExam.find({ status: "Active" }).limit(5).lean()
         ]);
 
         const activeCourses = enrollments.length;

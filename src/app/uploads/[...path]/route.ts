@@ -8,14 +8,14 @@ export async function GET(
     { params }: { params: Promise<{ path: string[] }> }
 ) {
     const { path: pathSegments } = await params;
-    const filePath = path.join(process.cwd(), "uploads", ...pathSegments);
+    const filePath = path.join(/* turbopackIgnore: true */ process.cwd(), "uploads", ...pathSegments);
 
     try {
         let finalPath = filePath;
         
         if (!fs.existsSync(finalPath)) {
             // Try fallback to public/uploads
-            const fallbackPath = path.join(process.cwd(), "public", "uploads", ...pathSegments);
+            const fallbackPath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads", ...pathSegments);
             if (fs.existsSync(fallbackPath)) {
                 finalPath = fallbackPath;
             } else {
