@@ -370,13 +370,13 @@ export default function ImportQuestionsPage() {
 
                 <div className="space-y-6 max-w-md mx-auto">
                     <div className="space-y-2">
-                        <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">1. Target Course</label>
+                        <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">1. Target Course (Optional)</label>
                         <select 
                             className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
                             value={selectedCourseId}
                             onChange={(e) => setSelectedCourseId(e.target.value)}
                         >
-                            <option value="">Choose a Course</option>
+                            <option value="">No Course (Individual Upload)</option>
                             {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                         </select>
                     </div>
@@ -411,7 +411,7 @@ export default function ImportQuestionsPage() {
 
                     <Button 
                         className="w-full h-16 rounded-[1.5rem] font-black text-lg gap-3 mt-4 shadow-2xl shadow-primary/20"
-                        disabled={!file || !selectedCourseId || importing}
+                        disabled={!file || importing}
                         onClick={handleImport}
                     >
                         {importing ? (
@@ -429,25 +429,68 @@ export default function ImportQuestionsPage() {
                 {previewData.length > 0 && (
                     <div className="pt-10 border-t border-slate-50">
                         <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-widest mb-6 italic flex items-center justify-center gap-2">
-                            <AlertCircle className="w-3 h-3" /> Previewing first few records
+                            <AlertCircle className="w-3 h-3" /> Data Preview (Correct Mapping for Question Types)
                         </p>
                         <div className="overflow-hidden rounded-2xl border border-slate-100">
                             <table className="w-full text-xs">
                                 <thead className="bg-slate-50 text-slate-400 font-black uppercase">
                                     <tr>
                                         <th className="px-4 py-3 text-left">Type</th>
-                                        <th className="px-4 py-3 text-left">Question Snippet</th>
-                                        <th className="px-4 py-3 text-center">Correct</th>
+                                        <th className="px-4 py-3 text-left">Question Details</th>
+                                        <th className="px-4 py-3 text-center">Correct Answer</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {previewData.map((row, i) => (
-                                        <tr key={i} className="border-t border-slate-50">
-                                            <td className="px-4 py-3 font-bold text-primary">{row.Type || "MCQ"}</td>
-                                            <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-xs">{row.Question || row.Content}</td>
-                                            <td className="px-4 py-3 text-center font-black text-emerald-500">{row.CorrectAnswer || "A"}</td>
-                                        </tr>
-                                    ))}
+                                    {previewData.map((row, i) => {
+                                        const type = mapType(getValueCaseInsensitive(row, ["Type", "QType"])?.toString());
+                                        const content = getValueCaseInsensitive(row, ["Question", "Content", "Q"])?.toString() || "No content";
+                                        const answer = getValueCaseInsensitive(row, ["CorrectAnswer", "Answer"])?.toString() || "N/A";
+                                        
+                                        return (
+                                            <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-4 py-3 align-top">
+                                                    <span className="px-2 py-1 bg-primary/5 text-primary rounded text-[10px] font-black">{type}</span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <p className="font-bold text-slate-900 mb-2 line-clamp-2">{content}</p>
+                                                    
+                                                    {/* Contextual Preview Based on Type */}
+                                                    <div className="grid grid-cols-2 gap-2 mt-1">
+                                                        {type === "MCQ_SINGLE" || type === "MCQ_MULTIPLE" ? (
+                                                            <>
+                                                                {['A', 'B', 'C', 'D'].map(lbl => {
+                                                                    const opt = getValueCaseInsensitive(row, [`Option${lbl}`, lbl]);
+                                                                    if (!opt) return null;
+                                                                    const isCorrect = String(answer).toUpperCase().includes(lbl);
+                                                                    return (
+                                                                        <div key={lbl} className={`p-1.5 rounded-lg border flex items-center gap-2 ${isCorrect ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white'}`}>
+                                                                            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>{lbl}</span>
+                                                                            <span className="truncate opacity-70">{opt.toString()}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </>
+                                                        ) : type === "TRUE_FALSE" ? (
+                                                            <div className="col-span-2 flex gap-4">
+                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${String(answer).toLowerCase() === 'true' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-400'}`}>True</span>
+                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${String(answer).toLowerCase() === 'false' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-400'}`}>False</span>
+                                                            </div>
+                                                        ) : type === "ASSERTION_REASON" ? (
+                                                            <div className="col-span-2 space-y-1">
+                                                                <p className="text-[10px] truncate"><span className="font-black text-slate-400 uppercase">A:</span> {getValueCaseInsensitive(row, ["Assertion"])?.toString().substring(0, 30)}...</p>
+                                                                <p className="text-[10px] truncate"><span className="font-black text-slate-400 uppercase">R:</span> {getValueCaseInsensitive(row, ["Reason"])?.toString().substring(0, 30)}...</p>
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center align-top">
+                                                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 font-black border border-emerald-100">
+                                                        {answer}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
