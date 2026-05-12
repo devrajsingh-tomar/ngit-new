@@ -25,18 +25,20 @@ export default function TypingResultsAdminPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+    const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
 
     useEffect(() => {
-        loadResults();
+        loadResults(1);
     }, []);
 
-    const loadResults = async () => {
+    const loadResults = async (page = 1) => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/typing/results");
+            const res = await fetch(`/api/admin/typing/results?page=${page}&limit=50`);
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setResults(data);
+            if (data.results) {
+                setResults(data.results);
+                setPagination(data.pagination);
             }
         } catch (error) {
             toast.error("Failed to load typing results");
@@ -220,7 +222,24 @@ export default function TypingResultsAdminPage() {
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     <div className="h-px bg-slate-100 my-1 mx-2" />
-                                                    <DropdownMenuItem className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-rose-600 focus:text-rose-600 focus:bg-rose-50">
+                                                    <DropdownMenuItem 
+                                                        className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                                                        onClick={async () => {
+                                                            if (confirm("Are you sure you want to permanently delete this typing result?")) {
+                                                                try {
+                                                                    const deleteRes = await fetch(`/api/admin/typing/results/${res._id}`, { method: 'DELETE' });
+                                                                    if (deleteRes.ok) {
+                                                                        toast.success("Result removed");
+                                                                        loadResults(pagination.page);
+                                                                    } else {
+                                                                        toast.error("Failed to delete result");
+                                                                    }
+                                                                } catch (err) {
+                                                                    toast.error("Error deleting result");
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
                                                         <Trash2 className="w-4 h-4" /> Remove Result
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -231,6 +250,34 @@ export default function TypingResultsAdminPage() {
                             )}
                         </TableBody>
                     </Table>
+                </div>
+                
+                {/* Pagination */}
+                <div className="flex items-center justify-between bg-white px-8 py-6 border-t border-slate-50">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Revealing <span className="text-slate-900 font-black">{results.length}</span> of <span className="text-slate-900 font-black">{pagination.total}</span> datasets
+                    </div>
+                    <div className="flex gap-3">
+                        <Button 
+                            variant="outline" 
+                            className="rounded-xl h-11 px-5 font-black text-[10px] uppercase tracking-widest border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
+                            disabled={pagination.page <= 1 || loading}
+                            onClick={() => loadResults(pagination.page - 1)}
+                        >
+                            Back
+                        </Button>
+                        <div className="flex items-center px-6 bg-slate-900 rounded-xl font-black text-[10px] text-white uppercase tracking-widest shadow-lg shadow-slate-200">
+                            P. {pagination.page} / {pagination.totalPages}
+                        </div>
+                        <Button 
+                            variant="outline" 
+                            className="rounded-xl h-11 px-5 font-black text-[10px] uppercase tracking-widest border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
+                            disabled={pagination.page >= pagination.totalPages || loading}
+                            onClick={() => loadResults(pagination.page + 1)}
+                        >
+                            Forward
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

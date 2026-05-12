@@ -37,6 +37,23 @@ export async function POST(req: Request) {
 
     await connectDB();
 
+    // --- NEW: Duplicate Prevention (De-bouncing) ---
+    // Check if the same student submitted for the same exam in the last 30 seconds
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    const existingRecentResult = await TypingResult.findOne({
+      userId: session.user.id,
+      examId,
+      createdAt: { $gte: thirtySecondsAgo }
+    });
+
+    if (existingRecentResult) {
+      return NextResponse.json({ 
+        success: true, 
+        message: "Result already saved recently", 
+        resultId: existingRecentResult._id 
+      }, { status: 200 });
+    }
+
     // Create the result record
     const result = await TypingResult.create({
       userId: session.user.id,

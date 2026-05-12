@@ -16,16 +16,33 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const examId = searchParams.get("examId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const skip = (page - 1) * limit;
     
     await connectDB();
     const query = examId ? { examId } : {};
     
-    const results = await TypingResult.find(query)
-      .populate("userId", "name email")
-      .populate("examId", "title")
-      .sort({ createdAt: -1 });
+    const [results, total] = await Promise.all([
+      TypingResult.find(query)
+        .populate("userId", "name email")
+        .populate("examId", "title language")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      TypingResult.countDocuments(query)
+    ]);
 
-    return NextResponse.json(results);
+    return NextResponse.json({
+      results,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch results" }, { status: 500 });
   }
