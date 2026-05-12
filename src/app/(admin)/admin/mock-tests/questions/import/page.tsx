@@ -122,10 +122,6 @@ export default function ImportQuestionsPage() {
     };
 
     const handleImport = async () => {
-        if (!selectedCourseId) {
-            toast.error("Please select a target course for these questions.");
-            return;
-        }
         if (!file) {
             toast.error("Please upload an Excel file.");
             return;
@@ -169,7 +165,7 @@ export default function ImportQuestionsPage() {
                 const questType = mapType(typeRaw?.toString());
 
                 return {
-                    courseId: selectedCourseId,
+                    courseId: selectedCourseId || undefined,
                     examCode: finalExamCode,
                     subject: subject || "General",
                     topic: topic || "Uncategorized",
