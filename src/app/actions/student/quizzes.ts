@@ -147,57 +147,61 @@ export const submitQuiz = createSafeAction(
             if (userAnswer === undefined || userAnswer === null || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
                 unattemptedCount++;
             } else {
-                if (question.type === "MCQ_SINGLE") {
-                    const correctOption = question.options.find((o: any) => o.isCorrect);
-                    isCorrect = correctOption?._id.toString() === userAnswer;
-                } else if (question.type === "MCQ_MULTIPLE") {
-                    const correctIds = question.options.filter((o: any) => o.isCorrect).map((o: any) => o._id.toString());
-                    isCorrect = Array.isArray(userAnswer) && 
-                                userAnswer.length === correctIds.length && 
-                                userAnswer.every(id => correctIds.includes(id));
-                } else if (question.type === "NUMERIC") {
-                    isCorrect = parseFloat(userAnswer) === question.numericAnswer;
-                } else if (question.type === "TRUE_FALSE") {
-                    const correctOption = question.options.find((o: any) => o.isCorrect);
-                    const isCorrectVal = correctOption?.text.en.toLowerCase() === "true";
-                    isCorrect = String(userAnswer) === String(isCorrectVal);
-                } else if (question.type === "ASSERTION_REASON") {
-                    isCorrect = parseInt(userAnswer) === question.numericAnswer;
-                } else if (question.type === "MATCH_THE_FOLLOWING") {
-                    const matches = Object.entries(userAnswer as Record<string, string>);
-                    if (matches.length === question.options.length) {
-                        isCorrect = matches.every(([optId, matchId]) => optId === matchId);
-                    }
-                } else if (question.type === "TYPING") {
-                    const originalText = question.shortAnswer || question.content.en || "";
-                    const typedText = typeof userAnswer === "string" ? userAnswer : "";
-                    
-                    if (!typedText.trim()) {
-                        isCorrect = false;
-                    } else {
-                        const originalWords = originalText.trim().split(/\s+/);
-                        const typedWords = typedText.trim().split(/\s+/);
-                        
-                        let correctWords = 0;
-                        for (let i = 0; i < Math.min(originalWords.length, typedWords.length); i++) {
-                            if (originalWords[i] === typedWords[i]) {
-                                correctWords++;
-                            }
+                try {
+                    if (question.type === "MCQ_SINGLE") {
+                        const correctOption = question.options.find((o: any) => o.isCorrect);
+                        isCorrect = correctOption?._id.toString() === userAnswer;
+                    } else if (question.type === "MCQ_MULTIPLE") {
+                        const correctIds = question.options.filter((o: any) => o.isCorrect).map((o: any) => o._id.toString());
+                        isCorrect = Array.isArray(userAnswer) && 
+                                    userAnswer.length === correctIds.length && 
+                                    userAnswer.every(id => correctIds.includes(id));
+                    } else if (question.type === "NUMERIC") {
+                        isCorrect = parseFloat(userAnswer) === question.numericAnswer;
+                    } else if (question.type === "TRUE_FALSE") {
+                        const correctOption = question.options.find((o: any) => o.isCorrect);
+                        const isCorrectVal = correctOption?.text?.en?.toLowerCase() === "true";
+                        isCorrect = String(userAnswer) === String(isCorrectVal);
+                    } else if (question.type === "ASSERTION_REASON") {
+                        isCorrect = parseInt(userAnswer) === question.numericAnswer;
+                    } else if (question.type === "MATCH_THE_FOLLOWING") {
+                        const matches = Object.entries(userAnswer as Record<string, string>);
+                        if (matches.length === question.options.length) {
+                            isCorrect = matches.every(([optId, matchId]) => optId === matchId);
                         }
-                        const accuracy = (correctWords / Math.max(1, originalWords.length)) * 100;
+                    } else if (question.type === "TYPING") {
+                        const originalText = question.shortAnswer || question.content?.en || "";
+                        const typedText = typeof userAnswer === "string" ? userAnswer : "";
                         
-                        // Mark as correct if accuracy is 80% or higher
-                        isCorrect = accuracy >= 80;
+                        if (!typedText.trim()) {
+                            isCorrect = false;
+                        } else {
+                            const originalWords = originalText.trim().split(/\s+/);
+                            const typedWords = typedText.trim().split(/\s+/);
+                            
+                            let correctWords = 0;
+                            for (let i = 0; i < Math.min(originalWords.length, typedWords.length); i++) {
+                                if (originalWords[i] === typedWords[i]) {
+                                    correctWords++;
+                                }
+                            }
+                            const accuracy = (correctWords / Math.max(1, originalWords.length)) * 100;
+                            isCorrect = accuracy >= 80;
+                        }
                     }
-                }
 
-                if (isCorrect) {
-                    marksAwarded = question.marks || 4;
-                    score += marksAwarded;
-                    correctCount++;
-                } else {
-                    marksAwarded = -(question.negativeMarks || 1);
-                    score += marksAwarded;
+                    if (isCorrect) {
+                        marksAwarded = question.marks || 4;
+                        score += marksAwarded;
+                        correctCount++;
+                    } else {
+                        marksAwarded = -(question.negativeMarks || 1);
+                        score += marksAwarded;
+                        incorrectCount++;
+                    }
+                } catch (e) {
+                    console.error("Error evaluating question:", question._id, e);
+                    // Continue with default (incorrect) to prevent crashing the whole submission
                     incorrectCount++;
                 }
             }
