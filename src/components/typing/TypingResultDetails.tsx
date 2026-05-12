@@ -167,7 +167,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
             >
                 <Download className="w-4 h-4" /> Export Report
             </button>
-            <Link href="/student/results">
+            <Link href="/student/typing">
                 <Button className="h-12 px-8 rounded-2xl gap-3">
                     View All Results <ArrowRight className="w-4 h-4" />
                 </Button>
