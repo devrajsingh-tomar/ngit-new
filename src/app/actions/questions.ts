@@ -30,7 +30,10 @@ export async function createQuestion(data: any) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const newQuestion = await Question.create(data);
+        const questionData = { ...data };
+        if (questionData.courseId === "") delete questionData.courseId;
+
+        const newQuestion = await Question.create(questionData);
         revalidatePath("/admin/mock-tests/questions");
         revalidatePath("/admin/mock-tests");
         return { success: true, question: JSON.parse(JSON.stringify(newQuestion)) };
@@ -90,7 +93,10 @@ export async function updateQuestion(id: string, data: any) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: data }, { new: true });
+        const updateData = { ...data };
+        if (updateData.courseId === "") updateData.courseId = null;
+
+        const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: updateData }, { new: true });
         revalidatePath("/admin/mock-tests/questions");
         revalidatePath("/admin/mock-tests");
         return { success: true, question: JSON.parse(JSON.stringify(updatedQuestion)) };

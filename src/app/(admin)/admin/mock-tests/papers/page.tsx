@@ -150,7 +150,9 @@ export default function PaperSetsPage() {
                                     <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">
                                         {ps.name}
                                     </h3>
-                                    <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mt-2">Course: {ps.courseId?.title}</p>
+                                    <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mt-2">
+                                        Courses: {ps.courseIds?.length > 0 ? ps.courseIds.map((c: any) => c.title).join(", ") : "Public"}
+                                    </p>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3">

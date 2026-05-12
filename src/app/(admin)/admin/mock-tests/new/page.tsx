@@ -44,7 +44,7 @@ export default function NewMockTestPage() {
         logo: "",
         courseId: "",
         examCode: "M1-R5",
-        isMockTest: false,
+        isMockTest: true,
         isPublic: true,
         paperSetId: "",
         pricing: {
@@ -110,10 +110,6 @@ export default function NewMockTestPage() {
     const handleSubmit = async () => {
         if (!formData.title) {
             toast.error("Please provide a Mock Test Title.");
-            return;
-        }
-        if (!formData.courseId) {
-            toast.error("Please select a Target Course.");
             return;
         }
         if (!formData.paperSetId) {
@@ -204,13 +200,13 @@ export default function NewMockTestPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">
                                 <div className="space-y-2">
-                                    <Label className="font-bold text-slate-700 ml-2">Target Course</Label>
+                                    <Label className="font-bold text-slate-700 ml-2">Target Course (Optional)</Label>
                                     <select 
                                         className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none"
                                         value={formData.courseId}
                                         onChange={(e) => setFormData({...formData, courseId: e.target.value})}
                                     >
-                                        <option value="">Select Course</option>
+                                        <option value="">None / Public</option>
                                         {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                                     </select>
                                 </div>
@@ -242,8 +238,8 @@ export default function NewMockTestPage() {
                                 </div>
                                 <div className="space-y-4 lg:col-span-2 p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
                                     <div>
-                                        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Public Mock Test</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">Make this test visible to all students on the homepage</p>
+                                        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Public Mock Catalog</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">If ON, this will appear in the main Mock Tests section for all students</p>
                                     </div>
                                     <Switch 
                                         checked={formData.isMockTest} 

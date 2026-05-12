@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IPaperSet extends Document {
     name: string;
-    courseId: mongoose.Types.ObjectId;
+    courseIds?: mongoose.Types.ObjectId[];
     examCode?: string;
     subject: string;
     totalQuestions: number;
@@ -17,7 +17,7 @@ export interface IPaperSet extends Document {
 const PaperSetSchema = new Schema<IPaperSet>(
     {
         name: { type: String, required: true },
-        courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        courseIds: [{ type: Schema.Types.ObjectId, ref: "Course" }],
         examCode: { type: String },
         subject: { type: String, required: true },
         totalQuestions: { type: Number, required: true },

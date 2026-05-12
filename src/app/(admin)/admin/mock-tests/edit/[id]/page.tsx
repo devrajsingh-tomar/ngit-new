@@ -95,7 +95,7 @@ export default function EditMockTestPage({ params }: { params: Promise<{ id: str
             const q = qRes.quiz;
             setFormData({
                 ...q,
-                courseId: q.courseId?._id || q.courseId,
+                courseId: q.courseId?._id || q.courseId || "",
                 schedule: {
                     ...q.schedule,
                     startDate: q.schedule.startDate ? new Date(q.schedule.startDate).toISOString().slice(0, 16) : "",
@@ -126,8 +126,8 @@ export default function EditMockTestPage({ params }: { params: Promise<{ id: str
     };
 
     const handleSubmit = async () => {
-        if (!formData.title || !formData.courseId) {
-            toast.error("Please fill all required fields.");
+        if (!formData.title) {
+            toast.error("Please provide a Mock Test Title.");
             return;
         }
 
@@ -212,13 +212,13 @@ export default function EditMockTestPage({ params }: { params: Promise<{ id: str
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">
                                 <div className="space-y-2">
-                                    <Label className="font-bold text-slate-700 ml-2">Target Course</Label>
+                                    <Label className="font-bold text-slate-700 ml-2">Target Course (Optional)</Label>
                                     <select 
                                         className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none"
                                         value={formData.courseId}
                                         onChange={(e) => setFormData({...formData, courseId: e.target.value})}
                                     >
-                                        <option value="">Select Course</option>
+                                        <option value="">None / Public</option>
                                         {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                                     </select>
                                 </div>
@@ -250,12 +250,24 @@ export default function EditMockTestPage({ params }: { params: Promise<{ id: str
                                 </div>
                                 <div className="space-y-4 lg:col-span-2 p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
                                     <div>
-                                        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Public Mock Test</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">Make this test visible to all students on the homepage</p>
+                                        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Public Mock Catalog</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">If ON, this will appear in the main Mock Tests section for all students</p>
                                     </div>
                                     <Switch 
                                         checked={formData.isMockTest} 
                                         onCheckedChange={(val) => setFormData({...formData, isMockTest: val})} 
+                                        className="data-[state=checked]:bg-primary"
+                                    />
+                                </div>
+
+                                <div className="space-y-4 lg:col-span-2 p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                                    <div>
+                                        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Public Visibility</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">If OFF, this quiz will only be visible within the assigned course</p>
+                                    </div>
+                                    <Switch 
+                                        checked={formData.isPublic} 
+                                        onCheckedChange={(val) => setFormData({...formData, isPublic: val})} 
                                         className="data-[state=checked]:bg-primary"
                                     />
                                 </div>

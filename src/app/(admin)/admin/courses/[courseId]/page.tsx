@@ -16,6 +16,7 @@ import {
     getCourseForAdmin, createLesson, deleteLesson,
     updateCourse, updateLesson, togglePublish, getQuizzesForCourse
 } from "@/app/actions/courses";
+import { getPaperSets } from "@/app/actions/paperSets";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +62,7 @@ export default function CourseContentPage() {
     const [lessonForm, setLessonForm] = useState({ ...EMPTY_LESSON });
     const [saving, setSaving] = useState(false);
     const [quizzes, setQuizzes] = useState<any[]>([]); // quizzes for this course
+    const [paperSets, setPaperSets] = useState<any[]>([]); // available paper sets
 
     // ── Course Settings Edit ─────────────────────────────────
     const [courseForm, setCourseForm] = useState<any>({});
@@ -85,12 +87,15 @@ export default function CourseContentPage() {
                 category: res.course.category,
                 thumbnail: res.course.thumbnail,
                 syllabusUrl: res.course.syllabusUrl ?? "",
+                paperSetIds: res.course.paperSetIds || [],
             });
         } else {
             toast.error(res.error || "Failed to load course");
             router.push("/admin/courses");
         }
         setLoading(false);
+        const pRes = await getPaperSets();
+        if (pRes.success) setPaperSets(pRes.paperSets);
     };
 
     // ── Publish Toggle ────────────────────────────────────────
@@ -493,6 +498,40 @@ export default function CourseContentPage() {
                                 onChange={e => setCourseForm({ ...courseForm, syllabusUrl: e.target.value })}
                                 className="h-12 rounded-2xl px-5 font-mono text-xs bg-slate-50/50"
                             />
+                        </div>
+
+                        {/* Paper Sets Selection */}
+                        <div className="space-y-4 pt-4 border-t">
+                            <div>
+                                <label className="text-sm font-bold text-slate-700">Assign Paper Blueprints</label>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Select mock test templates available for this course</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-slate-50 rounded-[2rem] border border-slate-100">
+                                {paperSets.map(ps => (
+                                    <label key={ps._id} className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 hover:border-primary/20 transition-all cursor-pointer group">
+                                        <input 
+                                            type="checkbox"
+                                            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                                            checked={courseForm.paperSetIds?.includes(ps._id)}
+                                            onChange={(e) => {
+                                                const newIds = e.target.checked 
+                                                    ? [...(courseForm.paperSetIds || []), ps._id]
+                                                    : (courseForm.paperSetIds || []).filter((id: string) => id !== ps._id);
+                                                setCourseForm({...courseForm, paperSetIds: newIds});
+                                            }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-slate-700 line-clamp-1">{ps.name}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{ps.subject} • {ps.questions?.length} Qs</p>
+                                        </div>
+                                    </label>
+                                ))}
+                                {paperSets.length === 0 && (
+                                    <div className="col-span-full py-8 text-center text-slate-400 italic text-sm">
+                                        No paper blueprints found. Create some in the Mock Test manager.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 

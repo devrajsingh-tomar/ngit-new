@@ -14,6 +14,7 @@ export interface ICourse extends Document {
     outcomes: string[];
     highlights: string[];
     instructions?: string;
+    paperSetIds?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -33,6 +34,7 @@ const CourseSchema = new Schema<ICourse>(
         outcomes: [{ type: String }],
         highlights: [{ type: String }],
         instructions: { type: String, default: "" },
+        paperSetIds: [{ type: Schema.Types.ObjectId, ref: "PaperSet" }],
     },
     { timestamps: true }
 );

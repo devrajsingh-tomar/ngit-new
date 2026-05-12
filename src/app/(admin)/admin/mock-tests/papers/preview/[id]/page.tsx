@@ -27,7 +27,7 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
     // Form State
     const [formData, setFormData] = useState<any>({
         name: "",
-        courseId: "",
+        courseIds: [],
         examCode: "",
         subject: "",
         totalQuestions: 0,
@@ -55,7 +55,7 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
                   const ps = pRes.paperSet;
                   setFormData({
                       ...ps,
-                      courseId: ps.courseId?._id || ps.courseId
+                      courseIds: ps.courseIds || (ps.courseId ? [ps.courseId?._id || ps.courseId] : [])
                   });
              } else {
                  toast.error(pRes.error);
@@ -123,7 +123,7 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
 
     const handleAutoGenerate = () => {
         const pool = allQuestions.filter(q => 
-            (!formData.courseId || q.courseId?._id === formData.courseId) &&
+            (formData.courseIds.length === 0 || formData.courseIds.includes(q.courseId?._id)) &&
             (!formData.examCode || q.examCode === formData.examCode) &&
             (!formData.subject || q.subject?.toLowerCase() === formData.subject?.toLowerCase())
         );
@@ -151,10 +151,6 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
             toast.error("Please provide a Template Name.");
             return;
         }
-        if (!formData.courseId) {
-            toast.error("Please select a Target Course.");
-            return;
-        }
         if (formData.questions.length === 0) {
             toast.error("Please select at least one question for the paper set.");
             return;
@@ -173,9 +169,8 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
 
     const filteredPool = allQuestions.filter(q => {
         const qCourseId = q.courseId?._id || q.courseId;
-        const formCourseId = formData.courseId?._id || formData.courseId;
 
-        const matchesCourse = !useBlueprintFilters || !formCourseId || qCourseId === formCourseId;
+        const matchesCourse = !useBlueprintFilters || formData.courseIds.length === 0 || formData.courseIds.includes(qCourseId);
         const matchesExamCode = !useBlueprintFilters || !formData.examCode || q.examCode === formData.examCode;
         const matchesSubject = !useBlueprintFilters || !formData.subject || q.subject?.toLowerCase() === formData.subject?.toLowerCase();
         const matchesSearch = !searchQ || q.content?.en?.toLowerCase().includes(searchQ.toLowerCase());
@@ -227,16 +222,27 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <Label className="font-bold text-slate-700 ml-1">Target Course <span className="text-rose-500">*</span></Label>
-                                <select 
-                                    className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900"
-                                    value={formData.courseId}
-                                    onChange={(e) => setFormData({...formData, courseId: e.target.value})}
-                                >
-                                    <option value="">Any Course</option>
-                                    {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
-                                </select>
+                            <div className="space-y-4">
+                                <Label className="font-bold text-slate-700 ml-1">Target Courses (Optional)</Label>
+                                <div className="max-h-48 overflow-y-auto p-4 bg-slate-50 rounded-2xl space-y-2 border border-slate-100">
+                                    {courses.map(c => (
+                                        <label key={c._id} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl transition-colors cursor-pointer group">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                                                checked={formData.courseIds?.includes(c._id)}
+                                                onChange={(e) => {
+                                                    const newIds = e.target.checked 
+                                                        ? [...(formData.courseIds || []), c._id]
+                                                        : (formData.courseIds || []).filter((id: string) => id !== c._id);
+                                                    setFormData({...formData, courseIds: newIds});
+                                                }}
+                                            />
+                                            <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{c.title}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Leave empty to allow this blueprint for all courses.</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

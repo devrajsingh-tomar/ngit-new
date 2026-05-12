@@ -125,9 +125,14 @@ export default function PublicExamsPage() {
                                 >
                                     <div className="flex justify-between items-start mb-8">
                                         <div className="space-y-3">
-                                            <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black tracking-widest uppercase px-3 py-1">
-                                                {exam.courseId?.title || "General Mock Test"}
-                                            </Badge>
+                                            <div className="flex gap-2 items-center">
+                                                <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black tracking-widest uppercase px-3 py-1">
+                                                    {exam.courseId?.title || "General Mock Test"}
+                                                </Badge>
+                                                <Badge className={`${exam.pricing?.type === "PAID" ? "bg-amber-500" : "bg-emerald-500"} text-white border-none text-[10px] font-black tracking-widest uppercase px-3 py-1`}>
+                                                    {exam.pricing?.type === "PAID" ? `₹${exam.pricing.amount}` : "FREE"}
+                                                </Badge>
+                                            </div>
                                             <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">
                                                 {exam.title}
                                             </h3>

@@ -42,8 +42,11 @@ export async function createAdminQuiz(data: any) {
         const session = await getServerSession(authOptions);
         if (!session || session.user.role !== "ADMIN") throw new Error("Unauthorized");
 
+        const quizData = { ...data };
+        if (quizData.courseId === "") delete quizData.courseId;
+
         const quiz = await Quiz.create({
-            ...data,
+            ...quizData,
             isMockTest: data.isMockTest ?? true,
             isPublished: data.isPublished ?? true,
         });
@@ -88,7 +91,10 @@ export async function updateAdminQuiz(id: string, data: any) {
         const session = await getServerSession(authOptions);
         if (!session || session.user.role !== "ADMIN") throw new Error("Unauthorized");
 
-        const updated = await Quiz.findByIdAndUpdate(id, data, { new: true });
+        const updateData = { ...data };
+        if (updateData.courseId === "") updateData.courseId = null;
+
+        const updated = await Quiz.findByIdAndUpdate(id, updateData, { new: true });
         revalidatePath("/admin/mock-tests/list");
         return { success: true, quiz: JSON.parse(JSON.stringify(updated)) };
     } catch (error: any) {

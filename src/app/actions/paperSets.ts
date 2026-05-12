@@ -13,7 +13,7 @@ export async function getPaperSets() {
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
         const paperSets = await PaperSet.find()
-            .populate("courseId", "title")
+            .populate("courseIds", "title")
             .sort({ createdAt: -1 })
             .lean();
 
@@ -29,7 +29,12 @@ export async function createPaperSet(data: any) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const newPaperSet = await PaperSet.create(data);
+        const paperSetData = { ...data };
+        if (Array.isArray(paperSetData.courseIds)) {
+            paperSetData.courseIds = paperSetData.courseIds.filter((id: any) => id && id !== "");
+        }
+
+        const newPaperSet = await PaperSet.create(paperSetData);
         revalidatePath("/admin/mock-tests/papers");
         return { success: true, paperSet: JSON.parse(JSON.stringify(newPaperSet)) };
     } catch (error: any) {
@@ -57,7 +62,7 @@ export async function getPaperSetById(id: string) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const paperSet = await PaperSet.findById(id).populate("courseId", "title").lean();
+        const paperSet = await PaperSet.findById(id).populate("courseIds", "title").lean();
         if (!paperSet) return { success: false, error: "Paper Set not found" };
 
         return { success: true, paperSet: JSON.parse(JSON.stringify(paperSet)) };
@@ -72,7 +77,12 @@ export async function updatePaperSet(id: string, data: any) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const updated = await PaperSet.findByIdAndUpdate(id, { $set: data }, { new: true });
+        const paperSetData = { ...data };
+        if (Array.isArray(paperSetData.courseIds)) {
+            paperSetData.courseIds = paperSetData.courseIds.filter((id: any) => id && id !== "");
+        }
+
+        const updated = await PaperSet.findByIdAndUpdate(id, { $set: paperSetData }, { new: true });
         revalidatePath("/admin/mock-tests/papers");
         return { success: true, paperSet: JSON.parse(JSON.stringify(updated)) };
     } catch (error: any) {
