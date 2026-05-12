@@ -164,6 +164,46 @@ export default function ImportQuestionsPage() {
 
                 const questType = mapType(typeRaw?.toString());
 
+                let options = [
+                    { 
+                        text: { en: getValueCaseInsensitive(row, ["OptionA", "Option A", "A"])?.toString() }, 
+                        pair: { en: getValueCaseInsensitive(row, ["MatchPairA", "PairA", "MatchA"])?.toString() },
+                        isCorrect: checkCorrect(row, "A", correctAnswer) 
+                    },
+                    { 
+                        text: { en: getValueCaseInsensitive(row, ["OptionB", "Option B", "B"])?.toString() }, 
+                        pair: { en: getValueCaseInsensitive(row, ["MatchPairB", "PairB", "MatchB"])?.toString() },
+                        isCorrect: checkCorrect(row, "B", correctAnswer) 
+                    },
+                    { 
+                        text: { en: getValueCaseInsensitive(row, ["OptionC", "Option C", "C"])?.toString() }, 
+                        pair: { en: getValueCaseInsensitive(row, ["MatchPairC", "PairC", "MatchC"])?.toString() },
+                        isCorrect: checkCorrect(row, "C", correctAnswer) 
+                    },
+                    { 
+                        text: { en: getValueCaseInsensitive(row, ["OptionD", "Option D", "D"])?.toString() }, 
+                        pair: { en: getValueCaseInsensitive(row, ["MatchPairD", "PairD", "MatchD"])?.toString() },
+                        isCorrect: checkCorrect(row, "D", correctAnswer) 
+                    },
+                    { 
+                        text: { en: getValueCaseInsensitive(row, ["OptionE", "Option E", "E"])?.toString() }, 
+                        pair: { en: getValueCaseInsensitive(row, ["MatchPairE", "PairE", "MatchE"])?.toString() },
+                        isCorrect: checkCorrect(row, "E", correctAnswer) 
+                    },
+                ].filter(o => o.text.en);
+
+                // Handle True/False auto-options
+                if (questType === "TRUE_FALSE" && options.length === 0) {
+                    const isTrue = String(correctAnswer).toLowerCase().includes("true") || 
+                                 String(correctAnswer).toUpperCase().trim() === "T" ||
+                                 checkCorrect(row, "A", correctAnswer);
+
+                    options = [
+                        { text: { en: "True" }, pair: { en: "" }, isCorrect: isTrue },
+                        { text: { en: "False" }, pair: { en: "" }, isCorrect: !isTrue }
+                    ];
+                }
+
                 return {
                     courseId: selectedCourseId || undefined,
                     examCode: finalExamCode,
@@ -177,35 +217,9 @@ export default function ImportQuestionsPage() {
                     explanation: { en: explanation?.toString() || "" },
                     assertion: { en: getValueCaseInsensitive(row, ["Assertion", "A_Stmt"])?.toString() || "" },
                     reason: { en: getValueCaseInsensitive(row, ["Reason", "R_Stmt"])?.toString() || "" },
-                    shortAnswer: getValueCaseInsensitive(row, ["ShortAnswer", "Passage", "AnswerText"])?.toString() || "",
+                    shortAnswer: questType === "TRUE_FALSE" ? String(correctAnswer) : (getValueCaseInsensitive(row, ["ShortAnswer", "Passage", "AnswerText"])?.toString() || ""),
                     numericAnswer: Number(getValueCaseInsensitive(row, ["NumericAnswer", "Value"])) || undefined,
-                    options: [
-                        { 
-                            text: { en: getValueCaseInsensitive(row, ["OptionA", "Option A", "A"])?.toString() }, 
-                            pair: { en: getValueCaseInsensitive(row, ["MatchPairA", "PairA", "MatchA"])?.toString() },
-                            isCorrect: checkCorrect(row, "A", correctAnswer) 
-                        },
-                        { 
-                            text: { en: getValueCaseInsensitive(row, ["OptionB", "Option B", "B"])?.toString() }, 
-                            pair: { en: getValueCaseInsensitive(row, ["MatchPairB", "PairB", "MatchB"])?.toString() },
-                            isCorrect: checkCorrect(row, "B", correctAnswer) 
-                        },
-                        { 
-                            text: { en: getValueCaseInsensitive(row, ["OptionC", "Option C", "C"])?.toString() }, 
-                            pair: { en: getValueCaseInsensitive(row, ["MatchPairC", "PairC", "MatchC"])?.toString() },
-                            isCorrect: checkCorrect(row, "C", correctAnswer) 
-                        },
-                        { 
-                            text: { en: getValueCaseInsensitive(row, ["OptionD", "Option D", "D"])?.toString() }, 
-                            pair: { en: getValueCaseInsensitive(row, ["MatchPairD", "PairD", "MatchD"])?.toString() },
-                            isCorrect: checkCorrect(row, "D", correctAnswer) 
-                        },
-                        { 
-                            text: { en: getValueCaseInsensitive(row, ["OptionE", "Option E", "E"])?.toString() }, 
-                            pair: { en: getValueCaseInsensitive(row, ["MatchPairE", "PairE", "MatchE"])?.toString() },
-                            isCorrect: checkCorrect(row, "E", correctAnswer) 
-                        },
-                    ].filter(o => o.text.en),
+                    options: options,
                 };
             });
 
@@ -257,10 +271,12 @@ export default function ImportQuestionsPage() {
             { header: "Option B", key: "OptionB", width: 20 },
             { header: "Option C", key: "OptionC", width: 20 },
             { header: "Option D", key: "OptionD", width: 20 },
+            { header: "Option E", key: "OptionE", width: 20 },
             { header: "MatchPairA", key: "MatchPairA", width: 20 },
             { header: "MatchPairB", key: "MatchPairB", width: 20 },
             { header: "MatchPairC", key: "MatchPairC", width: 20 },
             { header: "MatchPairD", key: "MatchPairD", width: 20 },
+            { header: "MatchPairE", key: "MatchPairE", width: 20 },
             { header: "Assertion", key: "Assertion", width: 30 },
             { header: "Reason", key: "Reason", width: 30 },
             { header: "Correct Answer", key: "CorrectAnswer", width: 15 },
@@ -282,41 +298,74 @@ export default function ImportQuestionsPage() {
             OptionA: "Monitor", OptionB: "Keyboard", OptionC: "Printer", OptionD: "Speaker",
             CorrectAnswer: "B",
             Explanation: "Keyboard is used to input text and commands.",
-            Marks: 1, NegMarks: 0.25, Subject: "Computer", Topic: "Hardware", Difficulty: "EASY"
+            Marks: 4, NegMarks: 1, Subject: "Computer", Topic: "Hardware", Difficulty: "EASY"
         });
 
-        // 2. True/False
+        // 2. MCQ Multiple
+        worksheet.addRow({
+            Question: "Select all programming languages from the list below:",
+            Type: "MCQ_MULTIPLE",
+            OptionA: "Python", OptionB: "HTML", OptionC: "Java", OptionD: "CSS",
+            CorrectAnswer: "A, C",
+            Explanation: "Python and Java are programming languages; HTML and CSS are markup/style languages.",
+            Marks: 4, NegMarks: 1, Subject: "Coding", Topic: "Basics", Difficulty: "MEDIUM"
+        });
+
+        // 3. True/False
         worksheet.addRow({
             Question: "RAM is a volatile memory.",
             Type: "TRUE_FALSE",
             CorrectAnswer: "True",
             Explanation: "RAM loses its data when power is turned off.",
-            Marks: 1, NegMarks: 0.25, Subject: "Computer", Topic: "Memory", Difficulty: "EASY"
+            Marks: 2, NegMarks: 0, Subject: "Computer", Topic: "Memory", Difficulty: "EASY"
         });
 
-        // 3. Assertion/Reason
+        // 4. Assertion/Reason
         worksheet.addRow({
             Question: "Analyze the Assertion and Reason below:",
             Type: "ASSERTION_REASON",
             Assertion: "Cloud computing is cost-effective for startups.",
             Reason: "It eliminates the need for heavy initial investment in hardware.",
+            OptionA: "Both A and R are true. R is the correct explanation of A.",
+            OptionB: "Both A and R are true but R is not the correct explanation of A.",
+            OptionC: "A is true but R is false.",
+            OptionD: "A is false but R is true.",
+            OptionE: "Both A and R are false.",
             CorrectAnswer: "A",
-            Explanation: "Both are true and R explains A.",
-            Marks: 1, NegMarks: 0.25, Subject: "IT", Topic: "Cloud", Difficulty: "MEDIUM"
+            Explanation: "Both are true and R is the correct explanation of A.",
+            Marks: 4, NegMarks: 1, Subject: "IT", Topic: "Cloud", Difficulty: "MEDIUM"
         });
 
-        // 4. Match the Following
+        // 5. Match the Following
         worksheet.addRow({
             Question: "Match the following Operating Systems with their Developers:",
             Type: "MATCH_THE_FOLLOWING",
             OptionA: "Windows", OptionB: "macOS", OptionC: "Android", OptionD: "Linux",
             MatchPairA: "Microsoft", MatchPairB: "Apple", MatchPairC: "Google", MatchPairD: "Open Source",
-            CorrectAnswer: "A-1, B-2, C-3, D-4",
-            Explanation: "Standard matching of OS to vendors.",
-            Marks: 4, NegMarks: 1, Subject: "IT", Topic: "OS", Difficulty: "MEDIUM"
+            CorrectAnswer: "1-A, 2-B, 3-C, 4-D",
+            Explanation: "Pair Column A numbers (1,2..) with Column B letters (A,B..). format: 1-A, 2-B, etc.",
+            Marks: 4, NegMarks: 1, Subject: "IT", Topic: "OS", Difficulty: "MEDIUM", ExamCode: "M1-R5"
         });
 
-        // 5. Typing Test
+        // 6. Numeric Answer
+        worksheet.addRow({
+            Question: "What is the value of 5 + 5?",
+            Type: "NUMERIC",
+            NumericAnswer: 10,
+            Explanation: "Basic addition.",
+            Marks: 2, NegMarks: 0, Subject: "Math", Topic: "Basic", Difficulty: "EASY"
+        });
+
+        // 7. Short Answer
+        worksheet.addRow({
+            Question: "Who discovered Gravity?",
+            Type: "SHORT_ANSWER",
+            ShortAnswer: "Isaac Newton",
+            Explanation: "Sir Isaac Newton is credited with the law of universal gravitation.",
+            Marks: 4, NegMarks: 0, Subject: "Science", Topic: "Physics", Difficulty: "MEDIUM"
+        });
+
+        // 8. Typing Test
         worksheet.addRow({
             Question: "Type the following passage exactly as shown.",
             Type: "TYPING",
@@ -324,13 +373,13 @@ export default function ImportQuestionsPage() {
             Marks: 10, Subject: "Skill", Topic: "Typing", Difficulty: "HARD"
         });
 
-        worksheet.getRow(1).font = { bold: true };
-        worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+        worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } }; // Dark blue/slate header
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const saveAs = (await import("file-saver")).default;
-        saveAs(blob, "universal_question_import_sample.xlsx");
+        saveAs(blob, "ngit_master_import_template.xlsx");
     };
 
     return (

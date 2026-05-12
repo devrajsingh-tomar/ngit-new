@@ -235,6 +235,21 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
 
     const currentQuestion = quiz.questions[state.currentQuestionIndex];
 
+    if (!currentQuestion) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8 text-center animate-in fade-in duration-500">
+                <AlertCircle className="w-20 h-20 text-red-500 mb-6" />
+                <h2 className="text-3xl font-black text-slate-900 mb-2">No Questions Found</h2>
+                <p className="max-w-md text-slate-500 font-medium mb-8">
+                    This mock test does not contain any questions yet. Please contact your administrator.
+                </p>
+                <Button onClick={() => router.push('/student')} variant="outline" className="h-12 px-8 rounded-xl font-bold">
+                    Return to Dashboard
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <div ref={containerRef} className="select-none h-full w-full fixed inset-0 overflow-hidden bg-white">
             <ExamLayout

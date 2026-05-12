@@ -67,32 +67,61 @@ export const getQuiz = createSafeAction(
             }
         } else {
             // 3. Enrollment Check for Course-specific Quizzes
-            const enrollment = await Enrollment.findOne({
-                userId: session.user.id,
-                courseId: quiz.courseId,
-                isActive: true
-            });
-            if (!enrollment) {
-                throw new Error("ENROLLMENT_REQUIRED: This assessment is part of a course you are not enrolled in.");
+            if (!quiz.courseId) {
+                // If not a mock test and has no course, it's an orphan quiz. 
+                // Allow access if it's published.
+                if (!quiz.isPublished) throw new Error("This assessment is currently unavailable.");
+            } else {
+                const enrollment = await Enrollment.findOne({
+                    userId: session.user.id,
+                    courseId: quiz.courseId,
+                    isActive: true
+                });
+                if (!enrollment) {
+                    throw new Error("ENROLLMENT_REQUIRED: This assessment is part of a course you are not enrolled in.");
+                }
             }
         }
 
         let questionsList = (quiz.questions as any[]).map((q: any) => {
             if (!q) return null;
-            return {
-                _id: q._id ? q._id.toString() : null,
-                content: q.content,
-                options: q.options?.map((opt: any) => ({ 
-                    _id: opt._id ? opt._id.toString() : null, 
-                    text: opt.text, 
-                    pair: opt.pair 
-                })), // Hide isCorrect
-                marks: q.marks,
-                type: q.type,
-                assertion: q.assertion,
-                reason: q.reason,
-                shortAnswer: q.shortAnswer
-            };
+            try {
+                return {
+                    _id: q._id ? q._id.toString() : null,
+                    content: {
+                        en: q.content?.en || "No content provided",
+                        hi: q.content?.hi || ""
+                    },
+                    options: q.options?.map((opt: any) => {
+                        if (!opt) return null;
+                        return { 
+                            _id: opt._id ? opt._id.toString() : null, 
+                            text: {
+                                en: opt.text?.en || "",
+                                hi: opt.text?.hi || ""
+                            }, 
+                            pair: {
+                                en: opt.pair?.en || "",
+                                hi: opt.pair?.hi || ""
+                            }
+                        };
+                    }).filter(Boolean) || [],
+                    marks: Number(q.marks) || 1,
+                    type: q.type || "MCQ_SINGLE",
+                    assertion: {
+                        en: q.assertion?.en || "",
+                        hi: q.assertion?.hi || ""
+                    },
+                    reason: {
+                        en: q.reason?.en || "",
+                        hi: q.reason?.hi || ""
+                    },
+                    shortAnswer: q.shortAnswer || ""
+                };
+            } catch (err) {
+                console.error("Failed to map question:", q._id, err);
+                return null;
+            }
         }).filter(Boolean);
 
         // Dynamic Shuffling
@@ -160,7 +189,12 @@ export const submitQuiz = createSafeAction(
                             // Handle MCQ/AR via Labels (A=0, B=1, etc.)
                             const labelToIndex = (lbl: string) => lbl.charCodeAt(0) - 65;
                             const userIndex = labelToIndex(String(userAnswer).toUpperCase());
-                            const correctIndex = question.options.findIndex((o: any) => o.isCorrect);
+                            
+                            let correctIndex = question.options.findIndex((o: any) => o.isCorrect);
+                            // Fallback for Assertion/Reason if options are missing in DB
+                            if (correctIndex === -1 && question.type === "ASSERTION_REASON") {
+                                correctIndex = typeof question.numericAnswer === 'number' ? question.numericAnswer : -1;
+                            }
                             
                             isCorrect = userIndex === correctIndex && userIndex !== -1;
                         }
@@ -218,10 +252,35 @@ export const submitQuiz = createSafeAction(
                 }
             }
 
+            // Map labels back to ObjectIds for database storage
+            let finalSelectedOptionIds: any[] = [];
+            if (userAnswer && !["NUMERIC", "TYPING", "SHORT_ANSWER", "DESCRIPTIVE"].includes(question.type)) {
+                if (question.type === "TRUE_FALSE") {
+                    // TRUE_FALSE labels are "True" or "False"
+                    const isTrue = String(userAnswer).toLowerCase() === "true";
+                    // Find option that matches text "True" or is at index 0/1 depending on admin setup
+                    // Most reliable is to check text content or index
+                    const optIndex = isTrue ? 0 : 1;
+                    const optId = question.options[optIndex]?._id;
+                    if (optId) finalSelectedOptionIds = [optId];
+                } else if (question.type === "MCQ_MULTIPLE") {
+                    const labels = Array.isArray(userAnswer) ? userAnswer : [];
+                    finalSelectedOptionIds = labels.map((lbl: string) => {
+                        const idx = lbl.toUpperCase().charCodeAt(0) - 65;
+                        return question.options[idx]?._id;
+                    }).filter(Boolean);
+                } else {
+                    // Single choice (MCQ_SINGLE, ASSERTION_REASON, etc.)
+                    const idx = String(userAnswer).toUpperCase().charCodeAt(0) - 65;
+                    const optId = question.options[idx]?._id;
+                    if (optId) finalSelectedOptionIds = [optId];
+                }
+            }
+
             answersToCreate.push({
                 attemptId: attempt._id,
                 questionId: question._id,
-                selectedOptionIds: Array.isArray(userAnswer) ? userAnswer : (userAnswer ? [userAnswer] : []),
+                selectedOptionIds: finalSelectedOptionIds,
                 numericAnswer: question.type === "NUMERIC" ? userAnswer : undefined,
                 timeTakenSeconds: 0,
                 evaluation: {

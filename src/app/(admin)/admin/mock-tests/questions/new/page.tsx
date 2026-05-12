@@ -405,10 +405,11 @@ export default function NewQuestionPage() {
                                 <Label className="font-bold text-slate-700 ml-1">Correct Logical Outcome</Label>
                                 <div className="space-y-2">
                                     {[
-                                        "A: Both are true, R is the correct explanation",
-                                        "B: Both are true, R is NOT the correct explanation",
-                                        "C: A is true, but R is false",
-                                        "D: A is false, but R is true"
+                                        "A: Both A and R are true. R is the correct explanation of A.",
+                                        "B: Both A and R are true but R is not the correct explanation of A.",
+                                        "C: A is true but R is false.",
+                                        "D: A is false but R is true.",
+                                        "E: Both A and R are false."
                                     ].map((opt, i) => (
                                         <div 
                                             key={i}

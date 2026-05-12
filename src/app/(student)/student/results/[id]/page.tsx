@@ -223,19 +223,74 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                                         </div>
                                         <div className="font-bold text-slate-700 leading-relaxed text-lg prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(q?.content?.en || "") }} />
                                         
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                                            <div className={`p-4 rounded-xl border-2 ${isCorrect ? "border-emerald-200 bg-white" : "border-rose-200 bg-white"}`}>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Response</p>
-                                                <span className="font-bold text-slate-800">
-                                                    {q.type === "NUMERIC" ? ans.numericAnswer : (ans.selectedOptionIds?.[0] ? "Selected an option" : "N/A")}
-                                                </span>
-                                            </div>
-                                            <div className="p-4 rounded-xl border-2 border-indigo-100 bg-white">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Correct Answer</p>
-                                                <span className="font-bold text-indigo-600">
-                                                    {q.type === "NUMERIC" ? q.numericAnswer : "Refer to Solution"}
-                                                </span>
-                                            </div>
+                                        {/* Options Breakdown */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {q.type === "NUMERIC" ? (
+                                                <>
+                                                    <div className={`p-5 rounded-2xl border-2 ${isCorrect ? "border-emerald-200 bg-emerald-50/30" : "border-rose-200 bg-rose-50/30"}`}>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Your Numerical Response</p>
+                                                        <span className="text-lg font-black text-slate-900">{ans.numericAnswer ?? "N/A"}</span>
+                                                    </div>
+                                                    <div className="p-5 rounded-2xl border-2 border-indigo-100 bg-indigo-50/30">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Target Answer</p>
+                                                        <span className="text-lg font-black text-indigo-600">{q.numericAnswer}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="md:col-span-2 space-y-3">
+                                                    {(() => {
+                                                        let displayOptions = q.options || [];
+                                                        if (q.type === "TRUE_FALSE" && displayOptions.length === 0) {
+                                                            const correctStr = (q.shortAnswer || "").toLowerCase();
+                                                            displayOptions = [
+                                                                { _id: "t", text: { en: "True" }, isCorrect: correctStr === "true" || correctStr === "t" },
+                                                                { _id: "f", text: { en: "False" }, isCorrect: correctStr === "false" || correctStr === "f" }
+                                                            ];
+                                                        } else if (q.type === "ASSERTION_REASON" && displayOptions.length === 0) {
+                                                            const arText = [
+                                                                "Both A and R are true. R is the correct explanation of A.",
+                                                                "Both A and R are true but R is not the correct explanation of A.",
+                                                                "A is true but R is false.",
+                                                                "A is false but R is true.",
+                                                                "Both A and R are false."
+                                                            ];
+                                                            displayOptions = arText.map((t, idx) => ({
+                                                                _id: `ar-${idx}`,
+                                                                text: { en: t },
+                                                                isCorrect: idx === q.numericAnswer
+                                                            }));
+                                                        }
+
+                                                        return displayOptions.map((opt: any, idx: number) => {
+                                                            const label = String.fromCharCode(65 + idx);
+                                                            const isSelected = ans.selectedOptionIds?.includes(opt._id) || 
+                                                                             (q.type === "ASSERTION_REASON" && ans.selectedOptionIds?.includes(label)) ||
+                                                                             (q.type === "TRUE_FALSE" && ans.selectedOptionIds?.includes(opt.text.en));
+                                                            const isRight = opt.isCorrect;
+
+                                                            let style = "border-slate-100 bg-white text-slate-600";
+                                                            if (isSelected && isRight) style = "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm";
+                                                            else if (isSelected && !isRight) style = "border-rose-500 bg-rose-50 text-rose-900 shadow-sm";
+                                                            else if (isRight) style = "border-emerald-200 bg-emerald-50/50 text-emerald-700";
+
+                                                            return (
+                                                                <div key={idx} className={`p-4 rounded-2xl border-2 flex items-center gap-4 transition-all ${style}`}>
+                                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                                                                        isRight ? "bg-emerald-500 text-white" : isSelected ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-400"
+                                                                    }`}>
+                                                                        {label}
+                                                                    </div>
+                                                                    <div className="flex-1 text-sm font-bold leading-tight" dangerouslySetInnerHTML={{ __html: sanitizeHtml(opt.text.en) }} />
+                                                                    <div className="flex gap-2">
+                                                                        {isRight && <Badge className="bg-emerald-500 text-white text-[8px] font-black uppercase">Correct Answer</Badge>}
+                                                                        {isSelected && <Badge className={`${isRight ? "bg-emerald-600" : "bg-rose-600"} text-white text-[8px] font-black uppercase`}>Your Selection</Badge>}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        });
+                                                    })()}
+                                                </div>
+                                            )}
                                         </div>
                                         
                                         {q.explanation?.en && (

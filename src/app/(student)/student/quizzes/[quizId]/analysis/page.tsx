@@ -12,6 +12,7 @@ import {
     ArrowLeft
 } from "lucide-react";
 import { getQuizAnalysis } from "@/app/actions/student/quizzes";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -61,7 +62,13 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
 
     const { quizId: quiz, totalScore: score, totalMarks, answers, isPassed } = analysis;
     const accuracy = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : 0;
-    const timeTaken = analysis.endTime ? (new Date(analysis.endTime).getTime() - new Date(analysis.startTime).getTime()) / 1000 : 0;
+    const timeTakenSecs = analysis.endTime ? (new Date(analysis.endTime).getTime() - new Date(analysis.startTime).getTime()) / 1000 : 0;
+    
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = Math.round(seconds % 60);
+        return m > 0 ? `${m}m ${s}s` : `${s}s`;
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4">
@@ -94,7 +101,7 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                         </div>
                         <div className="space-y-1">
                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Time</p>
-                            <p className="text-4xl font-black text-slate-900">{Math.round(timeTaken / 60)}m</p>
+                            <p className="text-3xl font-black text-slate-900">{formatTime(timeTakenSecs)}</p>
                         </div>
                     </div>
                 </div>
@@ -109,6 +116,30 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                         const userAnswer = (answers as any[]).find((a: any) => a.questionId === question._id);
                         const isCorrect = userAnswer?.evaluation?.isCorrect;
 
+                        // Fallback options for True/False if they are missing in DB
+                        let displayOptions = (question.options && question.options.length > 0) ? [...question.options] : [];
+                        if (question.type === "TRUE_FALSE" && displayOptions.length === 0) {
+                            const correctStr = (question.shortAnswer || "").toLowerCase();
+                            displayOptions = [
+                                { _id: "true-opt", text: { en: "True" }, isCorrect: correctStr === "true" || correctStr === "t" },
+                                { _id: "false-opt", text: { en: "False" }, isCorrect: correctStr === "false" || correctStr === "f" }
+                            ];
+                        } else if (question.type === "ASSERTION_REASON" && displayOptions.length === 0) {
+                            const defaultAR = [
+                                "Both A and R are true. R is the correct explanation of A.",
+                                "Both A and R are true but R is not the correct explanation of A.",
+                                "A is true but R is false.",
+                                "A is false but R is true.",
+                                "Both A and R are false."
+                            ];
+                            const correctIdx = typeof question.numericAnswer === 'number' ? question.numericAnswer : -1;
+                            displayOptions = defaultAR.map((text, i) => ({
+                                _id: `ar-opt-${i}`,
+                                text: { en: text },
+                                isCorrect: i === correctIdx
+                            }));
+                        }
+
                         return (
                             <div key={question._id} className={`bg-white rounded-[2rem] p-8 border-2 ${isCorrect ? 'border-emerald-100' : 'border-red-100'} shadow-sm`}>
                                 <div className="flex gap-4">
@@ -119,17 +150,36 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                                         <h3 className="text-lg font-bold text-slate-900">{question.content?.en}</h3>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {question.options.map((option: any, optIdx: number) => {
-                                                const isSelected = userAnswer?.selectedOptionIds?.includes(option._id);
+                                            {displayOptions.map((option: any, optIdx: number) => {
                                                 const isAnswer = option.isCorrect;
+                                                
+                                                // Robust selection check: ID match OR text match OR label match
+                                                let isSelected = userAnswer?.selectedOptionIds?.includes(option._id);
+                                                if (!isSelected) {
+                                                    if (question.type === "TRUE_FALSE") {
+                                                        const savedLabels = Array.isArray(userAnswer?.selectedOptionIds) ? userAnswer.selectedOptionIds : [];
+                                                        isSelected = savedLabels.some((val: any) => 
+                                                            String(val).toLowerCase() === option.text?.en?.toLowerCase()
+                                                        );
+                                                    } else if (question.type === "ASSERTION_REASON") {
+                                                        // Check if selection was saved as a label (e.g. "A", "B")
+                                                        const savedLabels = Array.isArray(userAnswer?.selectedOptionIds) ? userAnswer.selectedOptionIds : [userAnswer?.selectedOptionIds].filter(Boolean);
+                                                        const currentLabel = String.fromCharCode(65 + optIdx);
+                                                        isSelected = savedLabels.some((val: any) => String(val).toUpperCase() === currentLabel);
+                                                    }
+                                                }
 
                                                 let style = "bg-slate-50 border-slate-100 text-slate-500";
                                                 if (isAnswer) style = "bg-emerald-50 border-emerald-200 text-emerald-700 font-bold";
                                                 else if (isSelected && !isCorrect) style = "bg-red-50 border-red-200 text-red-700 font-bold";
 
                                                 return (
-                                                    <div key={optIdx} className={`p-4 rounded-xl border flex items-center justify-between ${style}`}>
-                                                        <span>{option.text?.en}</span>
+                                                    <div key={optIdx} className={`p-4 rounded-xl border flex items-center justify-between transition-all ${style}`}>
+                                                        <div className="flex items-center gap-3">
+                                                            <span>{option.text?.en}</span>
+                                                            {isAnswer && <Badge className="bg-emerald-500 text-white border-none text-[8px] h-4">CORRECT ANSWER</Badge>}
+                                                            {isSelected && <Badge className={`text-[8px] h-4 border-none ${isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-red-500 text-white'}`}>YOUR SELECTION</Badge>}
+                                                        </div>
                                                         {isAnswer && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
                                                         {isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
                                                     </div>

@@ -3,6 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { HelpCircle } from "lucide-react";
 import { QuestionRendererProps } from "./types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,10 +27,11 @@ export default function QuestionRenderer({
 }: Props) {
   // Standard A/R Options
   const DEFAULT_AR_OPTIONS = [
-    { en: "Both (A) and (R) are true and (R) is the correct explanation of (A)" },
-    { en: "Both (A) and (R) are true but (R) is NOT the correct explanation of (A)" },
-    { en: "Assertion (A) is true but Reason (R) is false" },
-    { en: "Assertion (A) is false but Reason (R) is true" }
+    { en: "Both A and R are true. R is the correct explanation of A." },
+    { en: "Both A and R are true but R is not the correct explanation of A." },
+    { en: "A is true but R is false." },
+    { en: "A is false but R is true." },
+    { en: "Both A and R are false." }
   ];
 
   // Helper to get number of options
@@ -196,7 +198,7 @@ export default function QuestionRenderer({
                     <div className="pt-12 border-t-2 border-slate-100">
                         
                         {/* MCQ / Matching / AssertionReason - Choice Grid */}
-                        {["MCQ_SINGLE", "MCQ_MULTIPLE", "MATCH_THE_FOLLOWING", "ASSERTION_REASON"].includes(question.type) && (
+                        {["MCQ_SINGLE", "MCQ_MULTIPLE", "ASSERTION_REASON"].includes(question.type) && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {displayOptions.map((opt: any, i: number) => {
                                     const label = String.fromCharCode(65 + i);
@@ -222,6 +224,64 @@ export default function QuestionRenderer({
                                         </div>
                                     );
                                 })}
+                            </div>
+                        )}
+
+                        {/* Specialized Match Matrix (Match the Following) UI */}
+                        {question.type === "MATCH_THE_FOLLOWING" && (
+                            <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] border-4 border-slate-100 p-8 md:p-12 shadow-sm space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-6">
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Column A</h4>
+                                        <div className="space-y-4">
+                                            {(question.options || []).map((opt: any, i: number) => (
+                                                <div key={i} className="h-20 flex items-center gap-4 bg-slate-50 px-6 rounded-2xl border-2 border-slate-100 font-bold text-slate-700">
+                                                    <span className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">{i + 1}</span>
+                                                    <div dangerouslySetInnerHTML={{ __html: opt.text?.en }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-6">
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Column B (Select Match)</h4>
+                                        <div className="space-y-4">
+                                            {(question.options || []).map((opt: any, i: number) => {
+                                                const currentMatches = String(value || "").split(", ").filter(Boolean);
+                                                const currentMatch = currentMatches.find(m => m.startsWith(`${i+1}-`))?.split("-")[1] || "";
+                                                
+                                                return (
+                                                    <div key={i} className="h-20 flex items-center gap-3">
+                                                        <select 
+                                                            className="w-full h-full bg-white border-4 border-slate-100 rounded-2xl px-6 font-black text-slate-700 outline-none focus:border-primary transition-all appearance-none cursor-pointer"
+                                                            value={currentMatch}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const newMapping = `${i+1}-${val}`;
+                                                                const filtered = currentMatches.filter(m => !m.startsWith(`${i+1}-`));
+                                                                if (val) filtered.push(newMapping);
+                                                                onChange(filtered.sort().join(", "));
+                                                            }}
+                                                        >
+                                                            <option value="">Choose Match...</option>
+                                                            {(question.options || []).map((o: any, idx: number) => {
+                                                                const pairText = typeof o.pair === 'object' ? o.pair.en : o.pair;
+                                                                return (
+                                                                    <option key={idx} value={String.fromCharCode(65 + idx)}>
+                                                                        {String.fromCharCode(65 + idx)}. {pairText}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-8 border-t border-slate-100 flex items-center gap-3 text-slate-400 font-bold italic text-[10px]">
+                                    <HelpCircle className="w-4 h-4" />
+                                    Pair each item from Column A with the correct option from the dropdowns in Column B.
+                                </div>
                             </div>
                         )}
 

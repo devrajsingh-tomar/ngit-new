@@ -148,12 +148,11 @@ export default function QuestionBankPage() {
             </div>
 
             {/* Stats Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 {[
                     { label: "Total Questions", value: questions.length, icon: HelpCircle, color: "text-blue-500", bg: "bg-blue-50" },
-                    { label: "Physics", value: questions.filter(q => q.subject === "Physics").length, icon: BrainCircuit, color: "text-purple-500", bg: "bg-purple-50" },
-                    { label: "Chemistry", value: questions.filter(q => q.subject === "Chemistry").length, icon: Sparkles, color: "text-emerald-500", bg: "bg-emerald-50" },
-                    { label: "Mathematics", value: questions.filter(q => q.subject === "Mathematics").length, icon: BrainCircuit, color: "text-indigo-500", bg: "bg-indigo-50" },
+                    { label: "Mock Tests", value: [...new Set(questions.map(q => q.mockTestId))].filter(Boolean).length, icon: BrainCircuit, color: "text-purple-500", bg: "bg-purple-50" },
+                    { label: "Exam Codes", value: [...new Set(questions.map(q => q.examCode))].filter(Boolean).length, icon: Sparkles, color: "text-emerald-500", bg: "bg-emerald-50" },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 border border-slate-100 flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-3 md:gap-5">
                         <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center shrink-0`}>
@@ -198,6 +197,7 @@ export default function QuestionBankPage() {
                         <option value="ALL">All Types</option>
                         <option value="MCQ_SINGLE">Single MCQ</option>
                         <option value="MCQ_MULTIPLE">Multiple MCQ</option>
+                        <option value="TRUE_FALSE">True / False</option>
                         <option value="NUMERIC">Numeric</option>
                         <option value="ASSERTION_REASON">Assertion-Reason</option>
                         <option value="MATCH_THE_FOLLOWING">Match Matrix</option>

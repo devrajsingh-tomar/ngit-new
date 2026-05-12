@@ -247,32 +247,6 @@ export default function StudentResultsPage() {
                 )}
             </div>
 
-            {attempts.length > 0 && (
-                <div className="mt-16 space-y-8">
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                            <Clock className="w-6 h-6 text-primary" />
-                            Recent Attempts (Evaluation Pending)
-                        </h2>
-                        <p className="text-slate-500 mt-1 font-medium">Tests you've recently finished but results aren't officially published yet.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {attempts.map((attempt) => (
-                            <div key={attempt._id} className="bg-white rounded-3xl p-6 border border-slate-100 flex flex-col gap-4 shadow-sm">
-                                <div className="flex justify-between items-start">
-                                    <Badge className="bg-slate-100 text-slate-500 border-none px-2 py-0.5 text-[8px] font-black uppercase tracking-widest">SUBMITTED</Badge>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(attempt.createdAt).toLocaleDateString()}</span>
-                                </div>
-                                <h4 className="text-lg font-black text-slate-900 leading-tight line-clamp-2">{attempt.quizId?.title || "Mock Assessment"}</h4>
-                                <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between font-bold text-xs text-slate-500">
-                                    <span>Score: {attempt.totalScore}/{attempt.totalMarks}</span>
-                                    <Link href="/student/quizzes" className="text-primary hover:underline">View History</Link>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
