@@ -89,7 +89,7 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, [isFullScreen]);
 
-  // 1. Initial Setup
+  // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
     setPassage(passage);
@@ -102,11 +102,18 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
       showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
     });
+
+    // CRITICAL: Cleanup on unmount to prevent state leakage between exams
+    return () => {
+      resetTest();
+    };
   }, [passage, config]);
 
-  // 2. Handle Completion
+  // 2. Handle Completion (Only trigger if the test was actually started/active)
   useEffect(() => {
-    if (isFinished) {
+    // Only trigger completion if isFinished is true AND we have some progress/activity
+    // to prevent auto-submission of previous results on mount
+    if (isFinished && (typedText.length > 0 || timeLeft === 0)) {
       toast.success("Examination Completed!");
       onComplete({
         wpm,

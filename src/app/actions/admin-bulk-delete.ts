@@ -20,58 +20,46 @@ export async function deleteResultsByFilters(formData: {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        let query: any = {};
-
-        // Date Range Filter
+        let dateQuery: any = {};
         if (formData.startDate || formData.endDate) {
-            query.createdAt = {};
+            dateQuery = { createdAt: {} };
             if (formData.startDate) {
                 const start = new Date(formData.startDate);
                 start.setHours(0, 0, 0, 0);
-                query.createdAt.$gte = start;
+                dateQuery.createdAt.$gte = start;
             }
             if (formData.endDate) {
                 const end = new Date(formData.endDate);
                 end.setHours(23, 59, 59, 999);
-                query.createdAt.$lte = end;
+                dateQuery.createdAt.$lte = end;
             }
         }
 
-        // Student Filter (needs to resolve Email to ID first)
+        let studentId: any = null;
         if (formData.studentEmail) {
             const User = (await import("@/models/User")).default;
-            const student = await User.findOne({ email: formData.studentEmail, role: "STUDENT" });
+            const student = await User.findOne({ email: formData.studentEmail.trim().toLowerCase() });
             if (!student) return { success: false, error: "Student not found with this email" };
-            
-            // Add studentId filter depending on model field name
-            // For TypingResult and MockTestResult it's userId or studentId
-            // We'll handle this per model below
+            studentId = student._id;
         }
 
         let deletedCount = 0;
 
-        // 1. Delete Typing Results
+        // 1. Cleanup Typing Results
         if (formData.type === "TYPING" || formData.type === "ALL") {
-            const typingQuery = { ...query };
-            if (formData.studentEmail) {
-                const User = (await import("@/models/User")).default;
-                const student = await User.findOne({ email: formData.studentEmail });
-                if (student) typingQuery.userId = student._id;
-            }
+            const typingQuery = { ...dateQuery };
+            if (studentId) typingQuery.userId = studentId;
+            
             const res = await TypingResult.deleteMany(typingQuery);
             deletedCount += res.deletedCount || 0;
         }
 
-        // 2. Delete Mock Test Results & Attempts
+        // 2. Cleanup Mock Test Data (Attempts, Results, Answers)
         if (formData.type === "MOCK_TEST" || formData.type === "ALL") {
-            const mockQuery = { ...query };
-            if (formData.studentEmail) {
-                const User = (await import("@/models/User")).default;
-                const student = await User.findOne({ email: formData.studentEmail });
-                if (student) mockQuery.studentId = student._id;
-            }
+            const mockQuery = { ...dateQuery };
+            if (studentId) mockQuery.studentId = studentId;
 
-            // Find attempts to delete associated answers
+            // We must find IDs first to cascade delete Answers
             const attempts = await Attempt.find(mockQuery).select("_id");
             const attemptIds = attempts.map(a => a._id);
 
@@ -83,15 +71,16 @@ export async function deleteResultsByFilters(formData: {
             }
         }
 
-        revalidatePath("/admin/results");
         revalidatePath("/admin/typing/results");
+        revalidatePath("/admin/mock-test/results");
+        revalidatePath("/admin/dashboard");
         
         return { 
             success: true, 
-            message: `Cleanup Complete: Deleted ${deletedCount} records across selected categories.` 
+            message: `Success: Successfully purged ${deletedCount} records from the database.` 
         };
     } catch (error: any) {
-        console.error("Bulk Delete Error:", error);
-        return { success: false, error: error.message };
+        console.error("CRITICAL Cleanup Error:", error);
+        return { success: false, error: "Internal Database Error: " + error.message };
     }
 }

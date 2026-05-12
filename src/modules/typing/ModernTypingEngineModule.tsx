@@ -196,6 +196,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     }
   }, [activeWordIndex, settings.autoScroll]);
 
+  // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
     setPassage(internalPassage);
@@ -210,10 +211,19 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       sourcePosition: config.sourcePosition || 'top',
     });
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // CRITICAL: Cleanup on unmount to prevent state leakage between exams
+    return () => {
+      resetTest();
+      hasSubmitted.current = false;
+    };
   }, [internalPassage, internalDuration, internalLanguage, internalLayout, config, resetTest, setPassage, updateSettings]);
 
+  // 2. Handle Completion (Only trigger if the test was actually started/active)
   useEffect(() => {
-    if (isFinished && !hasSubmitted.current) {
+    // Only trigger completion if isFinished is true AND we have some progress/activity
+    // to prevent auto-submission of previous results on mount
+    if (isFinished && !hasSubmitted.current && (typedText.length > 0 || timeLeft === 0)) {
       hasSubmitted.current = true;
       toast.success("Examination Completed!");
       onComplete({
@@ -229,7 +239,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         passageId: passagesList[currentPassageIndex]?._id
       });
     }
-  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, settings.duration, timeLeft, typedText.length, wpm]);
+  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, settings.duration, timeLeft, typedText, wpm]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {

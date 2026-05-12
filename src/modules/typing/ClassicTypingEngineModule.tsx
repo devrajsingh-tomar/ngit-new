@@ -209,7 +209,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     }
   }, [activeWordIndex, settings.autoScroll]);
 
-  // Initialize
+  // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
     setPassage(internalPassage);
@@ -225,11 +225,19 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     });
     // Scroll window to top so the exam starts from the top area
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // CRITICAL: Cleanup on unmount to prevent state leakage between exams
+    return () => {
+      resetTest();
+      hasSubmitted.current = false;
+    };
   }, [internalPassage, internalDuration, internalLanguage, internalLayout, config]);
 
-  // Handle Completion
+  // 2. Handle Completion (Only trigger if the test was actually started/active)
   useEffect(() => {
-    if (isFinished && !hasSubmitted.current) {
+    // Only trigger completion if isFinished is true AND we have some progress/activity
+    // to prevent auto-submission of previous results on mount
+    if (isFinished && !hasSubmitted.current && (typedText.length > 0 || timeLeft === 0)) {
       hasSubmitted.current = true;
       toast.success("Examination Completed!");
       onComplete({
@@ -245,7 +253,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         passageId: isBookPractice ? currentExam?._id : currentExam?.passageId?._id
       });
     }
-  }, [isFinished, onComplete, wpm, rawWpm, accuracy, errorCount, typedText.length, backspaceCount, settings.duration, timeLeft, currentExam, isBookPractice]);
+  }, [isFinished, onComplete, wpm, rawWpm, accuracy, errorCount, typedText, backspaceCount, settings.duration, timeLeft, currentExam, isBookPractice]);
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {
       startTest();
