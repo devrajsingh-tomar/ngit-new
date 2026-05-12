@@ -113,7 +113,6 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
     };
 
     const handleSubmit = async () => {
-        if (!formData.courseId) return toast.error("Please select a Course");
         if (!formData.content.en) return toast.error("Please enter the Question Content");
 
         setSubmitting(true);
@@ -168,34 +167,27 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
                 {/* 1. Context Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                        <Label className="font-bold text-slate-700 ml-1">Course</Label>
+                        <Label className="font-bold text-slate-700 ml-1">Target Course (Optional)</Label>
                         <select 
                             className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
-                            value={formData.courseId}
+                            value={formData.courseId || ""}
                             onChange={(e) => setFormData({...formData, courseId: e.target.value})}
                         >
-                            <option value="">Select Course</option>
+                            <option value="">Global / No Course</option>
                             {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                         </select>
                     </div>
-                    {courses.find(c => c._id === formData.courseId)?.title?.toLowerCase().includes("o level") && (
-                        <div className="space-y-2">
-                            <Label className="font-bold text-slate-700 ml-1">Exam Code</Label>
-                            <select 
-                                className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
-                                value={formData.examCode}
-                                onChange={(e) => setFormData({...formData, examCode: e.target.value})}
-                            >
-                                <option value="">Select Code</option>
-                                <option value="M1-R5.1">M1-R5.1</option>
-                                <option value="M2-R5.1">M2-R5.1</option>
-                                <option value="M3-R5.1">M3-R5.1</option>
-                                <option value="M4-R5.1">M4-R5.1</option>
-                            </select>
-                        </div>
-                    )}
                     <div className="space-y-2">
-                        <Label className="font-bold text-slate-700 ml-1">Topic Tag</Label>
+                        <Label className="font-bold text-slate-700 ml-1">Exam Code / Tag</Label>
+                        <Input 
+                            placeholder="e.g. M1-R5 or Generic"
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"
+                            value={formData.examCode || ""}
+                            onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="font-bold text-slate-700 ml-1">Subject / Topic</Label>
                         <Input 
                             placeholder="e.g. Thermodynamics"
                             className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"

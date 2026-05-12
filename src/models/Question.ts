@@ -51,7 +51,7 @@ export interface IQuestion extends Document {
 
 const QuestionSchema = new Schema<IQuestion>(
     {
-        courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        courseId: { type: Schema.Types.ObjectId, ref: "Course" },
         examCode: { 
             type: String
         },

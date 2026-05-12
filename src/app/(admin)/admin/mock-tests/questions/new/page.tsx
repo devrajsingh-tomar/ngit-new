@@ -117,7 +117,6 @@ export default function NewQuestionPage() {
     };
 
     const handleSubmit = async () => {
-        if (!formData.courseId) return toast.error("Please select a Course");
         if (!formData.content.en) return toast.error("Please enter the Question Content");
 
         setSubmitting(true);
@@ -171,55 +170,34 @@ export default function NewQuestionPage() {
                 {/* 1. Context Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                        <Label className="font-bold text-slate-700 ml-1">Course</Label>
+                        <Label className="font-bold text-slate-700 ml-1">Target Course (Optional)</Label>
                         <select 
                             className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
                             value={formData.courseId}
                             onChange={(e) => setFormData({...formData, courseId: e.target.value})}
                         >
-                            <option value="">Select Course</option>
+                            <option value="">Global / No Course</option>
                             {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                         </select>
                     </div>
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between px-1">
-                            <Label className="font-bold text-slate-700">Exam Code / Paper Type</Label>
-                            <MetadataManager 
-                                type="PAPER_TYPE" 
-                                courseId={formData.courseId} 
-                                onUpdate={loadMetadata} 
-                            />
-                        </div>
-                        <select 
-                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                        <Label className="font-bold text-slate-700 ml-1">Exam Code / Tag</Label>
+                        <Input 
+                            placeholder="e.g. M1-R5 or Generic"
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"
                             value={formData.examCode}
                             onChange={(e) => setFormData({...formData, examCode: e.target.value})}
-                            disabled={!formData.courseId}
-                        >
-                            <option value="">Select Code</option>
-                            {/* Keep legacy defaults for O Level if needed, but usually better to manage via UI */}
-                            {paperTypes.map(pt => <option key={pt._id} value={pt.name}>{pt.name}</option>)}
-                        </select>
+                        />
                     </div>
 
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between px-1">
-                            <Label className="font-bold text-slate-700">Topic Tag / Category</Label>
-                            <MetadataManager 
-                                type="CATEGORY" 
-                                courseId={formData.courseId} 
-                                onUpdate={loadMetadata} 
-                            />
-                        </div>
-                        <select 
-                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                        <Label className="font-bold text-slate-700 ml-1">Subject / Topic</Label>
+                        <Input 
+                            placeholder="e.g. Physics, IT Tools"
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"
                             value={formData.topic}
                             onChange={(e) => setFormData({...formData, topic: e.target.value, subject: e.target.value})}
-                            disabled={!formData.courseId}
-                        >
-                            <option value="">Select Category</option>
-                            {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
-                        </select>
+                        />
                     </div>
                 </div>
 
