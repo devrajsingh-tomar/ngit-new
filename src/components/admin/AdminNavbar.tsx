@@ -68,7 +68,7 @@ export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
                             <DropdownMenuSeparator className="my-2" />
                             <DropdownMenuItem 
                                 className="rounded-xl p-3 font-bold text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer gap-3"
-                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                onClick={() => signOut({ callbackUrl: '/admin/login' })}
                             >
                                 <LogOut className="w-4 h-4" /> Log out
                             </DropdownMenuItem>

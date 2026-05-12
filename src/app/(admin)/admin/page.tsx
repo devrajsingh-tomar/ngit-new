@@ -1,3 +1,6 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { getDashboardStats } from "@/app/actions/dashboard";
 import {
     Users,
@@ -16,9 +19,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminDashboard() {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== "ADMIN") {
+        redirect("/admin/login");
+    }
+
     const res = await getDashboardStats();
 
     // Fallback if DB fetch fails
