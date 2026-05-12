@@ -148,22 +148,34 @@ export const submitQuiz = createSafeAction(
                 unattemptedCount++;
             } else {
                 try {
-                    if (question.type === "MCQ_SINGLE") {
+                    if (question.type === "MCQ_SINGLE" || question.type === "TRUE_FALSE" || question.type === "ASSERTION_REASON") {
+                        // UI sends labels like 'A', 'B', 'C', 'D' OR 'True', 'False'
                         const correctOption = question.options.find((o: any) => o.isCorrect);
-                        isCorrect = correctOption?._id.toString() === userAnswer;
+                        
+                        if (question.type === "TRUE_FALSE") {
+                            // Handle True/False separately
+                            const correctVal = correctOption?.text?.en?.toLowerCase() === "true";
+                            isCorrect = String(userAnswer).toLowerCase() === String(correctVal);
+                        } else {
+                            // Handle MCQ/AR via Labels (A=0, B=1, etc.)
+                            const labelToIndex = (lbl: string) => lbl.charCodeAt(0) - 65;
+                            const userIndex = labelToIndex(String(userAnswer).toUpperCase());
+                            const correctIndex = question.options.findIndex((o: any) => o.isCorrect);
+                            
+                            isCorrect = userIndex === correctIndex && userIndex !== -1;
+                        }
                     } else if (question.type === "MCQ_MULTIPLE") {
-                        const correctIds = question.options.filter((o: any) => o.isCorrect).map((o: any) => o._id.toString());
-                        isCorrect = Array.isArray(userAnswer) && 
-                                    userAnswer.length === correctIds.length && 
-                                    userAnswer.every(id => correctIds.includes(id));
+                        const userLabels = Array.isArray(userAnswer) ? userAnswer : [];
+                        const correctIndices = question.options
+                            .map((o: any, idx: number) => o.isCorrect ? idx : -1)
+                            .filter((idx: number) => idx !== -1);
+                        
+                        const userIndices = userLabels.map((lbl: string) => lbl.charCodeAt(0) - 65);
+                        
+                        isCorrect = userIndices.length === correctIndices.length && 
+                                    userIndices.every(idx => correctIndices.includes(idx));
                     } else if (question.type === "NUMERIC") {
                         isCorrect = parseFloat(userAnswer) === question.numericAnswer;
-                    } else if (question.type === "TRUE_FALSE") {
-                        const correctOption = question.options.find((o: any) => o.isCorrect);
-                        const isCorrectVal = correctOption?.text?.en?.toLowerCase() === "true";
-                        isCorrect = String(userAnswer) === String(isCorrectVal);
-                    } else if (question.type === "ASSERTION_REASON") {
-                        isCorrect = parseInt(userAnswer) === question.numericAnswer;
                     } else if (question.type === "MATCH_THE_FOLLOWING") {
                         const matches = Object.entries(userAnswer as Record<string, string>);
                         if (matches.length === question.options.length) {
