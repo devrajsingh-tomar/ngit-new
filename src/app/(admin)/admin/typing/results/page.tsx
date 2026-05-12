@@ -19,6 +19,8 @@ import {
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import BulkDeleteModal from "@/components/admin/BulkDeleteModal";
+import { deleteTypingResult, deleteTypingResultsBulk } from "@/app/actions/admin/typing-results";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function TypingResultsAdminPage() {
     const [results, setResults] = useState<any[]>([]);
@@ -26,6 +28,7 @@ export default function TypingResultsAdminPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     useEffect(() => {
         loadResults(1);
@@ -47,10 +50,42 @@ export default function TypingResultsAdminPage() {
         }
     };
 
+    const toggleSelectAll = () => {
+        if (selectedIds.length === results.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(results.map(r => r._id));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleDeleteBulkSelected = async () => {
+        if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected results?`)) return;
+        setLoading(true);
+        const res = await deleteTypingResultsBulk(selectedIds);
+        if (res.success) {
+            toast.success(res.message);
+            setSelectedIds([]);
+            loadResults(pagination.page);
+        } else {
+            toast.error(res.error);
+        }
+        setLoading(false);
+    };
+
     const handleExportCSV = () => {
         if (results.length === 0) return;
+        const targetResults = selectedIds.length > 0 
+            ? results.filter(r => selectedIds.includes(r._id)) 
+            : results;
+
         const headers = ["Student Name", "Email", "Exam Title", "WPM", "Accuracy", "Errors", "Date"];
-        const rows = results.map(r => [
+        const rows = targetResults.map(r => [
             r.userId?.name || "N/A",
             r.userId?.email || "N/A",
             r.examId?.title || "N/A",
@@ -90,13 +125,19 @@ export default function TypingResultsAdminPage() {
                 </div>
                 
                 <div className="flex items-center gap-3">
+                    {selectedIds.length > 0 && (
+                        <Button onClick={handleDeleteBulkSelected} variant="destructive" className="rounded-2xl h-14 font-black gap-2 px-8 shadow-xl shadow-rose-200 animate-in zoom-in duration-300">
+                            <Trash2 className="w-5 h-5" />
+                            Delete ({selectedIds.length})
+                        </Button>
+                    )}
                     <Button onClick={() => setIsBulkDeleteOpen(true)} variant="ghost" className="rounded-2xl h-14 font-black gap-2 px-8 text-rose-600 hover:bg-rose-50 border-2 border-transparent hover:border-rose-100 transition-all">
                         <Trash2 className="w-5 h-5" />
-                        Bulk Delete
+                        Cleanup Tools
                     </Button>
                     <Button onClick={handleExportCSV} className="rounded-2xl h-14 font-black gap-2 px-8 bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-[1.02] transition-transform">
                         <Download className="w-5 h-5" />
-                        Export Data
+                        {selectedIds.length > 0 ? `Export (${selectedIds.length})` : "Export All"}
                     </Button>
                 </div>
             </div>
@@ -125,7 +166,14 @@ export default function TypingResultsAdminPage() {
                     <Table>
                         <TableHeader className="bg-slate-900">
                             <TableRow className="hover:bg-transparent border-none">
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 pl-10">Candidate</TableHead>
+                                <TableHead className="w-12 py-8 pl-10">
+                                    <Checkbox 
+                                        className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-slate-900" 
+                                        checked={selectedIds.length === results.length && results.length > 0}
+                                        onCheckedChange={toggleSelectAll}
+                                    />
+                                </TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Candidate</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Typing Exam</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Net Speed</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Accuracy</TableHead>
@@ -138,12 +186,12 @@ export default function TypingResultsAdminPage() {
                             {loading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i} className="animate-pulse">
-                                        <TableCell colSpan={7} className="h-24 bg-slate-50/20" />
+                                        <TableCell colSpan={8} className="h-24 bg-slate-50/20" />
                                     </TableRow>
                                 ))
                             ) : filteredResults.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="py-32 text-center">
+                                    <TableCell colSpan={8} className="py-32 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
                                             <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center">
                                                 <AlertCircle className="w-10 h-10 text-slate-200" />
@@ -154,8 +202,14 @@ export default function TypingResultsAdminPage() {
                                 </TableRow>
                             ) : (
                                 filteredResults.map((res) => (
-                                    <TableRow key={res._id} className="group hover:bg-slate-50/50 transition-all border-slate-50">
+                                    <TableRow key={res._id} className={`group hover:bg-slate-50/50 transition-all border-slate-50 ${selectedIds.includes(res._id) ? 'bg-indigo-50/30' : ''}`}>
                                         <TableCell className="py-8 pl-10">
+                                            <Checkbox 
+                                                checked={selectedIds.includes(res._id)}
+                                                onCheckedChange={() => toggleSelect(res._id)}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="py-8">
                                             <div className="flex items-center gap-5">
                                                 <div className="w-12 h-12 rounded-[1.25rem] bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-base shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-colors">
                                                     {res.userId?.name?.[0]}
@@ -226,16 +280,12 @@ export default function TypingResultsAdminPage() {
                                                         className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
                                                         onClick={async () => {
                                                             if (confirm("Are you sure you want to permanently delete this typing result?")) {
-                                                                try {
-                                                                    const deleteRes = await fetch(`/api/admin/typing/results/${res._id}`, { method: 'DELETE' });
-                                                                    if (deleteRes.ok) {
-                                                                        toast.success("Result removed");
-                                                                        loadResults(pagination.page);
-                                                                    } else {
-                                                                        toast.error("Failed to delete result");
-                                                                    }
-                                                                } catch (err) {
-                                                                    toast.error("Error deleting result");
+                                                                const result = await deleteTypingResult(res._id);
+                                                                if (result.success) {
+                                                                    toast.success(result.message);
+                                                                    loadResults(pagination.page);
+                                                                } else {
+                                                                    toast.error(result.error);
                                                                 }
                                                             }
                                                         }}
