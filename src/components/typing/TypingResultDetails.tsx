@@ -191,7 +191,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
           </div>
         </div>
 
-        <div className="bg-white rounded-[3rem] border border-slate-200 shadow-2xl shadow-slate-200/40 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0">
+        <div className="bg-white rounded-[3rem] border border-slate-200 shadow-2xl shadow-slate-200/40 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0 print:overflow-visible">
           <div className={cn(
             "p-12 text-white relative overflow-hidden print:bg-slate-50 print:text-slate-900 print:border-b print:border-slate-200",
             isQualified ? "bg-gradient-to-br from-emerald-600 to-teal-700" : "bg-gradient-to-br from-rose-600 to-red-700"

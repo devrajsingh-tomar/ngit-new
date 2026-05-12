@@ -18,11 +18,13 @@ import {
     DropdownMenuItem, 
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import BulkDeleteModal from "@/components/admin/BulkDeleteModal";
 
 export default function TypingResultsAdminPage() {
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     useEffect(() => {
         loadResults();
@@ -83,15 +85,22 @@ export default function TypingResultsAdminPage() {
                         <Keyboard className="w-4 h-4" />
                         Monitor student typing performance across all exams
                     </p>
-                </div>
-                
                 <div className="flex items-center gap-3">
+                    <Button onClick={() => setIsBulkDeleteOpen(true)} variant="ghost" className="rounded-2xl h-14 font-black gap-2 px-8 text-rose-600 hover:bg-rose-50 border-2 border-transparent hover:border-rose-100 transition-all">
+                        <Trash2 className="w-5 h-5" />
+                        Bulk Delete
+                    </Button>
                     <Button onClick={handleExportCSV} className="rounded-2xl h-14 font-black gap-2 px-8 bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-[1.02] transition-transform">
                         <Download className="w-5 h-5" />
                         Export Data
                     </Button>
                 </div>
             </div>
+
+            <BulkDeleteModal 
+                isOpen={isBulkDeleteOpen} 
+                onClose={() => setIsBulkDeleteOpen(false)} 
+            />
 
             {/* Filters bar */}
             <div className="bg-white rounded-[2.5rem] p-4 sm:p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row gap-5">

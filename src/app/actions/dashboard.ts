@@ -99,10 +99,20 @@ export async function getStudentDashboardData() {
 
         const userId = session.user.id;
 
-        const [enrollments, attempts, attendance, typingResults, typingExams] = await Promise.all([
+        const [
+            enrollments, 
+            totalAttempts, 
+            totalAttendance, 
+            presentAttendance,
+            recentAttempts,
+            typingResults, 
+            typingExams
+        ] = await Promise.all([
             Enrollment.find({ userId }).populate({ path: "courseId", select: "title thumbnail _id slug" }).lean(),
-            Attempt.find({ studentId: userId }).lean(),
-            Attendance.find({ studentId: userId }).lean(),
+            Attempt.countDocuments({ studentId: userId }),
+            Attendance.countDocuments({ studentId: userId }),
+            Attendance.countDocuments({ studentId: userId, status: { $in: ['PRESENT', 'LATE'] } }),
+            Attempt.find({ studentId: userId }).sort({ createdAt: -1 }).limit(10).lean(),
             TypingResult.find({ userId }).populate("examId", "title duration").sort({ createdAt: -1 }).limit(5).lean(),
             TypingExam.find({ status: "Active" }).limit(5).lean()
         ]);
@@ -112,12 +122,12 @@ export async function getStudentDashboardData() {
             ? Math.round(enrollments.reduce((acc, e: any) => acc + (e.progress || 0), 0) / activeCourses)
             : 0;
 
-        const attendancePercentage = attendance.length > 0
-            ? Math.round((attendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length / attendance.length) * 100)
+        const attendancePercentage = totalAttendance > 0
+            ? Math.round((presentAttendance / totalAttendance) * 100)
             : 0;
 
         const enrolledCourseIds = enrollments.map(e => (e.courseId as any)?._id);
-        const attemptedQuizIds = attempts.map(a => a.quizId.toString());
+        const attemptedQuizIds = recentAttempts.map(a => a.quizId.toString());
 
         const upcomingQuiz = await Quiz.findOne({
             courseId: { $in: enrolledCourseIds },
@@ -125,13 +135,11 @@ export async function getStudentDashboardData() {
             _id: { $nin: attemptedQuizIds }
         }).sort({ createdAt: -1 }).lean();
 
-        const testsCompleted = attempts.length;
-
         const stats = {
             avgProgress,
             activeCourses,
             attendancePercentage,
-            testsCompleted,
+            testsCompleted: totalAttempts,
             avgGrade: "A" // Placeholder if no grading logic yet
         };
 
@@ -142,10 +150,11 @@ export async function getStudentDashboardData() {
             enrollments: JSON.parse(JSON.stringify(enrollments)),
             typingResults: JSON.parse(JSON.stringify(typingResults)),
             typingExams: JSON.parse(JSON.stringify(typingExams)),
+            recentAttempts: JSON.parse(JSON.stringify(recentAttempts)), // Pass limited attempts
             userName: session.user.name,
             userImage: session.user.image,
             userId: session.user.id,
-            progressTrend: [65, 72, 68, 85, 90, 88, 92] // Placeholder for chart until more data exists
+            progressTrend: [65, 72, 68, 85, 90, 88, 92] // Placeholder for chart
         };
     } catch (error: any) {
         return { success: false, error: error.message };

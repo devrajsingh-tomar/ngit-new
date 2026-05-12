@@ -230,8 +230,14 @@ export const submitQuiz = createSafeAction(
             const MockTestResult = (await import("@/models/MockTestResult")).default;
             const Enrollment = (await import("@/models/Enrollment")).default;
             
-            // Get course info if available
-            const enrollment = await Enrollment.findOne({ userId: session.user.id, courseId: quiz.courseId }).populate("courseId");
+            // Get course info if available (safe check)
+            let courseTitle = "General";
+            if (quiz.courseId) {
+                const enrollment = await Enrollment.findOne({ userId: session.user.id, courseId: quiz.courseId }).populate("courseId");
+                if (enrollment?.courseId) {
+                    courseTitle = (enrollment.courseId as any).title;
+                }
+            }
             
             // Explicitly set attempt date to now
             const now = new Date();
@@ -245,7 +251,7 @@ export const submitQuiz = createSafeAction(
                     score,
                     totalMarks,
                     attemptDate: now,
-                    course: (enrollment?.courseId as any)?.title || "General",
+                    course: courseTitle,
                     publishStatus: "PUBLISHED", // Make it visible immediately
                     analysis: {
                         correctAnswers: correctCount,
@@ -258,7 +264,8 @@ export const submitQuiz = createSafeAction(
                 { upsert: true, new: true }
             );
         } catch (err) {
-            console.error("Failed to auto-create MockTestResult:", err);
+            console.error("[SubmitQuiz] Failed to auto-create MockTestResult:", err);
+            // We don't throw here to ensure the student's attempt is at least saved
         }
 
         return {

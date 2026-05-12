@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import BulkDeleteModal from "@/components/admin/BulkDeleteModal";
 
 export default function MockTestResultsAdminPage() {
     const [results, setResults] = useState<any[]>([]);
@@ -34,6 +35,7 @@ export default function MockTestResultsAdminPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterExamCode, setFilterExamCode] = useState("ALL");
     const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
     const [selectedQuizId, setSelectedQuizId] = useState("");
     const [publishSettings, setPublishSettings] = useState({
         publishToStudentPanel: true,
@@ -214,15 +216,17 @@ export default function MockTestResultsAdminPage() {
                         </DialogContent>
                     </Dialog>
                     <div className="flex bg-white border border-slate-100 p-1 rounded-2xl">
-                        <Button variant="ghost" className="rounded-xl h-10 px-4 font-bold text-xs gap-2" onClick={handleExportCSV}>
-                            <Download className="w-4 h-4" /> CSV
-                        </Button>
-                        <Button variant="ghost" className="rounded-xl h-10 px-4 font-bold text-xs gap-2">
-                            <Download className="w-4 h-4" /> Excel
+                        <Button variant="ghost" className="rounded-xl h-10 px-4 font-bold text-xs gap-2 text-rose-600 hover:bg-rose-50 hover:text-rose-600" onClick={() => setIsBulkDeleteOpen(true)}>
+                            <Trash2 className="w-4 h-4" /> Bulk Delete
                         </Button>
                     </div>
                 </div>
             </div>
+
+            <BulkDeleteModal 
+                isOpen={isBulkDeleteOpen} 
+                onClose={() => setIsBulkDeleteOpen(false)} 
+            />
 
             {/* Filters bar */}
             <div className="bg-white rounded-[2.5rem] p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row gap-5">

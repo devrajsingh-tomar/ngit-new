@@ -53,6 +53,11 @@ const MockTestResultSchema = new Schema<IMockTestResult>(
     { timestamps: true }
 );
 
+// Add indexes for optimized lookups and leaderboard generation
+MockTestResultSchema.index({ studentId: 1, attemptDate: -1 });
+MockTestResultSchema.index({ mockTestId: 1, score: -1 });
+MockTestResultSchema.index({ publishStatus: 1, attemptDate: -1 });
+
 const MockTestResult: Model<IMockTestResult> = mongoose.models.MockTestResult || mongoose.model<IMockTestResult>("MockTestResult", MockTestResultSchema);
 
 export default MockTestResult;
