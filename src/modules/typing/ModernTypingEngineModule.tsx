@@ -7,6 +7,7 @@ import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { mapKeyToHindi } from './utils/hindiMapping';
+import { mapEventToInscript } from './utils/InscriptEngine';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const hasSubmitted = useRef(false);
   const router = useRouter();
 
   const { 
@@ -211,7 +213,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   }, [internalPassage, internalDuration, internalLanguage, internalLayout, config, resetTest, setPassage, updateSettings]);
 
   useEffect(() => {
-    if (isFinished) {
+    if (isFinished && !hasSubmitted.current) {
+      hasSubmitted.current = true;
       toast.success("Examination Completed!");
       onComplete({
         wpm,
@@ -226,30 +229,14 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         passageId: passagesList[currentPassageIndex]?._id
       });
     }
-  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, settings.duration, timeLeft, typedText.length, typedText, wpm]);
+  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, settings.duration, timeLeft, typedText.length, wpm]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {
       startTest();
     }
     resetIdleTimer();
-    
-    let val = e.target.value;
-    const isDeletion = val.length < typedText.length;
-
-    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
-    if (isHindi && !isDeletion && val.length > typedText.length) {
-        // ONLY apply mapping if layout is NOT English (meaning no browser IME is being used)
-        if (settings.layout !== 'English') {
-            const lastChar = val.slice(-1);
-            if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
-                const mapped = mapKeyToHindi(lastChar, settings.layout);
-                val = val.slice(0, -1) + mapped;
-            }
-        }
-    }
-
-    setTypedText(val);
+    setTypedText(e.target.value);
     
     if (inputRef.current) {
         inputRef.current.scrollTop = inputRef.current.scrollHeight;
@@ -257,6 +244,33 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!isActive && !isFinished && timeLeft > 0) {
+      startTest();
+    }
+    resetIdleTimer();
+
+    // 1. Physical Inscript Mapping (Government Exam Standard)
+    if (settings.layout === 'Inscript' && settings.language === 'Hindi') {
+        const mappedChar = mapEventToInscript(e);
+        if (mappedChar) {
+            e.preventDefault();
+            const start = e.currentTarget.selectionStart;
+            const end = e.currentTarget.selectionEnd;
+            const val = typedText;
+            const newVal = val.substring(0, start) + mappedChar + val.substring(end);
+            
+            setTypedText(newVal);
+            
+            // Re-sync cursor position after render
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.selectionStart = inputRef.current.selectionEnd = start + mappedChar.length;
+                }
+            }, 0);
+            return;
+        }
+    }
+
     if (e.key === 'Backspace') {
       if (settings.backspaceMode === 'disabled') {
         e.preventDefault();
@@ -282,7 +296,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   const isUnicodeHindi = settings.language === 'Unicode Hindi' || settings.language === 'Hindi';
   const isKrutidev = settings.language === 'Krutidev Hindi';
   const typingFont = isUnicodeHindi 
-    ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
+    ? "'Mangal', 'Nirmala UI', 'Arial Unicode MS', sans-serif" 
     : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
 
   const passageWords = internalPassage.split(' ');

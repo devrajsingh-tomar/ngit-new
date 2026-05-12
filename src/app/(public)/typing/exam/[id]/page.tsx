@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ClassicTypingEngineModule } from "@/modules/typing/ClassicTypingEngineModule";
 import { ModernTypingEngineModule } from "@/modules/typing/ModernTypingEngineModule";
 import { toast } from "sonner";
@@ -89,7 +89,7 @@ export default function TypingExamPage() {
             setExam(found);
             
             // If we have language and layout in URL (from Step-by-Step flow), jump to engine
-            if (initialLang && initialLayout) {
+            if (initialLang && initialLayout && session) {
                setStep(3);
             }
           } else {
@@ -109,9 +109,16 @@ export default function TypingExamPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  const handleComplete = async (results: any) => {
+  const handleComplete = useCallback(async (results: any) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      if (!session) {
+        toast.error("Please login to submit your exam results");
+        router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.href)}`);
+        return;
+      }
+
       const response = await fetch("/api/typing/results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,7 +141,7 @@ export default function TypingExamPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [id, isSubmitting, router, session]);
 
   if (loading || status === "loading") return (
     <div className="flex justify-center py-20 min-h-screen bg-[#f5f4ef] items-center">
@@ -203,7 +210,7 @@ export default function TypingExamPage() {
                 <div className="bg-white/50 backdrop-blur-sm border border-slate-200 p-6 rounded-3xl mb-8">
                     <p className="text-sm font-bold text-slate-600 mb-4">You need to be logged in to save your results and view rankings.</p>
                     <button 
-                        onClick={() => router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`)}
+                        onClick={() => router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.href)}`)}
                         className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
                     >
                         Login as Student
@@ -366,6 +373,22 @@ export default function TypingExamPage() {
         <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
           <p className="font-black text-slate-700 text-lg uppercase tracking-widest">Recording Performance Metrics...</p>
+        </div>
+      )}
+
+      {!session && step === 3 && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-md z-[101] flex flex-col items-center justify-center p-6 text-center">
+           <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center mb-6">
+              <Keyboard className="w-10 h-10 text-rose-600" />
+           </div>
+           <h2 className="text-3xl font-black text-slate-900 mb-2">Authentication Required</h2>
+           <p className="text-slate-500 max-w-md mb-8">You need to be logged in as a student to participate in official exams and record your performance.</p>
+           <button 
+              onClick={() => router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.href)}`)}
+              className="px-10 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200"
+           >
+              Login as Student
+           </button>
         </div>
       )}
 

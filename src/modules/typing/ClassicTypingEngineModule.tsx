@@ -7,6 +7,7 @@ import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { mapKeyToHindi } from './utils/hindiMapping';
+import { mapEventToInscript } from './utils/InscriptEngine';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const hasSubmitted = useRef(false);
   const router = useRouter();
 
   const { 
@@ -227,7 +229,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
 
   // Handle Completion
   useEffect(() => {
-    if (isFinished) {
+    if (isFinished && !hasSubmitted.current) {
+      hasSubmitted.current = true;
       toast.success("Examination Completed!");
       onComplete({
         wpm,
@@ -242,31 +245,13 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         passageId: isBookPractice ? currentExam?._id : currentExam?.passageId?._id
       });
     }
-  }, [isFinished, currentExam, wpm, rawWpm, accuracy, errorCount, typedText.length, backspaceCount, settings.duration, timeLeft, isBookPractice, onComplete]);
-
+  }, [isFinished, onComplete, wpm, rawWpm, accuracy, errorCount, typedText.length, backspaceCount, settings.duration, timeLeft, currentExam, isBookPractice]);
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {
       startTest();
     }
     resetIdleTimer();
-    
-    let val = e.target.value;
-    const isDeletion = val.length < typedText.length;
-
-    // 0. HINDI MAPPING LOGIC
-    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
-    if (isHindi && !isDeletion && val.length > typedText.length) {
-        // ONLY apply mapping if layout is NOT English (meaning no browser IME is being used)
-        if (settings.layout !== 'English') {
-            const lastChar = val.slice(-1);
-            if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
-                const mapped = mapKeyToHindi(lastChar, settings.layout);
-                val = val.slice(0, -1) + mapped;
-            }
-        }
-    }
-
-    setTypedText(val);
+    setTypedText(e.target.value);
     
     // Auto-scroll typing textarea
     if (inputRef.current) {
@@ -275,6 +260,33 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!isActive && !isFinished && timeLeft > 0) {
+      startTest();
+    }
+    resetIdleTimer();
+
+    // 1. Physical Inscript Mapping (Government Exam Standard)
+    if (settings.layout === 'Inscript' && settings.language === 'Hindi') {
+        const mappedChar = mapEventToInscript(e);
+        if (mappedChar) {
+            e.preventDefault();
+            const start = e.currentTarget.selectionStart;
+            const end = e.currentTarget.selectionEnd;
+            const val = typedText;
+            const newVal = val.substring(0, start) + mappedChar + val.substring(end);
+            
+            setTypedText(newVal);
+            
+            // Re-sync cursor position after render
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.selectionStart = inputRef.current.selectionEnd = start + mappedChar.length;
+                }
+            }, 0);
+            return;
+        }
+    }
+
     if (e.key === 'Backspace') {
       if (settings.backspaceMode === 'disabled') {
         e.preventDefault();
@@ -282,7 +294,6 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       }
       
       if (settings.backspaceMode === 'word') {
-        // Prevent deleting the space that committed the previous word
         if (typedText.endsWith(' ')) {
           e.preventDefault();
           return;
@@ -309,7 +320,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const isKrutidev = settings.language === 'Krutidev Hindi';
   
   const typingFont = isUnicodeHindi 
-    ? "'Mangal', 'Mangal Regular', 'Arial Unicode MS', sans-serif" 
+    ? "'Mangal', 'Nirmala UI', 'Arial Unicode MS', sans-serif" 
     : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
 
   const passageWords = internalPassage.split(' ');
