@@ -25,7 +25,7 @@ export default function BookChapterPracticePage() {
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<"select" | "practice">("select");
   const [selectedLanguage, setSelectedLanguage] = useState<"English" | "Hindi">(lang as any);
-  const [selectedLayout, setSelectedLayout] = useState<"English" | "Remington Gail" | "Inscript" | "Phonetic">(lang === "Hindi" ? "Inscript" : "English");
+  const [selectedLayout, setSelectedLayout] = useState<"English" | "Inscript">(lang === "Hindi" ? "Inscript" : "English");
 
   useEffect(() => {
     if (!bookId) return;
@@ -118,7 +118,7 @@ export default function BookChapterPracticePage() {
                   )}
                 >{l === "English" ? "🇬🇧 English" : "🇮🇳 Hindi"}</button>
               ))}
-              {selectedLanguage === "Hindi" && ["Remington Gail", "Inscript", "Phonetic"].map(lay => (
+              {selectedLanguage === "Hindi" && ["Inscript", "Phonetic"].map(lay => (
                 <button
                   key={lay}
                   onClick={() => setSelectedLayout(lay as any)}

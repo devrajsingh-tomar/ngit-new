@@ -11,7 +11,7 @@ interface TypingSettings {
   fontSize: number;
   passageHeight: number;
   showScrollbar: boolean;
-  layout: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
+  layout: 'English' | 'Inscript';
   sourcePosition: 'top' | 'left' | 'right' | 'bottom';
 }
 

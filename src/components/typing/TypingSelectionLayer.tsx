@@ -25,7 +25,7 @@ export default function TypingSelectionLayer() {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>('English');
-  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>('English');
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Inscript'>('English');
   const [selectedDifficulty, setSelectedDifficulty] = useState<'Easy' | 'Medium' | 'Hard' | null>(null);
   const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[], current: any[], books: any[]}>({ words: [], essays: [], current: [], books: [] });
   const [loadingTaxonomy, setLoadingTaxonomy] = useState(true);
@@ -193,7 +193,7 @@ export default function TypingSelectionLayer() {
       <Card 
         onClick={() => {
             setSelectedLanguage('Hindi');
-            setSelectedLayout('Remington Gail');
+            setSelectedLayout('Inscript');
             setStep(selectedModule ? 2 : 1);
         }}
         className="p-10 rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all text-center border-slate-100 group"
@@ -202,7 +202,7 @@ export default function TypingSelectionLayer() {
            <span className="text-3xl font-black">HI</span>
         </div>
         <h3 className="text-3xl font-black text-slate-900 mb-2">Hindi</h3>
-        <p className="text-slate-400 font-bold">Unicode & Remington Support</p>
+        <p className="text-slate-400 font-bold">Mangal Inscript Support</p>
       </Card>
     </div>
   );
@@ -217,7 +217,7 @@ export default function TypingSelectionLayer() {
         </button>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' }
+            { id: 'Inscript', name: 'Mangal Inscript', sub: 'Official Government Standard' }
           ].map((layout) => (
             <Card 
               key={layout.id}
@@ -427,7 +427,7 @@ export default function TypingSelectionLayer() {
                         <button 
                             onClick={() => {
                                 setSelectedLanguage('Hindi');
-                                setSelectedLayout('Remington Gail');
+                                setSelectedLayout('Inscript');
                             }}
                             className={cn(
                                 "px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all",

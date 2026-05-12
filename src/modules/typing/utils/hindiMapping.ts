@@ -8,17 +8,7 @@ export const INSCRIPT_MAP: Record<string, string> = {
     'Z': 'ऋ', 'X': 'ँ', 'C': 'ण', 'V': 'ऩ', 'B': 'ळ', 'N': 'ळ', 'M': 'श', '<': 'ष', '>': '।', '?': 'य',
 };
 
-export const REMINGTON_GAIL_MAP: Record<string, string> = {
-    'q': 'ु', 'w': 'ू', 'e': 'म', 'r': 'त', 't': 'ज', 'y': 'ल', 'u': 'न', 'i': 'प', 'o': 'व', 'p': 'च', '[': 'ख', ']': ',',
-    'a': 'ं', 's': 'े', 'd': 'क', 'f': 'ि', 'g': 'ह', 'h': 'ी', 'j': 'र', 'k': 'ा', 'l': 'स', ';': 'य', "'": 'श',
-    'z': '्र', 'x': 'ग', 'c': 'ब', 'v': 'अ', 'b': 'इ', 'n': 'द', 'm': 'उ',
-    'Q': 'ु', 'W': 'ू', 'E': 'म', 'R': 'त', 'T': 'ज', 'Y': 'ल', 'U': 'न', 'I': 'प', 'O': 'व', 'P': 'च', '{': 'ख', '}': ',',
-    'A': 'ं', 'S': 'े', 'D': 'क', 'F': 'ि', 'G': 'ह', 'H': 'ी', 'J': 'र', 'K': 'ा', 'L': 'स', ':': 'य', '"': 'श',
-    'Z': '्र', 'X': 'ग', 'C': 'ब', 'V': 'अ', 'B': 'इ', 'N': 'द', 'M': 'उ',
-};
-
 export const mapKeyToHindi = (key: string, layout: string): string => {
-    if (layout === 'Inscript') return INSCRIPT_MAP[key] || key;
-    if (layout === 'Remington Gail') return REMINGTON_GAIL_MAP[key] || key;
-    return key;
+    // We only support Inscript for Hindi mapping now
+    return INSCRIPT_MAP[key] || key;
 };

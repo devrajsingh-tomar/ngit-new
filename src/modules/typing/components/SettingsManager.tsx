@@ -57,7 +57,6 @@ export const SettingsManager: React.FC = () => {
               className="w-full p-3 bg-slate-50 border-transparent rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
             >
               <option value="Inscript">Mangal Inscript</option>
-              <option value="Remington Gail">Remington Gail</option>
             </select>
           </div>
         )}

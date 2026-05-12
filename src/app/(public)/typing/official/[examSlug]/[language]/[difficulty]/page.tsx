@@ -118,7 +118,7 @@ export default async function TestSelectionPage({ params: paramsPromise }: { par
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <Link href={`/typing/exam/${test._id}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Remington Gail'}`}>
+                        <Link href={`/typing/exam/${test._id}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}`}>
                           <button className="inline-flex items-center justify-center h-9 px-5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95">
                             Start <Play className="w-3 h-3 ml-2" />
                           </button>

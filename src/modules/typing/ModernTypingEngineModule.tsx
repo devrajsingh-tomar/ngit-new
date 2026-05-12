@@ -23,7 +23,7 @@ interface ModernTypingEngineModuleProps {
     highlightMode?: 'word' | 'word_error' | 'letter' | 'none';
     wordLimit?: number;
     language?: string;
-    layout?: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
+    layout?: 'English' | 'Inscript';
     autoScroll?: boolean;
     showScrollbar?: boolean;
     sourcePosition?: 'top' | 'left' | 'right' | 'bottom';
@@ -200,7 +200,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     updateSettings({
       duration: internalDuration,
       language: (internalLanguage === 'Krutidev Hindi' || internalLanguage === 'Unicode Hindi' || internalLanguage === 'Hindi') ? 'Hindi' : internalLanguage,
-      layout: internalLayout || (internalLanguage?.includes('Hindi') ? 'English' : 'English'),
+      layout: internalLayout || (internalLanguage?.includes('Hindi') ? 'Inscript' : 'English'),
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,

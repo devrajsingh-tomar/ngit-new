@@ -22,7 +22,7 @@ interface TypingEngineModuleProps {
     highlightMode?: 'word' | 'word_error' | 'letter' | 'none';
     wordLimit?: number;
     language?: string;
-    layout?: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
+    layout?: 'English' | 'Inscript';
     autoScroll?: boolean;
     showScrollbar?: boolean;
   };

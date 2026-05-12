@@ -29,6 +29,8 @@ interface FooterData {
 
 export default async function Footer() {
     const result = await getHeaderFooterData();
+    const headerData = result.success ? result.header : null;
+
     
     // Default fallback data if everything fails
     const defaultFooterData: FooterData = {
@@ -80,12 +82,12 @@ export default async function Footer() {
                     <div className="lg:col-span-5 space-y-10">
                         <div className="space-y-8">
                             <Link href="/" className="inline-block group transition-transform duration-500 hover:scale-105">
-                                {footerData.logoImage ? (
+                                {footerData.logoImage || headerData?.logoImage ? (
                                     <div className="relative">
                                         <img 
-                                            src={footerData.logoImage} 
+                                            src={footerData.logoImage || headerData?.logoImage} 
                                             alt="NGIT Logo" 
-                                            className="h-20 w-auto object-contain brightness-0 invert opacity-90 group-hover:opacity-100 transition-all" 
+                                            className="h-20 w-auto object-contain opacity-90 group-hover:opacity-100 transition-all" 
                                         />
                                         <div className="absolute -inset-4 bg-blue-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
@@ -176,8 +178,8 @@ export default async function Footer() {
                                             )}>
                                                 {isPhone ? <Phone className="w-4 h-4" /> : isMail ? <Mail className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="text-[12px] font-bold text-white truncate group-hover:translate-x-1 transition-transform">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[12px] font-bold text-white group-hover:translate-x-1 transition-transform break-all">
                                                     {link.label.split(":")[1]?.trim() || link.label}
                                                 </p>
                                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">

@@ -27,8 +27,8 @@ export default function TypingExamPage() {
   const initialLayout = searchParams?.get("layout") || "English";
 
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>(initialLang as any);
-  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic' | 'Unicode'>(
-    (initialLayout || (initialLang === 'Hindi' ? 'Remington Gail' : 'English')) as any
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Inscript'>(
+    (initialLayout || (initialLang === 'Hindi' ? 'Inscript' : 'English')) as any
   );
 
   useEffect(() => {
@@ -257,7 +257,6 @@ export default function TypingExamPage() {
                         </h4>
                         <div className="grid grid-cols-1 gap-3">
                             {[
-                                { id: 'Remington Gail', name: 'Mangal Remington Gail', sub: 'Professional Standard' },
                                 { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard' },
                                 { id: 'Unicode', name: 'Unicode (Standard)', sub: 'Modern Typing' }
                             ].map((lay) => (
