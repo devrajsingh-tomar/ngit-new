@@ -22,7 +22,7 @@ export default function AdminGalleryPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [title, setTitle] = useState("");
-    const [category, setCategory] = useState("Campus");
+    const [category, setCategory] = useState("Others");
     const [images, setImages] = useState<any[]>([]);
 
     useEffect(() => {
@@ -71,19 +71,20 @@ export default function AdminGalleryPage() {
     const handleUpload = async () => {
         if (uploadMode === "url") {
             if (!externalUrl || !externalUrl.startsWith("http")) return toast.error("Enter a valid image URL");
-            if (!title) return toast.error("Enter a title");
+            
+            const uploadTitle = title || "Untitled";
             
             setLoading(true);
             const res = await (await import("@/app/actions/upload")).saveExternalImageUrlAction({
                 url: externalUrl,
-                title,
+                title: uploadTitle,
                 category
             });
 
             if (res.success) {
                 setImages([{
                     id: res.media._id,
-                    title,
+                    title: uploadTitle,
                     category,
                     url: externalUrl
                 }, ...images]);
@@ -94,12 +95,13 @@ export default function AdminGalleryPage() {
             }
         } else {
             if (!selectedFile) return toast.error("Select an image first");
-            if (!title) return toast.error("Enter a title");
+            
+            const uploadTitle = title || "Untitled";
 
             setLoading(true);
             const formData = new FormData();
             formData.append("file", selectedFile);
-            formData.append("title", title);
+            formData.append("title", uploadTitle);
             formData.append("category", category);
 
             const res = await uploadImageAction(formData);
@@ -107,7 +109,7 @@ export default function AdminGalleryPage() {
             if (res.success && res.url) {
                 setImages([{
                     id: res.media._id,
-                    title,
+                    title: uploadTitle,
                     category,
                     url: res.url
                 }, ...images]);
@@ -183,6 +185,7 @@ export default function AdminGalleryPage() {
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
                                 >
+                                    <option value="Others">Private / Others</option>
                                     <option>Campus</option>
                                     <option>Events</option>
                                     <option>Students</option>
