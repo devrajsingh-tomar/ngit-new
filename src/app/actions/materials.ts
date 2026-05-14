@@ -6,8 +6,32 @@ import Enrollment from "@/models/Enrollment";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { unlink } from "fs/promises";
+import { unlink, writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { saveFile } from "@/lib/file-upload";
+
+export async function uploadMaterialFile(formData: FormData): Promise<{ success: boolean; error?: string; url?: string; size?: string }> {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const file = formData.get("file") as File;
+        if (!file) return { success: false, error: "No file provided" };
+
+        const result = await saveFile(file, "materials");
+        if (!result.success) return { success: false, error: result.error || "File save failed" };
+
+        return {
+            success: true,
+            url: result.url,
+            size: (file.size / (1024 * 1024)).toFixed(2) + " MB"
+        };
+    } catch (error: any) {
+        return { success: false, error: error.message || "Upload failed" };
+    }
+}
 
 export async function createMaterial(data: any) {
     try {

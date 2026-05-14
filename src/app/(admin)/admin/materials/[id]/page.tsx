@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Save, FileText, ArrowLeft, Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getMaterialById, updateMaterial } from "@/app/actions/materials";
+import { getMaterialById, updateMaterial, uploadMaterialFile } from "@/app/actions/materials";
 import { getAllCourses } from "@/app/actions/courses";
 
 export default function EditMaterialPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,17 +76,13 @@ export default function EditMaterialPage({ params }: { params: Promise<{ id: str
             const uploadFormData = new FormData();
             uploadFormData.append("file", file);
 
-            const res = await fetch("/api/upload/material", {
-                method: "POST",
-                body: uploadFormData,
-            });
-
-            const data = await res.json();
+            // Use Server Action instead of API fetch for better support of large files
+            const data = await uploadMaterialFile(uploadFormData);
 
             if (data.success) {
                 setFormData(prev => ({
                     ...prev,
-                    url: data.url,
+                    url: data.url!,
                     size: data.size || prev.size,
                     type: "PDF"
                 }));
