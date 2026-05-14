@@ -79,7 +79,7 @@ export async function getStudentMaterials() {
             .map((en: any) => en.courseId?.title)
             .filter(Boolean);
 
-        const materials = await Material.find({ course: { $in: courseNames } })
+        const materials = await Material.find()
             .sort({ createdAt: -1 })
             .lean();
 

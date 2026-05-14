@@ -79,7 +79,7 @@ const nextConfig = {
     experimental: {
         optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
         serverActions: {
-            bodySizeLimit: "10mb",
+            bodySizeLimit: "50mb",
         },
     },
 } as any;

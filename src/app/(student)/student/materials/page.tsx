@@ -146,7 +146,7 @@ export default function StudentMaterialsPage() {
                     <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto text-slate-300">
                         <BookOpen className="w-10 h-10" />
                     </div>
-                    <p className="text-slate-500 font-medium">You don't have any study materials from your enrolled courses yet.</p>
+                    <p className="text-slate-500 font-medium">No study materials have been uploaded to the library yet.</p>
                 </div>
             )}
         </div>

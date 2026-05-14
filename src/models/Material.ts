@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IMaterial extends Document {
     title: string;
-    course: string;
+    course?: string;
     type: "PDF" | "VIDEO" | "LINK";
     url: string;
     size?: string;
@@ -14,7 +14,7 @@ export interface IMaterial extends Document {
 const MaterialSchema = new Schema<IMaterial>(
     {
         title: { type: String, required: true },
-        course: { type: String, required: true },
+        course: { type: String, default: "General" },
         type: {
             type: String,
             enum: ["PDF", "VIDEO", "LINK"],

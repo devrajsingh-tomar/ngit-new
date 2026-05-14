@@ -171,7 +171,7 @@ export default function EditMaterialPage({ params }: { params: Promise<{ id: str
                                 onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                                 className="w-full h-11 border border-slate-200 rounded-xl px-3 bg-white focus:border-primary outline-none text-sm font-medium"
                             >
-                                <option value="" disabled>Select a mapped course...</option>
+                                <option value="General">General / All Students</option>
                                 {courses.map(c => (
                                     <option key={c._id} value={c.title}>{c.title}</option>
                                 ))}
@@ -230,7 +230,7 @@ export default function EditMaterialPage({ params }: { params: Promise<{ id: str
                                             </label>
                                             <p className="pl-1">or drag and drop</p>
                                         </div>
-                                        <p className="text-xs text-slate-400">PDF up to 10MB</p>
+                                        <p className="text-xs text-slate-400">PDF up to 50MB</p>
                                         {formData.url && (
                                             <div className="mt-2 p-2 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center justify-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

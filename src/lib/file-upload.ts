@@ -13,7 +13,7 @@ type UploadResult = {
 // Configuration
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "gallery");
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // Increased to 10MB for larger profile pics/materials
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // Increased to 50MB
 const ALLOWED_TYPES = [
     "image/jpeg", 
     "image/png", 
