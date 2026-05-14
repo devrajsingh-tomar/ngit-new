@@ -1,18 +1,21 @@
+
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Save, FileText, ArrowLeft, Upload, Link as LinkIcon } from "lucide-react";
+import { Save, FileText, ArrowLeft, Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createMaterial } from "@/app/actions/materials";
+import { getMaterialById, updateMaterial } from "@/app/actions/materials";
 import { getAllCourses } from "@/app/actions/courses";
 
-export default function CreateMaterialPage() {
+export default function EditMaterialPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
     const [formData, setFormData] = useState({
         title: "",
         course: "",
@@ -25,12 +28,37 @@ export default function CreateMaterialPage() {
     const [uploadMode, setUploadMode] = useState<"upload" | "link">("link");
 
     useEffect(() => {
-        const loadCourses = async () => {
-            const res = await getAllCourses();
-            if (res.success && res.courses) setCourses(res.courses);
+        const loadData = async () => {
+            try {
+                const [materialRes, coursesRes] = await Promise.all([
+                    getMaterialById(id),
+                    getAllCourses()
+                ]);
+
+                if (materialRes.success && materialRes.material) {
+                    setFormData(materialRes.material);
+                    // Determine upload mode based on URL
+                    if (materialRes.material.url.startsWith("/uploads/")) {
+                        setUploadMode("upload");
+                    } else {
+                        setUploadMode("link");
+                    }
+                } else {
+                    toast.error("Material not found");
+                    router.push("/admin/materials");
+                }
+
+                if (coursesRes.success && coursesRes.courses) {
+                    setCourses(coursesRes.courses);
+                }
+            } catch (error) {
+                toast.error("Failed to load data");
+            } finally {
+                setFetching(false);
+            }
         };
-        loadCourses();
-    }, []);
+        loadData();
+    }, [id, router]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -83,13 +111,13 @@ export default function CreateMaterialPage() {
         setLoading(true);
 
         try {
-            const res = await createMaterial(formData);
+            const res = await updateMaterial(id, formData);
             if (res.success) {
-                toast.success("Study material added successfully!");
+                toast.success("Study material updated successfully!");
                 router.push("/admin/materials");
                 router.refresh();
             } else {
-                toast.error(res.error || "Failed to add material");
+                toast.error(res.error || "Failed to update material");
             }
         } catch (error) {
             toast.error("An error occurred");
@@ -97,6 +125,15 @@ export default function CreateMaterialPage() {
             setLoading(false);
         }
     };
+
+    if (fetching) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-slate-500 font-bold animate-pulse">Loading Material Details...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-3xl mx-auto space-y-8 pb-20">
@@ -107,8 +144,8 @@ export default function CreateMaterialPage() {
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Add Study Material</h1>
-                    <p className="text-slate-500 font-medium">Upload PDFs or share external resources with students.</p>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Edit Material</h1>
+                    <p className="text-slate-500 font-medium">Update the details of this study resource.</p>
                 </div>
             </div>
 
@@ -202,6 +239,9 @@ export default function CreateMaterialPage() {
                                         )}
                                     </div>
                                 </div>
+                                {formData.url && (
+                                    <p className="text-[10px] text-slate-400 mt-1 font-mono truncate">Current: {formData.url}</p>
+                                )}
                             </div>
                         ) : (
                             <div className="space-y-1">
@@ -229,7 +269,7 @@ export default function CreateMaterialPage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Size Info (Auto-filled on upload)</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Size Info</label>
                         <Input
                             value={formData.size}
                             onChange={(e) => setFormData({ ...formData, size: e.target.value })}
@@ -246,7 +286,7 @@ export default function CreateMaterialPage() {
                         size="lg" 
                         className="rounded-xl shadow-lg shadow-primary/20 gap-2 font-bold px-8"
                     >
-                        {loading ? "Processing..." : "Add Material"}
+                        {loading ? "Updating..." : "Update Material"}
                         <Save className="w-4 h-4" />
                     </Button>
                 </div>

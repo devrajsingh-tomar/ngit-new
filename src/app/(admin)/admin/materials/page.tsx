@@ -11,7 +11,8 @@ import {
     CheckCircle2,
     BookOpen,
     Loader2,
-    ExternalLink
+    ExternalLink,
+    Edit2
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -142,6 +143,15 @@ export default function AdminMaterialsPage() {
                                             >
                                                 <ExternalLink className="w-4 h-4" />
                                             </a>
+                                            <Link href={`/admin/materials/${m._id}`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="rounded-xl hover:bg-primary/10 text-slate-300 hover:text-primary"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </Button>
+                                            </Link>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

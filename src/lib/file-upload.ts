@@ -20,7 +20,8 @@ const ALLOWED_TYPES = [
     "image/webp", 
     "image/gif", 
     "image/svg+xml",
-    "image/bmp"
+    "image/bmp",
+    "application/pdf"
 ];
 
 // Magic Numbers for File Types
@@ -28,7 +29,8 @@ const MAGIC_NUMBERS = {
     jpg: [0xFF, 0xD8, 0xFF],
     png: [0x89, 0x50, 0x4E, 0x47],
     webp: [0x52, 0x49, 0x46, 0x46], // partial check (RIFF)
-    gif: [0x47, 0x49, 0x46, 0x38]   // GIF87a or GIF89a
+    gif: [0x47, 0x49, 0x46, 0x38],   // GIF87a or GIF89a
+    pdf: [0x25, 0x50, 0x44, 0x46]    // %PDF
 };
 
 const validateBuffer = (buffer: Buffer, type: string): boolean => {
@@ -45,6 +47,9 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
     if (type.includes("gif")) {
         return Buffer.compare(buffer.subarray(0, 4), Buffer.from(MAGIC_NUMBERS.gif)) === 0;
     }
+    if (type.includes("pdf")) {
+        return Buffer.compare(buffer.subarray(0, 4), Buffer.from(MAGIC_NUMBERS.pdf)) === 0;
+    }
     // SVG and others are harder to validate via bytes, skip strict check
     return true; 
 };
@@ -52,9 +57,9 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
 /**
  * Ensures the upload directory exists and has correct permissions for VPS serving.
  */
-const ensureUploadDir = async () => {
+const ensureUploadDir = async (subDir: string = "gallery") => {
     try {
-        const folders = ["uploads", "gallery"];
+        const folders = ["uploads", subDir];
         const base = process.cwd();
 
         for (const folder of folders) {
@@ -88,11 +93,18 @@ const ensureUploadDir = async () => {
  * Returns the public URL and filename.
  */
 export async function saveImage(file: File): Promise<UploadResult> {
+    return saveFile(file, "gallery");
+}
+
+/**
+ * Generic function to save any allowed file to a specific subdirectory.
+ */
+export async function saveFile(file: File, subDir: string = "gallery"): Promise<UploadResult> {
     try {
         if (!file) return { success: false, error: "No file provided" };
 
         if (!ALLOWED_TYPES.includes(file.type)) {
-            return { success: false, error: `Invalid type. Supported: JPG, PNG, WEBP, GIF, SVG` };
+            return { success: false, error: `Invalid type: ${file.type}. Supported: JPG, PNG, WEBP, GIF, SVG, PDF` };
         }
 
         if (file.size > MAX_FILE_SIZE) {
@@ -103,10 +115,10 @@ export async function saveImage(file: File): Promise<UploadResult> {
         const buffer = Buffer.from(bytes);
 
         if (!validateBuffer(buffer, file.type)) {
-            return { success: false, error: "File content mismatch (invalid image data)" };
+            return { success: false, error: "File content mismatch (invalid file data)" };
         }
 
-        await ensureUploadDir();
+        await ensureUploadDir(subDir);
 
         const timestamp = Date.now();
         const uniqueId = uuidv4();
@@ -117,12 +129,14 @@ export async function saveImage(file: File): Promise<UploadResult> {
             "image/webp": "webp",
             "image/gif": "gif",
             "image/svg+xml": "svg",
-            "image/bmp": "bmp"
+            "image/bmp": "bmp",
+            "application/pdf": "pdf"
         };
-        const extension = mimeToExt[file.type] || "jpg";
+        const extension = mimeToExt[file.type] || "file";
         const filename = `${timestamp}-${uniqueId}.${extension}`;
 
-        const filePath = path.join(UPLOAD_DIR, filename);
+        const UPLOAD_PATH = path.join(process.cwd(), "public", "uploads", subDir);
+        const filePath = path.join(UPLOAD_PATH, filename);
         await writeFile(filePath, buffer);
         
         // Set file permissions to 644 (rw-r--r--) so it's readable by the web server
@@ -133,7 +147,7 @@ export async function saveImage(file: File): Promise<UploadResult> {
             // Ignore on Windows
         }
 
-        const publicUrl = `/uploads/gallery/${filename}`;
+        const publicUrl = `/uploads/${subDir}/${filename}`;
 
         return {
             success: true,
@@ -146,3 +160,4 @@ export async function saveImage(file: File): Promise<UploadResult> {
         return { success: false, error: "Critical failure saving file to server" };
     }
 }
+
