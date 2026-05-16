@@ -6,6 +6,7 @@ import PracticeEssay, { IPracticeEssay } from "@/models/PracticeEssay";
 import CurrentPassage, { ICurrentPassage } from "@/models/CurrentPassage";
 import TypingPassage from "@/models/TypingPassage";
 import TypingBook from "@/models/TypingBook";
+import TypingExam from "@/models/TypingExam";
 import "@/models/TypingBook"; // Side-effect to ensure model is registered
 
 export async function GET(req: Request) {
@@ -123,6 +124,26 @@ export async function GET(req: Request) {
             duration: 10,
             backspaceMode: 'full',
             highlightMode: 'word'
+        });
+    }
+
+    if (type === 'EXAM' && val) {
+        if (!mongoose.Types.ObjectId.isValid(val)) {
+            return NextResponse.json({ error: "Invalid exam ID" }, { status: 400 });
+        }
+        const exam = await TypingExam.findById(val)
+            .populate("passageId")
+            .populate("rulePresetId")
+            .lean() as any;
+        if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+        
+        return NextResponse.json({
+            title: exam.title,
+            content: exam.passageId?.content || "",
+            duration: exam.duration,
+            backspaceMode: exam.rulePresetId?.backspaceMode || exam.backspaceMode || 'full',
+            highlightMode: exam.rulePresetId?.highlightMode || exam.highlightMode || 'word',
+            rawExamData: exam
         });
     }
 
