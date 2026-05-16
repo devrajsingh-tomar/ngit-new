@@ -18,55 +18,36 @@ interface MaterialViewerProps {
 
 export default function MaterialViewer({ isOpen, onClose, title, url }: MaterialViewerProps) {
     const [loading, setLoading] = useState(true);
-    const [blobUrl, setBlobUrl] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [displayUrl, setDisplayUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isOpen || !url) return;
 
-        const loadFile = async () => {
-            setLoading(true);
-            setError(null);
-            
-            // Handle Google Drive: These cannot be fetched via JS due to CORS
-            // They must be embedded directly. Google allows this for /preview URLs.
-            if (url.includes("drive.google.com")) {
-                const idMatch = url.match(/\/file\/d\/([^/?]+)/) || url.match(/[?&]id=([^&]+)/);
-                if (idMatch && idMatch[1]) {
-                    setBlobUrl(`https://drive.google.com/file/d/${idMatch[1]}/preview`);
-                } else {
-                    setBlobUrl(url);
-                }
-                setLoading(false);
-                return;
+        setLoading(true);
+        
+        // Handle Google Drive: Always use the direct preview link
+        if (url.includes("drive.google.com")) {
+            const idMatch = url.match(/\/file\/d\/([^/?]+)/) || url.match(/[?&]id=([^&]+)/);
+            if (idMatch && idMatch[1]) {
+                setDisplayUrl(`https://drive.google.com/file/d/${idMatch[1]}/preview`);
+            } else {
+                setDisplayUrl(url);
             }
+            setLoading(false);
+            return;
+        }
 
-            // For local files, we fetch them and create a Blob URL
-            // This bypasses server-side X-Frame-Options: DENY / SAMEORIGIN blocks
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("Failed to load PDF");
-                
-                const blob = await response.blob();
-                const localUrl = URL.createObjectURL(blob);
-                setBlobUrl(localUrl);
-            } catch (err) {
-                console.error("Blob loading error:", err);
-                // Fallback to direct URL if fetch fails
-                setBlobUrl(url);
-            } finally {
-                setLoading(false);
-            }
-        };
+        // For local files, use our new Proxy API to bypass Nginx X-Frame-Options
+        if (url.startsWith("/uploads/")) {
+            setDisplayUrl(`/api/view-pdf?url=${encodeURIComponent(url)}`);
+            setLoading(false);
+            return;
+        }
 
-        loadFile();
+        // Fallback for other external links
+        setDisplayUrl(url);
+        setLoading(false);
 
-        // Cleanup blob URL when component unmounts or URL changes
-        return () => {
-            if (blobUrl && blobUrl.startsWith("blob:")) {
-                URL.revokeObjectURL(blobUrl);
-            }
-        };
     }, [isOpen, url]);
 
     useEffect(() => {
@@ -119,18 +100,18 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                     {loading ? (
                         <div className="flex flex-col items-center gap-4">
                             <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Decryption in progress...</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading...</p>
                         </div>
-                    ) : blobUrl ? (
+                    ) : displayUrl ? (
                         <iframe
-                            src={blobUrl}
+                            src={displayUrl}
                             className="w-full h-full border-none relative z-10"
                             title={title}
                             allowFullScreen
                         />
                     ) : (
                         <div className="text-center p-8">
-                            <p className="text-slate-500 font-bold">Failed to load document content.</p>
+                            <p className="text-slate-500 font-bold">PDF viewer could not be initialized.</p>
                         </div>
                     )}
 
