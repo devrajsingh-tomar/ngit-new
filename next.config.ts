@@ -60,33 +60,6 @@ const nextConfig = {
             },
         ],
     },
-    async headers() {
-        return [
-            {
-                source: "/(.*)",
-                headers: [
-                    {
-                        key: "Permissions-Policy",
-                        value: "camera=(self), microphone=(), geolocation=(self), interest-cohort=()",
-                    },
-                ],
-            },
-            {
-                // Explicitly allow iframes and inline viewing for uploads
-                source: "/uploads/(.*)",
-                headers: [
-                    {
-                        key: "Content-Type",
-                        value: "application/pdf",
-                    },
-                    {
-                        key: "Content-Disposition",
-                        value: "inline",
-                    },
-                ],
-            },
-        ];
-    },
     typescript: {
         ignoreBuildErrors: true,
     },

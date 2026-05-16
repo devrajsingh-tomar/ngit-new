@@ -19,13 +19,11 @@ interface MaterialViewerProps {
 export default function MaterialViewer({ isOpen, onClose, title, url }: MaterialViewerProps) {
     const [fullScreen, setFullScreen] = useState(false);
 
-    // Use Google Docs Viewer for high compatibility and to bypass local security blocks
+    // Get the direct embed URL
     const getEmbedUrl = (rawUrl: string) => {
         if (!rawUrl) return "";
         
-        let finalUrl = rawUrl;
-        
-        // Handle Google Drive: Use its own preview mode if it's a drive link
+        // Handle Google Drive: Ensure it's in preview mode
         if (rawUrl.includes("drive.google.com")) {
             const idMatch = rawUrl.match(/\/file\/d\/([^/?]+)/) || rawUrl.match(/[?&]id=([^&]+)/);
             if (idMatch && idMatch[1]) {
@@ -33,14 +31,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
             }
         }
 
-        // For local files or other links, use Google Docs Viewer as a proxy
-        if (rawUrl.startsWith("/")) {
-            if (typeof window !== "undefined") {
-                finalUrl = window.location.origin + rawUrl;
-            }
-        }
-
-        return `https://docs.google.com/viewer?url=${encodeURIComponent(finalUrl)}&embedded=true`;
+        return rawUrl;
     };
 
     useEffect(() => {
@@ -75,7 +66,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                         </div>
                         <div>
                             <h2 className="font-bold text-slate-900 leading-tight line-clamp-1">{title}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure Academic Portal</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Study Material Viewer</p>
                         </div>
                     </div>
 
@@ -93,6 +84,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
 
                 {/* Content Area */}
                 <main className="flex-1 bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                    {/* The native PDF viewer is often the most reliable */}
                     <iframe
                         src={embedUrl}
                         className="w-full h-full border-none relative z-10"
@@ -100,24 +92,18 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                         allowFullScreen
                     />
 
-                    {/* Watermark Overlay */}
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.06] rotate-[-30deg] z-20">
+                    {/* Watermark Overlay - Reduced opacity to ensure it doesn't interfere */}
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg] z-20">
                         <p className="text-7xl md:text-9xl font-black text-slate-900 select-none uppercase text-center leading-tight">
-                            NGIT PROPERTY<br/>DO NOT COPY
+                            NGIT PROPERTY<br/>CONFIDENTIAL
                         </p>
-                    </div>
-
-                    {/* Security Badge */}
-                    <div className="absolute bottom-6 right-6 z-30 flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-2xl">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Encrypted Stream</span>
                     </div>
                 </main>
 
                 {/* Footer */}
-                <footer className="h-12 bg-white border-t px-8 flex items-center justify-center shrink-0 relative z-20">
+                <footer className="h-10 bg-white border-t px-8 flex items-center justify-center shrink-0 relative z-20">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                        Protected by NGIT Security • Unauthorized Capture Prohibited
+                        Protected Content • Screen Capture Prohibited
                     </p>
                 </footer>
             </div>
