@@ -21,6 +21,9 @@ import { getMaterials, deleteMaterial } from "@/app/actions/materials";
 export default function AdminMaterialsPage() {
     const [materials, setMaterials] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         loadMaterials();
@@ -52,6 +55,17 @@ export default function AdminMaterialsPage() {
         }
     };
 
+    const filteredMaterials = materials.filter(m =>
+        m.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.course?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredMaterials.length / ITEMS_PER_PAGE);
+    const paginatedMaterials = filteredMaterials.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
     return (
         <div className="space-y-8 pb-20">
             <div className="flex items-center justify-between">
@@ -73,6 +87,11 @@ export default function AdminMaterialsPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             placeholder="Search by title or course..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="w-full h-12 bg-white border border-slate-200 rounded-xl pl-12 pr-4 text-sm focus:border-primary outline-none transition-all font-medium"
                         />
                     </div>
@@ -95,7 +114,7 @@ export default function AdminMaterialsPage() {
                                         <Loader2 className="w-5 h-5 animate-spin" /> Loading library...
                                     </td>
                                 </tr>
-                            ) : materials.length === 0 ? (
+                            ) : paginatedMaterials.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="py-24 text-center">
                                         <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -105,7 +124,7 @@ export default function AdminMaterialsPage() {
                                         <p className="text-slate-400 text-sm mt-1">Start by uploading your first study resource.</p>
                                     </td>
                                 </tr>
-                            ) : materials.map((m) => (
+                            ) : paginatedMaterials.map((m) => (
                                 <tr key={m._id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -167,7 +186,37 @@ export default function AdminMaterialsPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="p-8 border-t flex items-center justify-between bg-slate-50/30">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Page {currentPage} of {totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => prev - 1)}
+                                className="rounded-xl font-bold"
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                className="rounded-xl font-bold"
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
+
 }
