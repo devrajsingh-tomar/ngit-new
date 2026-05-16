@@ -19,29 +19,13 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
   if (!exam) return notFound();
 
   const langFormatted = params.language.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  const langQuery = langFormatted === 'Hindi' 
-    ? { $in: ['Hindi', 'Unicode Hindi', 'Hindi (Mangal)', 'Krutidev Hindi'] }
-    : langFormatted;
 
   // Find which difficulties actually have tests for this exam + language
   const availableDifficulties = await TypingExam.distinct("difficulty", { 
     govExamId: exam._id,
-    language: langQuery,
+    language: langFormatted,
     status: "Active"
   });
-
-  // Fetch one test for each available difficulty to link directly
-  const testsByDifficulty = await Promise.all(
-    availableDifficulties.map(async (diff) => {
-      const test = await TypingExam.findOne({
-        govExamId: exam._id,
-        language: langQuery,
-        difficulty: diff,
-        status: "Active"
-      }).sort({ createdAt: -1 }).select("_id");
-      return { difficulty: diff, testId: test?._id };
-    })
-  );
 
   const allDifficulties = [
     { 
@@ -79,8 +63,9 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
         <Link href={`/typing/official/${exam.slug}`} className="inline-flex items-center text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Language Selection
         </Link>
+
         <div className="text-center space-y-3">
-          <p className="text-indigo-600 font-bold uppercase tracking-widest text-xs">Step 3 of 3</p>
+          <p className="text-indigo-600 font-bold uppercase tracking-widest text-xs">Step 3 of 4</p>
           <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900">
             Select Difficulty Level
           </h1>
@@ -90,41 +75,36 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {difficulties.map((diff) => {
-            const testId = testsByDifficulty.find(t => t.difficulty === diff.id)?.testId;
-            const layout = langFormatted === 'English' ? 'English' : 'Inscript';
-            
-            return (
-              <Link key={diff.id} href={`/typing/exam?type=exam&val=${testId}&lang=${langFormatted}&layout=${layout}`}>
-                <div className={`bg-white rounded-2xl p-8 shadow-sm border border-slate-200 transition-all duration-300 group cursor-pointer h-full flex flex-col items-center text-center hover:shadow-lg ${diff.color}`}>
-                  <div className={`w-20 h-20 bg-slate-50 flex items-center justify-center rounded-full mb-6 group-hover:scale-110 transition-all ${diff.bgHover}`}>
-                    {diff.icon}
-                  </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-4">
-                    {diff.name}
-                  </h3>
-                  <div className="w-full space-y-3">
-                    <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
-                        <span className="font-bold text-slate-400 uppercase">Expected Speed</span>
-                        <span className="font-black text-slate-900">{diff.metrics.wpm} WPM</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
-                        <span className="font-bold text-slate-400 uppercase">Word Count</span>
-                        <span className="font-black text-slate-900">{diff.metrics.words}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
-                        <span className="font-bold text-slate-400 uppercase">Complexity</span>
-                        <span className="font-black text-slate-900">{diff.metrics.complexity}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-slate-400 uppercase">Exam Pressure</span>
-                        <span className={`font-black ${diff.id === 'Hard' ? 'text-rose-600' : diff.id === 'Medium' ? 'text-amber-600' : 'text-emerald-600'}`}>{diff.metrics.pressure}</span>
-                    </div>
-                  </div>
+          {difficulties.map((diff) => (
+            <Link key={diff.id} href={`/typing/official/${exam.slug}/${params.language}/${diff.id.toLowerCase()}`}>
+              <div className={`bg-white rounded-2xl p-8 shadow-sm border border-slate-200 transition-all duration-300 group cursor-pointer h-full flex flex-col items-center text-center hover:shadow-lg ${diff.color}`}>
+                <div className={`w-20 h-20 bg-slate-50 flex items-center justify-center rounded-full mb-6 group-hover:scale-110 transition-all ${diff.bgHover}`}>
+                  {diff.icon}
                 </div>
-              </Link>
-            );
-          })}
+                <h3 className="text-2xl font-black text-slate-900 mb-4">
+                  {diff.name}
+                </h3>
+                <div className="w-full space-y-3">
+                   <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                      <span className="font-bold text-slate-400 uppercase">Expected Speed</span>
+                      <span className="font-black text-slate-900">{diff.metrics.wpm} WPM</span>
+                   </div>
+                   <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                      <span className="font-bold text-slate-400 uppercase">Word Count</span>
+                      <span className="font-black text-slate-900">{diff.metrics.words}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                      <span className="font-bold text-slate-400 uppercase">Complexity</span>
+                      <span className="font-black text-slate-900">{diff.metrics.complexity}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-400 uppercase">Exam Pressure</span>
+                      <span className={`font-black ${diff.id === 'Hard' ? 'text-rose-600' : diff.id === 'Medium' ? 'text-amber-600' : 'text-emerald-600'}`}>{diff.metrics.pressure}</span>
+                   </div>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
         
       </div>

@@ -29,12 +29,7 @@ export default async function LanguageSelectionPage({ params: paramsPromise }: {
     { id: "Hindi", name: "Hindi (Mangal)", icon: "अ", description: "Standard government Mangal layout" }
   ];
 
-  const languages = allLanguages.filter(lang => {
-    if (lang.id === 'Hindi') {
-      return availableLanguages.some(al => ['Hindi', 'Unicode Hindi', 'Hindi (Mangal)', 'Krutidev Hindi'].includes(al));
-    }
-    return availableLanguages.includes(lang.id);
-  });
+  const languages = allLanguages.filter(lang => availableLanguages.includes(lang.id));
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans py-12 px-4 sm:px-6 lg:px-8">

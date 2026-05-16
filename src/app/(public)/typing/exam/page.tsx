@@ -6,9 +6,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { TypingEngineModule } from "@/modules/typing/TypingEngineModule";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, RotateCcw, ArrowLeft, Target, Zap, AlertCircle, Keyboard } from "lucide-react";
+import { Trophy, RotateCcw, ArrowLeft, Target, Zap, AlertCircle } from "lucide-react";
+
 import { ClassicTypingEngineModule } from "@/modules/typing/ClassicTypingEngineModule";
-import { useSession } from "next-auth/react";
 
 function TypingPracticeContent() {
   const searchParams = useSearchParams();
@@ -21,7 +21,6 @@ function TypingPracticeContent() {
   const [content, setContent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<any>(null);
-  const { data: session } = useSession();
   const router = useRouter();
 
   const engineConfig = useMemo(() => ({
@@ -56,28 +55,7 @@ function TypingPracticeContent() {
     return () => { isMounted = false; };
   }, [type, cat, val, router]);
 
-  const handleComplete = async (res: any) => {
-    // If it's an official exam, submit to results API
-    if (type?.toUpperCase() === 'EXAM' && session) {
-        try {
-            const response = await fetch("/api/typing/results", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    examId: val,
-                    ...res
-                })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                toast.success("Result recorded successfully!");
-                router.push(`/typing/results/${data.resultId}`);
-                return;
-            }
-        } catch (error) {
-            console.error("Failed to submit result:", error);
-        }
-    }
+  const handleComplete = (res: any) => {
     setResults(res);
     toast.success("Practice Completed!");
   };
@@ -141,33 +119,16 @@ function TypingPracticeContent() {
     );
   }
 
-  const isClassic = type?.toLowerCase() === 'book' || type?.toLowerCase() === 'exam';
+  const isBook = type?.toLowerCase() === 'book';
 
   return (
     <div className="min-h-screen bg-white">
-      {type?.toUpperCase() === 'EXAM' && !session && (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-md z-[101] flex flex-col items-center justify-center p-6 text-center">
-           <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center mb-6">
-              <Keyboard className="w-10 h-10 text-rose-600" />
-           </div>
-           <h2 className="text-3xl font-black text-slate-900 mb-2">Authentication Required</h2>
-           <p className="text-slate-500 max-w-md mb-8">You need to be logged in as a student to participate in official exams and record your performance.</p>
-           <button 
-              onClick={() => router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.href)}`)}
-              className="px-10 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200"
-           >
-              Login as Student
-           </button>
-        </div>
-      )}
-
-      {isClassic ? (
+      {isBook ? (
           <ClassicTypingEngineModule 
             exam={content?.rawExamData || content} 
             passage={content?.content || ""} 
             config={engineConfig}
             onComplete={handleComplete}
-            userName={session?.user?.name || "STUDENT"}
           />
       ) : (
           <TypingEngineModule 

@@ -462,7 +462,7 @@ export default function TypingSelectionLayer() {
                     key={opt.id}
                     onClick={() => {
                         if (selectedModule === 'SPECIAL') {
-                            router.push(`/typing/exam?type=exam&val=${opt.id}&lang=${selectedLanguage}&layout=${selectedLayout}`);
+                            router.push(`/typing/exam/${opt.id}?lang=${selectedLanguage}&layout=${selectedLayout}`);
                             return;
                         }
                         const modulePath = selectedModule?.toLowerCase();
