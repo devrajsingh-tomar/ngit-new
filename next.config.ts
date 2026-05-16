@@ -69,6 +69,28 @@ const nextConfig = {
                         key: "Permissions-Policy",
                         value: "camera=(self), microphone=(), geolocation=(self), interest-cohort=()",
                     },
+                    {
+                        key: "X-Frame-Options",
+                        value: "SAMEORIGIN",
+                    },
+                    {
+                        key: "Content-Security-Policy",
+                        value: "frame-ancestors 'self' https://drive.google.com https://*.google.com;",
+                    },
+                ],
+            },
+            {
+                // Explicitly allow iframes for uploads
+                source: "/uploads/(.*)",
+                headers: [
+                    {
+                        key: "Content-Type",
+                        value: "application/pdf",
+                    },
+                    {
+                        key: "Content-Disposition",
+                        value: "inline",
+                    },
                 ],
             },
         ];
@@ -79,7 +101,7 @@ const nextConfig = {
     experimental: {
         optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
         serverActions: {
-            bodySizeLimit: "50mb",
+            bodySizeLimit: "60mb",
         },
     },
 } as any;

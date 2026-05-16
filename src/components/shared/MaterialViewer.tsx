@@ -8,7 +8,8 @@ import {
     ZoomIn,
     ZoomOut,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -24,13 +25,39 @@ interface MaterialViewerProps {
 export default function MaterialViewer({ isOpen, onClose, title, url }: MaterialViewerProps) {
     const [fullScreen, setFullScreen] = useState(false);
 
-    // Sanitize URL for Google Drive
+    // Sanitize URL for Google Drive and other providers
     const getEmbedUrl = (rawUrl: string) => {
         if (!rawUrl) return "";
-        if (rawUrl.includes("drive.google.com")) {
-            // Convert /view or /edit to /preview for embedding
-            return rawUrl.replace(/\/view(\?.*)?$/, "/preview").replace(/\/edit(\?.*)?$/, "/preview");
+        
+        try {
+            // Handle Google Drive
+            if (rawUrl.includes("drive.google.com")) {
+                let fileId = "";
+                
+                // Format: /file/d/ID/view
+                const idMatch = rawUrl.match(/\/file\/d\/([^/?]+)/);
+                if (idMatch && idMatch[1]) {
+                    fileId = idMatch[1];
+                } else {
+                    // Format: ?id=ID
+                    const urlObj = new URL(rawUrl);
+                    fileId = urlObj.searchParams.get("id") || "";
+                }
+
+                if (fileId) {
+                    return `https://drive.google.com/file/d/${fileId}/preview`;
+                }
+            }
+
+            // Handle Dropbox
+            if (rawUrl.includes("dropbox.com")) {
+                return rawUrl.replace("?dl=0", "?dl=1").replace("www.dropbox.com", "dl.dropboxusercontent.com");
+            }
+
+        } catch (e) {
+            console.error("URL parsing error:", e);
         }
+        
         return rawUrl;
     };
 
@@ -108,10 +135,25 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                         src={`${embedUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                         className="w-full h-full border-none"
                         title={title}
+                        allowFullScreen
                         onLoad={(e) => {
                             // Basic attempts to obscure iframe content from standard print/save
                         }}
                     />
+
+                    {/* Fallback for blocked content */}
+                    <div className="absolute top-4 right-4 z-10 flex flex-col items-center gap-2">
+                         <a 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-[10px] font-black text-primary border border-primary/20 shadow-lg hover:bg-primary hover:text-white transition-all uppercase tracking-widest flex items-center gap-2"
+                        >
+                            <ExternalLink className="w-3 h-3" /> 
+                            Open in New Tab
+                         </a>
+                         <p className="text-[8px] font-bold text-slate-400 bg-white/50 backdrop-blur px-2 py-1 rounded-md uppercase tracking-tighter">If content is blocked above</p>
+                    </div>
 
                     {/* Watermark Overlay to discourage screenshots */}
                     <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg]">

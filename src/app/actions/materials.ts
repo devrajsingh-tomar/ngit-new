@@ -40,6 +40,7 @@ export async function createMaterial(data: any) {
         const material = await Material.create(data);
 
         revalidatePath("/admin/materials");
+        revalidatePath("/student/materials");
         return { success: true, material: JSON.parse(JSON.stringify(material)) };
     } catch (error: any) {
         console.error("Create Material Error:", error);
@@ -66,6 +67,7 @@ export async function deleteMaterial(id: string) {
 
         await Material.findByIdAndDelete(id);
         revalidatePath("/admin/materials");
+        revalidatePath("/student/materials");
         return { success: true };
     } catch (error) {
         console.error("Delete Material Error:", error);
@@ -130,6 +132,7 @@ export async function updateMaterial(id: string, data: any) {
         await connectDB();
         const material = await Material.findByIdAndUpdate(id, data, { new: true });
         revalidatePath("/admin/materials");
+        revalidatePath("/student/materials");
         return { success: true, material: JSON.parse(JSON.stringify(material)) };
     } catch (error: any) {
         return { success: false, error: error.message || "Failed to update material" };
