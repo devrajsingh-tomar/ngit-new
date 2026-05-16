@@ -76,11 +76,13 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
 
     if (!isOpen) return null;
 
+    const isLocal = url.startsWith("/uploads/");
     const embedUrl = getEmbedUrl(url);
+    const finalUrl = isLocal ? `${embedUrl}#toolbar=0&navpanes=0&scrollbar=0` : embedUrl;
 
     return (
         <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 select-none"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 select-none no-print"
             onContextMenu={(e) => e.preventDefault()}
         >
             {/* Backdrop */}
@@ -95,14 +97,14 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                 fullScreen ? "w-full h-full" : "w-full max-w-6xl h-[90vh]"
             )}>
                 {/* Header */}
-                <header className="h-20 bg-slate-50 border-b flex items-center justify-between px-8 shrink-0">
+                <header className="h-20 bg-slate-50 border-b flex items-center justify-between px-8 shrink-0 relative z-20">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
                             <Maximize2 className="w-5 h-5" />
                         </div>
                         <div>
                             <h2 className="font-bold text-slate-900 leading-tight line-clamp-1">{title}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure PDF Document</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure Encrypted Viewer</p>
                         </div>
                     </div>
 
@@ -113,10 +115,6 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex items-center gap-2">
-                            <Button variant="ghost" size="icon" className="rounded-xl h-11 w-11 text-slate-400 hover:text-primary"><Share2 className="w-5 h-5" /></Button>
-                            {/* Download button removed as per security request */}
-                        </div>
                         <div className="w-px h-8 bg-slate-200 mx-2" />
                         <Button
                             variant="ghost"
@@ -130,49 +128,62 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                 </header>
 
                 {/* Content Area */}
-                <main className="flex-1 bg-slate-100 flex items-center justify-center overflow-auto relative">
+                <main className="flex-1 bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                    {/* Security Shield Overlay - blocks right-click and interaction with top toolbar area */}
+                    <div 
+                        className="absolute inset-0 z-10" 
+                        onContextMenu={(e) => e.preventDefault()}
+                    >
+                        {/* Top bar shield to hide/block built-in PDF toolbar */}
+                        <div className="absolute top-0 left-0 right-0 h-14 bg-transparent cursor-not-allowed" />
+                        {/* Right side shield to block scrollbar/download buttons */}
+                        <div className="absolute top-0 right-0 bottom-0 w-16 bg-transparent cursor-not-allowed" />
+                    </div>
+
                     <iframe
-                        src={`${embedUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                        className="w-full h-full border-none"
+                        src={finalUrl}
+                        className="w-full h-full border-none pointer-events-auto"
                         title={title}
                         allowFullScreen
                         onLoad={(e) => {
-                            // Basic attempts to obscure iframe content from standard print/save
+                            // Loaded
                         }}
                     />
 
-                    {/* Fallback for blocked content */}
-                    <div className="absolute top-4 right-4 z-10 flex flex-col items-center gap-2">
-                         <a 
-                            href={url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-[10px] font-black text-primary border border-primary/20 shadow-lg hover:bg-primary hover:text-white transition-all uppercase tracking-widest flex items-center gap-2"
-                        >
-                            <ExternalLink className="w-3 h-3" /> 
-                            Open in New Tab
-                         </a>
-                         <p className="text-[8px] font-bold text-slate-400 bg-white/50 backdrop-blur px-2 py-1 rounded-md uppercase tracking-tighter">If content is blocked above</p>
+                    {/* Watermark Overlay */}
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.04] rotate-[-30deg] z-[5]">
+                        <p className="text-9xl font-black text-slate-900 select-none uppercase text-center leading-tight">
+                            NGIT PROPERTY<br/>CONFIDENTIAL
+                        </p>
                     </div>
 
-                    {/* Watermark Overlay to discourage screenshots */}
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg]">
-                        <p className="text-9xl font-black text-slate-900 select-none uppercase">Confidential • NGIT</p>
-                    </div>
-
-                    {/* Floating Controls Overlay */}
-                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-900/90 backdrop-blur-xl p-3 rounded-2xl shadow-2xl border border-white/10 opacity-0 hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-xl"><ChevronLeft className="w-5 h-5" /></Button>
-                        <span className="text-white text-sm font-bold px-4 border-l border-r border-white/10 uppercase tracking-widest">Protected View</span>
-                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-xl"><ChevronRight className="w-5 h-5" /></Button>
+                    {/* Security Badge */}
+                    <div className="absolute bottom-6 left-6 z-20 flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-2xl">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Secure View Active</span>
                     </div>
                 </main>
 
                 {/* Footer / Meta */}
-                <footer className="h-10 bg-white border-t px-8 flex items-center justify-center shrink-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Protected Content • Download and Screenshot prohibited</p>
+                <footer className="h-12 bg-white border-t px-8 flex items-center justify-center shrink-0 relative z-20">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        Protected by NGIT Security • Unauthorized Capture Prohibited
+                    </p>
                 </footer>
             </div>
+
+            <style jsx global>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    body { display: none !important; }
+                }
+                .select-none {
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                }
+            `}</style>
         </div>
     );
 }

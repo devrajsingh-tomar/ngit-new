@@ -75,7 +75,7 @@ const nextConfig = {
                     },
                     {
                         key: "Content-Security-Policy",
-                        value: "frame-ancestors 'self' https://drive.google.com https://*.google.com;",
+                        value: "frame-src 'self' https://drive.google.com https://docs.google.com https://*.google.com; object-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.google.com; worker-src 'self' blob:;",
                     },
                 ],
             },
