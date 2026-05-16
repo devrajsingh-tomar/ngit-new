@@ -36,7 +36,13 @@ export async function GET(req: NextRequest) {
     }
 
     if (lang) {
-      query.language = lang;
+      // If the language param is any Hindi variant, match ALL Hindi variants
+      // so exercises from 'Unicode Hindi', 'Mangal Hindi', 'Krutidev Hindi', and 'Hindi' are all grouped together
+      if (lang.toLowerCase().includes('hindi')) {
+        query.language = { $regex: /hindi/i };
+      } else {
+        query.language = lang;
+      }
     }
 
     if (bookId && bookId !== "All") {

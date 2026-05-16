@@ -117,7 +117,11 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     // For Gov / Special exams: fetch from exams API
     let query = '';
     if (exam) {
-        const queryLang = exam.language || config.language;
+        const rawLang = exam.language || config.language || '';
+        // Normalize all Hindi variants to "Hindi" so the API regex matches ALL of them,
+        // causing all Hindi exercises (Unicode Hindi, Mangal Hindi, Krutidev Hindi, Hindi)
+        // to appear together in the exercise switcher dropdown.
+        const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : rawLang;
         if (exam.govExamId) {
             query = `?govExamId=${exam.govExamId}&language=${queryLang}`;
             if (exam.difficulty) query += `&difficulty=${exam.difficulty}`;
