@@ -3,13 +3,24 @@ import connectDB from "@/lib/db";
 import GovExam from "@/models/GovExam";
 import TypingExam from "@/models/TypingExam";
 import Link from "next/link";
-import { ArrowLeft, Clock, Keyboard, Play } from "lucide-react";
+import { ArrowLeft, Clock, Keyboard, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function TestSelectionPage({ params: paramsPromise }: { params: Promise<{ examSlug: string, language: string, difficulty: string }> }) {
+export default async function TestSelectionPage({ 
+  params: paramsPromise,
+  searchParams: searchParamsPromise
+}: { 
+  params: Promise<{ examSlug: string, language: string, difficulty: string }>,
+  searchParams: Promise<{ page?: string }>
+}) {
   const params = await paramsPromise;
+  const searchParams = await searchParamsPromise;
+  const page = parseInt(searchParams.page || "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
   await connectDB();
   const exam = await GovExam.findOne({ 
     slug: { $regex: new RegExp(`^${params.examSlug}$`, "i") }, 
@@ -21,13 +32,24 @@ export default async function TestSelectionPage({ params: paramsPromise }: { par
   const langFormatted = params.language.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const diffFormatted = params.difficulty.charAt(0).toUpperCase() + params.difficulty.slice(1);
 
-  // Fetch typing tests that match the criteria
-  const typingExams = await TypingExam.find({
+  const query = {
     govExamId: exam._id,
     language: langFormatted,
     difficulty: diffFormatted,
     status: "Active"
-  }).populate("passageId").sort({ createdAt: -1 });
+  };
+
+  // Fetch typing tests that match the criteria with pagination
+  const [typingExams, totalTests] = await Promise.all([
+    TypingExam.find(query)
+      .populate("passageId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    TypingExam.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalTests / limit);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans py-12 px-4 sm:px-6 lg:px-8">
@@ -61,7 +83,7 @@ export default async function TestSelectionPage({ params: paramsPromise }: { par
                />
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-               <span>Showing {typingExams.length} Available Tests</span>
+               <span>Showing {skip + 1}-{Math.min(skip + typingExams.length, totalTests)} of {totalTests} Available Tests</span>
             </div>
           </div>
 
@@ -87,7 +109,7 @@ export default async function TestSelectionPage({ params: paramsPromise }: { par
                   return (
                     <tr key={test._id.toString()} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-5 text-xs font-bold text-slate-400">
-                        {(index + 1).toString().padStart(2, '0')}
+                        {(skip + index + 1).toString().padStart(2, '0')}
                       </td>
                       <td className="px-6 py-5">
                         <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded uppercase tracking-wider">
@@ -140,6 +162,68 @@ export default async function TestSelectionPage({ params: paramsPromise }: { par
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Page {page} of {totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                {page > 1 ? (
+                  <Link 
+                    href={`?page=${page - 1}`}
+                    className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-all shadow-sm"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <div className="h-9 w-9 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-100 text-slate-300 cursor-not-allowed">
+                    <ChevronLeft className="w-4 h-4" />
+                  </div>
+                )}
+
+                {/* Page Numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum = page;
+                    if (page <= 3) pageNum = i + 1;
+                    else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                    else pageNum = page - 2 + i;
+
+                    if (pageNum <= 0 || pageNum > totalPages) return null;
+
+                    return (
+                      <Link 
+                        key={pageNum}
+                        href={`?page=${pageNum}`}
+                        className={`h-9 px-3.5 flex items-center justify-center rounded-lg text-xs font-black transition-all shadow-sm ${
+                          page === pageNum 
+                          ? "bg-slate-900 text-white shadow-indigo-500/10" 
+                          : "bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600"
+                        }`}
+                      >
+                        {pageNum}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {page < totalPages ? (
+                  <Link 
+                    href={`?page=${page + 1}`}
+                    className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-all shadow-sm"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <div className="h-9 w-9 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-100 text-slate-300 cursor-not-allowed">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
       </div>

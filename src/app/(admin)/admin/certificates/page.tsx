@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { getAdminCertificates, issueCertificate, revokeCertificate, getStudentList, getFormData, getCertificatePDF } from "@/app/actions/certificate";
 import { getAllCourses } from "@/app/actions/courses";
-import { Search, Award, ShieldCheck, XCircle, FileDiff, QrCode, Plus, Loader2, Download } from "lucide-react";
+import { Search, Award, ShieldCheck, XCircle, FileDiff, QrCode, Plus, Loader2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -20,6 +20,8 @@ export default function AdminCertificatesPage() {
     const [issuing, setIssuing] = useState(false);
     const [openAdd, setOpenAdd] = useState(false);
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [form, setForm] = useState({
         studentId: "",
@@ -35,14 +37,18 @@ export default function AdminCertificatesPage() {
         load();
     }, []);
 
-    const load = async () => {
+    const load = async (pageNum = 1) => {
         setLoading(true);
         const [cRes, crsData, fData] = await Promise.all([
-            getAdminCertificates({}),
+            getAdminCertificates({ page: pageNum, limit: 20 }),
             getAllCourses(),
             getFormData({})
         ]);
-        if (cRes.success) setCerts(cRes.data);
+        if (cRes.success) {
+            setCerts(cRes.data.certs);
+            setTotalPages(cRes.data.totalPages);
+            setPage(pageNum);
+        }
         setCourses(crsData.courses || []);
         if (fData.success) {
             setStudents(fData.data.students || []);
@@ -109,11 +115,16 @@ export default function AdminCertificatesPage() {
         }
     };
 
+    const filtered = certs; // Since we are doing server-side pagination, filtering on client will only filter current page.
+    // In a future update, we can implement full server-side search.
+    // For now, let's just show what we have.
+    /*
     const filtered = certs.filter(c =>
         c.certificateNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.courseId?.title?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    */
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-500">
@@ -334,6 +345,48 @@ export default function AdminCertificatesPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="px-8 py-6 border-t bg-slate-50/30 flex items-center justify-between">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Showing Page {page} of {totalPages}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => load(page - 1)} 
+                                disabled={page === 1}
+                                className="h-10 rounded-xl font-bold gap-2"
+                            >
+                                <ChevronLeft className="w-4 h-4" /> Previous
+                            </Button>
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                    <Button
+                                        key={p}
+                                        variant={page === p ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => load(p)}
+                                        className={`w-10 h-10 rounded-xl font-bold ${page === p ? "shadow-lg shadow-primary/20" : ""}`}
+                                    >
+                                        {p}
+                                    </Button>
+                                )).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2))}
+                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => load(page + 1)} 
+                                disabled={page === totalPages}
+                                className="h-10 rounded-xl font-bold gap-2"
+                            >
+                                Next <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

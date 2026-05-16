@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getPublicExams } from "@/app/actions/results";
 import { 
     Search, Award, Clock, Target, ArrowRight, 
-    BookOpen, Sparkles, Filter, ChevronRight
+    BookOpen, Sparkles, Filter, ChevronRight, ChevronLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ export default function PublicExamsPage() {
     const [exams, setExams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 20;
 
     useEffect(() => {
         const fetchExams = async () => {
@@ -35,6 +37,9 @@ export default function PublicExamsPage() {
         e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.courseId?.title?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const totalPages = Math.ceil(filteredExams.length / itemsPerPage);
+    const paginatedExams = filteredExams.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
     return (
         <div className="min-h-screen bg-slate-50 pb-24">
@@ -109,83 +114,126 @@ export default function PublicExamsPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredExams.map((exam, idx) => {
-                            const startUrl = session?.user 
-                                ? `/student/quizzes/${exam._id}` 
-                                : `/student/login?callbackUrl=${encodeURIComponent(`/student/quizzes/${exam._id}`)}`;
+                    <>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {paginatedExams.map((exam, idx) => {
+                                const startUrl = session?.user 
+                                    ? `/student/quizzes/${exam._id}` 
+                                    : `/student/login?callbackUrl=${encodeURIComponent(`/student/quizzes/${exam._id}`)}`;
 
-                            return (
-                                <motion.div
-                                    key={exam._id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group flex flex-col"
-                                >
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="space-y-3">
-                                            <div className="flex gap-2 items-center">
-                                                <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black tracking-widest uppercase px-3 py-1">
-                                                    {exam.courseId?.title || "General Mock Test"}
-                                                </Badge>
-                                                <Badge className={`${exam.pricing?.type === "PAID" ? "bg-amber-500" : "bg-emerald-500"} text-white border-none text-[10px] font-black tracking-widest uppercase px-3 py-1`}>
-                                                    {exam.pricing?.type === "PAID" ? `₹${exam.pricing.amount}` : "FREE"}
-                                                </Badge>
+                                return (
+                                    <motion.div
+                                        key={exam._id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group flex flex-col"
+                                    >
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div className="space-y-3">
+                                                <div className="flex gap-2 items-center">
+                                                    <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black tracking-widest uppercase px-3 py-1">
+                                                        {exam.courseId?.title || "General Mock Test"}
+                                                    </Badge>
+                                                    <Badge className={`${exam.pricing?.type === "PAID" ? "bg-amber-500" : "bg-emerald-500"} text-white border-none text-[10px] font-black tracking-widest uppercase px-3 py-1`}>
+                                                        {exam.pricing?.type === "PAID" ? `₹${exam.pricing.amount}` : "FREE"}
+                                                    </Badge>
+                                                </div>
+                                                <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">
+                                                    {exam.title}
+                                                </h3>
                                             </div>
-                                            <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">
-                                                {exam.title}
-                                            </h3>
-                                        </div>
-                                        <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-500 flex items-center justify-center shrink-0 shadow-inner">
-                                            <Sparkles className="w-8 h-8" />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4 mb-8">
-                                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                                                    <Clock className="w-5 h-5 text-blue-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duration</p>
-                                                    <p className="font-bold text-slate-700">{exam.settings?.timeLimit || 0} Minutes</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                                                    <Target className="w-5 h-5 text-emerald-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Total Marks</p>
-                                                    <p className="font-bold text-slate-700">{exam.settings?.totalMarks || 0} Points</p>
-                                                </div>
+                                            <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-500 flex items-center justify-center shrink-0 shadow-inner">
+                                                <Sparkles className="w-8 h-8" />
                                             </div>
                                         </div>
-                                        
-                                        <div className="flex items-center gap-3 text-slate-500 font-medium px-2">
-                                            <BookOpen className="w-4 h-4" />
-                                            <span className="text-sm">English, Hindi Medium Avaliable</span>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-auto pt-6 flex items-center gap-3">
-                                        <Link href={startUrl} className="flex-1">
-                                            <Button className="w-full h-14 rounded-2xl font-black text-base shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                                {session?.user ? "Start Now" : "Start Exam"}
+                                        <div className="space-y-4 mb-8">
+                                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                                        <Clock className="w-5 h-5 text-blue-500" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duration</p>
+                                                        <p className="font-bold text-slate-700">{exam.settings?.timeLimit || 0} Minutes</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                                        <Target className="w-5 h-5 text-emerald-500" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Total Marks</p>
+                                                        <p className="font-bold text-slate-700">{exam.settings?.totalMarks || 0} Points</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-3 text-slate-500 font-medium px-2">
+                                                <BookOpen className="w-4 h-4" />
+                                                <span className="text-sm">English, Hindi Medium Avaliable</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto pt-6 flex items-center gap-3">
+                                            <Link href={startUrl} className="flex-1">
+                                                <Button className="w-full h-14 rounded-2xl font-black text-base shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
+                                                    {session?.user ? "Start Now" : "Start Exam"}
+                                                </Button>
+                                            </Link>
+                                            <Link href="/courses">
+                                                <Button variant="outline" className="h-14 w-14 rounded-2xl p-0 border-2 hover:bg-slate-50">
+                                                    <ChevronRight className="w-6 h-6 text-slate-400" />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                    Page {page} of {totalPages}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={() => { setPage(page - 1); window.scrollTo({ top: 400, behavior: 'smooth' }); }} 
+                                        disabled={page === 1}
+                                        className="h-12 px-6 rounded-xl font-black gap-2 border-2"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" /> Previous
+                                    </Button>
+                                    
+                                    <div className="hidden sm:flex items-center gap-1">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                            <Button
+                                                key={p}
+                                                variant={page === p ? "default" : "outline"}
+                                                onClick={() => { setPage(p); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
+                                                className={`w-12 h-12 rounded-xl font-black border-2 ${page === p ? "shadow-lg shadow-primary/20" : ""}`}
+                                            >
+                                                {p}
                                             </Button>
-                                        </Link>
-                                        <Link href="/courses">
-                                            <Button variant="outline" className="h-14 w-14 rounded-2xl p-0 border-2 hover:bg-slate-50">
-                                                <ChevronRight className="w-6 h-6 text-slate-400" />
-                                            </Button>
-                                        </Link>
+                                        )).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2))}
                                     </div>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
+
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={() => { setPage(page + 1); window.scrollTo({ top: 400, behavior: 'smooth' }); }} 
+                                        disabled={page === totalPages}
+                                        className="h-12 px-6 rounded-xl font-black gap-2 border-2"
+                                    >
+                                        Next <ChevronRight className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
             

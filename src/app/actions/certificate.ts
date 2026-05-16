@@ -188,15 +188,44 @@ export async function getCertificatePDF(certId: string) {
 
 // --- ADMIN: LIST ALL CERTIFICATES ---
 export const getAdminCertificates = createSafeAction(
-    { roles: [UserRole.ADMIN], requireAuth: true },
-    async () => {
+    { 
+        schema: z.object({
+            page: z.number().optional().default(1),
+            limit: z.number().optional().default(20),
+            search: z.string().optional()
+        }),
+        roles: [UserRole.ADMIN], 
+        requireAuth: true 
+    },
+    async ({ page = 1, limit = 20, search }) => {
         await connectDB();
-        const certs = await Certificate.find()
-            .populate("studentId", "name email")
-            .populate("courseId", "title thumbnail")
-            .sort({ createdAt: -1 });
+        const skip = (page - 1) * limit;
 
-        return JSON.parse(JSON.stringify(certs));
+        let query: any = {};
+        if (search) {
+            query = {
+                $or: [
+                    { certificateNumber: { $regex: search, $options: "i" } },
+                ]
+            };
+        }
+
+        const [certs, total] = await Promise.all([
+            Certificate.find(query)
+                .populate("studentId", "name email")
+                .populate("courseId", "title thumbnail")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            Certificate.countDocuments(query)
+        ]);
+
+        return {
+            certs: JSON.parse(JSON.stringify(certs)),
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        };
     }
 );
 

@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
     Check, X, Search, MoreVertical, Mail, Phone,
     UserCheck, UserX, CreditCard, FileText, Eye,
-    BookOpen, Calendar, MapPin, Shield, User
+    BookOpen, Calendar, MapPin, Shield, User, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { getStudentRegistrations, approveStudent, rejectStudent } from "@/app/actions/registration";
@@ -36,20 +36,26 @@ export default function AdminStudentsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<StudentProfile | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [counts, setCounts] = useState({ Pending: 0, Approved: 0, All: 0 });
 
-    const fetchStudents = useCallback(async () => {
+    const fetchStudents = useCallback(async (pageNum = 1, status = activeTab) => {
         setLoading(true);
-        const res = await getStudentRegistrations({});
+        const res = await getStudentRegistrations({ page: pageNum, limit: 20, status });
         if (!res.success) {
             toast.error(res.error || "Failed to load students");
             setLoading(false);
             return;
         }
-        setStudents(res.data as StudentProfile[]);
+        setStudents(res.data.data as StudentProfile[]);
+        setTotalPages(res.data.totalPages);
+        setPage(pageNum);
+        setCounts(res.data.counts);
         setLoading(false);
-    }, []);
+    }, [activeTab]);
 
-    useEffect(() => { fetchStudents(); }, [fetchStudents]);
+    useEffect(() => { fetchStudents(1, activeTab); }, [activeTab, fetchStudents]);
 
     const handleApprove = async (id: string) => {
         const res = await approveStudent({ profileId: id });
@@ -74,6 +80,8 @@ export default function AdminStudentsPage() {
         }
     };
 
+    const filtered = students; // Filtering is now done server-side for status. Search is client-side on current page for now.
+    /*
     const filtered = students.filter((s) => {
         const matchesTab = activeTab === "All" || s.status === activeTab;
         const matchesSearch =
@@ -83,12 +91,15 @@ export default function AdminStudentsPage() {
             s.course.toLowerCase().includes(search.toLowerCase());
         return matchesTab && matchesSearch;
     });
+    */
 
+    /*
     const counts = {
         Pending: students.filter((s) => s.status === "Pending").length,
         Approved: students.filter((s) => s.status === "Approved").length,
         All: students.length,
     };
+    */
 
     return (
         <div className="space-y-8">
@@ -257,6 +268,48 @@ export default function AdminStudentsPage() {
                 {!loading && filtered.length === 0 && (
                     <div className="py-20 text-center text-slate-400 italic">
                         No students found in "{activeTab}" category.
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="px-8 py-6 border-t bg-slate-50/30 flex items-center justify-between">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Page {page} of {totalPages}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => fetchStudents(page - 1)} 
+                                disabled={page === 1}
+                                className="h-10 rounded-xl font-bold gap-2"
+                            >
+                                <ChevronLeft className="w-4 h-4" /> Previous
+                            </Button>
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                    <Button
+                                        key={p}
+                                        variant={page === p ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => fetchStudents(p)}
+                                        className={`w-10 h-10 rounded-xl font-bold ${page === p ? "shadow-lg shadow-primary/20" : ""}`}
+                                    >
+                                        {p}
+                                    </Button>
+                                )).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2))}
+                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => fetchStudents(page + 1)} 
+                                disabled={page === totalPages}
+                                className="h-10 rounded-xl font-bold gap-2"
+                            >
+                                Next <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>

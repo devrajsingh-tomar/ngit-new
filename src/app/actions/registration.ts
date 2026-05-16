@@ -74,14 +74,47 @@ export const registerStudent = createSafeAction(
 );
 
 export const getStudentRegistrations = createSafeAction(
-    { roles: [UserRole.ADMIN], requireAuth: true },
-    async () => {
+    { 
+        schema: z.object({
+            page: z.number().optional().default(1),
+            limit: z.number().optional().default(20),
+            status: z.string().optional()
+        }),
+        roles: [UserRole.ADMIN], 
+        requireAuth: true 
+    },
+    async ({ page = 1, limit = 20, status }) => {
         await connectDB();
-        const profiles = await StudentProfile.find({})
-            .sort({ createdAt: -1 })
-            .lean();
+        const skip = (page - 1) * limit;
 
-        return JSON.parse(JSON.stringify(profiles));
+        let query: any = {};
+        if (status && status !== "All") {
+            query.status = status;
+        }
+
+        const [profiles, total, pendingCount, approvedCount, allCount] = await Promise.all([
+            StudentProfile.find(query)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            StudentProfile.countDocuments(query),
+            StudentProfile.countDocuments({ status: "Pending" }),
+            StudentProfile.countDocuments({ status: "Approved" }),
+            StudentProfile.countDocuments({})
+        ]);
+
+        return {
+            data: JSON.parse(JSON.stringify(profiles)),
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+            counts: {
+                Pending: pendingCount,
+                Approved: approvedCount,
+                All: allCount
+            }
+        };
     }
 );
 

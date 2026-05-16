@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle, Award } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle, Award, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,11 @@ export default function AdminTypingDashboard() {
   const [adminLanguage, setAdminLanguage] = useState("English");
   const [adminLayout, setAdminLayout] = useState("Inscript");
   const [submitting, setSubmitting] = useState(false);
+
+  // Pagination
+  const [examPage, setExamPage] = useState(1);
+  const [passagePage, setPassagePage] = useState(1);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     fetchData();
@@ -380,10 +385,15 @@ export default function AdminTypingDashboard() {
 
   // Filter components
   const filteredExams = exams.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const paginatedExams = filteredExams.slice((examPage - 1) * itemsPerPage, examPage * itemsPerPage);
+  const totalExamPages = Math.ceil(filteredExams.length / itemsPerPage);
+
   const filteredPassages = passages.filter(p => 
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.bookId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const paginatedPassages = filteredPassages.slice((passagePage - 1) * itemsPerPage, passagePage * itemsPerPage);
+  const totalPassagePages = Math.ceil(filteredPassages.length / itemsPerPage);
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-[#f5f7fb]">
@@ -472,14 +482,14 @@ export default function AdminTypingDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredExams.map((exam, index) => {
+                        {paginatedExams.map((exam, index) => {
                           const linkedGovExam = govExams.find(g => g._id.toString() === exam.govExamId?.toString());
                           const linkedPassage = passages.find(p => p._id.toString() === exam.passageId?.toString());
                           const linkedPreset = rulePresets.find(r => r._id.toString() === exam.rulePresetId?.toString());
 
                           return (
                             <tr key={exam._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 text-center text-slate-400 font-mono text-xs">{index + 1}</td>
+                              <td className="px-6 py-4 text-center text-slate-400 font-mono text-xs">{(examPage - 1) * itemsPerPage + index + 1}</td>
                               <td className="px-6 py-4">
                                 <div className="flex flex-col">
                                   <span className="font-semibold text-slate-900">{exam.title}</span>
@@ -520,6 +530,35 @@ export default function AdminTypingDashboard() {
                       <div className="p-12 text-center text-slate-400">No exams found matching your search.</div>
                     )}
                 </div>
+
+                {/* Exams Pagination */}
+                {totalExamPages > 1 && (
+                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                      Page {examPage} of {totalExamPages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setExamPage(Math.max(1, examPage - 1))} 
+                        disabled={examPage === 1}
+                        className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Prev
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setExamPage(Math.min(totalExamPages, examPage + 1))} 
+                        disabled={examPage === totalExamPages}
+                        className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+                      >
+                        Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
              </div>
           </TabsContent>
 
@@ -619,7 +658,7 @@ export default function AdminTypingDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPassages.map(p => (
+                    {paginatedPassages.map(p => (
                       <tr key={p._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
                          <td className="px-6 py-3 font-semibold text-slate-900">{p.title}</td>
                          <td className="px-6 py-3 text-slate-600">{p.language}</td>
@@ -645,6 +684,35 @@ export default function AdminTypingDashboard() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Passages Pagination */}
+                {totalPassagePages > 1 && (
+                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                      Page {passagePage} of {totalPassagePages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setPassagePage(Math.max(1, passagePage - 1))} 
+                        disabled={passagePage === 1}
+                        className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Prev
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setPassagePage(Math.min(totalPassagePages, passagePage + 1))} 
+                        disabled={passagePage === totalPassagePages}
+                        className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+                      >
+                        Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
              </div>
           </TabsContent>
 
