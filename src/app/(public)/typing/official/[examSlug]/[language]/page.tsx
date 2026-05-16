@@ -19,11 +19,18 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
   if (!exam) return notFound();
 
   const langFormatted = params.language.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  const isHindi = langFormatted.toLowerCase().includes('hindi');
+  const isEnglish = langFormatted.toLowerCase().includes('english');
+
+  // Build language filter: match all Hindi variants stored in DB (Unicode Hindi, Mangal Hindi, Krutidev Hindi, Hindi)
+  const langFilter = isHindi 
+    ? { $regex: /hindi/i } 
+    : langFormatted;
 
   // Find which difficulties actually have tests for this exam + language
   const availableDifficulties = await TypingExam.distinct("difficulty", { 
     govExamId: exam._id,
-    language: langFormatted,
+    language: langFilter,
     status: "Active"
   });
 

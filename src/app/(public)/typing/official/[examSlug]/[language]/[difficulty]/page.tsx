@@ -32,9 +32,14 @@ export default async function TestSelectionPage({
   const langFormatted = params.language.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const diffFormatted = params.difficulty.charAt(0).toUpperCase() + params.difficulty.slice(1);
 
+  // Build language filter: if 'Hindi' is in URL, match all Hindi variants in DB
+  // (Unicode Hindi, Mangal Hindi, Krutidev Hindi, Hindi)
+  const isHindi = langFormatted.toLowerCase().includes('hindi');
+  const langFilter = isHindi ? { $regex: /hindi/i } : langFormatted;
+
   const query = {
     govExamId: exam._id,
-    language: langFormatted,
+    language: langFilter,
     difficulty: diffFormatted,
     status: "Active"
   };

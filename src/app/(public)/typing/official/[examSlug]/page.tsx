@@ -19,17 +19,23 @@ export default async function LanguageSelectionPage({ params: paramsPromise }: {
   if (!exam) return notFound();
 
   // Find which languages actually have tests for this exam
-  const availableLanguages = await TypingExam.distinct("language", { 
+  // Group all Hindi variants (Unicode Hindi, Krutidev Hindi, Mangal Hindi) under "Hindi"
+  const rawLanguages = await TypingExam.distinct("language", { 
     govExamId: exam._id,
     status: "Active"
   });
+
+  const hasEnglish = rawLanguages.some((l: string) => l.toLowerCase().includes("english"));
+  const hasHindi = rawLanguages.some((l: string) => l.toLowerCase().includes("hindi"));
 
   const allLanguages = [
     { id: "English", name: "English Typing", icon: "⌨️", description: "Standard QWERTY layout practice" },
     { id: "Hindi", name: "Hindi (Mangal)", icon: "अ", description: "Standard government Mangal layout" }
   ];
 
-  const languages = allLanguages.filter(lang => availableLanguages.includes(lang.id));
+  const languages = allLanguages.filter(lang => 
+    lang.id === "English" ? hasEnglish : hasHindi
+  );
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans py-12 px-4 sm:px-6 lg:px-8">
