@@ -585,7 +585,14 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       <div className="bg-[#f0f0f0] p-4 border-t border-gray-300 flex justify-center items-center relative h-16">
         <div className="flex items-center gap-4 max-w-[1400px] mx-auto w-full justify-center relative">
           <button 
-            onClick={() => router.back()}
+            onClick={() => {
+              // Navigate back to typing listing, or previous exam listing if navigated from there
+              if (document.referrer && document.referrer.includes('/typing/official')) {
+                router.back();
+              } else {
+                router.push('/typing');
+              }
+            }}
             className="absolute left-0 bg-[#dc3545] text-white px-8 py-2 rounded text-sm font-bold hover:bg-[#c82333] transition-colors"
           >
             Back

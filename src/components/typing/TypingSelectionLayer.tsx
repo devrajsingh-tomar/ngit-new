@@ -145,11 +145,13 @@ export default function TypingSelectionLayer() {
   const { data: session } = useSession();
 
   const handleModuleSelect = (moduleId: Module) => {
+    // Require login for all exam modules
+    if (!session) {
+      router.push(`/student/login?callbackUrl=${encodeURIComponent('/typing')}`);
+      return;
+    }
+
     if (moduleId === 'OFFICIAL') {
-        if (!session) {
-            router.push(`/api/auth/signin?callbackUrl=/typing/official?lang=${selectedLanguage}`);
-            return;
-        }
         router.push(`/typing/official?lang=${selectedLanguage}`); 
         return;
     }

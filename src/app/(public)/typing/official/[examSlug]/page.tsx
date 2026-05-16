@@ -4,12 +4,22 @@ import GovExam from "@/models/GovExam";
 import TypingExam from "@/models/TypingExam";
 import Link from "next/link";
 import { ChevronRight, ArrowLeft } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function LanguageSelectionPage({ params: paramsPromise }: { params: Promise<{ examSlug: string }> }) {
   const params = await paramsPromise;
+
+  // Auth check: require student login
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    const callbackUrl = `/typing/official/${params.examSlug}`;
+    redirect(`/student/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  }
+
   await connectDB();
   const exam = await GovExam.findOne({ 
     slug: { $regex: new RegExp(`^${params.examSlug}$`, "i") }, 

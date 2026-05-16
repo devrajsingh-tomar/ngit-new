@@ -6,11 +6,13 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { TypingEngineModule } from "@/modules/typing/TypingEngineModule";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, RotateCcw, ArrowLeft, Target, Zap, AlertCircle } from "lucide-react";
+import { Trophy, RotateCcw, ArrowLeft, Target, Zap, AlertCircle, Lock } from "lucide-react";
 
 import { ClassicTypingEngineModule } from "@/modules/typing/ClassicTypingEngineModule";
+import { useSession } from "next-auth/react";
 
 function TypingPracticeContent() {
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const type = searchParams.get("type"); // e.g., 'book', 'word', 'essay', 'current'
   const cat = searchParams.get("cat");
@@ -66,6 +68,27 @@ function TypingPracticeContent() {
       <p className="text-slate-500 font-bold animate-pulse">PREPARING YOUR DRILL...</p>
     </div>
   );
+
+  // Auth guard: redirect to login if not authenticated
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-10 rounded-[3rem] border-none shadow-2xl bg-white text-center">
+          <div className="w-20 h-20 bg-indigo-100 rounded-3xl flex items-center justify-center text-indigo-600 mx-auto mb-6">
+            <Lock className="w-10 h-10" />
+          </div>
+          <h2 className="text-3xl font-black text-slate-900 mb-3">Login Required</h2>
+          <p className="text-slate-500 font-medium mb-8">You need to be logged in as a student to access typing practice sessions.</p>
+          <Button 
+            onClick={() => router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.href)}`)}
+            className="w-full h-14 rounded-2xl font-black text-base"
+          >
+            Login as Student
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   if (results) {
     return (
