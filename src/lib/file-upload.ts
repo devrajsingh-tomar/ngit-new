@@ -57,36 +57,34 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
 /**
  * Ensures the upload directory exists and has correct permissions for VPS serving.
  */
+/**
+ * Ensures the upload directory exists: public/uploads/[subDir]
+ */
 const ensureUploadDir = async (subDir: string = "gallery") => {
     try {
-        const folders = ["uploads", subDir];
-        const base = process.cwd();
+        const base = path.join(process.cwd(), "public", "uploads");
+        const targetDir = path.join(base, subDir);
 
-        for (const folder of folders) {
-            // Static scope helps Turbopack
-            const currentPath = path.join(/* turbopackIgnore: true */ base, "public", folder);
-            
-            try {
-                await mkdir(currentPath, { recursive: true });
-                // Set directory permissions to 755 (drwxr-xr-x) for web access
-                try {
-                    const { chmod } = await import("fs/promises");
-                    await chmod(currentPath, 0o755);
-                } catch (e) {
-                    // Windows or permission issue
-                }
-            } catch (err: any) {
-                if (err.code !== 'EEXIST') {
-                    console.error(`Failed to create directory ${currentPath}:`, err);
-                    throw err;
-                }
-            }
+        // Create public/uploads first, then public/uploads/subDir
+        await mkdir(base, { recursive: true });
+        await mkdir(targetDir, { recursive: true });
+
+        // Set directory permissions to 755 for web access (Linux/VPS)
+        try {
+            const { chmod } = await import("fs/promises");
+            await chmod(base, 0o755);
+            await chmod(targetDir, 0o755);
+        } catch (e) {
+            // Ignore on Windows or if permissions not applicable
         }
-    } catch (error) {
-        console.error("Error in ensureUploadDir:", error);
-        throw error;
+    } catch (error: any) {
+        if (error.code !== 'EEXIST') {
+            console.error("Error in ensureUploadDir:", error);
+            throw error;
+        }
     }
 };
+
 
 /**
  * Validates and saves an image file to the local filesystem.
@@ -108,7 +106,7 @@ export async function saveFile(file: File, subDir: string = "gallery"): Promise<
         }
 
         if (file.size > MAX_FILE_SIZE) {
-            return { success: false, error: "File size exceeds 10MB limit" };
+            return { success: false, error: "File size exceeds 50MB limit" };
         }
 
         const bytes = await file.arrayBuffer();
