@@ -2,8 +2,8 @@
 
 import {
     X,
-    Maximize2,
     FileText,
+    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -17,22 +17,57 @@ interface MaterialViewerProps {
 }
 
 export default function MaterialViewer({ isOpen, onClose, title, url }: MaterialViewerProps) {
-    const [fullScreen, setFullScreen] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    // Get the direct embed URL
-    const getEmbedUrl = (rawUrl: string) => {
-        if (!rawUrl) return "";
-        
-        // Handle Google Drive: Ensure it's in preview mode
-        if (rawUrl.includes("drive.google.com")) {
-            const idMatch = rawUrl.match(/\/file\/d\/([^/?]+)/) || rawUrl.match(/[?&]id=([^&]+)/);
-            if (idMatch && idMatch[1]) {
-                return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
+    useEffect(() => {
+        if (!isOpen || !url) return;
+
+        const loadFile = async () => {
+            setLoading(true);
+            setError(null);
+            
+            // Handle Google Drive: These cannot be fetched via JS due to CORS
+            // They must be embedded directly. Google allows this for /preview URLs.
+            if (url.includes("drive.google.com")) {
+                const idMatch = url.match(/\/file\/d\/([^/?]+)/) || url.match(/[?&]id=([^&]+)/);
+                if (idMatch && idMatch[1]) {
+                    setBlobUrl(`https://drive.google.com/file/d/${idMatch[1]}/preview`);
+                } else {
+                    setBlobUrl(url);
+                }
+                setLoading(false);
+                return;
             }
-        }
 
-        return rawUrl;
-    };
+            // For local files, we fetch them and create a Blob URL
+            // This bypasses server-side X-Frame-Options: DENY / SAMEORIGIN blocks
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Failed to load PDF");
+                
+                const blob = await response.blob();
+                const localUrl = URL.createObjectURL(blob);
+                setBlobUrl(localUrl);
+            } catch (err) {
+                console.error("Blob loading error:", err);
+                // Fallback to direct URL if fetch fails
+                setBlobUrl(url);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadFile();
+
+        // Cleanup blob URL when component unmounts or URL changes
+        return () => {
+            if (blobUrl && blobUrl.startsWith("blob:")) {
+                URL.revokeObjectURL(blobUrl);
+            }
+        };
+    }, [isOpen, url]);
 
     useEffect(() => {
         if (isOpen) {
@@ -42,8 +77,6 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
     }, [isOpen]);
 
     if (!isOpen) return null;
-
-    const embedUrl = getEmbedUrl(url);
 
     return (
         <div 
@@ -55,8 +88,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
 
             {/* Viewer Container */}
             <div className={cn(
-                "relative bg-white rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-white/20 transition-all duration-500",
-                fullScreen ? "w-full h-full" : "w-full max-w-6xl h-[90vh]"
+                "relative bg-white rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-white/20 transition-all duration-500 w-full max-w-6xl h-[90vh]"
             )}>
                 {/* Header */}
                 <header className="h-20 bg-slate-50 border-b flex items-center justify-between px-8 shrink-0 relative z-20">
@@ -66,7 +98,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                         </div>
                         <div>
                             <h2 className="font-bold text-slate-900 leading-tight line-clamp-1">{title}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Study Material Viewer</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure Study Portal</p>
                         </div>
                     </div>
 
@@ -84,15 +116,25 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
 
                 {/* Content Area */}
                 <main className="flex-1 bg-slate-100 flex items-center justify-center overflow-hidden relative">
-                    {/* The native PDF viewer is often the most reliable */}
-                    <iframe
-                        src={embedUrl}
-                        className="w-full h-full border-none relative z-10"
-                        title={title}
-                        allowFullScreen
-                    />
+                    {loading ? (
+                        <div className="flex flex-col items-center gap-4">
+                            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Decryption in progress...</p>
+                        </div>
+                    ) : blobUrl ? (
+                        <iframe
+                            src={blobUrl}
+                            className="w-full h-full border-none relative z-10"
+                            title={title}
+                            allowFullScreen
+                        />
+                    ) : (
+                        <div className="text-center p-8">
+                            <p className="text-slate-500 font-bold">Failed to load document content.</p>
+                        </div>
+                    )}
 
-                    {/* Watermark Overlay - Reduced opacity to ensure it doesn't interfere */}
+                    {/* Watermark Overlay */}
                     <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] rotate-[-30deg] z-20">
                         <p className="text-7xl md:text-9xl font-black text-slate-900 select-none uppercase text-center leading-tight">
                             NGIT PROPERTY<br/>CONFIDENTIAL
@@ -103,7 +145,7 @@ export default function MaterialViewer({ isOpen, onClose, title, url }: Material
                 {/* Footer */}
                 <footer className="h-10 bg-white border-t px-8 flex items-center justify-center shrink-0 relative z-20">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                        Protected Content • Screen Capture Prohibited
+                        Protected Content • Unauthorized Capture Prohibited
                     </p>
                 </footer>
             </div>
