@@ -69,18 +69,10 @@ const nextConfig = {
                         key: "Permissions-Policy",
                         value: "camera=(self), microphone=(), geolocation=(self), interest-cohort=()",
                     },
-                    {
-                        key: "X-Frame-Options",
-                        value: "SAMEORIGIN",
-                    },
-                    {
-                        key: "Content-Security-Policy",
-                        value: "frame-src 'self' https://drive.google.com https://docs.google.com https://*.google.com; object-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.google.com; worker-src 'self' blob:;",
-                    },
                 ],
             },
             {
-                // Explicitly allow iframes for uploads
+                // Explicitly allow iframes and inline viewing for uploads
                 source: "/uploads/(.*)",
                 headers: [
                     {
