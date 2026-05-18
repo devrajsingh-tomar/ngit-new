@@ -196,6 +196,13 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     }
   }, [activeWordIndex, settings.autoScroll]);
 
+  // Auto-scroll typing textarea whenever typedText changes
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.scrollTop = inputRef.current.scrollHeight;
+    }
+  }, [typedText]);
+
   // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
@@ -309,7 +316,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     ? "'Mangal', 'Nirmala UI', 'Arial Unicode MS', sans-serif" 
     : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
 
-  const passageWords = internalPassage.split(' ');
+  const passageWords = (internalPassage || "").trim().split(/\s+/);
 
   const [instituteLogo, setInstituteLogo] = useState<string | null>(null);
 

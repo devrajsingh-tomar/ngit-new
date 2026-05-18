@@ -213,6 +213,13 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     }
   }, [activeWordIndex, settings.autoScroll]);
 
+  // Auto-scroll typing textarea whenever typedText changes
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.scrollTop = inputRef.current.scrollHeight;
+    }
+  }, [typedText]);
+
   // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
@@ -335,7 +342,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     ? "'Mangal', 'Nirmala UI', 'Arial Unicode MS', sans-serif" 
     : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
 
-  const passageWords = internalPassage.split(' ');
+  const passageWords = (internalPassage || "").trim().split(/\s+/);
 
   return (
     <div ref={containerRef} className={`flex flex-col bg-[#f0f0f0] font-sans ${isFullScreen ? 'h-screen' : 'min-h-screen'}`}>
