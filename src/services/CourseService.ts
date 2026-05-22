@@ -12,7 +12,7 @@ const CourseSchema = z.object({
     price: z.preprocess((val) => Number(val), z.number().min(0)), // Parse string to number
     category: z.string(),
     type: z.enum(["ONLINE", "OFFLINE"]).optional().default("ONLINE"),
-    thumbnail: z.string().url(),
+    thumbnail: z.string().min(1),
 });
 
 import { createSafeAction } from "@/lib/safe-action";
