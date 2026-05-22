@@ -16,6 +16,7 @@ import NotificationScroller from "@/components/public/NotificationScroller";
 import DirectorMessageSection from "@/components/public/DirectorMessageSection";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 import CertificateVerificationSection from "@/components/public/CertificateVerificationSection";
+import TypingTestCTASection from "@/components/public/TypingTestCTASection";
 
 import { getCMSContent } from "@/services/CMSService";
 import { getDynamicPageData, getHeroSlides } from "@/app/actions/cms";
@@ -151,6 +152,9 @@ export default async function PublicHomePage() {
 
                         {/* Courses Section */}
                         <CoursesSection courses={publicCourses} />
+
+                        {/* Typing Test Section */}
+                        <TypingTestCTASection />
 
                         {/* Gallery Section */}
                         <GallerySection images={galleryImages} />

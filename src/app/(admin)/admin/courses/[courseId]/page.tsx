@@ -9,7 +9,7 @@ import {
     ArrowLeft, Plus, Video, FileText, Brain,
     Trash2, GripVertical, X, Loader2, Save,
     Eye, EyeOff, Users, BookOpen, Settings,
-    CheckCircle, Clock, Globe, Lock, Pencil
+    CheckCircle, Clock, Globe, Lock, Pencil, Upload
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +19,7 @@ import {
 import { getPaperSets } from "@/app/actions/paperSets";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { uploadImageAction } from "@/app/actions/upload";
 
 type Tab = "curriculum" | "settings";
 
@@ -68,6 +69,7 @@ export default function CourseContentPage() {
     const [courseForm, setCourseForm] = useState<any>({});
     const [savingCourse, setSavingCourse] = useState(false);
     const [publishing, setPublishing] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     // ── Load ─────────────────────────────────────────────────
     useEffect(() => { if (courseId) load(); }, [courseId]);
@@ -123,6 +125,33 @@ export default function CourseContentPage() {
             toast.error(res.error || "Failed to save");
         }
         setSavingCourse(false);
+    };
+
+    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        const toastId = toast.loading("Uploading course thumbnail...");
+        
+        try {
+            const formDataUpload = new FormData();
+            formDataUpload.append("file", file);
+            formDataUpload.append("title", `Course Thumbnail - ${courseForm.title || (course && course.title) || "Course"}`);
+            formDataUpload.append("category", "Courses");
+
+            const res = await uploadImageAction(formDataUpload);
+            if (res.success && res.url) {
+                setCourseForm((prev: any) => ({ ...prev, thumbnail: res.url }));
+                toast.success("Thumbnail uploaded successfully!", { id: toastId });
+            } else {
+                toast.error(res.error || "Failed to upload image", { id: toastId });
+            }
+        } catch (err) {
+            toast.error("Upload failed", { id: toastId });
+        } finally {
+            setUploading(false);
+        }
     };
 
     // ── Open modal for Add / Edit ─────────────────────────────
@@ -474,19 +503,42 @@ export default function CourseContentPage() {
                         </div>
 
                         {/* Thumbnail */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Thumbnail URL</label>
-                            {courseForm.thumbnail && (
-                                <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 mb-2">
-                                    <img src={courseForm.thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
-                                </div>
-                            )}
-                            <Input
-                                placeholder="https://..."
-                                value={courseForm.thumbnail}
-                                onChange={e => setCourseForm({ ...courseForm, thumbnail: e.target.value })}
-                                className="h-12 rounded-2xl px-5 font-mono text-xs bg-slate-50/50"
+                        <div className="space-y-4">
+                            <label className="text-sm font-bold text-slate-700">Course Thumbnail</label>
+                            <input 
+                                type="file" 
+                                id="course-thumbnail-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={handleThumbnailUpload}
                             />
+                            <div 
+                                onClick={() => document.getElementById("course-thumbnail-upload")?.click()}
+                                className="w-full aspect-video rounded-2xl bg-slate-50 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400 group hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer overflow-hidden shadow-inner relative"
+                            >
+                                {uploading ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-xs font-bold text-slate-400">Uploading image...</p>
+                                    </div>
+                                ) : courseForm.thumbnail ? (
+                                    <img src={courseForm.thumbnail} alt="Thumbnail Preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                ) : (
+                                    <>
+                                        <Upload className="w-8 h-8 mb-2 opacity-30 group-hover:scale-110 group-hover:text-primary transition-all" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Identity Visual</p>
+                                    </>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Asset URL / Secure Source</label>
+                                <Input
+                                    placeholder="Enter secure image URL..."
+                                    className="h-12 rounded-2xl px-5 font-mono text-xs bg-slate-50/50"
+                                    value={courseForm.thumbnail}
+                                    onChange={e => setCourseForm({ ...courseForm, thumbnail: e.target.value })}
+                                />
+                            </div>
                         </div>
 
                         {/* Syllabus URL */}

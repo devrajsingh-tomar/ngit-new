@@ -13,6 +13,7 @@ interface Course {
     type: string;
     price: number;
     category: string;
+    thumbnail?: string;
 }
 
 export default function CoursesSection({ courses = [], data, hideExplorer = false }: { courses?: Course[], data?: any, hideExplorer?: boolean }) {
@@ -53,14 +54,29 @@ export default function CoursesSection({ courses = [], data, hideExplorer = fals
                             className="group"
                         >
                             <div className="h-full bg-white border border-slate-100 rounded-[2.5rem] p-8 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 flex flex-col relative overflow-hidden">
-                                {/* Category Badge */}
-                                <div className="absolute top-8 right-8 px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-500">
-                                    {course.category}
-                                </div>
-
-                                <div className="p-4 bg-slate-50 rounded-2xl w-fit mb-8 group-hover:bg-primary/10 transition-colors">
-                                    <BookOpen className="w-8 h-8 text-slate-400 group-hover:text-primary transition-colors" />
-                                </div>
+                                {course.thumbnail ? (
+                                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden mb-6 bg-slate-50 border border-slate-100 shadow-inner">
+                                        <img 
+                                            src={course.thumbnail} 
+                                            alt={course.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        {/* Category Badge overlay on image */}
+                                        <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-slate-100 text-[9px] font-black text-slate-900 uppercase tracking-widest shadow-sm">
+                                            {course.category}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="relative flex items-center justify-between mb-8">
+                                        <div className="p-4 bg-slate-50 rounded-2xl w-fit group-hover:bg-primary/10 transition-colors">
+                                            <BookOpen className="w-8 h-8 text-slate-400 group-hover:text-primary transition-colors" />
+                                        </div>
+                                        {/* Category Badge */}
+                                        <div className="px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-500">
+                                            {course.category}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="flex-1 space-y-4">
                                     <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-primary transition-colors">

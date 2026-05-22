@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { uploadImageAction } from "@/app/actions/upload";
 
 export default function NewCoursePage() {
     const [loading, setLoading] = useState(false);
@@ -21,7 +22,35 @@ export default function NewCoursePage() {
     });
     const [categories, setCategories] = useState(["Academic", "Competitive Exams", "Skill Development", "Management"]);
     const [newCategory, setNewCategory] = useState("");
+    const [uploading, setUploading] = useState(false);
     const router = useRouter();
+
+    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        const toastId = toast.loading("Uploading course thumbnail...");
+        
+        try {
+            const formDataUpload = new FormData();
+            formDataUpload.append("file", file);
+            formDataUpload.append("title", `Course Thumbnail - ${formData.title || "New Course"}`);
+            formDataUpload.append("category", "Courses");
+
+            const res = await uploadImageAction(formDataUpload);
+            if (res.success && res.url) {
+                setFormData(prev => ({ ...prev, thumbnail: res.url }));
+                toast.success("Thumbnail uploaded successfully!", { id: toastId });
+            } else {
+                toast.error(res.error || "Failed to upload image", { id: toastId });
+            }
+        } catch (err) {
+            toast.error("Upload failed", { id: toastId });
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,8 +193,23 @@ export default function NewCoursePage() {
                             Program Visuals
                         </h2>
                         <div className="space-y-6">
-                            <div className="w-full aspect-video rounded-[2rem] bg-slate-50 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400 group hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer overflow-hidden shadow-inner relative">
-                                {formData.thumbnail ? (
+                            <input 
+                                type="file" 
+                                id="course-thumbnail-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={handleThumbnailUpload}
+                            />
+                            <div 
+                                onClick={() => document.getElementById("course-thumbnail-upload")?.click()}
+                                className="w-full aspect-video rounded-[2rem] bg-slate-50 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400 group hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer overflow-hidden shadow-inner relative"
+                            >
+                                {uploading ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-xs font-bold text-slate-400">Uploading image...</p>
+                                    </div>
+                                ) : formData.thumbnail ? (
                                     <img src={formData.thumbnail} alt="Preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                                 ) : (
                                     <>

@@ -7,7 +7,7 @@ import {
     Type, Users, Star, MessageSquare, BookOpen,
     Phone, HelpCircle, Award, Megaphone, Save,
     CheckCircle2, Settings2, Loader2, LayoutTemplate,
-    Search, X, ExternalLink
+    Search, X, ExternalLink, Keyboard
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ const SECTION_TYPES = [
   { type: "AboutSection", label: "About Section", icon: Type, desc: "Institute intro text" },
   { type: "DirectorMessageSection", label: "Director Message", icon: Users, desc: "Official institution vision" },
   { type: "CoursesSection", label: "Courses Grid", icon: BookOpen, desc: "Featured course cards" },
+  { type: "TypingTestCTASection", label: "Typing Test Section", icon: Keyboard, desc: "Official typing module prompt" },
   { type: "AchievementsSection", label: "Achievements", icon: Award, desc: "Stats & milestones" },
   { type: "TestimonialSlider", label: "Testimonials", icon: Star, desc: "Student reviews" },
   { type: "FacultySection", label: "Faculty Team", icon: Users, desc: "Meet the team" },
