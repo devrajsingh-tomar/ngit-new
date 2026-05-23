@@ -1,11 +1,8 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "NGIT | National Genius Institute of Technology",
@@ -19,7 +16,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={inter.className} suppressHydrationWarning>
+            <body className="font-sans" suppressHydrationWarning>
                 <Providers>
                     {children}
                     <Toaster />

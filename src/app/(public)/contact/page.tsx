@@ -1,6 +1,7 @@
 import { getDynamicPageData } from "@/app/actions/cms";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
-import { MessageSquare, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MessageSquare, MapPin, Phone, Mail } from "lucide-react";
+import ContactForm from "@/components/public/ContactForm";
 
 const staticFallbackContent = (
     <div className="min-h-screen bg-slate-50 pt-32 pb-24">
@@ -56,12 +57,8 @@ const staticFallbackContent = (
                     </div>
                 </div>
 
-                {/* Optional Forms could be here */}
-                <div className="bg-white p-10 md:p-14 rounded-[3rem] shadow-2xl border border-slate-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full opacity-50 blur-3xl -z-10" />
-                    <h3 className="text-3xl font-extrabold text-slate-900 mb-8">Send us a Message</h3>
-                    <p className="text-slate-500 mb-8 font-medium">Please contact via phone or email for immediate assistance.</p>
-                </div>
+                {/* Contact Form */}
+                <ContactForm />
             </div>
         </div>
     </div>

@@ -168,6 +168,18 @@ export default function ContactSection({ data, blocks }: { data?: any, blocks?: 
                             </div>
 
                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-4">Tele-Navigation (Phone)</label>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    className="w-full h-16 px-8 rounded-3xl bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 text-slate-900 font-bold transition-all placeholder:text-slate-300"
+                                    placeholder="+91 XXXXX XXXXX"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-4">Payload (Message)</label>
                                 <textarea
                                     name="message"
