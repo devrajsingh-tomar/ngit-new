@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Users, ArrowRight, Zap, Target, Globe } from "lucide-react";
+import { BookOpen, Users, ArrowRight, Zap, Target, Globe, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -14,6 +14,7 @@ interface Course {
     price: number;
     category: string;
     thumbnail?: string;
+    duration?: string;
 }
 
 export default function CoursesSection({ courses = [], data, hideExplorer = false }: { courses?: Course[], data?: any, hideExplorer?: boolean }) {
@@ -53,32 +54,33 @@ export default function CoursesSection({ courses = [], data, hideExplorer = fals
                             transition={{ delay: idx * 0.1 }}
                             className="group"
                         >
-                            <div className="h-full bg-white border border-slate-100 rounded-[2.5rem] p-8 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 flex flex-col relative overflow-hidden">
-                                {course.thumbnail ? (
-                                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden mb-6 bg-slate-50 border border-slate-100 shadow-inner">
+                            <div className="h-full bg-white border-8 border-slate-50 rounded-[3rem] p-8 shadow-2xl hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] hover:border-slate-100 transition-all duration-500 flex flex-col relative overflow-hidden">
+                                
+                                {/* Thumbnail Image with Video Play Overlay */}
+                                <div className="aspect-video rounded-3xl bg-slate-900 flex items-center justify-center overflow-hidden relative mb-6 border border-slate-100">
+                                    {course.thumbnail ? (
                                         <img 
                                             src={course.thumbnail} 
                                             alt={course.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-110 transition-transform duration-700"
                                         />
-                                        {/* Category Badge overlay on image */}
-                                        <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-slate-100 text-[9px] font-black text-slate-900 uppercase tracking-widest shadow-sm">
-                                            {course.category}
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                                            <BookOpen className="w-12 h-12 text-slate-300" />
                                         </div>
+                                    )}
+                                    <PlayCircle className="w-16 h-16 text-white/80 group-hover:text-white group-hover:scale-110 transition-all z-10 drop-shadow-md" />
+                                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity z-0" />
+                                    <p className="absolute bottom-4 left-0 right-0 text-center text-white font-black text-[9px] tracking-[0.2em] uppercase z-10 drop-shadow-md">Watch Course Preview</p>
+                                    
+                                    {/* Category Badge overlay on image */}
+                                    <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-slate-100 text-[9px] font-black text-slate-900 uppercase tracking-widest shadow-sm z-10">
+                                        {course.category}
                                     </div>
-                                ) : (
-                                    <div className="relative flex items-center justify-between mb-8">
-                                        <div className="p-4 bg-slate-50 rounded-2xl w-fit group-hover:bg-primary/10 transition-colors">
-                                            <BookOpen className="w-8 h-8 text-slate-400 group-hover:text-primary transition-colors" />
-                                        </div>
-                                        {/* Category Badge */}
-                                        <div className="px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-500">
-                                            {course.category}
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
 
-                                <div className="flex-1 space-y-4">
+                                {/* Text Details */}
+                                <div className="flex-1 space-y-4 mb-6">
                                     <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-primary transition-colors">
                                         {course.title}
                                     </h3>
@@ -87,34 +89,40 @@ export default function CoursesSection({ courses = [], data, hideExplorer = fals
                                     </p>
                                 </div>
 
-                                {/* Meta Info */}
-                                <div className="flex items-center gap-4 mt-8 pt-8 border-t border-slate-50">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                            <Globe className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Mode</p>
-                                            <p className="text-[11px] font-black text-slate-900 uppercase italic">{course.type}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                            <Target className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Success</p>
-                                            <p className="text-[11px] font-black text-slate-900 uppercase italic">Assured</p>
-                                        </div>
-                                    </div>
+                                {/* Pricing Section */}
+                                <div className="flex items-baseline gap-2 mb-6">
+                                    <p className="text-4xl font-black text-slate-900 tracking-tighter">₹{course.price.toLocaleString()}</p>
+                                    {course.price > 0 && (
+                                        <>
+                                            <p className="text-slate-400 line-through font-bold text-sm">₹{Math.round(course.price * 1.25).toLocaleString()}</p>
+                                            <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border border-emerald-100">20% OFF</span>
+                                        </>
+                                    )}
                                 </div>
 
-                                <Link href={`/courses/${course.slug}`} className="mt-8">
-                                    <Button className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-slate-950 text-white hover:bg-slate-800 shadow-xl transition-all hover:scale-105 group/btn">
-                                        Explore Curriculum
+                                {/* Enroll Button */}
+                                <Link href={`/courses/${course.slug}`} className="w-full mb-6">
+                                    <Button className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white shadow-xl transition-all hover:scale-105 group/btn">
+                                        Enroll in Program
                                         <ArrowRight className="w-4 h-4 ml-3 transition-transform group-hover/btn:translate-x-1" />
                                     </Button>
                                 </Link>
+
+                                {/* Footer details grid layout */}
+                                <div className="grid grid-cols-3 gap-2 text-center pt-6 border-t border-slate-100">
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Duration</p>
+                                        <p className="text-[11px] font-black text-slate-700 mt-0.5 truncate">{course.duration || "Self-paced"}</p>
+                                    </div>
+                                    <div className="border-x border-slate-100">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Access</p>
+                                        <p className="text-[11px] font-black text-slate-700 mt-0.5">Lifetime</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Certificate</p>
+                                        <p className="text-[11px] font-black text-slate-700 mt-0.5">Included</p>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
