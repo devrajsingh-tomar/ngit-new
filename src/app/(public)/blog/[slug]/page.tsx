@@ -149,9 +149,9 @@ export default async function PublicBlogPostPage({ params }: { params: Promise<{
                         Ready to begin your <br className="hidden md:block"/> <span className="text-primary">Intellectual Journey?</span>
                     </h2>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <Link href="/courses">
+                        <Link href="/exams">
                             <button className="h-16 px-12 rounded-2xl bg-primary text-white text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                                Explore Courses
+                                Explore Mock Tests
                             </button>
                         </Link>
                         <Link href="/contact">

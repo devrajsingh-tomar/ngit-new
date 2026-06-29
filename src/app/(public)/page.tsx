@@ -7,7 +7,7 @@ import WhyChooseSection from "@/components/public/WhyChooseSection";
 import InfrastructureSection from "@/components/public/InfrastructureSection";
 import FacultySection from "@/components/public/FacultySection";
 import AchievementsSection from "@/components/public/AchievementsSection";
-import CoursesSection from "@/components/public/CoursesSection";
+
 import GallerySection from "@/components/public/GallerySection";
 import EventsSection from "@/components/public/EventsSection";
 import RegistrationCTA from "@/components/public/RegistrationCTA";
@@ -150,8 +150,7 @@ export default async function PublicHomePage() {
                         {/* Notice Slider Section */}
                         <NoticeSliderSection notices={noticesRes.success ? noticesRes.notices : []} />
 
-                        {/* Courses Section */}
-                        <CoursesSection courses={publicCourses} />
+
 
                         {/* Typing Test Section */}
                         <TypingTestCTASection />

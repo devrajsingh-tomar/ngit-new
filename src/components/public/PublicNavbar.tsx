@@ -52,10 +52,9 @@ export default function PublicNavbar() {
         };
     }, []);
 
-    const navLinks: NavLink[] = headerData?.navigation || [
+    const fallbackLinks: NavLink[] = [
         { label: "Home", href: "/" },
         { label: "About", href: "/#about" },
-        { label: "Courses", href: "/student/login" },
         { label: "Blog", href: "/blog" },
         { label: "Mock Tests", href: "/student/login" },
         { label: "Typing Tests", href: "/student/login" },
@@ -65,6 +64,10 @@ export default function PublicNavbar() {
         { label: "Faculty", href: "/faculty" },
         { label: "Contact", href: "/contact" },
     ];
+
+    const navLinks: NavLink[] = (headerData?.navigation || fallbackLinks).filter(
+        (link) => link.label.toLowerCase() !== "courses" && link.href !== "/courses"
+    );
 
     return (
         <nav className={cn(

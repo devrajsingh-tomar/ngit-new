@@ -21,7 +21,6 @@ export async function getHeaderFooterData() {
             logoText: "NGIT",
             navigation: [
                 { label: "Home", href: "/" },
-                { label: "Courses", href: "/courses" },
                 { label: "Mock Tests", href: "/exams" },
                 { label: "Results", href: "/results" },
                 { label: "Gallery", href: "/gallery" },
@@ -41,7 +40,6 @@ export async function getHeaderFooterData() {
                     title: "Quick Links",
                     links: [
                         { label: "About Us", href: "/about" },
-                        { label: "Courses", href: "/courses" },
                         { label: "Contact", href: "/contact" },
                     ],
                 },

@@ -42,7 +42,6 @@ export default async function Footer() {
                 title: "Quick Links",
                 links: [
                     { label: "About Us", href: "/#about" },
-                    { label: "Courses", href: "/courses" },
                     { label: "Contact", href: "/contact" },
                 ],
             }
@@ -54,7 +53,15 @@ export default async function Footer() {
         ]
     };
 
-    const footerData: FooterData = (result.success && result.footer) ? result.footer : defaultFooterData;
+    const footerData: FooterData = (result.success && result.footer) ? { ...result.footer } : defaultFooterData;
+    
+    // Dynamically filter out Courses from database-configured sections
+    if (footerData.sections) {
+        footerData.sections = footerData.sections.map(section => ({
+            ...section,
+            links: section.links?.filter(link => link.label.toLowerCase() !== "courses" && link.href !== "/courses") || []
+        }));
+    }
 
     const currentYear = new Date().getFullYear();
     const contactSection = footerData.sections?.find(s => s.title.toLowerCase().includes('contact'));

@@ -33,7 +33,7 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
 
     return (
         <>
-            {sections.filter((s: any) => s.is_active).map((section: any, index: number) => {
+            {sections.filter((s: any) => s.is_active && s.section_type !== "CoursesSection" && s.section_type !== "CourseGrid").map((section: any, index: number) => {
                 const sectionKey = section._id || index;
 
                 switch (section.section_type) {

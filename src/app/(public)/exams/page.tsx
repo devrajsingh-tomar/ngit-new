@@ -177,14 +177,9 @@ export default function PublicExamsPage() {
                                         </div>
 
                                         <div className="mt-auto pt-6 flex items-center gap-3">
-                                            <Link href={startUrl} className="flex-1">
+                                            <Link href={startUrl} className="w-full">
                                                 <Button className="w-full h-14 rounded-2xl font-black text-base shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
                                                     {session?.user ? "Start Now" : "Start Exam"}
-                                                </Button>
-                                            </Link>
-                                            <Link href="/courses">
-                                                <Button variant="outline" className="h-14 w-14 rounded-2xl p-0 border-2 hover:bg-slate-50">
-                                                    <ChevronRight className="w-6 h-6 text-slate-400" />
                                                 </Button>
                                             </Link>
                                         </div>
