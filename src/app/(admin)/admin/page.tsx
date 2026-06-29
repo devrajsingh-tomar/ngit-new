@@ -64,20 +64,13 @@ export default async function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <MetricCard
                     label="Active Students"
                     value={s.totalStudents}
                     icon={<Users className="w-6 h-6 text-blue-600" />}
                     trend="+12%"
                     color="blue"
-                />
-                <MetricCard
-                    label="Published Courses"
-                    value={s.activeCourses}
-                    icon={<BookOpen className="w-6 h-6 text-indigo-600" />}
-                    trend="Stable"
-                    color="indigo"
                 />
                 <MetricCard
                     label="Total Revenue"
