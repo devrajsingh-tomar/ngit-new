@@ -53,15 +53,7 @@ export default async function Footer() {
         ]
     };
 
-    const footerData: FooterData = (result.success && result.footer) ? { ...result.footer } : defaultFooterData;
-    
-    // Dynamically filter out Courses from database-configured sections
-    if (footerData.sections) {
-        footerData.sections = footerData.sections.map(section => ({
-            ...section,
-            links: section.links?.filter(link => link.label.toLowerCase() !== "courses" && link.href !== "/courses") || []
-        }));
-    }
+    const footerData: FooterData = (result.success && result.footer) ? result.footer : defaultFooterData;
 
     const currentYear = new Date().getFullYear();
     const contactSection = footerData.sections?.find(s => s.title.toLowerCase().includes('contact'));

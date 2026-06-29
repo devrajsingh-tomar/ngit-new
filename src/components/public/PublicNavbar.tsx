@@ -65,9 +65,7 @@ export default function PublicNavbar() {
         { label: "Contact", href: "/contact" },
     ];
 
-    const navLinks: NavLink[] = (headerData?.navigation || fallbackLinks).filter(
-        (link) => link.label.toLowerCase() !== "courses" && link.href !== "/courses"
-    );
+    const navLinks: NavLink[] = headerData?.navigation || fallbackLinks;
 
     return (
         <nav className={cn(
