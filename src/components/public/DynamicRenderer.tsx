@@ -33,6 +33,8 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
         return <>{staticFallback}</>;
     }
 
+    const hasDynamicActionsGrid = sections.some((s: any) => s.is_active && s.section_type === "QuickActionsGrid");
+
     return (
         <>
             {sections.filter((s: any) => s.is_active && s.section_type !== "CoursesSection" && s.section_type !== "CourseGrid").map((section: any, index: number) => {
@@ -43,9 +45,11 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
                         return (
                             <React.Fragment key={sectionKey}>
                                 <HeroSection blocks={extraData?.heroSlides || section.blocks} />
-                                <QuickActionsGrid />
+                                {!hasDynamicActionsGrid && <QuickActionsGrid />}
                             </React.Fragment>
                         );
+                    case "QuickActionsGrid":
+                        return <QuickActionsGrid key={sectionKey} blocks={section.blocks} />;
                     case "AboutSection":
                         return <AboutSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "WhyChooseSection":

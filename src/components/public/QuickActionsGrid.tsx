@@ -1,73 +1,45 @@
 import Link from "next/link";
-import { Keyboard, BrainCircuit, Library, ShieldCheck, Bell, UserCheck, ArrowRight, GraduationCap, FileText } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-export default function QuickActionsGrid() {
-    const actions = [
+interface QuickActionItem {
+    title: string;
+    image: string;
+    href: string;
+}
+
+export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
+    // Default fallback actions using images matching the screenshot!
+    const defaultActions: QuickActionItem[] = [
         {
-            title: "Academic Courses",
-            desc: "Explore professional computer diplomas, IT certifications, and syllabus details.",
-            href: "student.ngitedu.com",
-            icon: GraduationCap,
-            textColor: "text-violet-600",
-            bg: "bg-violet-50/50"
+            title: "Hindi Steno Software (Login/Register)",
+            image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600", // Elegant abstract red/gold themed banner
+            href: "student.ngitedu.com"
         },
         {
-            title: "Shorthand Dictations",
-            desc: "Access dictation libraries, transcribing tools, and stenography practice papers.",
-            href: "https://svshorthandsoftware.blogspot.com",
-            icon: FileText,
-            textColor: "text-fuchsia-600",
-            bg: "bg-fuchsia-50/50"
+            title: "My Web App",
+            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600", // Blue themed web login dashboard
+            href: "/student/login"
         },
         {
-            title: "Typing Test Simulator",
-            desc: "Improve WPM & accuracy with English/Hindi government-grade typing exams.",
-            href: "/typing",
-            icon: Keyboard,
-            textColor: "text-blue-600",
-            bg: "bg-blue-50/50"
+            title: "Typing Software",
+            image: "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?q=80&w=600", // Neon backlit keyboard image
+            href: "/typing"
         },
         {
-            title: "MCQ Mock Exams",
-            desc: "Test preparation with subject-wise questions, real-time feedback & scoring.",
-            href: "/exams",
-            icon: BrainCircuit,
-            textColor: "text-indigo-600",
-            bg: "bg-indigo-50/50"
-        },
-        {
-            title: "Study Material Hub",
-            desc: "Access digital reference books, PDF study guides, and notes instantly.",
-            href: "/student/login",
-            icon: Library,
-            textColor: "text-emerald-600",
-            bg: "bg-emerald-50/50"
-        },
-        {
-            title: "Verify Certificates",
-            desc: "Check and download authentic digital diplomas issued by the institute.",
-            href: "/verify",
-            icon: ShieldCheck,
-            textColor: "text-amber-600",
-            bg: "bg-amber-50/50"
-        },
-        {
-            title: "Notices & Bulletins",
-            desc: "Read official announcements, timetables, and recent administrative updates.",
-            href: "/notices",
-            icon: Bell,
-            textColor: "text-rose-600",
-            bg: "bg-rose-50/50"
-        },
-        {
-            title: "Student Portal Dashboard",
-            desc: "Manage enrollment profile, check status, attendance, and online fees.",
-            href: "/student/login",
-            icon: UserCheck,
-            textColor: "text-cyan-600",
-            bg: "bg-cyan-50/50"
+            title: "English Steno Software (Login/Register)",
+            image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600", // Writing pad/pen banner
+            href: "https://svshorthandsoftware.blogspot.com"
         }
     ];
+
+    // Map database blocks to our rendering structure if they exist
+    const actionsToRender = (blocks && blocks.length > 0)
+        ? blocks.map(b => ({
+            title: b.title || "",
+            image: b.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600",
+            href: b.button_link || "#"
+          }))
+        : defaultActions;
 
     return (
         <section className="py-16 bg-slate-50 relative overflow-hidden">
@@ -88,8 +60,8 @@ export default function QuickActionsGrid() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {actions.map((item, index) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {actionsToRender.map((item, index) => {
                         const finalHref = item.href.startsWith("http") || item.href.startsWith("/") ? item.href : `https://${item.href}`;
                         const isExternal = finalHref.startsWith("http");
                         return (
@@ -98,22 +70,23 @@ export default function QuickActionsGrid() {
                                 href={finalHref}
                                 target={isExternal ? "_blank" : undefined}
                                 rel={isExternal ? "noopener noreferrer" : undefined}
-                                className="group bg-white rounded-[2.2rem] p-8 border border-slate-100/80 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+                                className="group bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
                             >
-                                <div>
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-md shadow-slate-100/50 group-hover:scale-110 duration-300 transition-transform ${item.bg}`}>
-                                        <item.icon className={`w-6 h-6 ${item.textColor}`} />
+                                <div className="w-full">
+                                    {/* Card Image Header */}
+                                    <div className="w-full aspect-[2.4/1] relative overflow-hidden bg-slate-900 flex items-center justify-center">
+                                        <img 
+                                            src={item.image} 
+                                            alt={item.title} 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                        />
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors">
-                                        {item.title}
-                                    </h3>
-                                    <p className="text-slate-500 font-medium text-sm leading-relaxed mb-6">
-                                        {item.desc}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400 group-hover:text-primary transition-colors">
-                                    Launch Module
-                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                                    {/* Card Label Bottom */}
+                                    <div className="p-5 text-center bg-slate-50/50 min-h-[80px] flex items-center justify-center border-t border-slate-100">
+                                        <span className="font-bold text-slate-800 text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                            {item.title}
+                                        </span>
+                                    </div>
                                 </div>
                             </Link>
                         );

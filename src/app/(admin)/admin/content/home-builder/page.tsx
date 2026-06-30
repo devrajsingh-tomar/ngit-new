@@ -35,6 +35,7 @@ const SECTION_TYPES = [
   { type: "HeroSection", label: "Hero Slider", icon: ImageIcon, desc: "Dynamic background slides" },
   { type: "AboutSection", label: "About Section", icon: Type, desc: "Institute intro text" },
   { type: "DirectorMessageSection", label: "Director Message", icon: Users, desc: "Official institution vision" },
+  { type: "QuickActionsGrid", label: "Quick Navigation", icon: LayoutTemplate, desc: "Quick access grid with image boxes" },
   { type: "TypingTestCTASection", label: "Typing Test Section", icon: Keyboard, desc: "Official typing module prompt" },
   { type: "AchievementsSection", label: "Achievements", icon: Award, desc: "Stats & milestones" },
   { type: "TestimonialSlider", label: "Testimonials", icon: Star, desc: "Student reviews" },
