@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import HeroSection from "@/components/public/HeroSection";
+import QuickActionsGrid from "@/components/public/QuickActionsGrid";
 
 import TrustIndicators from "@/components/public/TrustIndicators";
 import AboutSection from "@/components/public/AboutSection";
@@ -108,6 +109,7 @@ export default async function PublicHomePage() {
                     <>
                         {/* Hero Section */}
                         <HeroSection blocks={heroSlides} />
+                        <QuickActionsGrid />
 
                         {/* Notification Scroller */}
                         {scrollingNotices.length > 0 && (

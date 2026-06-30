@@ -1,5 +1,7 @@
+import React from "react";
 import HeroSection from "./HeroSection";
 import AboutSection from "./AboutSection";
+import QuickActionsGrid from "./QuickActionsGrid";
 import WhyChooseSection from "./WhyChooseSection";
 import InfrastructureSection from "./InfrastructureSection";
 import FacultySection from "./FacultySection";
@@ -38,7 +40,12 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
 
                 switch (section.section_type) {
                     case "HeroSection":
-                        return <HeroSection key={sectionKey} blocks={extraData?.heroSlides || section.blocks} />;
+                        return (
+                            <React.Fragment key={sectionKey}>
+                                <HeroSection blocks={extraData?.heroSlides || section.blocks} />
+                                <QuickActionsGrid />
+                            </React.Fragment>
+                        );
                     case "AboutSection":
                         return <AboutSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "WhyChooseSection":
