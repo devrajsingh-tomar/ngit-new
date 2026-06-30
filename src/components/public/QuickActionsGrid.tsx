@@ -1,8 +1,24 @@
 import Link from "next/link";
-import { Keyboard, BrainCircuit, Library, ShieldCheck, Bell, UserCheck, ArrowRight } from "lucide-react";
+import { Keyboard, BrainCircuit, Library, ShieldCheck, Bell, UserCheck, ArrowRight, GraduationCap, FileText } from "lucide-react";
 
 export default function QuickActionsGrid() {
     const actions = [
+        {
+            title: "Academic Courses",
+            desc: "Explore professional computer diplomas, IT certifications, and syllabus details.",
+            href: "student.ngitedu.com",
+            icon: GraduationCap,
+            textColor: "text-violet-600",
+            bg: "bg-violet-50/50"
+        },
+        {
+            title: "Shorthand Dictations",
+            desc: "Access dictation libraries, transcribing tools, and stenography practice papers.",
+            href: "https://svshorthandsoftware.blogspot.com",
+            icon: FileText,
+            textColor: "text-fuchsia-600",
+            bg: "bg-fuchsia-50/50"
+        },
         {
             title: "Typing Test Simulator",
             desc: "Improve WPM & accuracy with English/Hindi government-grade typing exams.",
@@ -73,29 +89,35 @@ export default function QuickActionsGrid() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {actions.map((item, index) => (
-                        <Link 
-                            key={index} 
-                            href={item.href}
-                            className="group bg-white rounded-[2.2rem] p-8 border border-slate-100/80 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
-                        >
-                            <div>
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-md shadow-slate-100/50 group-hover:scale-110 duration-300 transition-transform ${item.bg}`}>
-                                    <item.icon className={`w-6 h-6 ${item.textColor}`} />
+                    {actions.map((item, index) => {
+                        const finalHref = item.href.startsWith("http") || item.href.startsWith("/") ? item.href : `https://${item.href}`;
+                        const isExternal = finalHref.startsWith("http");
+                        return (
+                            <Link 
+                                key={index} 
+                                href={finalHref}
+                                target={isExternal ? "_blank" : undefined}
+                                rel={isExternal ? "noopener noreferrer" : undefined}
+                                className="group bg-white rounded-[2.2rem] p-8 border border-slate-100/80 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-md shadow-slate-100/50 group-hover:scale-110 duration-300 transition-transform ${item.bg}`}>
+                                        <item.icon className={`w-6 h-6 ${item.textColor}`} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-slate-500 font-medium text-sm leading-relaxed mb-6">
+                                        {item.desc}
+                                    </p>
                                 </div>
-                                <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors">
-                                    {item.title}
-                                </h3>
-                                <p className="text-slate-500 font-medium text-sm leading-relaxed mb-6">
-                                    {item.desc}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400 group-hover:text-primary transition-colors">
-                                Launch Module
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-                            </div>
-                        </Link>
-                    ))}
+                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400 group-hover:text-primary transition-colors">
+                                    Launch Module
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                                </div>
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
         </section>
