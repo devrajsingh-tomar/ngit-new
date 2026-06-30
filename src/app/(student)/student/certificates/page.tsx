@@ -100,7 +100,7 @@ export default function StudentCertificatesPage() {
                                 </div>
 
                                 <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
-                                    {cert.courseId?.title}
+                                    {cert.courseId?.title || cert.customCourseName}
                                 </h3>
                                 <p className="text-sm text-slate-500 mb-4">
                                     Issued on {new Date(cert.issuedDate).toLocaleDateString()}

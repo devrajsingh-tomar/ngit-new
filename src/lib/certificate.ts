@@ -8,12 +8,22 @@ import Course from "@/models/Course";
  * Format: NGIT/YYYY/COURSE-CODE/SERIAL
  * Example: NGIT/2026/FSD/0001
  */
-export async function generateCertificateNumber(courseId: string, year: number = new Date().getFullYear()): Promise<string> {
-    const course = await Course.findById(courseId);
-    if (!course) throw new Error("Course not found");
-
-    // Get course short code (e.g. "FSD" from "Full Stack Development" or slug)
-    const courseCode = (course.slug || "UNKNOWN").substring(0, 3).toUpperCase();
+export async function generateCertificateNumber(
+    courseId?: string, 
+    year: number = new Date().getFullYear(),
+    customCourseName?: string
+): Promise<string> {
+    let courseCode = "GEN"; // Default/General code
+    
+    if (courseId) {
+        const course = await Course.findById(courseId);
+        if (course) {
+            courseCode = (course.slug || "UNKNOWN").substring(0, 3).toUpperCase();
+        }
+    } else if (customCourseName) {
+        // Generate course code from the custom course name (remove non-alphabetic chars, get first 3 chars)
+        courseCode = customCourseName.replace(/[^a-zA-Z]/g, "").substring(0, 3).toUpperCase() || "GEN";
+    }
 
     // Find latest certificate for this course & year to increment serial
     const prefix = `NGIT/${year}/${courseCode}/`;
@@ -28,9 +38,10 @@ export async function generateCertificateNumber(courseId: string, year: number =
     let serial = 1;
     if (latestCert && latestCert.certificateNumber) {
         const parts = latestCert.certificateNumber.split("/");
-        const lastSerial = parseInt(parts[parts.length - 1], 10);
-        if (!isNaN(lastSerial)) {
-            serial = lastSerial + 1;
+        const lastSerial = parts[parts.length - 1];
+        const lastSerialNum = parseInt(lastSerial, 10);
+        if (!isNaN(lastSerialNum)) {
+            serial = lastSerialNum + 1;
         }
     }
 

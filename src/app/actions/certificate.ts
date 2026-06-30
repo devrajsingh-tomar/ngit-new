@@ -65,10 +65,10 @@ export async function getCertificatePDF(certId: string) {
 
         if (!cert) return { success: false, error: "Certificate record not found" };
         if (!cert.studentId) return { success: false, error: "Student for this certificate no longer exists" };
-        if (!cert.courseId) return { success: false, error: "Course for this certificate no longer exists" };
+        if (!cert.courseId && !cert.customCourseName) return { success: false, error: "Course for this certificate no longer exists" };
 
         const student = cert.studentId as any;
-        const course = cert.courseId as any;
+        const courseName = cert.courseId ? (cert.courseId as any).title : cert.customCourseName;
 
         // Generate QR Code Data URL
         const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://ngit-new.vercel.app"}/verify/${cert.certificateNumber}`;
@@ -144,7 +144,7 @@ export async function getCertificatePDF(certId: string) {
                             origin: origin,
                             placeholders: {
                                 student_name: student.name || "Student Name",
-                                course_name: course.title || "Course Name",
+                                course_name: courseName || "Course Name",
                                 grade: cert.grade || "N/A",
                                 percentage: (cert.percentage || 0).toString(),
                                 enrollment_number: student.email || student._id.toString(),
@@ -235,12 +235,16 @@ export const getAllCertificates = getAdminCertificates;
 // --- ADMIN: ISSUE CERTIFICATE ---
 const IssueCertificateSchema = z.object({
     studentId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Student ID"),
-    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Course ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Course ID").optional().or(z.literal("")),
+    customCourseName: z.string().optional().or(z.literal("")),
     grade: z.string().min(1),
     percentage: z.number().min(0).max(100),
     courseDuration: z.string().min(1),
-    templateId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Template ID").optional(),
+    templateId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Template ID").optional().or(z.literal("")),
     remarks: z.string().optional(),
+}).refine(data => data.courseId || data.customCourseName, {
+    message: "Either Course or Custom Course Name must be provided",
+    path: ["courseId"]
 });
 
 export const issueCertificate = createSafeAction(
@@ -248,29 +252,43 @@ export const issueCertificate = createSafeAction(
     async (data, session) => {
         await connectDB();
 
+        const cid = data.courseId || undefined;
+        const customName = data.customCourseName || undefined;
+
         // Duplicate Check
-        const existing = await Certificate.findOne({
-            studentId: data.studentId,
-            courseId: data.courseId,
-            status: CertificateStatus.ISSUED
-        });
+        let existing = null;
+        if (cid) {
+            existing = await Certificate.findOne({
+                studentId: data.studentId,
+                courseId: cid,
+                status: CertificateStatus.ISSUED
+            });
+        } else if (customName) {
+            existing = await Certificate.findOne({
+                studentId: data.studentId,
+                customCourseName: customName,
+                status: CertificateStatus.ISSUED
+            });
+        }
 
         if (existing) {
             throw new Error("This student already has an active certificate for this course.");
         }
 
         // Generate Certificate Number
-        const certNumber = await generateCertificateNumber(data.courseId);
+        const certNumber = await generateCertificateNumber(cid, undefined, customName);
 
         const cert = await Certificate.create({
             ...data,
+            courseId: cid,
+            customCourseName: customName,
             certificateNumber: certNumber,
             issuedDate: new Date(),
             status: CertificateStatus.ISSUED,
             metadata: {
                 adminId: session.user.id,
                 remarks: data.remarks,
-                templateId: data.templateId
+                templateId: data.templateId || undefined
             }
         });
 

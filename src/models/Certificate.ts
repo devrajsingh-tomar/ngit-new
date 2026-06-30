@@ -8,7 +8,8 @@ export enum CertificateStatus {
 
 export interface ICertificate extends Document {
     studentId: mongoose.Types.ObjectId;
-    courseId: mongoose.Types.ObjectId;
+    courseId?: mongoose.Types.ObjectId;
+    customCourseName?: string;
     certificateNumber: string;
     grade: string;
     percentage: number;
@@ -28,7 +29,8 @@ export interface ICertificate extends Document {
 const CertificateSchema = new Schema<ICertificate>(
     {
         studentId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        courseId: { type: Schema.Types.ObjectId, ref: "Course", required: false },
+        customCourseName: { type: String, required: false },
         certificateNumber: { type: String, required: true, unique: true },
         grade: { type: String, required: true },
         percentage: { type: Number, required: true },

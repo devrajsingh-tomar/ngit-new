@@ -123,7 +123,7 @@ export default function VerificationPage({ params }: { params: Promise<{ certNum
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">
                                             <BookOpen className="w-3.5 h-3.5" /> Certification Course
                                         </p>
-                                        <p className="font-bold text-slate-900 text-lg leading-snug">{cert.courseId?.title}</p>
+                                        <p className="font-bold text-slate-900 text-lg leading-snug">{cert.courseId?.title || cert.customCourseName}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">

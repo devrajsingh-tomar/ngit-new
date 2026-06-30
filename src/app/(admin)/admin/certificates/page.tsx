@@ -26,6 +26,7 @@ export default function AdminCertificatesPage() {
     const [form, setForm] = useState({
         studentId: "",
         courseId: "",
+        customCourseName: "",
         templateId: "",
         grade: "A+",
         percentage: 95,
@@ -92,12 +93,17 @@ export default function AdminCertificatesPage() {
     const handleIssue = async (e: React.FormEvent) => {
         e.preventDefault();
         setIssuing(true);
-        const res = await issueCertificate(form);
+        const payload = {
+            ...form,
+            courseId: form.courseId === "custom" ? "" : form.courseId,
+            customCourseName: form.courseId === "custom" ? form.customCourseName : ""
+        };
+        const res = await issueCertificate(payload);
         if (res.success) {
             toast.success("Certificate Issued and Published successfully!");
             setOpenAdd(false);
             load();
-            setForm({ studentId: "", courseId: "", templateId: "", grade: "A+", percentage: 95, courseDuration: "12 Weeks", remarks: "" });
+            setForm({ studentId: "", courseId: "", customCourseName: "", templateId: "", grade: "A+", percentage: 95, courseDuration: "12 Weeks", remarks: "" });
         } else {
             toast.error(res.error || "Failed to issue certificate");
         }
@@ -189,8 +195,21 @@ export default function AdminCertificatesPage() {
                                     >
                                         <option value="">-- Click to Select Course --</option>
                                         {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+                                        <option value="custom">-- Custom Course / Enter Manually --</option>
                                     </select>
                                 </div>
+                                {form.courseId === "custom" && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase text-slate-500 tracking-wider">Enter Custom Course Name</label>
+                                        <Input
+                                            required
+                                            value={form.customCourseName}
+                                            onChange={e => setForm({ ...form, customCourseName: e.target.value })}
+                                            className="h-12 border-slate-200 rounded-xl font-bold"
+                                            placeholder="e.g. DCA, PGDCA, CCC"
+                                        />
+                                    </div>
+                                )}
                                 <div className="space-y-2">
                                     <label className="text-xs font-black uppercase text-slate-500 tracking-wider">Design Template (Optional)</label>
                                     <select
@@ -301,8 +320,8 @@ export default function AdminCertificatesPage() {
                                                     <img src={cert.courseId.thumbnail} alt="" className="w-full h-full object-cover" />
                                                 ) : <FileDiff className="w-4 h-4 m-2 text-slate-400" />}
                                             </div>
-                                            <p className="text-xs font-semibold text-slate-700 max-w-[200px] truncate" title={cert.courseId?.title}>
-                                                {cert.courseId?.title || "Unknown Course"}
+                                            <p className="text-xs font-semibold text-slate-700 max-w-[200px] truncate" title={cert.courseId?.title || cert.customCourseName}>
+                                                {cert.courseId?.title || cert.customCourseName || "Unknown Course"}
                                             </p>
                                         </div>
                                     </td>
