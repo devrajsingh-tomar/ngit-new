@@ -59,8 +59,8 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
         setUploading(false);
     };
 
-    const needsMedia = ["HeroSection", "TestimonialSlider", "InfrastructureSection", "GalleryGrid", "AboutSection", "AchievementsSection", "VideoFeedbackSection", "CourseGrid", "FacultyGrid"].includes(sectionType);
-    const needsCTA = ["HeroSection", "CTASection", "AboutSection"].includes(sectionType);
+    const needsMedia = ["HeroSection", "TestimonialSlider", "InfrastructureSection", "GalleryGrid", "AboutSection", "AchievementsSection", "VideoFeedbackSection", "CourseGrid", "FacultyGrid", "QuickActionsGrid"].includes(sectionType);
+    const needsCTA = ["HeroSection", "CTASection", "AboutSection", "QuickActionsGrid"].includes(sectionType);
     const needsStructure = ["HeroSection"].includes(sectionType);
     const isHero = sectionType === "HeroSection";
 
