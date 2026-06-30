@@ -69,13 +69,13 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
 
                     return (
                         <SwiperSlide key={block._id || idx}>
-                            <div className="relative w-full min-h-[40vh] sm:min-h-[50vh] lg:min-h-[65vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-slate-950">
+                            <div className="relative w-full aspect-[16/9] sm:aspect-auto min-h-[25vh] sm:min-h-[50vh] lg:min-h-[65vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-slate-950">
                                 {/* Background Image - Edge to Edge */}
                                 <div className="absolute inset-0 z-0">
                                     <img
                                         src={image || defaultBlock.image}
                                         alt={block.title || "Hero Image"}
-                                        className="w-full h-full object-cover md:object-fill lg:object-cover object-center transition-transform duration-700"
+                                        className="w-full h-full object-contain sm:object-cover object-center transition-transform duration-700"
                                     />
                                     {/* Only show overlay if there is custom text to show */}
                                     {!isTextEmpty && (
@@ -86,7 +86,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                 {/* Content Overlay (Only if not empty) */}
                                 {!isTextEmpty && (
                                     <div className="container relative z-10 px-6 mx-auto">
-                                        <div className="max-w-4xl space-y-8 text-center lg:text-left">
+                                        <div className="max-w-4xl space-y-3 sm:space-y-8 text-center lg:text-left">
                                             <motion.div
                                                 initial={{ opacity: 0, y: 30 }}
                                                 whileInView={{ opacity: 1, y: 0 }}
@@ -103,32 +103,32 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                                 )}
 
                                                 {block.title && (
-                                                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter leading-tight italic drop-shadow-2xl">
+                                                    <h1 className="text-xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter leading-tight italic drop-shadow-2xl">
                                                         {block.title}
                                                     </h1>
                                                 )}
 
                                                 {block.description && (
                                                     <div 
-                                                        className="text-lg md:text-xl text-slate-300 font-medium leading-relaxed max-w-2xl"
+                                                        className="text-xs sm:text-xl text-slate-300 font-medium leading-relaxed max-w-2xl"
                                                         dangerouslySetInnerHTML={{ __html: block.description }}
                                                     />
                                                 )}
 
                                                 {(primaryText || secondaryText) && (
-                                                    <div className="flex flex-col sm:flex-row items-center gap-5 pt-4 justify-center lg:justify-start">
+                                                    <div className="flex sm:flex-row items-center gap-3 pt-2 justify-center lg:justify-start">
                                                         {primaryText && (
-                                                            <Link href={primaryLink || "/register"} className="w-full sm:w-auto">
-                                                                <Button className="w-full sm:w-auto h-16 px-10 rounded-2xl text-lg font-black bg-white text-slate-900 hover:bg-slate-100 shadow-xl transition-all hover:scale-105">
-                                                                    <UserPlus className="w-6 h-6 mr-3" />
+                                                            <Link href={primaryLink || "/register"} className="shrink-0">
+                                                                <Button className="h-10 sm:h-16 px-5 sm:px-10 rounded-xl sm:rounded-2xl text-xs sm:text-lg font-black bg-white text-slate-900 hover:bg-slate-100 shadow-xl transition-all hover:scale-105">
+                                                                    <UserPlus className="w-4 h-4 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
                                                                     {primaryText}
                                                                 </Button>
                                                             </Link>
                                                         )}
                                                         {secondaryText && (
-                                                            <Link href={secondaryLink || "/prospectus"} className="w-full sm:w-auto">
-                                                                <Button variant="outline" className="w-full sm:w-auto h-16 px-10 rounded-2xl text-lg font-black text-white border-white/20 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all hover:scale-105">
-                                                                    <Download className="w-6 h-6 mr-3" />
+                                                            <Link href={secondaryLink || "/prospectus"} className="shrink-0">
+                                                                <Button variant="outline" className="h-10 sm:h-16 px-5 sm:px-10 rounded-xl sm:rounded-2xl text-xs sm:text-lg font-black text-white border-white/20 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all hover:scale-105">
+                                                                    <Download className="w-4 h-4 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
                                                                     {secondaryText}
                                                                 </Button>
                                                             </Link>
