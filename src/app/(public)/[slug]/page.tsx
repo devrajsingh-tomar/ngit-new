@@ -18,7 +18,7 @@ export default async function DynamicCMSPage({ params }: { params: Promise<{ slu
         <div className="min-h-screen">
             {/* Header / Banner for Dynamic Pages */}
             <section className="bg-slate-900 pt-32 pb-20 relative overflow-hidden">
-                <div className="absolute inset-0 bg-blue-600/10 mix-blend-overlay" />
+                <div className="absolute inset-0 bg-primary/10 mix-blend-overlay" />
                 <div className="container relative z-10 px-4 mx-auto text-center">
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white capitalize">
                         {dynamicData.page.title || slug}

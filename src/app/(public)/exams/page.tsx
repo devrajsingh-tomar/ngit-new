@@ -46,7 +46,7 @@ export default function PublicExamsPage() {
             {/* Header */}
             <div className="bg-slate-900 pt-32 pb-24 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] -mr-64 -mt-64" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] -ml-48 -mb-48" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/10 rounded-full blur-[100px] -ml-48 -mb-48" />
                 
                 <div className="container-custom relative z-10 text-center">
                     <motion.div
@@ -152,7 +152,7 @@ export default function PublicExamsPage() {
                                             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                                                        <Clock className="w-5 h-5 text-blue-500" />
+                                                        <Clock className="w-5 h-5 text-emerald-500" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duration</p>

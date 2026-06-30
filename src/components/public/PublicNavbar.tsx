@@ -151,7 +151,7 @@ export default function PublicNavbar() {
                                                 <div className="flex flex-col space-y-1">
                                                     <p className="text-sm font-black leading-none text-slate-900">{session.user.name}</p>
                                                     <p className="text-xs font-medium leading-none text-slate-500 mt-1">{session.user.email}</p>
-                                                    <Badge className="w-fit mt-2 bg-blue-50 text-blue-600 border-none shadow-none text-[10px] font-black">{session.user.role}</Badge>
+                                                    <Badge className="w-fit mt-2 bg-emerald-50 text-emerald-600 border-none shadow-none text-[10px] font-black">{session.user.role}</Badge>
                                                 </div>
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />

@@ -38,7 +38,7 @@ export default function FacultyGrid({ data, blocks, members }: { data: any, bloc
                                     <Image src={block.image} alt={block.title} fill className="object-cover" />
                                 </div>
                             ) : (
-                                <div className={`p-4 rounded-full shadow-sm mb-6 ${extra.iconColor || "bg-blue-50 text-blue-600"}`}>
+                                <div className={`p-4 rounded-full shadow-sm mb-6 ${extra.iconColor || "bg-emerald-50 text-emerald-600"}`}>
                                     <Users className="w-10 h-10" />
                                 </div>
                             )}

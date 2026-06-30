@@ -65,7 +65,7 @@ export default function HeroSlider() {
     // Loading state
     if (loading) {
         return (
-            <div className="relative w-full h-[85vh] md:h-[90vh] bg-gradient-to-br from-primary via-primary to-indigo-900 flex items-center justify-center">
+            <div className="relative w-full h-[85vh] md:h-[90vh] bg-gradient-to-br from-primary via-primary to-emerald-950 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
             </div>
         );
@@ -74,7 +74,7 @@ export default function HeroSlider() {
     // Empty state — no slides configured yet
     if (slides.length === 0) {
         return (
-            <div className="relative w-full h-[85vh] md:h-[90vh] bg-gradient-to-br from-primary via-primary to-indigo-900 flex items-center justify-center">
+            <div className="relative w-full h-[85vh] md:h-[90vh] bg-gradient-to-br from-primary via-primary to-emerald-950 flex items-center justify-center">
                 <div className="text-center text-white/60 px-4">
                     <p className="text-2xl font-bold mb-2">Hero Banner</p>
                     <p className="text-sm opacity-70">No slides configured yet. Add slides from the Admin Panel → Website CMS → Homepage Builder.</p>
@@ -106,7 +106,7 @@ export default function HeroSlider() {
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent" />
                         </div>
                     ) : (
-                        <div className={cn("absolute inset-0 bg-gradient-to-br", slide.bgColor || "from-primary via-primary to-indigo-900")}>
+                        <div className={cn("absolute inset-0 bg-gradient-to-br", slide.bgColor || "from-primary via-primary to-emerald-950")}>
                             <div className="absolute inset-0 bg-black/20" />
                         </div>
                     )}

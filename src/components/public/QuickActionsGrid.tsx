@@ -44,7 +44,7 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
     return (
         <section className="py-16 bg-slate-50 relative overflow-hidden">
             {/* Background elements */}
-            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-100/30 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-100/30 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-100/30 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="container mx-auto px-4 lg:px-10 relative z-10">

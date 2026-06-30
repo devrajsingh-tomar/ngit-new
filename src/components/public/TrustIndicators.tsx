@@ -15,8 +15,8 @@ const defaultStats = [
         icon: Users,
         value: "5000+",
         label: "Students Architected",
-        color: "text-blue-600",
-        bg: "bg-blue-100",
+        color: "text-teal-600",
+        bg: "bg-teal-100",
     },
     {
         icon: TrendingUp,

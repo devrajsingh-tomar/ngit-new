@@ -56,9 +56,9 @@ export default function NoticeSliderSection({ notices = [] }: { notices?: Notice
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 px-4">
                     <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100/50">
-                            <Megaphone className="w-4 h-4 text-blue-600 animate-bounce" />
-                            <span className="text-blue-600 font-black uppercase tracking-[0.2em] text-[10px]">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100/50">
+                            <Megaphone className="w-4 h-4 text-emerald-600 animate-bounce" />
+                            <span className="text-emerald-600 font-black uppercase tracking-[0.2em] text-[10px]">
                                 Real-time Institute Updates
                             </span>
                         </div>
@@ -91,7 +91,7 @@ export default function NoticeSliderSection({ notices = [] }: { notices?: Notice
                             >
                                 {/* Date Badge */}
                                 <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center justify-center p-4">
-                                    <Calendar className="w-6 h-6 text-blue-500 mb-2 opacity-20" />
+                                    <Calendar className="w-6 h-6 text-emerald-500 mb-2 opacity-20" />
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{dateObj.toLocaleDateString('en-US', { month: 'short' })}</span>
                                     <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">{dateObj.getDate()}</span>
                                     <span className="text-[10px] font-bold text-slate-400 mt-1">{dateObj.getFullYear()}</span>
@@ -134,7 +134,7 @@ export default function NoticeSliderSection({ notices = [] }: { notices?: Notice
                                 onClick={() => setIndex(i)}
                                 className={cn(
                                     "h-2 rounded-full transition-all duration-300",
-                                    index === i ? "w-8 bg-blue-600" : "w-2 bg-slate-200 hover:bg-slate-300"
+                                    index === i ? "w-8 bg-emerald-600" : "w-2 bg-slate-200 hover:bg-slate-300"
                                 )}
                             />
                         ))}
@@ -167,8 +167,8 @@ export default function NoticeSliderSection({ notices = [] }: { notices?: Notice
             </div>
 
             {/* Decorations */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/5 rounded-full blur-[120px] -z-10" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/5 rounded-full blur-[120px] -z-10" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-[100px] -z-10" />
         </section>
     );
 }

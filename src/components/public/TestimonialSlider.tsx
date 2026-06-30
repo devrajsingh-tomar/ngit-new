@@ -30,7 +30,7 @@ export default function TestimonialSlider({ data, blocks }: { data: any, blocks:
                             </p>
 
                             <h4 className="text-xl font-bold text-slate-900">{block.title || "Student Name"}</h4>
-                            <p className="text-sm font-bold uppercase tracking-widest text-blue-600 mt-1">
+                            <p className="text-sm font-bold uppercase tracking-widest text-emerald-600 mt-1">
                                 {block.subtitle || "Achievement"}
                             </p>
                             {extra.course && (

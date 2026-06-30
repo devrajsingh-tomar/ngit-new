@@ -9,8 +9,8 @@ const facilities = [
         icon: Building2,
         title: "Adaptive Labs",
         description: "High-performance computational workspaces architected for intensive engineering tasks.",
-        gradient: "from-blue-500/20 to-indigo-500/20",
-        iconColor: "text-blue-600"
+        gradient: "from-emerald-500/20 to-teal-500/20",
+        iconColor: "text-emerald-600"
     },
     {
         icon: Globe,
@@ -47,12 +47,12 @@ export default function InfrastructureSection({ data, blocks }: { data?: any, bl
         return {
             title: b.title || "Facility",
             description: b.description || "Description",
-            gradient: extra.gradient || "from-blue-500/20 to-indigo-500/20",
-            iconColor: extra.iconColor || "text-blue-600",
+            gradient: extra.gradient || "from-emerald-500/20 to-teal-500/20",
+            iconColor: extra.iconColor || "text-emerald-600",
             iconName: extra.icon || 'Building2'
         };
     }) : [
-        { title: "Adaptive Labs", description: "High-performance computational workspaces architected for intensive engineering tasks.", gradient: "from-blue-500/20 to-indigo-500/20", iconColor: "text-blue-600", iconName: 'Building2' },
+        { title: "Adaptive Labs", description: "High-performance computational workspaces architected for intensive engineering tasks.", gradient: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-600", iconName: 'Building2' },
         { title: "Gigabit Mesh", description: "Enterprise-grade connectivity fabric ensuring zero-latency access to global knowledge.", gradient: "from-purple-500/20 to-pink-500/20", iconColor: "text-purple-600", iconName: 'Globe' },
         { title: "Digital Archive", description: "A comprehensive repository of research, synthesis, and industrial case studies.", gradient: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-600", iconName: 'BookOpen' },
         { title: "Secure Hub", description: "24/7 monitored environment designed for safety and focused intellectual pursuit.", gradient: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-600", iconName: 'ShieldCheck' }

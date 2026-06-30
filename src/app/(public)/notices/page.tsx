@@ -15,13 +15,13 @@ export default async function NoticesPublicPage() {
     return (
         <div className="min-h-screen bg-slate-50 relative pt-16 md:pt-24 pb-20 overflow-hidden">
             {/* Ambient Backgrounds */}
-            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] mix-blend-multiply pointer-events-none" />
+            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] mix-blend-multiply pointer-events-none" />
             <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px] mix-blend-multiply pointer-events-none" />
 
             <div className="container px-6 mx-auto relative z-10 max-w-5xl">
                 {/* Header Section */}
                 <div className="text-center md:text-left mb-10 md:mb-16 max-w-3xl space-y-6">
-                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-50 text-blue-600 font-bold border border-blue-100 shadow-sm text-[10px] md:text-xs tracking-widest uppercase mt-8 md:mt-0">
+                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-50 text-emerald-600 font-bold border border-emerald-100 shadow-sm text-[10px] md:text-xs tracking-widest uppercase mt-8 md:mt-0">
                         <Bell className="w-4 h-4" /> Live Broadcast
                     </div>
                     <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-600">
@@ -42,7 +42,7 @@ export default async function NoticesPublicPage() {
                 ) : (
                     <div className="space-y-8 relative">
                         {/* Timeline wire */}
-                        <div className="absolute left-[39px] top-4 md:left-[51px] bottom-4 w-1 bg-gradient-to-b from-blue-100 via-slate-200 to-transparent rounded-full hidden md:block" />
+                        <div className="absolute left-[39px] top-4 md:left-[51px] bottom-4 w-1 bg-gradient-to-b from-emerald-100 via-slate-200 to-transparent rounded-full hidden md:block" />
 
                         {notices.map((notice: any, index: number) => {
                             const dateObj = new Date(notice.date);
@@ -54,7 +54,7 @@ export default async function NoticesPublicPage() {
                                     
                                     {/* Date Bubble */}
                                     <div className="flex-shrink-0 flex items-center justify-start md:w-auto">
-                                        <div className="relative z-10 w-16 h-16 md:w-28 md:h-28 bg-white rounded-2xl md:rounded-[2rem] flex flex-col items-center justify-center border-2 border-slate-100 shadow-lg shadow-slate-200/50 group-hover:border-blue-500 group-hover:shadow-blue-500/20 transition-all duration-300 group-hover:-translate-y-1">
+                                        <div className="relative z-10 w-16 h-16 md:w-28 md:h-28 bg-white rounded-2xl md:rounded-[2rem] flex flex-col items-center justify-center border-2 border-slate-100 shadow-lg shadow-slate-200/50 group-hover:border-primary group-hover:shadow-primary/20 transition-all duration-300 group-hover:-translate-y-1">
                                             <span className="text-[10px] md:text-xs font-black text-slate-400 tracking-widest uppercase mb-0.5">{month}</span>
                                             <span className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">{day}</span>
                                             <span className="text-[8px] md:text-[10px] font-bold text-slate-400 tracking-wider mt-0.5">{dateObj.getFullYear()}</span>
@@ -63,7 +63,7 @@ export default async function NoticesPublicPage() {
 
                                     {/* Content Card */}
                                     <div className="flex-1 w-full bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
-                                        <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="h-1.5 w-full bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
                                         
                                         <div className="p-6 md:p-10">
                                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
@@ -84,7 +84,7 @@ export default async function NoticesPublicPage() {
                                             {notice.link && (
                                                 <div className="pt-4 border-t border-slate-100">
                                                     <Link href={notice.link} target={notice.link.startsWith('http') ? '_blank' : '_self'}>
-                                                        <Button className="font-bold bg-slate-900 text-white rounded-xl h-12 px-6 group/btn hover:bg-blue-600 transition-colors shadow-lg">
+                                                        <Button className="font-bold bg-slate-900 text-white rounded-xl h-12 px-6 group/btn hover:bg-primary transition-colors shadow-lg">
                                                             <span>Read More / Act Now</span>
                                                             {notice.link.startsWith('http') ? (
                                                                 <ExternalLink className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />

@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { ShieldCheck, BookOpen, Globe, MonitorPlay, CheckCircle, GraduationCap, Zap } from "lucide-react";
 
 const staticReasons = [
-    { icon: <ShieldCheck className="w-8 h-8" />, title: "Trusted IT Institute", desc: "Recognized training center with a 15-year legacy of excellence.", color: "text-blue-600", bg: "bg-blue-50" },
+    { sincerity: true, icon: <ShieldCheck className="w-8 h-8" />, title: "Trusted IT Institute", desc: "Recognized training center with a 15-year legacy of excellence.", color: "text-emerald-600", bg: "bg-emerald-50" },
     { icon: <BookOpen className="w-8 h-8" />, title: "Affordable Diplomas", desc: "Premium technical education at accessible fee structures.", color: "text-purple-600", bg: "bg-purple-50" },
     { icon: <Globe className="w-8 h-8" />, title: "Bilingual Learning", desc: "Flexible course delivery in Hindi & English for better understanding.", color: "text-emerald-600", bg: "bg-emerald-50" },
     { icon: <MonitorPlay className="w-8 h-8" />, title: "Smart Hybrid Classes", desc: "State-of-the-art labs combined with flexible online support.", color: "text-orange-600", bg: "bg-orange-50" },
     { icon: <CheckCircle className="w-8 h-8" />, title: "50+ Courses", desc: "Comprehensive curriculum from basic IT to professional diplomas.", color: "text-pink-600", bg: "bg-pink-50" },
-    { icon: <GraduationCap className="w-8 h-8" />, title: "Govt. Exam Prep", desc: "Dedicated coaching for competitive exams & job placements.", color: "text-indigo-600", bg: "bg-indigo-50" }
+    { icon: <GraduationCap className="w-8 h-8" />, title: "Govt. Exam Prep", desc: "Dedicated coaching for competitive exams & job placements.", color: "text-teal-600", bg: "bg-teal-50" }
 ];
 
 export default function WhyChooseSection({ data, blocks }: { data?: any, blocks?: any[] }) {

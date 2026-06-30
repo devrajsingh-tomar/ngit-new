@@ -6,15 +6,15 @@
 
 @layer base {
   :root {
-    /* Primary - Modern Deep Blue */
-    --primary: 221 83% 53%;
-    --primary-light: 217 91% 60%;
-    --primary-dark: 222 47% 11%;
+    /* Primary - Modern Emerald Green */
+    --primary: 142 76% 36%;
+    --primary-light: 142 72% 45%;
+    --primary-dark: 143 85% 12%;
     
-    /* Secondary - Modern Purple Accent */
-    --secondary: 262 83% 58%;
-    --secondary-light: 263 70% 50%;
-    --secondary-dark: 263 70% 30%;
+    /* Secondary - Vibrant Mint/Teal Accent */
+    --secondary: 160 84% 39%;
+    --secondary-light: 165 85% 48%;
+    --secondary-dark: 166 85% 15%;
 
     /* Semantic Colors */
     --success: 142 71% 45%;
@@ -37,7 +37,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --ring: 142 76% 36%;
 
     --radius: 12px;
     

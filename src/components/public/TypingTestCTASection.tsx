@@ -8,8 +8,8 @@ export default function TypingTestCTASection({ data }: { data?: any }) {
         <div className="container mx-auto px-4 lg:px-10 py-16">
             <div className="bg-slate-900 rounded-[3rem] p-10 md:p-16 lg:p-20 relative overflow-hidden shadow-2xl border border-slate-800">
                 {/* Background Decorations */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px] -mr-48 -mt-48" />
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px] -ml-48 -mb-48" />
+                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-[100px] -mr-48 -mt-48" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/20 rounded-full blur-[100px] -ml-48 -mb-48" />
 
                 <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
                     <div className="flex-1 space-y-8 text-center lg:text-left">
@@ -19,7 +19,7 @@ export default function TypingTestCTASection({ data }: { data?: any }) {
                         </div>
                         
                         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
-                            Master Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 italic">Typing Speed</span>
+                            Master Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 italic">Typing Speed</span>
                         </h2>
                         
                         <p className="text-lg md:text-xl text-slate-300 font-medium max-w-2xl mx-auto lg:mx-0">
@@ -47,8 +47,8 @@ export default function TypingTestCTASection({ data }: { data?: any }) {
                         <div className="bg-slate-800/50 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2.5rem] shadow-2xl rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700">
                             <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                                        <Timer className="w-6 h-6 text-blue-400" />
+                                    <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                                        <Timer className="w-6 h-6 text-teal-400" />
                                     </div>
                                     <div className="text-left">
                                         <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Time Remaining</div>
@@ -72,8 +72,8 @@ export default function TypingTestCTASection({ data }: { data?: any }) {
                                 <div className="h-4 bg-white/5 rounded-full w-[95%]" />
                                 <div className="h-4 bg-white/5 rounded-full w-[80%]" />
                                 <div className="flex gap-2 pt-2">
-                                    <div className="h-4 bg-blue-500/50 rounded-full w-[40%]" />
-                                    <div className="h-4 bg-transparent border border-blue-500/30 rounded-full w-[2px] animate-pulse" />
+                                    <div className="h-4 bg-emerald-500/50 rounded-full w-[40%]" />
+                                    <div className="h-4 bg-transparent border border-emerald-500/30 rounded-full w-[2px] animate-pulse" />
                                 </div>
                             </div>
                         </div>

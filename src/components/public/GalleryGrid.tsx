@@ -34,7 +34,7 @@ export default function GalleryGrid({ data, blocks }: { data: any, blocks: any[]
                             </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                            <span className="text-blue-300 font-bold uppercase tracking-wider text-xs mb-1">
+                            <span className="text-emerald-300 font-bold uppercase tracking-wider text-xs mb-1">
                                 {item.subtitle || "Category"}
                             </span>
                             <h4 className="text-white text-lg font-bold">

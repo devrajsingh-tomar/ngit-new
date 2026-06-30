@@ -102,7 +102,7 @@ export default function CoursesSection({ courses = [], data, hideExplorer = fals
 
                                 {/* Enroll Button */}
                                 <Link href={`/courses/${course.slug}`} className="w-full mb-6">
-                                    <Button className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white shadow-xl transition-all hover:scale-105 group/btn">
+                                    <Button className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-primary hover:bg-primary-dark text-white shadow-xl transition-all hover:scale-105 group/btn">
                                         Enroll in Program
                                         <ArrowRight className="w-4 h-4 ml-3 transition-transform group-hover/btn:translate-x-1" />
                                     </Button>
