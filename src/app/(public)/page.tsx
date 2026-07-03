@@ -6,17 +6,23 @@ import InteractiveTypingSandbox from "@/components/public/InteractiveTypingSandb
 import RedesignedCertification from "@/components/public/RedesignedCertification";
 import BlogSection from "@/components/public/BlogSection";
 
-import { getHeroSlides } from "@/app/actions/cms";
+import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
 import { listBlogPosts } from "@/app/actions/blog";
 
 export default async function PublicHomePage() {
-    const [slidesRes, blogRes] = await Promise.all([
+    const [slidesRes, blogRes, dynamicRes] = await Promise.all([
         getHeroSlides(),
         listBlogPosts({ status: "PUBLISHED", limit: 3, page: 1 }),
+        getDynamicPageData("home"),
     ]);
 
     const heroSlides = slidesRes.success ? slidesRes.slides : [];
     const publicBlogs = blogRes.success ? blogRes.data.posts : [];
+    
+    // Find dynamic Quick Navigation blocks configured by the admin
+    const pageSections = dynamicRes.success && dynamicRes.sections ? dynamicRes.sections : [];
+    const quickActionsSection = pageSections.find((s: any) => s.section_type === "QuickActionsGrid");
+    const navigationBlocks = quickActionsSection ? quickActionsSection.blocks : [];
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -24,7 +30,7 @@ export default async function PublicHomePage() {
             <HeroSlider blocks={heroSlides} />
 
             {/* 2. Quick Navigation */}
-            <QuickActionsGrid />
+            <QuickActionsGrid blocks={navigationBlocks} />
 
             {/* 3. Typing Exam Section */}
             <InteractiveTypingSandbox />
