@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import HeroSection from "@/components/public/HeroSection";
+import HeroSlider from "@/components/home/HeroSlider";
 import QuickActionsGrid from "@/components/public/QuickActionsGrid";
 import InteractiveTypingSandbox from "@/components/public/InteractiveTypingSandbox";
 import RedesignedCertification from "@/components/public/RedesignedCertification";
@@ -21,7 +21,7 @@ export default async function PublicHomePage() {
     return (
         <div className="min-h-screen bg-slate-50">
             {/* 1. Hero Slider */}
-            <HeroSection blocks={heroSlides} />
+            <HeroSlider blocks={heroSlides} />
 
             {/* 2. Quick Navigation */}
             <QuickActionsGrid />
