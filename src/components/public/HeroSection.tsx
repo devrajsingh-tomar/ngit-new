@@ -69,22 +69,44 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
 
                     return (
                         <SwiperSlide key={block._id || idx}>
-                            <div className="relative w-full aspect-[16/9] sm:aspect-auto min-h-[25vh] sm:min-h-[50vh] lg:min-h-[65vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-slate-950">
-                                {/* Background Image - Edge to Edge */}
-                                <div className="absolute inset-0 z-0">
+                            {isTextEmpty ? (
+                                /* Graphic Banner Slide (Preserves aspect ratio, no text cropping) */
+                                <div 
+                                    className={cn(
+                                        "relative w-full overflow-hidden flex items-center justify-center transition-all",
+                                        "aspect-[16/9] sm:aspect-[2.5/1] md:aspect-[3.2/1] lg:aspect-[3.6/1]",
+                                        block.bgColor?.includes("from-") ? `bg-gradient-to-r ${block.bgColor}` : (block.bgColor || "bg-white")
+                                    )}
+                                >
                                     <img
                                         src={image || defaultBlock.image}
-                                        alt={block.title || "Hero Image"}
-                                        className="w-full h-full object-contain sm:object-cover object-center transition-transform duration-700"
+                                        alt={block.title || "Hero Banner"}
+                                        className="w-full h-full object-contain object-center"
                                     />
-                                    {/* Only show overlay if there is custom text to show */}
-                                    {!isTextEmpty && (
-                                        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]" />
+                                    {/* Make the entire banner clickable if it has a CTA link */}
+                                    {primaryLink && (
+                                        <Link 
+                                            href={primaryLink} 
+                                            target={primaryLink.startsWith("http") ? "_blank" : undefined}
+                                            rel={primaryLink.startsWith("http") ? "noopener noreferrer" : undefined}
+                                            className="absolute inset-0 z-10 cursor-pointer"
+                                        />
                                     )}
                                 </div>
+                            ) : (
+                                /* Text Overlay Slide (Original full height with object-cover image background) */
+                                <div className="relative w-full aspect-[16/9] sm:aspect-auto min-h-[25vh] sm:min-h-[50vh] lg:min-h-[65vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-slate-950">
+                                    {/* Background Image - Edge to Edge */}
+                                    <div className="absolute inset-0 z-0">
+                                        <img
+                                            src={image || defaultBlock.image}
+                                            alt={block.title || "Hero Image"}
+                                            className="w-full h-full object-cover object-center transition-transform duration-700"
+                                        />
+                                        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]" />
+                                    </div>
 
-                                {/* Content Overlay (Only if not empty) */}
-                                {!isTextEmpty && (
+                                    {/* Content Overlay */}
                                     <div className="container relative z-10 px-6 mx-auto">
                                         <div className="max-w-4xl space-y-3 sm:space-y-8 text-center lg:text-left">
                                             <motion.div
@@ -138,8 +160,8 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                             </motion.div>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </SwiperSlide>
                     );
                 })}
@@ -148,10 +170,10 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
             {/* Custom Navigation */}
             {sliderBlocks.length > 1 && (
                 <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-between px-4 md:px-8">
-                    <button className="hero-prev pointer-events-auto h-12 w-12 rounded-full bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all group">
+                    <button className="hero-prev pointer-events-auto h-12 w-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all group shadow-md">
                         <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
                     </button>
-                    <button className="hero-next pointer-events-auto h-12 w-12 rounded-full bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all group">
+                    <button className="hero-next pointer-events-auto h-12 w-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all group shadow-md">
                         <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                     </button>
                     
@@ -165,14 +187,16 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     width: 8px;
                     height: 8px;
                     border-radius: 99px;
-                    background: rgba(255, 255, 255, 0.2);
+                    background: rgba(100, 116, 139, 0.4); /* slate-500 with opacity */
+                    border: 1px solid rgba(255, 255, 255, 0.6);
                     cursor: pointer;
                     transition: all 0.3s;
                 }
                 .hero-bullet-active {
-                    width: 32px;
-                    background: #fff;
-                    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                    width: 24px;
+                    background: #10b981; /* emerald-500 brand color */
+                    border-color: #10b981;
+                    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
                 }
             `}</style>
         </section>

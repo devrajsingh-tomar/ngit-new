@@ -95,6 +95,7 @@ const menuGroups = [
                 subItems: [
                     { label: "Website Overview", href: "/admin/content" },
                     { label: "Homepage Builder", href: "/admin/content/home-builder" },
+                    { label: "Homepage Popup", href: "/admin/content/popup" },
                     { label: "All Pages", href: "/admin/content/pages" },
                     { label: "About Us", href: "/admin/content/about" },
                     { label: "SEO Settings", href: "/admin/content/seo" },

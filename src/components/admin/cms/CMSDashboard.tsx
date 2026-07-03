@@ -44,6 +44,7 @@ import {
 const cmsNav = [
   { label: "Website Overview", href: "/admin/content", icon: LayoutDashboard },
   { label: "Homepage Builder", href: "/admin/content/home-builder", icon: Layers },
+  { label: "Homepage Popup", href: "/admin/content/popup", icon: Megaphone },
   { label: "Pages", href: "/admin/content/pages", icon: FileText },
   { label: "Blogs & Articles", href: "/admin/blogs", icon: BookOpen },
   { label: "Media Library", href: "/admin/gallery", icon: ImageIcon },
@@ -316,6 +317,7 @@ export default function CMSDashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
             {[
               { label: "Homepage Builder", desc: "Hero, banners, sections", href: "/admin/content/home-builder", icon: Layers, color: "text-violet-600 bg-violet-50" },
+              { label: "Homepage Popup", desc: "Overlay modals & alert banners", href: "/admin/content/popup", icon: Megaphone, color: "text-rose-600 bg-rose-50" },
               { label: "All Pages", desc: "Create & manage pages", href: "/admin/content/pages", icon: FileText, color: "text-blue-600 bg-blue-50" },
               { label: "Blogs", desc: "Articles & posts", href: "/admin/blogs", icon: BookOpen, color: "text-emerald-600 bg-emerald-50" },
               { label: "Media Library", desc: "Images, videos, docs", href: "/admin/gallery", icon: ImageIcon, color: "text-cyan-600 bg-cyan-50" },
