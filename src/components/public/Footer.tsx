@@ -127,11 +127,10 @@ export default async function Footer() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Navigation Framework */}
-                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-12">
+                    {/* Navigation Framework */}
+                    <div className="lg:col-span-7 flex flex-col sm:flex-row flex-wrap justify-between gap-12">
                         {regularSections.map((section, idx) => (
-                            <div key={idx} className="space-y-8">
+                            <div key={idx} className="space-y-8 min-w-[140px]">
                                 <h4 className="text-[11px] font-black uppercase text-emerald-500 tracking-[0.3em] flex items-center gap-3">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500/30" />
                                     {section.title}
@@ -153,7 +152,8 @@ export default async function Footer() {
                         ))}
 
                         {/* Direct Support */}
-                        <div className="space-y-8">                            <h4 className="text-[11px] font-black uppercase text-emerald-500 tracking-[0.3em] flex items-center gap-3">
+                        <div className="space-y-8 min-w-[260px] sm:max-w-[320px] flex-1">
+                            <h4 className="text-[11px] font-black uppercase text-emerald-500 tracking-[0.3em] flex items-center gap-3">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500/30" />
                                 {contactSection?.title || "SUPPORT"}
                             </h4>
@@ -177,7 +177,7 @@ export default async function Footer() {
                                                 {isPhone ? <Phone className="w-4 h-4" /> : isMail ? <Mail className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-[12px] font-bold text-white group-hover:translate-x-1 transition-transform break-all">
+                                                <p className="text-[12px] font-bold text-white group-hover:translate-x-1 transition-transform break-words">
                                                     {link.label.split(":")[1]?.trim() || link.label}
                                                 </p>
                                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">
