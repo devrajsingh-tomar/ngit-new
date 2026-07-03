@@ -70,28 +70,25 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     return (
                         <SwiperSlide key={block._id || idx}>
                             {isTextEmpty ? (
-                                /* Graphic Banner Slide (Preserves aspect ratio, no text cropping) */
-                                <div 
-                                    className={cn(
-                                        "relative w-full overflow-hidden flex items-center justify-center transition-all",
-                                        "aspect-[16/9] sm:aspect-[2.5/1] md:aspect-[3.2/1] lg:aspect-[3.6/1]",
-                                        block.bgColor?.includes("from-") ? `bg-gradient-to-r ${block.bgColor}` : (block.bgColor || "bg-white")
-                                    )}
-                                >
-                                    <img
-                                        src={image || defaultBlock.image}
-                                        alt={block.title || "Hero Banner"}
-                                        className="w-full h-full object-contain object-center"
-                                    />
-                                    {/* Make the entire banner clickable if it has a CTA link */}
-                                    {primaryLink && (
-                                        <Link 
-                                            href={primaryLink} 
-                                            target={primaryLink.startsWith("http") ? "_blank" : undefined}
-                                            rel={primaryLink.startsWith("http") ? "noopener noreferrer" : undefined}
-                                            className="absolute inset-0 z-10 cursor-pointer"
-                                        />
-                                    )}
+                                /* Graphic Banner Slide (Centered floating white card layout, matching the screenshot) */
+                                <div className="w-full bg-slate-50/50 py-8 sm:py-12 md:py-16 flex items-center justify-center">
+                                    <div className="container max-w-6xl mx-auto px-4">
+                                        <div className="relative bg-white rounded-3xl sm:rounded-[2.5rem] p-2 sm:p-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden w-full aspect-[16/9] sm:aspect-[2.4/1] md:aspect-[2.7/1] lg:aspect-[3/1] flex items-center justify-center">
+                                            <img
+                                                src={image || defaultBlock.image}
+                                                alt={block.title || "Hero Banner"}
+                                                className="w-full h-full object-contain rounded-2xl sm:rounded-[2rem]"
+                                            />
+                                            {primaryLink && (
+                                                <Link 
+                                                    href={primaryLink} 
+                                                    target={primaryLink.startsWith("http") ? "_blank" : undefined}
+                                                    rel={primaryLink.startsWith("http") ? "noopener noreferrer" : undefined}
+                                                    className="absolute inset-0 z-10 cursor-pointer"
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 /* Text Overlay Slide (Original full height with object-cover image background) */
