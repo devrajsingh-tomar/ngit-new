@@ -16,6 +16,18 @@ export interface IStudentProfile extends Document {
     photoUrl?: string;
     status: "Pending" | "Approved" | "Rejected";
     email?: string;
+    
+    // Offline Form Fields
+    year?: string;
+    mode?: string;
+    idNo?: string;
+    gender?: string;
+    nationality?: string;
+    religion?: string;
+    abcId?: string;
+    guardianPhone?: string;
+    whatsappNo?: string;
+
     createdAt: Date;
     updatedAt: Date;
 }
@@ -40,6 +52,17 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
             enum: ["Pending", "Approved", "Rejected"],
             default: "Pending",
         },
+        
+        // Offline Form Fields
+        year: { type: String },
+        mode: { type: String },
+        idNo: { type: String },
+        gender: { type: String },
+        nationality: { type: String },
+        religion: { type: String },
+        abcId: { type: String },
+        guardianPhone: { type: String },
+        whatsappNo: { type: String },
     },
     { timestamps: true }
 );

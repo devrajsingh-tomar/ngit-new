@@ -23,7 +23,18 @@ const RegistrationSchema = z.object({
     permanentPhone: z.string().max(15).optional(),
     course: z.string(),
     password: z.string().min(8),
-    photoUrl: z.string().url().optional(),
+    photoUrl: z.string().optional(),
+    
+    // Offline Form Fields
+    year: z.string().optional(),
+    mode: z.string().optional(),
+    idNo: z.string().optional(),
+    gender: z.string().optional(),
+    nationality: z.string().optional(),
+    religion: z.string().optional(),
+    abcId: z.string().optional(),
+    guardianPhone: z.string().optional(),
+    whatsappNo: z.string().optional(),
 });
 
 export const registerStudent = createSafeAction(
@@ -65,6 +76,17 @@ export const registerStudent = createSafeAction(
             course: formData.course,
             photoUrl: formData.photoUrl || "",
             status: "Pending",
+            
+            // Offline Form Fields
+            year: formData.year,
+            mode: formData.mode,
+            idNo: formData.idNo,
+            gender: formData.gender,
+            nationality: formData.nationality,
+            religion: formData.religion,
+            abcId: formData.abcId,
+            guardianPhone: formData.guardianPhone,
+            whatsappNo: formData.whatsappNo,
         });
 
         revalidatePath("/admin/students");

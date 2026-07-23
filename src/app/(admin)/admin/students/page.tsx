@@ -28,6 +28,17 @@ interface StudentProfile {
     photoUrl?: string;
     status: "Pending" | "Approved" | "Rejected";
     createdAt: string;
+
+    // Offline Form Fields
+    year?: string;
+    mode?: string;
+    idNo?: string;
+    gender?: string;
+    nationality?: string;
+    religion?: string;
+    abcId?: string;
+    guardianPhone?: string;
+    whatsappNo?: string;
 }
 
 export default function AdminStudentsPage() {
@@ -363,8 +374,17 @@ export default function AdminStudentsPage() {
                                 { icon: User, label: "Mother's Name", value: selected.motherName },
                                 { icon: Shield, label: "Aadhar No.", value: selected.aadharNo },
                                 { icon: Calendar, label: "Date of Birth", value: selected.dateOfBirth },
+                                { icon: User, label: "Sex / Gender", value: selected.gender || "—" },
+                                { icon: Shield, label: "Nationality", value: selected.nationality || "—" },
+                                { icon: Shield, label: "Religion", value: selected.religion || "—" },
+                                { icon: Shield, label: "ABC ID", value: selected.abcId || "—" },
                                 { icon: BookOpen, label: "Course", value: selected.course },
-                                { icon: Phone, label: "Local Phone", value: selected.localPhone },
+                                { icon: Calendar, label: "Session / Year", value: selected.year || "—" },
+                                { icon: BookOpen, label: "Course Mode", value: selected.mode || "—" },
+                                { icon: Shield, label: "Id No.", value: selected.idNo || "—" },
+                                { icon: Phone, label: "Student Phone", value: selected.localPhone },
+                                { icon: Phone, label: "Guardian Phone", value: selected.guardianPhone || "—" },
+                                { icon: Phone, label: "Whatsapp Mobile No.", value: selected.whatsappNo || "—" },
                                 { icon: MapPin, label: "Local Address", value: selected.localAddress },
                                 { icon: Phone, label: "Permanent Phone", value: selected.permanentPhone || "—" },
                                 { icon: MapPin, label: "Permanent Address", value: selected.permanentAddress },

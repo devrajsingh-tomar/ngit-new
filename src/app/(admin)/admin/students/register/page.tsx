@@ -58,6 +58,17 @@ interface FormData {
     password: string;
     confirmPassword: string;
     photoUrl: string;
+
+    // Offline Form Fields
+    year: string;
+    mode: string;
+    idNo: string;
+    gender: string;
+    nationality: string;
+    religion: string;
+    abcId: string;
+    guardianPhone: string;
+    whatsappNo: string;
 }
 
 export default function RegisterPage() {
@@ -85,6 +96,17 @@ export default function RegisterPage() {
         password: "",
         confirmPassword: "",
         photoUrl: "",
+
+        // Offline Form Fields
+        year: new Date().getFullYear().toString(),
+        mode: "Offline",
+        idNo: "",
+        gender: "Male",
+        nationality: "Indian",
+        religion: "",
+        abcId: "",
+        guardianPhone: "",
+        whatsappNo: "",
     });
 
     const set = (field: keyof FormData, value: string) =>
@@ -112,15 +134,25 @@ export default function RegisterPage() {
             if (form.aadharNo.length !== 12 || !/^\d+$/.test(form.aadharNo)) {
                 toast.error("Aadhar number must be exactly 12 digits"); return false;
             }
+            if (!form.gender) { toast.error("Gender is required"); return false; }
+            if (!form.nationality.trim()) { toast.error("Nationality is required"); return false; }
         }
         if (step === 2) {
             if (!form.localAddress.trim()) { toast.error("Local address is required"); return false; }
-            if (!/^\d{10}$/.test(form.localPhone)) { toast.error("Enter a valid 10-digit phone number"); return false; }
+            if (!/^\d{10}$/.test(form.localPhone)) { toast.error("Enter a valid 10-digit student phone number"); return false; }
+            if (!/^\d{10}$/.test(form.guardianPhone)) { toast.error("Enter a valid 10-digit guardian phone number"); return false; }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { toast.error("Enter a valid email address"); return false; }
-            if (!form.permanentAddress.trim()) { toast.error("Permanent address is required"); return false; }
+            if (form.whatsappNo && !/^\d{10}$/.test(form.whatsappNo)) {
+                toast.error("Whatsapp number must be 10 digits"); return false;
+            }
+            if (form.abcId && (form.abcId.length !== 12 || !/^\d+$/.test(form.abcId))) {
+                toast.error("ABC ID must be exactly 12 digits"); return false;
+            }
         }
         if (step === 3) {
             if (!form.course) { toast.error("Please select a course"); return false; }
+            if (!form.year.trim()) { toast.error("Year/Session is required"); return false; }
+            if (!form.mode) { toast.error("Please select a mode"); return false; }
         }
         if (step === 4) {
             if (form.password.length < 8) { toast.error("Password must be at least 8 characters"); return false; }
@@ -149,11 +181,22 @@ export default function RegisterPage() {
                 localAddress: form.localAddress,
                 localPhone: form.localPhone,
                 email: form.email,
-                permanentAddress: form.permanentAddress,
-                permanentPhone: form.permanentPhone,
+                permanentAddress: form.permanentAddress || form.localAddress,
+                permanentPhone: form.permanentPhone || form.localPhone,
                 course: form.course,
                 password: form.password,
                 photoUrl: form.photoUrl,
+                
+                // Offline Form Fields
+                year: form.year,
+                mode: form.mode,
+                idNo: form.idNo,
+                gender: form.gender,
+                nationality: form.nationality,
+                religion: form.religion,
+                abcId: form.abcId,
+                guardianPhone: form.guardianPhone,
+                whatsappNo: form.whatsappNo,
             });
             if (result.success) {
                 setSuccess(true);
@@ -291,18 +334,7 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
-                                {/* Date of Birth */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Date of Birth <span className="text-red-500">*</span></label>
-                                    <Input
-                                        type="date"
-                                        value={form.dateOfBirth}
-                                        onChange={(e) => set("dateOfBirth", e.target.value)}
-                                        className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
-                                    />
-                                </div>
-
-                                {/* Father + Aadhar */}
+                                {/* Father + Mother */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-slate-700">Father's / Guardian's Name <span className="text-red-500">*</span></label>
@@ -310,6 +342,28 @@ export default function RegisterPage() {
                                             placeholder="Enter father's name"
                                             value={form.fatherName}
                                             onChange={(e) => set("fatherName", e.target.value)}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Mother's Name <span className="text-red-500">*</span></label>
+                                        <Input
+                                            placeholder="Enter mother's name"
+                                            value={form.motherName}
+                                            onChange={(e) => set("motherName", e.target.value)}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* DOB + Aadhar */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Date of Birth <span className="text-red-500">*</span></label>
+                                        <Input
+                                            type="date"
+                                            value={form.dateOfBirth}
+                                            onChange={(e) => set("dateOfBirth", e.target.value)}
                                             className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
                                         />
                                     </div>
@@ -325,15 +379,52 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
-                                {/* Mother's Name */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Mother's Name <span className="text-red-500">*</span></label>
-                                    <Input
-                                        placeholder="Enter mother's name"
-                                        value={form.motherName}
-                                        onChange={(e) => set("motherName", e.target.value)}
-                                        className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
-                                    />
+                                {/* Sex + Nationality */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Sex / Gender <span className="text-red-500">*</span></label>
+                                        <select
+                                            value={form.gender}
+                                            onChange={(e) => set("gender", e.target.value)}
+                                            className="flex h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none appearance-none font-medium text-slate-800 transition-all focus:bg-white"
+                                        >
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Nationality <span className="text-red-500">*</span></label>
+                                        <Input
+                                            placeholder="e.g. Indian"
+                                            value={form.nationality}
+                                            onChange={(e) => set("nationality", e.target.value)}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Religion + ABC ID */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Religion</label>
+                                        <Input
+                                            placeholder="e.g. Hindu, Muslim, sikh, etc."
+                                            value={form.religion}
+                                            onChange={(e) => set("religion", e.target.value)}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">ABC ID (Academic Bank of Credits)</label>
+                                        <Input
+                                            placeholder="12-digit ABC ID (optional)"
+                                            maxLength={12}
+                                            value={form.abcId}
+                                            onChange={(e) => set("abcId", e.target.value.replace(/\D/g, ""))}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -345,16 +436,48 @@ export default function RegisterPage() {
                                     <label className="text-sm font-bold text-slate-700">Local Address <span className="text-red-500">*</span></label>
                                     <textarea
                                         rows={3}
-                                        placeholder="Enter your current local address"
+                                        placeholder="Enter current local address"
                                         value={form.localAddress}
                                         onChange={(e) => set("localAddress", e.target.value)}
                                         className="w-full rounded-xl px-4 py-3 bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white transition-all outline-none resize-none text-sm"
                                     />
                                 </div>
 
+                                <div className="flex justify-end -mt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => set("permanentAddress", form.localAddress)}
+                                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1"
+                                    >
+                                        Copy Local Address to Permanent
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Permanent Address <span className="text-red-500">*</span></label>
+                                    <textarea
+                                        rows={3}
+                                        placeholder="Enter permanent address"
+                                        value={form.permanentAddress}
+                                        onChange={(e) => set("permanentAddress", e.target.value)}
+                                        className="w-full rounded-xl px-4 py-3 bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white transition-all outline-none resize-none text-sm"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Email Address <span className="text-red-500">*</span></label>
+                                    <Input
+                                        type="email"
+                                        placeholder="you@example.com"
+                                        value={form.email}
+                                        onChange={(e) => set("email", e.target.value)}
+                                        className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                    />
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Phone No. (Local) <span className="text-red-500">*</span></label>
+                                        <label className="text-sm font-bold text-slate-700">Student Mobile No. <span className="text-red-500">*</span></label>
                                         <Input
                                             type="tel"
                                             placeholder="10-digit mobile number"
@@ -365,38 +488,41 @@ export default function RegisterPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Email Address <span className="text-red-500">*</span></label>
+                                        <label className="text-sm font-bold text-slate-700">Guardian Mobile No. <span className="text-red-500">*</span></label>
                                         <Input
-                                            type="email"
-                                            placeholder="you@example.com"
-                                            value={form.email}
-                                            onChange={(e) => set("email", e.target.value)}
+                                            type="tel"
+                                            placeholder="10-digit guardian mobile number"
+                                            maxLength={10}
+                                            value={form.guardianPhone}
+                                            onChange={(e) => set("guardianPhone", e.target.value.replace(/\D/g, ""))}
                                             className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Permanent Address <span className="text-red-500">*</span></label>
-                                    <textarea
-                                        rows={3}
-                                        placeholder="Enter your permanent address"
-                                        value={form.permanentAddress}
-                                        onChange={(e) => set("permanentAddress", e.target.value)}
-                                        className="w-full rounded-xl px-4 py-3 bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white transition-all outline-none resize-none text-sm"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Phone No. (Permanent Address) (Optional)</label>
-                                    <Input
-                                        type="tel"
-                                        placeholder="10-digit mobile number"
-                                        maxLength={10}
-                                        value={form.permanentPhone}
-                                        onChange={(e) => set("permanentPhone", e.target.value.replace(/\D/g, ""))}
-                                        className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">WhatsApp Mobile No.</label>
+                                        <Input
+                                            type="tel"
+                                            placeholder="10-digit whatsapp number"
+                                            maxLength={10}
+                                            value={form.whatsappNo}
+                                            onChange={(e) => set("whatsappNo", e.target.value.replace(/\D/g, ""))}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Permanent Phone (Optional)</label>
+                                        <Input
+                                            type="tel"
+                                            placeholder="10-digit permanent phone"
+                                            maxLength={10}
+                                            value={form.permanentPhone}
+                                            onChange={(e) => set("permanentPhone", e.target.value.replace(/\D/g, ""))}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -416,6 +542,39 @@ export default function RegisterPage() {
                                             <option key={c} value={c}>{c}</option>
                                         ))}
                                     </select>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Year / Session <span className="text-red-500">*</span></label>
+                                        <Input
+                                            placeholder="e.g. 2026"
+                                            value={form.year}
+                                            onChange={(e) => set("year", e.target.value)}
+                                            className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Mode <span className="text-red-500">*</span></label>
+                                        <select
+                                            value={form.mode}
+                                            onChange={(e) => set("mode", e.target.value)}
+                                            className="flex h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none appearance-none font-medium text-slate-800 transition-all focus:bg-white"
+                                        >
+                                            <option value="Offline">Offline</option>
+                                            <option value="Online">Online</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Id No. (Optional)</label>
+                                    <Input
+                                        placeholder="Enter Manual Student Id No."
+                                        value={form.idNo}
+                                        onChange={(e) => set("idNo", e.target.value)}
+                                        className="h-12 rounded-xl px-4 bg-slate-50 border-slate-200 focus:border-primary focus:bg-white transition-all"
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
