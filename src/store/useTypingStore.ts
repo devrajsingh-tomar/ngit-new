@@ -62,6 +62,7 @@ interface TypingState {
   updateSettings: (settings: Partial<TypingSettings>) => void;
   setCurrentWordIndex: (index: number) => void;
   toggleFullScreen: () => void;
+  incrementBackspace: () => void;
 }
 
 const initialSettings: TypingSettings = {
@@ -143,4 +144,6 @@ export const useTypingStore = create<TypingState>((set) => ({
   setCurrentWordIndex: (currentWordIndex) => set({ currentWordIndex }),
 
   toggleFullScreen: () => set((state) => ({ isFullScreen: !state.isFullScreen })),
+
+  incrementBackspace: () => set((state) => ({ backspaceCount: state.backspaceCount + 1 })),
 }));

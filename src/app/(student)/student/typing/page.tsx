@@ -114,10 +114,11 @@ export default function StudentTypingDashboard() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 max-w-2xl">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 flex-1 max-w-3xl">
                     {[
                       { l: 'Accuracy', v: `${result.accuracy}%`, c: 'text-emerald-600', bg: 'bg-emerald-50' },
                       { l: 'Errors', v: result.errorCount, c: 'text-rose-600', bg: 'bg-rose-50' },
+                      { l: 'Backspaces', v: result.backspaces || 0, c: 'text-amber-600', bg: 'bg-amber-50' },
                       { l: 'Net WPM', v: result.wpm, c: 'text-blue-600', bg: 'bg-blue-50' },
                       { l: 'Raw WPM', v: result.rawWpm, c: 'text-slate-600', bg: 'bg-slate-50' }
                     ].map((st, i) => (

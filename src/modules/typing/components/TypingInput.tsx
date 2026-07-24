@@ -16,7 +16,8 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
     settings, 
     isActive, 
     isFinished,
-    startTest 
+    startTest,
+    incrementBackspace
   } = useTypingStore();
 
   const words = passage.split(/\s+/);
@@ -25,6 +26,22 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
   const currentWord = words[currentWordIdx] || "";
   const currentTypedWord = typedWords[currentWordIdx] || "";
   const hasError = currentTypedWord.length > 0 && !currentWord.startsWith(currentTypedWord);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Backspace') {
+      if (settings.backspaceMode === 'disabled') {
+        e.preventDefault();
+        return;
+      }
+      if (settings.backspaceMode === 'word') {
+        if (typedText.endsWith(' ')) {
+          e.preventDefault();
+          return;
+        }
+      }
+      incrementBackspace();
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (isFinished) return;
@@ -82,6 +99,7 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
       <textarea
         value={typedText}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         disabled={isFinished}
         spellCheck={false}
         autoFocus

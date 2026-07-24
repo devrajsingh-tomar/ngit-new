@@ -210,7 +210,7 @@ export default function StudentResultsPage() {
                                         </p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full lg:w-auto shrink-0">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full lg:w-auto shrink-0">
                                         <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 min-w-[140px]">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Net Speed</p>
                                             <div className="flex items-baseline gap-1">
@@ -228,6 +228,12 @@ export default function StudentResultsPage() {
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Errors</p>
                                             <div className="flex items-baseline text-slate-900">
                                                 <span className="text-2xl font-black">{res.errorCount || 0}</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 min-w-[140px]">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Backspaces</p>
+                                            <div className="flex items-baseline text-slate-900">
+                                                <span className="text-2xl font-black">{res.backspaces || 0}</span>
                                             </div>
                                         </div>
                                     </div>

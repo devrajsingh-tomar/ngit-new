@@ -63,6 +63,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     settings,
     rawWpm,
     backspaceCount,
+    incrementBackspace,
     resetTest,
     endTest,
     isActive,
@@ -300,6 +301,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
           return;
         }
       }
+      incrementBackspace();
     }
     
     if ((e.ctrlKey || e.metaKey) && e.key === 'v') {

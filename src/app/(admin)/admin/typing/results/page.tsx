@@ -84,7 +84,7 @@ export default function TypingResultsAdminPage() {
             ? results.filter(r => selectedIds.includes(r._id)) 
             : results;
 
-        const headers = ["Student Name", "Email", "Exam Title", "WPM", "Accuracy", "Errors", "Date"];
+        const headers = ["Student Name", "Email", "Exam Title", "WPM", "Accuracy", "Errors", "Backspaces", "Date"];
         const rows = targetResults.map(r => [
             r.userId?.name || "N/A",
             r.userId?.email || "N/A",
@@ -92,6 +92,7 @@ export default function TypingResultsAdminPage() {
             r.wpm,
             `${r.accuracy}%`,
             r.errorCount || 0,
+            r.backspaces || 0,
             new Date(r.createdAt).toLocaleDateString()
         ]);
 
@@ -178,6 +179,7 @@ export default function TypingResultsAdminPage() {
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Net Speed</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Accuracy</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Mistakes</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Backspaces</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Status</TableHead>
                                 <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-right pr-10">Report</TableHead>
                             </TableRow>
@@ -186,12 +188,12 @@ export default function TypingResultsAdminPage() {
                             {loading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i} className="animate-pulse">
-                                        <TableCell colSpan={8} className="h-24 bg-slate-50/20" />
+                                        <TableCell colSpan={9} className="h-24 bg-slate-50/20" />
                                     </TableRow>
                                 ))
                             ) : filteredResults.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="py-32 text-center">
+                                    <TableCell colSpan={9} className="py-32 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
                                             <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center">
                                                 <AlertCircle className="w-10 h-10 text-slate-200" />
@@ -247,6 +249,12 @@ export default function TypingResultsAdminPage() {
                                             <div className="flex flex-col items-center">
                                                 <p className="font-black text-xl text-rose-600 leading-none">{res.errorCount || 0}</p>
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">Mistakes</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-8 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <p className="font-black text-xl text-amber-600 leading-none">{res.backspaces || 0}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">Backspaces</p>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-8">

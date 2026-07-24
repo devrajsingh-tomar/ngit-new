@@ -14,6 +14,7 @@ export const useTypingEngine = () => {
     settings, 
     isActive, 
     isFinished,
+    backspaceCount,
     updateMetrics 
   } = useTypingStore();
 
@@ -34,10 +35,10 @@ export const useTypingEngine = () => {
         accuracy: metrics.accuracy,
         errorCount: metrics.errorCount,
         wrongWords: metrics.wrongWords,
-        backspaceCount: 0, // Could be synced from state if needed
+        backspaceCount, // Could be synced from state if needed
         keystrokes: metrics.keystrokes,
         progress: metrics.progress
       });
     }
-  }, [typedText, timeLeft, isActive, isFinished, passage, settings.duration, updateMetrics]);
+  }, [typedText, timeLeft, isActive, isFinished, passage, settings.duration, backspaceCount, updateMetrics]);
 };

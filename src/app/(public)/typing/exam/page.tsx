@@ -104,7 +104,7 @@ function TypingPracticeContent() {
             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Your Performance Metrics</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-12">
              <div className="bg-slate-50 p-8 rounded-[2rem] text-center border border-slate-100 group hover:border-indigo-200 transition-all">
                 <Zap className="w-6 h-6 text-indigo-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <div className="text-5xl font-black text-slate-900 mb-1">{Math.round(results.wpm)}</div>
@@ -119,6 +119,11 @@ function TypingPracticeContent() {
                 <AlertCircle className="w-6 h-6 text-rose-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <div className="text-5xl font-black text-slate-900 mb-1">{results.errorCount}</div>
                 <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Mistakes</div>
+             </div>
+             <div className="bg-slate-50 p-8 rounded-[2rem] text-center border border-slate-100 group hover:border-amber-200 transition-all">
+                <ArrowLeft className="w-6 h-6 text-amber-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <div className="text-5xl font-black text-slate-900 mb-1">{results.backspaces || 0}</div>
+                <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Backspaces</div>
              </div>
           </div>
 

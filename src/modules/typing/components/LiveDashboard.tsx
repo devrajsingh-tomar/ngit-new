@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { cn } from "@/lib/utils";
-import { Target, Zap, AlertCircle, BarChart3, Clock, Maximize, Minimize, Keyboard } from 'lucide-react';
+import { Target, Zap, AlertCircle, BarChart3, Clock, Maximize, Minimize, Keyboard, ArrowLeft } from 'lucide-react';
 
 /**
  * StatCard Component (Private)
@@ -32,7 +32,8 @@ const StatCard = ({ icon: Icon, label, value, hexColor, unit }: any) => (
 export const LiveDashboard: React.FC = () => {
   const { 
     wpm, netWpm, grossWpm, accuracy, errorCount, wrongWords, 
-    progress, keystrokes, timeLeft, settings, isActive, isFinished 
+    progress, keystrokes, timeLeft, settings, isActive, isFinished,
+    backspaceCount
   } = useTypingStore();
 
   return (
@@ -87,6 +88,14 @@ export const LiveDashboard: React.FC = () => {
         label="Keystrokes" 
         value={keystrokes} 
         hexColor="#d97706" // Amber 600
+      />
+
+      {/* Backspaces */}
+      <StatCard 
+        icon={ArrowLeft} 
+        label="Backspaces" 
+        value={backspaceCount} 
+        hexColor="#f59e0b" // Amber 500
       />
     </div>
   );

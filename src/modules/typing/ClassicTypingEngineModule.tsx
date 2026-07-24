@@ -65,6 +65,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     settings,
     rawWpm,
     backspaceCount,
+    incrementBackspace,
     resetTest,
     endTest,
     isActive,
@@ -318,6 +319,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
           return;
         }
       }
+      incrementBackspace();
     }
     
     // Prevent paste
