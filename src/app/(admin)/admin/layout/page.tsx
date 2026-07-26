@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getHeaderFooterData, updateHeaderData, updateFooterData } from "@/app/actions/layoutContent";
+import { 
+    getHeaderFooterData, 
+    updateHeaderData, 
+    updateFooterData, 
+    getFloatingSocialsData, 
+    updateFloatingSocialsData 
+} from "@/app/actions/layoutContent";
 import { toast } from "sonner";
 import { Save, Plus, Trash2, Layout, Menu, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -10,7 +16,7 @@ import { ImageUpload } from "@/components/ui/image-upload";
 export default function LayoutManagementPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<"header" | "footer">("header");
+    const [activeTab, setActiveTab] = useState<"header" | "footer" | "socials">("header");
 
     // Header State
     const [headerLogoImage, setHeaderLogoImage] = useState("");
@@ -25,6 +31,9 @@ export default function LayoutManagementPage() {
     const [footerSections, setFooterSections] = useState<{ title: string; links: { label: string; href: string }[] }[]>([]);
     const [footerSocial, setFooterSocial] = useState<{ platform: string; url: string }[]>([]);
     const [footerCopyright, setFooterCopyright] = useState("");
+
+    // Floating Socials State
+    const [floatingSocials, setFloatingSocials] = useState<{ platform: string; url: string; isActive?: boolean }[]>([]);
 
     const availableLinks = [
         { label: "Home", href: "/" },
@@ -45,7 +54,11 @@ export default function LayoutManagementPage() {
 
     const loadData = async () => {
         setLoading(true);
-        const result = await getHeaderFooterData();
+        const [result, socialsRes] = await Promise.all([
+            getHeaderFooterData(),
+            getFloatingSocialsData(),
+        ]);
+
         if (result.success) {
             // Load Header Data
             setHeaderLogoImage(result.header.logoImage || "");
@@ -61,7 +74,13 @@ export default function LayoutManagementPage() {
             setFooterSocial(result.footer.social || []);
             setFooterCopyright(result.footer.copyright || "");
         } else {
-            toast.error("Failed to load data");
+            toast.error("Failed to load header/footer data");
+        }
+
+        if (socialsRes.success) {
+            setFloatingSocials(socialsRes.data || []);
+        } else {
+            toast.error("Failed to load floating social data");
         }
         setLoading(false);
     };
@@ -98,6 +117,18 @@ export default function LayoutManagementPage() {
             toast.success("Footer updated successfully!");
         } else {
             toast.error(result.error || "Failed to update footer");
+        }
+        setSaving(false);
+    };
+
+    const handleSaveSocials = async () => {
+        setSaving(true);
+        const result = await updateFloatingSocialsData(floatingSocials);
+
+        if (result.success) {
+            toast.success("Floating socials updated successfully!");
+        } else {
+            toast.error(result.error || "Failed to update floating socials");
         }
         setSaving(false);
     };
@@ -143,6 +174,15 @@ export default function LayoutManagementPage() {
                             }`}
                     >
                         Footer
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("socials")}
+                        className={`px-6 py-3 font-bold text-sm transition-all ${activeTab === "socials"
+                            ? "text-primary border-b-2 border-primary"
+                            : "text-slate-500 hover:text-slate-700"
+                            }`}
+                    >
+                        Floating Buttons
                     </button>
                 </div>
 
@@ -532,6 +572,109 @@ export default function LayoutManagementPage() {
                         <Button onClick={handleSaveFooter} disabled={saving} className="w-full h-12 font-bold">
                             <Save className="w-4 h-4 mr-2" />
                             {saving ? "Saving..." : "Save Footer"}
+                        </Button>
+                    </div>
+                )}
+
+                {/* Floating Buttons Tab */}
+                {activeTab === "socials" && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Floating Action Buttons</label>
+                                <p className="text-xs text-slate-500 mt-1">Add, edit, or remove floating actions (WhatsApp, Telegram, Instagram) positioned at the bottom right corner of the website.</p>
+                            </div>
+                            <Button
+                                onClick={() => setFloatingSocials([...floatingSocials, { platform: "WhatsApp", url: "", isActive: true }])}
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-xs font-bold"
+                            >
+                                <Plus className="w-3.5 h-3.5 mr-1" /> Add Button
+                            </Button>
+                        </div>
+
+                        <div className="space-y-3.5">
+                            {floatingSocials.length === 0 ? (
+                                <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                    <p className="text-sm font-medium text-slate-500">No floating buttons configured. Click "Add Button" to create one.</p>
+                                </div>
+                            ) : (
+                                floatingSocials.map((social, index) => (
+                                    <div key={index} className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center bg-slate-50 p-4 rounded-xl border border-slate-200/50">
+                                        <div className="w-full sm:w-1/4">
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Platform Type</label>
+                                            <select
+                                                value={social.platform}
+                                                onChange={(e) => {
+                                                    const updated = [...floatingSocials];
+                                                    updated[index].platform = e.target.value;
+                                                    setFloatingSocials(updated);
+                                                }}
+                                                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold bg-white"
+                                            >
+                                                <option value="WhatsApp">WhatsApp</option>
+                                                <option value="Telegram">Telegram</option>
+                                                <option value="Instagram">Instagram</option>
+                                                <option value="Facebook">Facebook</option>
+                                                <option value="Custom">Custom Link</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Redirect URL</label>
+                                            <input
+                                                type="text"
+                                                value={social.url}
+                                                onChange={(e) => {
+                                                    const updated = [...floatingSocials];
+                                                    updated[index].url = e.target.value;
+                                                    setFloatingSocials(updated);
+                                                }}
+                                                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-medium"
+                                                placeholder={
+                                                    social.platform === "WhatsApp" ? "e.g., https://wa.me/911234567890" :
+                                                    social.platform === "Telegram" ? "e.g., https://t.me/yourusername" :
+                                                    "e.g., https://instagram.com/yourprofile"
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-4 justify-between sm:justify-start pt-2 sm:pt-4">
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`active-social-${index}`}
+                                                    checked={social.isActive !== false}
+                                                    onChange={(e) => {
+                                                        const updated = [...floatingSocials];
+                                                        updated[index].isActive = e.target.checked;
+                                                        setFloatingSocials(updated);
+                                                    }}
+                                                    className="w-4 h-4 text-primary focus:ring-primary border-slate-300 rounded cursor-pointer"
+                                                />
+                                                <label htmlFor={`active-social-${index}`} className="text-xs font-bold text-slate-600 cursor-pointer select-none">
+                                                    Active
+                                                </label>
+                                            </div>
+
+                                            <Button
+                                                onClick={() => setFloatingSocials(floatingSocials.filter((_, i) => i !== index))}
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg shrink-0"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <Button onClick={handleSaveSocials} disabled={saving} className="w-full h-12 font-bold">
+                            <Save className="w-4 h-4 mr-2" />
+                            {saving ? "Saving..." : "Save Floating Buttons"}
                         </Button>
                     </div>
                 )}

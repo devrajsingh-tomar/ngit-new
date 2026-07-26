@@ -124,3 +124,47 @@ export async function updateFooterData(data: any) {
         return { success: false, error: "Failed to update footer" };
     }
 }
+
+export async function getFloatingSocialsData() {
+    try {
+        await dbConnect();
+        const content = await CMSContent.findOne({ key: "FLOATING_SOCIALS" });
+        const defaultSocials = [
+            { platform: "WhatsApp", url: "https://wa.me/911234567890", isActive: true },
+            { platform: "Telegram", url: "https://t.me/yourchannel", isActive: true },
+            { platform: "Instagram", url: "https://instagram.com/yourprofile", isActive: true },
+        ];
+        return {
+            success: true,
+            data: content?.data || defaultSocials
+        };
+    } catch (error) {
+        console.error("Error fetching floating socials:", error);
+        return { success: false, error: "Failed to fetch data" };
+    }
+}
+
+export async function updateFloatingSocialsData(data: any) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user || session.user.role !== UserRole.ADMIN) {
+            return { success: false, error: "Unauthorized" };
+        }
+        await dbConnect();
+        await CMSContent.findOneAndUpdate(
+            { key: "FLOATING_SOCIALS" },
+            {
+                data,
+                updatedBy: session.user.id
+            },
+            { upsert: true, new: true }
+        );
+        revalidatePath("/", "layout");
+        revalidatePath("/");
+        return { success: true, message: "Floating socials updated successfully" };
+    } catch (error) {
+        console.error("Error updating floating socials:", error);
+        return { success: false, error: "Failed to update floating socials" };
+    }
+}
+
