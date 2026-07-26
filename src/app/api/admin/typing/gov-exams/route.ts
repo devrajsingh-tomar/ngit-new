@@ -17,6 +17,10 @@ export async function POST(req: Request) {
         data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
 
+    if (data.rulePresetId === "") {
+        data.rulePresetId = null;
+    }
+
     const exam = await GovExam.create(data);
     return NextResponse.json(exam, { status: 201 });
   } catch (error: any) {

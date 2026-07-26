@@ -33,6 +33,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (data.logo !== undefined) updateData.logo = data.logo;
     if (data.active !== undefined) updateData.active = data.active;
     if (data.description !== undefined) updateData.description = data.description;
+    if (data.rulePresetId !== undefined) {
+      updateData.rulePresetId = data.rulePresetId === "" ? null : data.rulePresetId;
+    }
+    if (data.defaultDuration !== undefined) {
+      updateData.defaultDuration = data.defaultDuration === "" ? 10 : Number(data.defaultDuration);
+    }
     
     // Auto-update slug if title changed
     if (data.title) {

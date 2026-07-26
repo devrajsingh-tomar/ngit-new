@@ -6,6 +6,8 @@ export interface IGovExam {
   logo: string;
   description?: string;
   active: boolean;
+  rulePresetId?: mongoose.Types.ObjectId;
+  defaultDuration?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +19,8 @@ const GovExamSchema = new Schema<IGovExam>(
     logo: { type: String, default: "" },
     description: { type: String, default: "" },
     active: { type: Boolean, default: true },
+    rulePresetId: { type: Schema.Types.ObjectId, ref: "TypingRulePreset" },
+    defaultDuration: { type: Number, default: 10 },
   },
   { timestamps: true }
 );

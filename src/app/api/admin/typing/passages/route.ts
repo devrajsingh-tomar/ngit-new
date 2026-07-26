@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import TypingPassage from "@/models/TypingPassage";
+import TypingExam from "@/models/TypingExam";
+import GovExam from "@/models/GovExam";
+import TypingRulePreset from "@/models/TypingRulePreset";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -26,18 +29,52 @@ export async function POST(req: Request) {
     await connectDB();
     const data = await req.json();
     
+    // Extract govExamIds if provided
+    const { govExamIds, ...passageData } = data;
+    
     // Auto calculate word count
-    const wordCount = data.content.trim().split(/\s+/).length;
+    const wordCount = passageData.content.trim().split(/\s+/).length;
     
     // Clear bookId if empty string submitted
-    if (data.bookId === "") {
-      data.bookId = null;
+    if (passageData.bookId === "") {
+      passageData.bookId = null;
     }
     
     const passage = await TypingPassage.create({
-      ...data,
+      ...passageData,
       wordCount
     });
+
+    // Auto-create tests (TypingExam) for selected Gov Exams
+    if (govExamIds && Array.isArray(govExamIds) && govExamIds.length > 0) {
+      for (const govExamId of govExamIds) {
+        if (!govExamId) continue;
+        const govExam = await GovExam.findById(govExamId).populate("rulePresetId");
+        if (!govExam) continue;
+
+        const preset: any = govExam.rulePresetId;
+        
+        await TypingExam.create({
+          title: passage.title,
+          category: govExam.title,
+          language: passage.language,
+          passageId: passage._id,
+          govExamId: govExam._id,
+          duration: govExam.defaultDuration || 10,
+          wordLimit: preset?.wordLimit || 0,
+          backspaceMode: preset?.backspaceMode || "full",
+          highlightMode: preset?.highlightMode || "word",
+          autoScroll: preset?.autoScroll !== undefined ? preset.autoScroll : true,
+          showScrollbar: preset?.showScrollbar !== undefined ? preset.showScrollbar : true,
+          examMode: preset?.examMode || "General",
+          rulePresetId: preset?._id || null,
+          difficulty: passage.difficulty || "Medium",
+          status: "Active",
+          startTime: new Date(),
+          endTime: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, passage: passage.toObject() }, { status: 201 });
   } catch (error: any) {

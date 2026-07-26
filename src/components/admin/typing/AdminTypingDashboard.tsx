@@ -57,6 +57,37 @@ export default function AdminTypingDashboard() {
   const [adminLayout, setAdminLayout] = useState("Inscript");
   const [submitting, setSubmitting] = useState(false);
 
+  // Dynamic Exam creation helper states
+  const [examCategory, setExamCategory] = useState("");
+  const [examPresetId, setExamPresetId] = useState("");
+  const [examDuration, setExamDuration] = useState(10);
+  const [selectedGovExamId, setSelectedGovExamId] = useState("");
+  const [customOverrides, setCustomOverrides] = useState(false);
+
+  useEffect(() => {
+    if (showExamModal) {
+      if (editingExam) {
+        const gid = editingExam.govExamId?._id || editingExam.govExamId || "";
+        setSelectedGovExamId(gid);
+        setExamCategory(editingExam.category || "");
+        setExamPresetId(editingExam.rulePresetId?._id || editingExam.rulePresetId || "");
+        setExamDuration(editingExam.duration || 10);
+        
+        const hasCustomRules = editingExam.backspaceMode !== "full" || 
+                              editingExam.highlightMode !== "word" || 
+                              editingExam.wordLimit > 0 || 
+                              editingExam.typingEngineType !== "classic";
+        setCustomOverrides(hasCustomRules);
+      } else {
+        setSelectedGovExamId("");
+        setExamCategory("");
+        setExamPresetId("");
+        setExamDuration(10);
+        setCustomOverrides(false);
+      }
+    }
+  }, [showExamModal, editingExam]);
+
   // Pagination
   const [examPage, setExamPage] = useState(1);
   const [passagePage, setPassagePage] = useState(1);
@@ -107,7 +138,8 @@ export default function AdminTypingDashboard() {
     if (!editingPassage) return;
     setSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
+    const data: any = Object.fromEntries(formData.entries());
+    data.govExamIds = formData.getAll('govExamIds');
     try {
       const res = await fetch(`/api/admin/typing/passages/${editingPassage._id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
@@ -126,7 +158,9 @@ export default function AdminTypingDashboard() {
     e.preventDefault();
     setSubmitting(true);
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
+    const formData = new FormData(form);
+    const data: any = Object.fromEntries(formData.entries());
+    data.govExamIds = formData.getAll('govExamIds');
     try {
       const res = await fetch("/api/admin/typing/passages", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
@@ -907,92 +941,159 @@ export default function AdminTypingDashboard() {
                className="p-6 space-y-5"
              >
                 <div className="grid grid-cols-2 gap-5">
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Exam Mode</label>
-                     <select name="examMode" defaultValue={editingExam?.examMode || "General"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="General">General Practice</option>
-                       <option value="SSC">SSC</option>
-                       <option value="CPCT">CPCT</option>
-                       <option value="Court">Court</option>
-                     </select>
-                   </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
-                      <input name="title" defaultValue={editingExam?.title} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                    </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Category</label>
-                      <select name="category" defaultValue={editingExam?.category} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="">Select...</option>
-                         <option value="SPECIAL">Special Topic / Current Affairs</option>
-                         {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                      </select>
-                    </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Gov Exam</label>
-                      <select name="govExamId" defaultValue={editingExam?.govExamId} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="">None (General)</option>
-                        {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
-                      </select>
-                    </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Rule Preset (Overrides individual rules)</label>
-                      <select name="rulePresetId" defaultValue={editingExam?.rulePresetId} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="">No Preset (Use individual settings)</option>
-                         {rulePresets.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Source Position</label>
-                      <select name="sourcePosition" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="top">Top</option><option value="left">Left</option><option value="right">Right</option><option value="bottom">Bottom</option>
-                      </select>
-                    </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Passage</label>
-                      <select name="passageId" defaultValue={editingExam?.passageId} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="">Select Passage...</option>
-                        {passages.map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
-                      </select>
-                    </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Duration (Min)</label>
-                     <input type="number" name="duration" defaultValue={10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Word Limit (0 = Unlimited)</label>
-                      <input type="number" name="wordLimit" defaultValue={editingExam?.wordLimit || 0} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                    </div>
-                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-slate-600 uppercase">Typing Engine Design</label>
-                        <select name="typingEngineType" defaultValue={editingExam?.typingEngineType || "classic"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                           <option value="classic">Classic (Standard)</option>
-                           <option value="modern">Modern (High-End Analytics)</option>
-                        </select>
+                       <label className="text-xs font-bold text-slate-600 uppercase">Gov Exam</label>
+                       <select 
+                         name="govExamId" 
+                         value={selectedGovExamId} 
+                         onChange={(e) => {
+                           const gid = e.target.value;
+                           setSelectedGovExamId(gid);
+                           if (gid) {
+                             const gov = govExams.find(g => g._id === gid);
+                             if (gov) {
+                               setExamCategory(gov.title);
+                               setExamPresetId(gov.rulePresetId || "");
+                               setExamDuration(gov.defaultDuration || 10);
+                             }
+                           }
+                         }}
+                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none"
+                       >
+                         <option value="">None (General Practice)</option>
+                         {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
+                       </select>
                      </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Backspace Mode</label>
-                      <select name="backspaceMode" defaultValue={editingExam?.backspaceMode || "full"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="full">Full Access</option><option value="word">Word Only</option><option value="disabled">Disabled</option>
-                      </select>
-                   </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Highlight Mode</label>
-                      <select name="highlightMode" defaultValue={editingExam?.highlightMode || "word"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="word">Active Word</option>
-                         <option value="word_error">Word with Error Tracking</option>
-                         <option value="letter">Character by Character</option>
-                         <option value="none">None (Blind Typing)</option>
-                      </select>
-                    </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Status</label>
-                      <select name="status" defaultValue={editingExam?.status || "Active"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="Active">Active (Visible)</option>
-                         <option value="Draft">Draft (Hidden)</option>
-                         <option value="Expired">Expired</option>
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
+                       <input name="title" defaultValue={editingExam?.title} required placeholder="e.g. Test 1" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Exam Mode / Type</label>
+                      <select name="examMode" defaultValue={editingExam?.examMode || "General"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="General">General Practice</option>
+                        <option value="SSC">SSC</option>
+                        <option value="CPCT">CPCT</option>
+                        <option value="Court">Court</option>
+                        <option value="Steno">Steno</option>
+                        <option value="UPSSSC">UPSSSC</option>
+                        <option value="AHC">AHC</option>
+                        <option value="UP_POLICE">UP Police</option>
                       </select>
                     </div>
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Category</label>
+                       <select 
+                         name="category" 
+                         value={examCategory} 
+                         onChange={(e) => setExamCategory(e.target.value)} 
+                         required 
+                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none"
+                       >
+                          <option value="">Select...</option>
+                          <option value="SPECIAL">Special Topic / Current Affairs</option>
+                          {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                          {govExams.map(g => <option key={g._id} value={g.title}>{g.title}</option>)}
+                       </select>
+                     </div>
+                     <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Rule Preset</label>
+                       <select 
+                         name="rulePresetId" 
+                         value={examPresetId} 
+                         onChange={(e) => setExamPresetId(e.target.value)} 
+                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none"
+                       >
+                          <option value="">No Preset (Use custom/default rules)</option>
+                          {rulePresets.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                       </select>
+                     </div>
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Passage</label>
+                       <select name="passageId" defaultValue={editingExam?.passageId} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="">Select Passage...</option>
+                         {passages.map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
+                       </select>
+                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Duration (Min)</label>
+                      <input 
+                        type="number" 
+                        name="duration" 
+                        value={examDuration} 
+                        onChange={(e) => setExamDuration(Number(e.target.value))} 
+                        required 
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" 
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Status</label>
+                       <select name="status" defaultValue={editingExam?.status || "Active"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                          <option value="Active">Active (Visible)</option>
+                          <option value="Draft">Draft (Hidden)</option>
+                          <option value="Expired">Expired</option>
+                       </select>
+                     </div>
+
+                     {/* Collapsible Custom Overrides */}
+                     <div className="col-span-2 pt-2 border-t border-slate-100">
+                       <label className="flex items-center gap-2 cursor-pointer select-none">
+                         <input 
+                           type="checkbox" 
+                           checked={customOverrides} 
+                           onChange={(e) => setCustomOverrides(e.target.checked)} 
+                           className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" 
+                         />
+                         <span className="text-xs font-bold text-slate-700 uppercase">Customize advanced rules / overrides</span>
+                       </label>
+                     </div>
+
+                     {customOverrides && (
+                       <div className="col-span-2 grid grid-cols-2 gap-5 p-4 bg-slate-50 rounded-xl border border-slate-200/50 animate-in slide-in-from-top-2 duration-200">
+                         <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Source Position</label>
+                           <select name="sourcePosition" defaultValue={editingExam?.sourcePosition || "top"} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                              <option value="top">Top</option><option value="left">Left</option><option value="right">Right</option><option value="bottom">Bottom</option>
+                           </select>
+                         </div>
+                         <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Word Limit (0 = Unlimited)</label>
+                            <input type="number" name="wordLimit" defaultValue={editingExam?.wordLimit || 0} required className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Typing Engine Design</label>
+                             <select name="typingEngineType" defaultValue={editingExam?.typingEngineType || "classic"} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                                <option value="classic">Classic (Standard)</option>
+                                <option value="modern">Modern (High-End Analytics)</option>
+                             </select>
+                          </div>
+                         <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Backspace Mode</label>
+                            <select name="backspaceMode" defaultValue={editingExam?.backspaceMode || "full"} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                               <option value="full">Full Access</option><option value="word">Word Only</option><option value="disabled">Disabled</option>
+                            </select>
+                         </div>
+                         <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Highlight Mode</label>
+                            <select name="highlightMode" defaultValue={editingExam?.highlightMode || "word"} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                               <option value="word">Active Word</option>
+                               <option value="word_error">Word with Error Tracking</option>
+                               <option value="letter">Character by Character</option>
+                               <option value="none">None (Blind Typing)</option>
+                            </select>
+                          </div>
+                          <div className="flex gap-4 pt-4 col-span-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="checkbox" name="autoScroll" defaultChecked={editingExam ? editingExam.autoScroll : true} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                              <span className="text-xs font-semibold text-slate-700">Auto Scroll</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="checkbox" name="showScrollbar" defaultChecked={editingExam ? editingExam.showScrollbar : true} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                              <span className="text-xs font-semibold text-slate-700">Show Scrollbar</span>
+                            </label>
+                          </div>
+                       </div>
+                     )}
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
                    <Button type="button" variant="outline" onClick={() => { setShowExamModal(false); setEditingExam(null); }}>Cancel</Button>
@@ -1018,6 +1119,19 @@ export default function AdminTypingDashboard() {
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Exam Title</label>
                    <input name="title" defaultValue={editingGovExam?.title} required placeholder="e.g. SSC CGL" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Default Rule Preset</label>
+                      <select name="rulePresetId" defaultValue={editingGovExam?.rulePresetId?._id || editingGovExam?.rulePresetId} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="">No Preset (Standard Rules)</option>
+                         {rulePresets.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                      </select>
+                   </div>
+                   <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Default Duration (Min)</label>
+                      <input type="number" name="defaultDuration" defaultValue={editingGovExam?.defaultDuration || 10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                   </div>
                 </div>
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Description</label>
@@ -1144,6 +1258,36 @@ export default function AdminTypingDashboard() {
                           <option value="">Select Book...</option>
                           {books.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
                        </select>
+                     </div>
+                   )}
+                   {modalSection === 'Government' && (
+                     <div className="col-span-2 space-y-2 animate-in slide-in-from-top-2 duration-300">
+                       <label className="text-xs font-bold text-slate-600 uppercase block">Assign to Government Exams</label>
+                       <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg max-h-48 overflow-y-auto">
+                         {govExams.map(gov => {
+                           const isChecked = editingPassage 
+                             ? exams.some(ex => {
+                                 const pid = ex.passageId?._id || ex.passageId;
+                                 const gid = ex.govExamId?._id || ex.govExamId;
+                                 return pid === editingPassage._id && gid?.toString() === gov._id?.toString();
+                               })
+                             : false;
+                           
+                           return (
+                             <label key={gov._id} className="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer hover:text-indigo-600">
+                               <input 
+                                 type="checkbox" 
+                                 name="govExamIds" 
+                                 value={gov._id} 
+                                 defaultChecked={isChecked}
+                                 className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" 
+                               />
+                               {gov.title}
+                             </label>
+                           );
+                         })}
+                       </div>
+                       <p className="text-[10px] font-semibold text-slate-400">Selected exams will automatically get a test created for this passage, using their specific rule presets.</p>
                      </div>
                    )}
                 </div>
