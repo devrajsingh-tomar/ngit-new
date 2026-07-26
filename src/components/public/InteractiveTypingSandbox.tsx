@@ -1,10 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Keyboard, RefreshCw, Play, Flame, Target, Timer, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { 
+    Keyboard, 
+    RefreshCw, 
+    Flame, 
+    Target, 
+    Timer, 
+    CheckCircle2, 
+    ShieldCheck, 
+    Sparkles 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function InteractiveTypingSandbox() {
     const targetPassage = "Success in typing exams is not just about speed, it is a game of muscle memory, consistency, and maintaining a calm composure. Focus on accuracy first, and speed will follow naturally.";
@@ -84,23 +92,22 @@ export default function InteractiveTypingSandbox() {
             correctChars++;
         }
     }
-    const errors = totalChars - correctChars;
     const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
     const netWpm = timeElapsed > 0 ? Math.max(0, Math.round(((correctChars / 5) / timeElapsed) * 60)) : 0;
 
     // Render characters with color highlighting
     const renderPassageChars = () => {
         return targetPassage.split("").map((char, index) => {
-            let className = "text-slate-400"; // default untyped
+            let className = "text-slate-600"; // default untyped (subtle in dark terminal)
             if (index < typedText.length) {
                 className = typedText[index] === char 
-                    ? "text-emerald-500 bg-emerald-500/10 font-bold" 
-                    : "text-rose-500 bg-rose-500/10 font-bold underline";
+                    ? "text-emerald-400 bg-emerald-950/40 rounded-sm px-[1px] font-semibold" 
+                    : "text-rose-400 bg-rose-950/40 rounded-sm px-[1px] font-semibold underline decoration-rose-500 decoration-2";
             } else if (index === typedText.length && isStarted && !isFinished) {
-                className = "text-primary border-l-2 border-primary animate-pulse font-bold bg-primary/10";
+                className = "text-white bg-primary/30 border-b-2 border-primary animate-pulse font-semibold";
             }
             return (
-                <span key={index} className={`${className} transition-colors duration-150 font-mono text-[15px] sm:text-[17px] leading-relaxed`}>
+                <span key={index} className={`${className} transition-colors duration-150 font-mono text-[15px] sm:text-[18px] leading-relaxed`}>
                     {char}
                 </span>
             );
@@ -109,113 +116,122 @@ export default function InteractiveTypingSandbox() {
 
     return (
         <section id="typing-exam" className="py-24 bg-slate-950 text-white relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px] pointer-events-none" />
+            {/* High-tech radial background glows */}
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[130px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[650px] h-[650px] bg-emerald-900/10 rounded-full blur-[140px] pointer-events-none" />
 
             <div className="container mx-auto px-6 lg:px-12 relative z-10">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/95 text-xs font-black uppercase tracking-[0.2em] backdrop-blur-md">
-                        <Flame className="w-4 h-4 text-amber-500 animate-bounce" />
-                        National Typing Assessment Standard
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/90 text-xs font-black uppercase tracking-[0.25em] backdrop-blur-md">
+                        <Flame className="w-4 h-4 text-emerald-400 animate-pulse" />
+                        National Assessment Standards
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-none">
-                        Master Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 italic">Typing Engine</span>
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-none">
+                        Master Your <span className="text-gradient italic">Typing Engine</span>
                     </h2>
-                    <p className="text-slate-400 font-medium text-lg max-w-2xl mx-auto">
-                        Practice with government-standard formats, select multiple layouts, and assess your performance instantly with scientific diagnostics.
+                    <p className="text-slate-400 font-bold text-lg max-w-2xl mx-auto leading-relaxed">
+                        Assess shorthand speed, error mapping, and key accuracy using our government-standard test simulation tools.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
-                    {/* Left Column: Info & Specs */}
-                    <div className="lg:col-span-5 flex flex-col justify-between space-y-8">
-                        <div className="space-y-6">
-                            <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                                Prepare for <span className="text-primary">Government Certifications</span>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    {/* Left Column: Details & Layout Selector */}
+                    <div className="lg:col-span-5 flex flex-col justify-center space-y-8 h-full">
+                        <div className="space-y-4">
+                            <h3 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                                Live Diagnostics & <span className="text-primary">Exam Simulations</span>
                             </h3>
                             <p className="text-slate-400 font-medium leading-relaxed text-sm">
-                                NGIT is the leading portal for mock typing tests adhering strictly to national guidelines. Gain a competitive edge with live error reporting and real examination simulations.
+                                Track accuracy calculations, net words per minute (WPM), and key omissions in real-time. Practice for official typing formats with custom Inscript and QWERTY templates.
                             </p>
                         </div>
 
-                        {/* Language Selector Preview */}
-                        <div className="space-y-4">
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-500">Supported Standards</span>
+                        {/* Language & Layout Selector */}
+                        <div className="space-y-3">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                                Select Layout Mode
+                            </span>
                             <div className="flex gap-4">
                                 <button 
                                     onClick={() => setSelectedLanguage("English")}
-                                    className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-start ${selectedLanguage === "English" ? "border-primary bg-primary/5 text-white" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10"}`}
+                                    className={`flex-1 p-4 rounded-2xl border transition-all duration-300 flex flex-col items-start text-left ${selectedLanguage === "English" ? "border-primary bg-primary/10 text-white shadow-[0_0_20px_rgba(16,185,129,0.15)]" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
                                 >
-                                    <span className="text-lg font-black">English</span>
-                                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mt-1">Standard QWERTY Layout</span>
+                                    <span className="text-base font-black">English</span>
+                                    <span className="text-[9px] uppercase font-bold tracking-widest text-slate-500 mt-1">QWERTY Layout</span>
                                 </button>
                                 <button 
                                     onClick={() => setSelectedLanguage("Hindi")}
-                                    className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-start ${selectedLanguage === "Hindi" ? "border-primary bg-primary/5 text-white" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10"}`}
+                                    className={`flex-1 p-4 rounded-2xl border transition-all duration-300 flex flex-col items-start text-left ${selectedLanguage === "Hindi" ? "border-primary bg-primary/10 text-white shadow-[0_0_20px_rgba(16,185,129,0.15)]" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
                                 >
-                                    <span className="text-lg font-black">Hindi</span>
-                                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mt-1">Mangal Inscript Layout</span>
+                                    <span className="text-base font-black">Hindi</span>
+                                    <span className="text-[9px] uppercase font-bold tracking-widest text-slate-500 mt-1">Inscript Layout</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Exam Badges */}
-                        <div className="space-y-4">
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-500">Official Exam Modules</span>
+                        {/* Badges */}
+                        <div className="space-y-3">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Official Syllabi Modules</span>
                             <div className="grid grid-cols-2 gap-3 text-xs">
-                                <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                    <span className="font-bold text-slate-300">SSC CHSL/CGL</span>
+                                <div className="p-3 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-2.5 hover:bg-white/[0.08] transition-colors">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                                    <span className="font-bold text-slate-300">SSC CHSL / CGL</span>
                                 </div>
-                                <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                    <span className="font-bold text-slate-300">UPSSSC Junior Assistant</span>
+                                <div className="p-3 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-2.5 hover:bg-white/[0.08] transition-colors">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                                    <span className="font-bold text-slate-300">UPSSSC Junior Asst</span>
                                 </div>
-                                <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                                <div className="p-3 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-2.5 hover:bg-white/[0.08] transition-colors">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                                     <span className="font-bold text-slate-300">Railway NTPC</span>
                                 </div>
-                                <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                    <span className="font-bold text-slate-300">State Police Exams</span>
+                                <div className="p-3 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-2.5 hover:bg-white/[0.08] transition-colors">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                                    <span className="font-bold text-slate-300">High Court Exams</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Live Sandbox Widget */}
-                    <div className="lg:col-span-7">
-                        <div className="bg-slate-900 border border-white/10 rounded-[2.5rem] p-6 sm:p-8 flex flex-col h-full justify-between shadow-2xl relative overflow-hidden">
-                            {/* Dashboard HUD */}
+                    {/* Right Column: Premium Dark Dashboard Widget */}
+                    <div className="lg:col-span-7 h-full flex flex-col justify-center">
+                        <div className="bg-slate-900/90 border border-white/10 rounded-[2.5rem] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-md relative overflow-hidden">
+                            {/* HUD Stats Dashboard */}
                             <div className="grid grid-cols-3 gap-4 pb-6 border-b border-white/5 mb-6 text-center">
-                                <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
-                                    <div className="flex items-center justify-center gap-1.5 text-slate-400 mb-1">
-                                        <Timer className="w-4 h-4 text-primary" />
-                                        <span className="text-[10px] font-black uppercase tracking-wider">Time</span>
+                                <div className="bg-slate-950/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center transition-all hover:border-slate-800">
+                                    <div className="flex items-center gap-1.5 text-slate-500 mb-1">
+                                        <Timer className="w-3.5 h-3.5 text-primary" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">Time</span>
                                     </div>
-                                    <span className="text-xl font-bold font-mono text-white">{timeElapsed}s</span>
+                                    <span className="text-2xl font-bold font-mono text-white">{timeElapsed}s</span>
                                 </div>
-                                <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
-                                    <div className="flex items-center justify-center gap-1.5 text-slate-400 mb-1">
-                                        <Flame className="w-4 h-4 text-amber-400" />
-                                        <span className="text-[10px] font-black uppercase tracking-wider">Net WPM</span>
+                                
+                                <div className="bg-slate-950/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center transition-all hover:border-slate-800">
+                                    <div className="flex items-center gap-1.5 text-slate-500 mb-1">
+                                        <Flame className="w-3.5 h-3.5 text-amber-500" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">Net WPM</span>
                                     </div>
-                                    <span className="text-xl font-bold font-mono text-emerald-400">{netWpm}</span>
+                                    <span className="text-2xl font-bold font-mono text-emerald-400">{netWpm}</span>
                                 </div>
-                                <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
-                                    <div className="flex items-center justify-center gap-1.5 text-slate-400 mb-1">
-                                        <Target className="w-4 h-4 text-sky-400" />
-                                        <span className="text-[10px] font-black uppercase tracking-wider">Accuracy</span>
+
+                                <div className="bg-slate-950/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center transition-all hover:border-slate-800">
+                                    <div className="flex items-center gap-1.5 text-slate-500 mb-1">
+                                        <Target className="w-3.5 h-3.5 text-sky-400" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">Accuracy</span>
                                     </div>
-                                    <span className={`text-xl font-bold font-mono ${accuracy >= 95 ? "text-emerald-400" : accuracy >= 85 ? "text-amber-400" : "text-rose-400"}`}>{accuracy}%</span>
+                                    <span className={`text-2xl font-bold font-mono ${accuracy >= 95 ? "text-emerald-400" : accuracy >= 85 ? "text-amber-400" : "text-rose-400"}`}>
+                                        {accuracy}%
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Live Text Viewer */}
-                            <div className="bg-slate-950 border border-white/10 rounded-2xl p-5 mb-6 min-h-[120px] select-none text-left relative">
-                                <div className="absolute top-2 right-2 text-[8px] uppercase tracking-widest text-slate-600 font-black">Reference Passage</div>
+                            {/* Reference Text (Terminal Frame) */}
+                            <div className="bg-slate-950 border border-white/5 rounded-2xl p-6 mb-6 min-h-[140px] select-none text-left relative overflow-hidden">
+                                <div className="absolute top-2 right-3 text-[8px] uppercase tracking-widest text-slate-700 font-black">
+                                    Assess Box View
+                                </div>
                                 <div className="pt-2">{renderPassageChars()}</div>
                             </div>
 
@@ -225,30 +241,33 @@ export default function InteractiveTypingSandbox() {
                                     ref={inputRef}
                                     value={typedText}
                                     onChange={handleInputChange}
-                                    placeholder="Click here and start typing to launch the engine..."
-                                    className="w-full bg-slate-950/80 border-2 border-white/10 focus:border-primary rounded-2xl p-4 min-h-[100px] text-white text-sm font-medium outline-none resize-none transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-primary/5"
+                                    placeholder="Focus inside and begin typing to start key assess engine..."
+                                    className="w-full bg-slate-950/80 border-2 border-white/5 focus:border-primary rounded-2xl p-4 min-h-[120px] text-white text-sm font-medium outline-none resize-none transition-all placeholder:text-slate-700 focus:ring-4 focus:ring-primary/5 leading-relaxed"
                                     disabled={isFinished}
                                 />
                                 {isFinished && (
-                                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center space-y-2 border border-white/10">
-                                        <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-                                        <span className="text-sm font-bold text-white">Assessment Completed!</span>
+                                    <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center space-y-3 border border-white/10 animate-fade-in">
+                                        <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                                        <div className="text-center">
+                                            <p className="text-base font-extrabold text-white">Assessment Completed!</p>
+                                            <p className="text-xs text-slate-400 mt-1">Accuracy: {accuracy}% | Speed: {netWpm} WPM</p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Control Actions */}
+                            {/* Control Buttons */}
                             <div className="flex flex-col sm:flex-row items-center gap-4">
                                 <Button 
                                     onClick={handleReset} 
                                     variant="outline"
-                                    className="h-14 px-6 rounded-xl border-white/10 text-white bg-white/5 hover:bg-white/10 transition-all w-full sm:w-auto font-black uppercase text-xs tracking-widest flex items-center gap-2 justify-center"
+                                    className="h-14 px-6 rounded-2xl border-white/10 text-white bg-white/5 hover:bg-white/10 transition-all w-full sm:w-auto font-black uppercase text-xs tracking-widest flex items-center gap-2 justify-center"
                                 >
                                     <RefreshCw className="w-4 h-4" />
                                     Reset Test
                                 </Button>
                                 <Link href="/typing" className="w-full sm:flex-1">
-                                    <Button className="h-14 rounded-xl bg-white text-slate-900 font-black hover:bg-slate-100 transition-all w-full text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-white/5">
+                                    <Button className="h-14 rounded-2xl bg-white text-slate-950 font-black hover:bg-slate-100 transition-all w-full text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-white/5 border-none">
                                         <Keyboard className="w-4 h-4" />
                                         Launch Full Examination Suite
                                     </Button>

@@ -84,7 +84,7 @@ export default function HeroSlider() {
     }
 
     return (
-        <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[85vh] lg:h-[90vh] min-h-[400px] overflow-hidden bg-slate-950">
+        <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[80vh] lg:h-[85vh] min-h-[420px] overflow-hidden bg-slate-950">
             {/* Slides */}
             {slides.map((slide, index) => (
                 <div
@@ -97,50 +97,51 @@ export default function HeroSlider() {
                     {/* Background */}
                     {slide.imageUrl ? (
                         <div
-                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform [transition-duration:10000ms] ease-linear"
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform [transition-duration:10000ms] ease-out"
                             style={{ 
                                 backgroundImage: `url(${slide.imageUrl})`,
-                                transform: index === currentSlide ? 'scale(1.1)' : 'scale(1)'
+                                transform: index === currentSlide ? 'scale(1.05)' : 'scale(1)'
                             }}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
                         </div>
                     ) : (
                         <div className={cn("absolute inset-0 bg-gradient-to-br", slide.bgColor || "from-primary via-primary to-emerald-950")}>
-                            <div className="absolute inset-0 bg-black/20" />
+                            <div className="absolute inset-0 bg-black/30" />
                         </div>
                     )}
 
                     {/* Content */}
                     <div className="relative h-full flex items-center">
                         <div className="container-custom">
-                            <div className="max-w-4xl animate-slide-up">
+                            <div className="max-w-4xl space-y-6 md:space-y-8">
                                 {slide.subtitle && (
-                                    <p className="text-accent font-bold text-base md:text-lg uppercase tracking-widest mb-6 inline-block px-4 py-2 bg-accent/10 rounded-lg backdrop-blur-sm">
+                                    <p className="text-emerald-400 font-black text-xs md:text-sm uppercase tracking-[0.2em] mb-4 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full backdrop-blur-sm">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                         {slide.subtitle}
                                     </p>
                                 )}
-                                <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold text-white mb-6 leading-[1.1] tracking-tight">
+                                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
                                     {slide.title}
                                 </h1>
                                 {slide.description && (
-                                    <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-3xl leading-relaxed font-medium">
+                                    <p className="text-base sm:text-lg md:text-xl text-slate-200 max-w-2xl leading-relaxed font-medium">
                                         {slide.description}
                                     </p>
                                 )}
-                                <div className="flex flex-col sm:flex-row gap-5">
+                                <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                     {slide.cta1Text && slide.cta1Link && (
                                         <Link href={slide.cta1Link}>
-                                            <Button className="bg-gradient-to-r from-accent via-accent-dark to-orange-600 hover:from-orange-600 hover:via-accent-dark hover:to-accent text-white font-bold text-lg px-10 py-7 shadow-2xl hover:shadow-accent/50 transition-all duration-300 w-full sm:w-auto">
-                                                <FileDown className="w-6 h-6 mr-3" />
+                                            <Button className="bg-primary hover:bg-primary-dark text-white font-bold text-sm px-8 py-6 rounded-xl transition-all duration-300 w-full sm:w-auto shadow-lg shadow-primary/25 flex items-center justify-center gap-2">
+                                                <FileDown className="w-5 h-5" />
                                                 {slide.cta1Text}
                                             </Button>
                                         </Link>
                                     )}
                                     {slide.cta2Text && slide.cta2Link && (
                                         <Link href={slide.cta2Link}>
-                                            <Button variant="outline" className="w-full sm:w-auto bg-white/15 backdrop-blur-md border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold text-lg px-10 py-7 transition-all duration-300">
-                                                <Calendar className="w-6 h-6 mr-3" />
+                                            <Button variant="outline" className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-slate-900 font-bold text-sm px-8 py-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+                                                <Calendar className="w-5 h-5" />
                                                 {slide.cta2Text}
                                             </Button>
                                         </Link>
@@ -157,33 +158,33 @@ export default function HeroSlider() {
                 <>
                     <button
                         onClick={prevSlide}
-                        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-all group"
+                        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-primary hover:border-primary rounded-full flex items-center justify-center transition-all group shadow-md"
                         aria-label="Previous slide"
                     >
-                        <ChevronLeft className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                        <ChevronLeft className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                     </button>
                     <button
                         onClick={nextSlide}
-                        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-all group"
+                        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-primary hover:border-primary rounded-full flex items-center justify-center transition-all group shadow-md"
                         aria-label="Next slide"
                     >
-                        <ChevronRight className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                        <ChevronRight className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                     </button>
                 </>
             )}
 
             {/* Slide Indicators */}
             {slides.length > 1 && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
                     {slides.map((_, index) => (
                         <button
                             key={index}
                             onClick={() => goToSlide(index)}
                             className={cn(
-                                "transition-all duration-300",
+                                "h-2 transition-all duration-300 rounded-full",
                                 index === currentSlide
-                                    ? "w-12 h-2 bg-accent rounded-full"
-                                    : "w-2 h-2 bg-white/50 hover:bg-white/75 rounded-full"
+                                    ? "w-8 bg-primary"
+                                    : "w-2 bg-white/40 hover:bg-white/60"
                             )}
                             aria-label={`Go to slide ${index + 1}`}
                         />
