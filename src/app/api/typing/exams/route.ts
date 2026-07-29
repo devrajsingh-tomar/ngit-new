@@ -60,6 +60,14 @@ export async function GET(req: NextRequest) {
     const exams = await TypingExam.find(query)
     .populate("passageId")
     .populate({ path: "bookId", strictPopulate: false })
+    .populate({
+      path: "govExamId",
+      populate: {
+        path: "rulePresetId",
+        model: "TypingRulePreset"
+      },
+      strictPopulate: false
+    })
     .populate({ path: "rulePresetId", strictPopulate: false })
     .sort({ createdAt: -1 });
 

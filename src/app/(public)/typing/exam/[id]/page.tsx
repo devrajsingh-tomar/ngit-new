@@ -37,12 +37,14 @@ export default function TypingExamPage() {
   }, [initialLang, initialLayout]);
 
   const engineConfig = React.useMemo(() => {
-    // If a rule preset exists, it overrides the individual exam settings
-    const preset = exam?.rulePresetId;
+    // If a rule preset exists, it overrides the individual exam settings.
+    // Otherwise, if the exam belongs to a GovExam, inherit from the GovExam's rule preset!
+    const preset = exam?.rulePresetId || exam?.govExamId?.rulePresetId;
+    const duration = exam?.duration || exam?.govExamId?.defaultDuration || 10;
     
     return {
       title: exam?.title || "",
-      duration: exam?.duration || 10,
+      duration: duration,
       backspaceMode: preset?.backspaceMode || exam?.backspaceMode || "full",
       highlightMode: preset?.highlightMode || exam?.highlightMode || "word",
       wordLimit: preset?.wordLimit || exam?.wordLimit || 0,
@@ -192,7 +194,7 @@ export default function TypingExamPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase">Test Duration</p>
-                        <p className="text-xl font-black">{exam.duration} Minutes</p>
+                        <p className="text-xl font-black">{engineConfig.duration} Minutes</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -326,7 +328,7 @@ export default function TypingExamPage() {
             <p>1. The candidates will be provided with the master text passage of about <span className="font-bold">{exam.passageId?.wordCount || 500} words</span> in <span className="font-bold">{exam.language}</span>.</p>
             <p>2. The typing can be of either word based typing or key strokes based typing.</p>
             <p>3. For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.</p>
-            <p>4. Time duration of <span className="font-bold">{exam.language}</span> typing test is <span className="font-bold">{(exam.duration || 10).toString().padStart(2, '0')}:00 minute</span>.</p>
+            <p>4. Time duration of <span className="font-bold">{exam.language}</span> typing test is <span className="font-bold">{(engineConfig.duration || 10).toString().padStart(2, '0')}:00 minute</span>.</p>
             <p>5. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination. When the timer reaches zero, the examination will end by itself with typed passage, you are not required to end or submit your test.</p>
             <p>6. <span className="font-bold">Candidates are not required to repeat the passage</span>, if he/she has completed the passage once and has time in his/her disposal, however they are allowed to revise and correct their mistakes and inaccuracies, if any, during the prescribed time</p>
             <p>7. After every Punctuation mark, only One space is to be inserted, e.g. after comma, full stop, mark of interrogation etc. However, candidates are advised to follow the Question paper scrupulously in this regard.</p>
