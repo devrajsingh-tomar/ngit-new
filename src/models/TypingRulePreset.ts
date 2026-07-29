@@ -2,6 +2,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 
 export interface ITypingRulePreset {
   name: string;
+  govExamId?: mongoose.Types.ObjectId; // References GovExam
   
   // Backspace Rules
   backspaceMode: "full" | "word" | "disabled";
@@ -44,6 +45,7 @@ export interface ITypingRulePreset {
 const TypingRulePresetSchema = new Schema<ITypingRulePreset>(
   {
     name: { type: String, required: true, unique: true },
+    govExamId: { type: Schema.Types.ObjectId, ref: "GovExam" },
     
     backspaceMode: { type: String, enum: ["full", "word", "disabled"], default: "full" },
     highlightMode: { type: String, enum: ["word", "word_error", "letter", "none"], default: "word" },

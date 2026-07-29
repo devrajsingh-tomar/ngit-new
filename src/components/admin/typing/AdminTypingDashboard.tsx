@@ -650,29 +650,81 @@ export default function AdminTypingDashboard() {
               </div>
            </TabsContent>
            <TabsContent value="rule-presets" className="mt-0">
-              <div className="mb-4 flex justify-end">
-                 <Button onClick={() => setShowRulePresetModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Rule Preset</Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                 {rulePresets.map(preset => (
-                   <div key={preset._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
-                      <div className="flex justify-between items-start mb-3">
-                         <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-5 h-5"/></div>
-                         <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 group-hover:text-rose-600 transition-colors"><Trash2 className="w-4 h-4"/></button>
+               <div className="mb-6 flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                  <div>
+                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Rule Presets</h2>
+                     <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Define exam rules and tie them to Gov Exams</p>
+                  </div>
+                  <Button onClick={() => setShowRulePresetModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Rule Preset</Button>
+               </div>
+
+               <div className="space-y-6">
+                  {/* Gov Exam Grouped Presets */}
+                  {govExams.map(gov => {
+                    const associatedPresets = rulePresets.filter(preset => {
+                      const gid = preset.govExamId?._id || preset.govExamId;
+                      return gid?.toString() === gov._id?.toString();
+                    });
+                    
+                    if (associatedPresets.length === 0) return null;
+
+                    return (
+                      <div key={gov._id} className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-200/80">
+                          {gov.logo && <img src={gov.logo} alt="" className="w-5 h-5 rounded-md object-contain bg-white" />}
+                          <h3 className="font-black text-slate-800 text-xs uppercase tracking-wider">{gov.title} Presets</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
+                           {associatedPresets.map(preset => (
+                             <div key={preset._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
+                                <div className="flex justify-between items-start mb-2">
+                                   <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
+                                   <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 group-hover:text-rose-600 transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
+                                </div>
+                                <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
+                                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                   <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
+                                   <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
+                                   {preset.disableCopyPaste && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-bold uppercase">No Copy</span>}
+                                </div>
+                             </div>
+                           ))}
+                        </div>
                       </div>
-                      <h3 className="font-bold text-slate-900 text-lg mb-1">{preset.name}</h3>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                         <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
-                         <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
-                         {preset.disableCopyPaste && <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded text-[10px] font-bold uppercase">No Copy</span>}
+                    );
+                  })}
+
+                  {/* Unassigned / General Presets */}
+                  {rulePresets.filter(preset => !preset.govExamId).length > 0 && (
+                    <div className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+                      <div className="flex items-center gap-2 pb-2 border-b border-slate-200/80">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                        <h3 className="font-black text-slate-800 text-xs uppercase tracking-wider">General / Global Presets</h3>
                       </div>
-                   </div>
-                 ))}
-              </div>
-              {rulePresets.length === 0 && (
-                <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">No rule presets defined. Create one to standardize exam patterns.</div>
-              )}
-           </TabsContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
+                         {rulePresets.filter(preset => !preset.govExamId).map(preset => (
+                           <div key={preset._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
+                              <div className="flex justify-between items-start mb-2">
+                                 <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
+                                 <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 group-hover:text-rose-600 transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
+                              </div>
+                              <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
+                              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                 <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
+                                 <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
+                                 {preset.disableCopyPaste && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-bold uppercase">No Copy</span>}
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {rulePresets.length === 0 && (
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">No rule presets defined. Create one to standardize exam patterns.</div>
+                  )}
+               </div>
+            </TabsContent>
 
           {/* ... Add Passages Tab Content ... */}
           <TabsContent value="passages" className="mt-0">
@@ -896,13 +948,17 @@ export default function AdminTypingDashboard() {
                       <Button onClick={() => setShowCategoryModal(true)} variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest"><Plus className="w-3 h-3 mr-1"/> Add</Button>
                    </div>
                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
-                      {categories.length > 0 ? categories.map(c => (
-                         <div key={c._id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg group">
-                            <span className="text-xs font-semibold text-slate-700">{c.name}</span>
-                            <button onClick={() => handleDeleteCategory(c._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-3.5 h-3.5"/></button>
-                         </div>
-                      )) : <p className="text-[10px] text-slate-400 italic">No categories.</p>}
-                   </div>
+                       {categories.length > 0 ? categories.map(c => {
+                          const parent = categories.find(p => p._id === c.parentCategoryId?._id || p._id === c.parentCategoryId);
+                          const displayName = parent ? `${parent.name} ➔ ${c.name}` : c.name;
+                          return (
+                             <div key={c._id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg group">
+                                <span className="text-xs font-semibold text-slate-700">{displayName}</span>
+                                <button onClick={() => handleDeleteCategory(c._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-3.5 h-3.5"/></button>
+                             </div>
+                          );
+                       }) : <p className="text-[10px] text-slate-400 italic">No categories.</p>}
+                    </div>
                 </div>
              </div>
            </TabsContent>
@@ -992,7 +1048,11 @@ export default function AdminTypingDashboard() {
                        >
                           <option value="">Select...</option>
                           <option value="SPECIAL">Special Topic / Current Affairs</option>
-                          {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                          {categories.map(c => {
+                             const parent = categories.find(p => p._id === c.parentCategoryId?._id || p._id === c.parentCategoryId);
+                             const displayName = parent ? `${parent.name} ➔ ${c.name}` : c.name;
+                             return <option key={c._id} value={c.name}>{displayName}</option>;
+                           })}
                           {govExams.map(g => <option key={g._id} value={g.title}>{g.title}</option>)}
                        </select>
                      </div>
@@ -1349,6 +1409,13 @@ export default function AdminTypingDashboard() {
                    <label className="text-xs font-bold text-slate-600 uppercase">Category Name</label>
                    <input name="name" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                 </div>
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Parent Category (Optional)</label>
+                   <select name="parentCategoryId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none bg-white">
+                      <option value="">None (Top-level Category)</option>
+                      {categories.filter(c => !c.parentCategoryId).map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                   </select>
+                </div>
                 <div className="pt-4 flex justify-end gap-3">
                    <Button type="button" variant="outline" onClick={() => setShowCategoryModal(false)}>Cancel</Button>
                    <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Category</Button>
@@ -1478,39 +1545,47 @@ export default function AdminTypingDashboard() {
                 <button onClick={() => setShowRulePresetModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
              <form onSubmit={handleAddRulePreset} className="p-6 space-y-5">
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Preset Name</label>
-                   <input name="name" required placeholder="e.g. SSC Pattern, High Court Pattern" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-600 uppercase">Backspace</label>
-                    <select name="backspaceMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="enabled">Enabled</option>
-                       <option value="disabled">Disabled</option>
-                       <option value="one-word">One Word Only</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-600 uppercase">Highlighting</label>
-                    <select name="highlightMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="enabled">Enabled</option>
-                       <option value="disabled">Disabled</option>
-                       <option value="current">Current Only</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <label className="text-xs font-bold text-slate-600 uppercase">Exam Calculation Mode</label>
-                    <select name="examMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="General">General Practice (Words)</option>
-                       <option value="SSC">SSC Standard (Keys/5)</option>
-                       <option value="UPSSSC">UPSSSC / Junior Assistant (Official Formula)</option>
-                       <option value="AHC">AHC / Allahabad High Court (Official Formula)</option>
-                       <option value="UP_POLICE">UP Police (ASI / Computer Operator - 1 Word = 1 Word)</option>
-                       <option value="CPCT">CPCT Standard</option>
-                       <option value="Court">High Court Standard</option>
-                    </select>
-                  </div>
+                   <div className="space-y-1.5 col-span-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Preset Name</label>
+                      <input name="name" required placeholder="e.g. SSC Pattern, High Court Pattern" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                   </div>
+                   <div className="space-y-1.5 col-span-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Associated Gov Exam (Optional)</label>
+                      <select name="govExamId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none bg-white">
+                         <option value="">General / Global Preset (Unassigned)</option>
+                         {govExams.map(gov => <option key={gov._id} value={gov._id}>{gov.title}</option>)}
+                      </select>
+                   </div>
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Backspace Mode</label>
+                     <select name="backspaceMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="full">Full Access</option>
+                        <option value="word">Word Only</option>
+                        <option value="disabled">Disabled</option>
+                     </select>
+                   </div>
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Highlighting Mode</label>
+                     <select name="highlightMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="word">Active Word</option>
+                        <option value="word_error">Word with Error Tracking</option>
+                        <option value="letter">Character by Character</option>
+                        <option value="none">None (Blind Typing)</option>
+                     </select>
+                   </div>
+                   <div className="space-y-1.5 col-span-2">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Exam Calculation Mode</label>
+                     <select name="examMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="General">General Practice (Words)</option>
+                        <option value="SSC">SSC Standard (Keys/5)</option>
+                        <option value="UPSSSC">UPSSSC / Junior Assistant (Official Formula)</option>
+                        <option value="AHC">AHC / Allahabad High Court (Official Formula)</option>
+                        <option value="UP_POLICE">UP Police (ASI / Computer Operator - 1 Word = 1 Word)</option>
+                        <option value="CPCT">CPCT Standard</option>
+                        <option value="Court">High Court Standard</option>
+                     </select>
+                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <input type="checkbox" name="disableCopyPaste" id="disableCopyPaste" defaultChecked className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />

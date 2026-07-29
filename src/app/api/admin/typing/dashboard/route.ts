@@ -99,13 +99,13 @@ export async function GET() {
         .populate({ path: "govExamId", strictPopulate: false })
         .populate({ path: "rulePresetId", strictPopulate: false })
         .sort({ createdAt: -1 }),
-      TypingCategory.find().sort({ name: 1 }),
+      TypingCategory.find().populate("parentCategoryId").sort({ name: 1 }),
       WordSet.find().sort({ category: 1 }),
       PracticeEssay.find().sort({ topic: 1 }),
       CurrentPassage.find().sort({ date: -1 }),
       TypingBook.find().sort({ name: 1 }),
       GovExam.find().sort({ title: 1 }),
-      TypingRulePreset.find().sort({ name: 1 }),
+      TypingRulePreset.find().populate("govExamId").sort({ name: 1 }),
       TypingTopic.find().sort({ category: 1, name: 1 }),
       TypingSetting.find().sort({ key: 1 })
     ]);

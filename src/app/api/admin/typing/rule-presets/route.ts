@@ -14,6 +14,10 @@ export async function POST(req: Request) {
     await connectDB();
     const data = await req.json();
 
+    if (data.govExamId === "") {
+      data.govExamId = null;
+    }
+
     const preset = await TypingRulePreset.create(data);
     return NextResponse.json(preset);
   } catch (error: any) {
@@ -29,7 +33,7 @@ export async function GET() {
     }
 
     await connectDB();
-    const presets = await TypingRulePreset.find().sort({ name: 1 });
+    const presets = await TypingRulePreset.find().populate("govExamId").sort({ name: 1 });
     return NextResponse.json(presets);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });

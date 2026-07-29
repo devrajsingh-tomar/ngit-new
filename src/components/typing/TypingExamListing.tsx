@@ -130,20 +130,30 @@ export default function TypingExamListing() {
 
           {/* Category Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-0.5 max-w-full scrollbar-none">
-            {["All", ...categories.map(c => c.name)].map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={cn(
-                  "whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-black transition-all border",
-                  selectedCategory === cat
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
-                )}
-              >
-                {cat}
-              </button>
-            ))}
+            {["All", ...categories.map(c => {
+              const parent = categories.find(p => p._id === c.parentCategoryId?._id || p._id === c.parentCategoryId);
+              return {
+                value: c.name,
+                label: parent ? `${parent.name} ➔ ${c.name}` : c.name
+              };
+            })].map(cat => {
+              const val = typeof cat === "string" ? cat : cat.value;
+              const lbl = typeof cat === "string" ? cat : cat.label;
+              return (
+                <button
+                  key={val}
+                  onClick={() => setSelectedCategory(val)}
+                  className={cn(
+                    "whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-black transition-all border",
+                    selectedCategory === val
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                  )}
+                >
+                  {lbl}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
