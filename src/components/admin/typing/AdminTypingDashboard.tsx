@@ -1176,7 +1176,10 @@ export default function AdminTypingDashboard() {
                          <div className="space-y-1.5">
                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Backspace Mode</label>
                             <select name="backspaceMode" defaultValue={editingExam?.backspaceMode || "full"} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                               <option value="full">Full Access</option><option value="word">Word Only</option><option value="disabled">Disabled</option>
+                               <option value="full">Full Access</option>
+                               <option value="word">Word Only</option>
+                               <option value="upssssc">UPSSSC Pattern (Current + 1 Prev Word)</option>
+                               <option value="disabled">Disabled</option>
                             </select>
                          </div>
                          <div className="space-y-1.5">
@@ -1612,6 +1615,7 @@ export default function AdminTypingDashboard() {
                      <select name="backspaceMode" defaultValue={editingRulePreset?.backspaceMode || "full"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="full">Full Access</option>
                         <option value="word">Word Only</option>
+                        <option value="upssssc">UPSSSC Pattern (Current + 1 Prev Word)</option>
                         <option value="disabled">Disabled</option>
                      </select>
                    </div>

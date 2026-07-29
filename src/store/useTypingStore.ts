@@ -3,7 +3,7 @@ import { create } from 'zustand';
 interface TypingSettings {
   language: string;
   duration: number; // minutes
-  backspaceMode: 'full' | 'word' | 'disabled';
+  backspaceMode: 'full' | 'word' | 'disabled' | 'upssssc';
   highlightMode: 'word' | 'word_error' | 'letter' | 'none';
   autoScroll: boolean;
   wordLimit: number;

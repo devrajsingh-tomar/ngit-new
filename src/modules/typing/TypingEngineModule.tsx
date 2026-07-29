@@ -18,7 +18,7 @@ interface TypingEngineModuleProps {
   config: {
     title: string;
     duration: number;
-    backspaceMode?: 'full' | 'word' | 'disabled';
+    backspaceMode?: 'full' | 'word' | 'disabled' | 'upssssc';
     highlightMode?: 'word' | 'word_error' | 'letter' | 'none';
     wordLimit?: number;
     language?: string;

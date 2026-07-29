@@ -7,7 +7,7 @@ export interface ITypingExam {
   passageId: mongoose.Types.ObjectId;
   duration: number; // in minutes
   wordLimit: number;
-  backspaceMode: "full" | "word" | "disabled";
+  backspaceMode: "full" | "word" | "disabled" | "upssssc";
   highlightMode: "word" | "word_error" | "letter" | "none";
   autoScroll: boolean;
   showScrollbar: boolean;
@@ -34,7 +34,7 @@ const TypingExamSchema = new Schema<ITypingExam>(
     passageId: { type: Schema.Types.ObjectId, ref: "TypingPassage", required: true },
     duration: { type: Number, required: true },
     wordLimit: { type: Number, default: 0 },
-    backspaceMode: { type: String, enum: ["full", "word", "disabled"], default: "full" },
+    backspaceMode: { type: String, enum: ["full", "word", "disabled", "upssssc"], default: "full" },
     highlightMode: { type: String, enum: ["word", "word_error", "letter", "none"], default: "word" },
     autoScroll: { type: Boolean, default: true },
     showScrollbar: { type: Boolean, default: true },

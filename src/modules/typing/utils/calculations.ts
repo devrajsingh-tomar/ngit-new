@@ -93,7 +93,13 @@ export const calculateMetrics = (
   }
 
   const grossWpm = Math.round(wordCountBase / timeMinutes);
-  const netWpm = Math.round((wordCountBase - errors) / timeMinutes);
+  let netWpm = Math.round((wordCountBase - errors) / timeMinutes);
+  if (isUPSSSC) {
+    // UPSSSC 5-Error Penalty Rule:
+    // First 5 errors are free. For every error beyond 5, deduct 5 words.
+    const penaltyWords = errors > 5 ? (errors - 5) * 5 : 0;
+    netWpm = Math.round((wordCountBase - penaltyWords) / timeMinutes);
+  }
 
   const accuracy = totalCharacters > 0 
     ? Math.max(0, Math.round(((totalCharacters - (errors * 5)) / totalCharacters) * 100)) 

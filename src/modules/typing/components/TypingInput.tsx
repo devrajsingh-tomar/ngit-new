@@ -39,6 +39,17 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
           return;
         }
       }
+      if (settings.backspaceMode === 'upssssc') {
+        const typedWords = typedText.split(' ');
+        if (typedWords.length >= 3) {
+          const lockedWords = typedWords.slice(0, typedWords.length - 2);
+          const lockedText = lockedWords.join(' ') + ' ';
+          if (typedText.length <= lockedText.length) {
+            e.preventDefault();
+            return;
+          }
+        }
+      }
       incrementBackspace();
     }
   };
@@ -69,6 +80,14 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
       if (settings.backspaceMode === 'word') {
         // Prevent deleting the space that committed the previous word
         if (typedText.endsWith(' ') && !val.endsWith(' ')) return;
+      }
+      if (settings.backspaceMode === 'upssssc') {
+        const typedWords = typedText.split(' ');
+        if (typedWords.length >= 3) {
+          const lockedWords = typedWords.slice(0, typedWords.length - 2);
+          const lockedText = lockedWords.join(' ') + ' ';
+          if (val.length < lockedText.length) return;
+        }
       }
     }
 
