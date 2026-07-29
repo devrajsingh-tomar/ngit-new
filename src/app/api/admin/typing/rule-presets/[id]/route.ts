@@ -19,3 +19,25 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const data = await req.json();
+
+    if (data.govExamId === "") {
+      data.govExamId = null;
+    }
+
+    const preset = await TypingRulePreset.findByIdAndUpdate(id, data, { new: true });
+    return NextResponse.json(preset);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}

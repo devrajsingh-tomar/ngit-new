@@ -53,6 +53,7 @@ export default function AdminTypingDashboard() {
   const [editingPassage, setEditingPassage] = useState<any>(null);
   const [editingGovExam, setEditingGovExam] = useState<any>(null);
   const [editingExam, setEditingExam] = useState<any>(null);
+  const [editingRulePreset, setEditingRulePreset] = useState<any>(null);
   const [adminLanguage, setAdminLanguage] = useState("English");
   const [adminLayout, setAdminLayout] = useState("Inscript");
   const [submitting, setSubmitting] = useState(false);
@@ -318,13 +319,36 @@ export default function AdminTypingDashboard() {
     e.preventDefault();
     setSubmitting(true);
     const data = Object.fromEntries(new FormData(e.currentTarget).entries());
-    await fetch("/api/admin/typing/rule-presets", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-    });
-    toast.success("Added!");
-    setShowRulePresetModal(false);
-    fetchData();
-    setSubmitting(false);
+    
+    // Explicitly parse disableCopyPaste checkbox
+    data.disableCopyPaste = (e.currentTarget.elements.namedItem("disableCopyPaste") as HTMLInputElement)?.checked;
+
+    try {
+      if (editingRulePreset) {
+        const res = await fetch(`/api/admin/typing/rule-presets/${editingRulePreset._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        toast.success("Updated!");
+      } else {
+        const res = await fetch("/api/admin/typing/rule-presets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        toast.success("Added!");
+      }
+      setShowRulePresetModal(false);
+      setEditingRulePreset(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error("Failed to save preset: " + err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
 
@@ -679,7 +703,18 @@ export default function AdminTypingDashboard() {
                              <div key={preset._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
                                 <div className="flex justify-between items-start mb-2">
                                    <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
-                                   <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 group-hover:text-rose-600 transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
+                                   <div className="flex items-center gap-1.5">
+                                     <button 
+                                       onClick={() => {
+                                         setEditingRulePreset(preset);
+                                         setShowRulePresetModal(true);
+                                       }} 
+                                       className="text-slate-300 hover:text-indigo-600 transition-colors p-1"
+                                     >
+                                       <Edit2 className="w-3.5 h-3.5"/>
+                                     </button>
+                                     <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 hover:text-rose-600 transition-colors p-1"><Trash2 className="w-3.5 h-3.5"/></button>
+                                   </div>
                                 </div>
                                 <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
                                 <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -706,7 +741,18 @@ export default function AdminTypingDashboard() {
                            <div key={preset._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
                               <div className="flex justify-between items-start mb-2">
                                  <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
-                                 <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 group-hover:text-rose-600 transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
+                                 <div className="flex items-center gap-1.5">
+                                   <button 
+                                     onClick={() => {
+                                       setEditingRulePreset(preset);
+                                       setShowRulePresetModal(true);
+                                     }} 
+                                     className="text-slate-300 hover:text-indigo-600 transition-colors p-1"
+                                   >
+                                     <Edit2 className="w-3.5 h-3.5"/>
+                                   </button>
+                                   <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 hover:text-rose-600 transition-colors p-1"><Trash2 className="w-3.5 h-3.5"/></button>
+                                 </div>
                               </div>
                               <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
                               <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -1541,25 +1587,29 @@ export default function AdminTypingDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900">Add Rule Preset</h2>
-                <button onClick={() => setShowRulePresetModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingRulePreset ? "Edit Rule Preset" : "Add Rule Preset"}</h2>
+                <button onClick={() => { setShowRulePresetModal(false); setEditingRulePreset(null); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
-             <form onSubmit={handleAddRulePreset} className="p-6 space-y-5">
+             <form 
+               key={editingRulePreset?._id || 'new-preset'}
+               onSubmit={handleAddRulePreset} 
+               className="p-6 space-y-5"
+             >
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1.5 col-span-2">
                       <label className="text-xs font-bold text-slate-600 uppercase">Preset Name</label>
-                      <input name="name" required placeholder="e.g. SSC Pattern, High Court Pattern" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                      <input name="name" defaultValue={editingRulePreset?.name} required placeholder="e.g. SSC Pattern, High Court Pattern" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                    </div>
                    <div className="space-y-1.5 col-span-2">
                       <label className="text-xs font-bold text-slate-600 uppercase">Associated Gov Exam (Optional)</label>
-                      <select name="govExamId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none bg-white">
+                      <select name="govExamId" defaultValue={editingRulePreset?.govExamId?._id || editingRulePreset?.govExamId || ""} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none bg-white">
                          <option value="">General / Global Preset (Unassigned)</option>
                          {govExams.map(gov => <option key={gov._id} value={gov._id}>{gov.title}</option>)}
                       </select>
                    </div>
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Backspace Mode</label>
-                     <select name="backspaceMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                     <select name="backspaceMode" defaultValue={editingRulePreset?.backspaceMode || "full"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="full">Full Access</option>
                         <option value="word">Word Only</option>
                         <option value="disabled">Disabled</option>
@@ -1567,7 +1617,7 @@ export default function AdminTypingDashboard() {
                    </div>
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Highlighting Mode</label>
-                     <select name="highlightMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                     <select name="highlightMode" defaultValue={editingRulePreset?.highlightMode || "word"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="word">Active Word</option>
                         <option value="word_error">Word with Error Tracking</option>
                         <option value="letter">Character by Character</option>
@@ -1576,7 +1626,7 @@ export default function AdminTypingDashboard() {
                    </div>
                    <div className="space-y-1.5 col-span-2">
                      <label className="text-xs font-bold text-slate-600 uppercase">Exam Calculation Mode</label>
-                     <select name="examMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                     <select name="examMode" defaultValue={editingRulePreset?.examMode || "General"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                         <option value="General">General Practice (Words)</option>
                         <option value="SSC">SSC Standard (Keys/5)</option>
                         <option value="UPSSSC">UPSSSC / Junior Assistant (Official Formula)</option>
@@ -1588,12 +1638,12 @@ export default function AdminTypingDashboard() {
                    </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <input type="checkbox" name="disableCopyPaste" id="disableCopyPaste" defaultChecked className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                    <input type="checkbox" name="disableCopyPaste" id="disableCopyPaste" defaultChecked={editingRulePreset ? editingRulePreset.disableCopyPaste : true} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
                     <label htmlFor="disableCopyPaste" className="text-sm font-semibold text-slate-700 cursor-pointer">Disable Copy / Paste / Right Click</label>
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowRulePresetModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Preset</Button>
+                   <Button type="button" variant="outline" onClick={() => { setShowRulePresetModal(false); setEditingRulePreset(null); }}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">{editingRulePreset ? "Save Changes" : "Create Preset"}</Button>
                 </div>
              </form>
           </div>
