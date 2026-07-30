@@ -1,0 +1,221 @@
+"use server";
+
+import connectDB from "@/lib/db";
+import User, { UserRole } from "@/models/User";
+import StudentProfile from "@/models/StudentProfile";
+import Enrollment from "@/models/Enrollment";
+import Invoice from "@/models/Invoice";
+import TypingResult from "@/models/TypingResult";
+import MockTestResult from "@/models/MockTestResult";
+import Course from "@/models/Course";
+import { revalidatePath } from "next/cache";
+
+// Search students globally (by name, email, phone, roll/id number)
+export async function searchStudentsAdmin(queryText: string) {
+  try {
+    await connectDB();
+    const cleanQuery = queryText.trim();
+    if (!cleanQuery) return { success: true, students: [] };
+
+    const regex = new RegExp(cleanQuery, "i");
+
+    // Search in User model first
+    const matchedUsers = await User.find({
+      role: UserRole.STUDENT,
+      $or: [
+        { name: regex },
+        { email: regex },
+        { mobile: regex }
+      ]
+    }).limit(20).lean();
+
+    const userIds = matchedUsers.map(u => u._id);
+
+    // Search in StudentProfile model
+    const matchedProfiles = await StudentProfile.find({
+      $or: [
+        { userId: { $in: userIds } },
+        { name: regex },
+        { localPhone: regex },
+        { permanentPhone: regex },
+        { idNo: regex },
+        { whatsappNo: regex }
+      ]
+    }).limit(20).populate("userId").lean();
+
+    // Map profiles
+    const mapped = matchedProfiles.map((p: any) => {
+      const u = p.userId || {};
+      return {
+        _id: p._id.toString(),
+        userId: u._id?.toString() || "",
+        name: p.name || u.name || "Unknown",
+        email: u.email || p.email || "",
+        phone: p.localPhone || u.mobile || "",
+        whatsapp: p.whatsappNo || "",
+        course: p.course || "",
+        status: p.status || "Pending",
+        idNo: p.idNo || "",
+        createdAt: p.createdAt
+      };
+    });
+
+    return { success: true, students: JSON.parse(JSON.stringify(mapped)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Fetch complete profile, attempts record, and billing info
+export async function getStudentFullDetailsAdmin(userId: string) {
+  try {
+    await connectDB();
+
+    const userObj = await User.findById(userId).lean();
+    if (!userObj) throw new Error("Student account not found");
+
+    const profileObj = await StudentProfile.findOne({ userId }).lean();
+    
+    // Fetch Enrollments and check duration status
+    const enrollments = await Enrollment.find({ userId })
+      .populate({ path: "courseId", model: "Course" })
+      .lean();
+
+    const now = new Date();
+    const mappedEnrollments = enrollments.map((e: any) => {
+      // Auto duration expiration calculation: 30 days
+      const enrolledDate = e.enrolledAt ? new Date(e.enrolledAt) : new Date();
+      const diffTime = Math.abs(now.getTime() - enrolledDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const isExpired = diffDays > 30;
+      const statusActive = e.isActive && !isExpired;
+
+      return {
+        ...e,
+        _id: e._id.toString(),
+        daysEnrolled: diffDays,
+        isExpired,
+        isActive: statusActive, // Overwritten dynamically if completed 30 days (1 month)
+        originalIsActive: e.isActive
+      };
+    });
+
+    // Fetch Invoices / Fees details
+    const invoices = await Invoice.find({ studentId: userId })
+      .populate({ path: "courseId", model: "Course" })
+      .lean();
+
+    // Fetch Typing attempts record
+    const typingResults = await TypingResult.find({ userId })
+      .populate("examId")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Fetch Mock Test / Quiz attempts record
+    const mockResults = await MockTestResult.find({ studentId: userId })
+      .populate({ path: "mockTestId", model: "Quiz" })
+      .sort({ attemptDate: -1 })
+      .lean();
+
+    return {
+      success: true,
+      student: JSON.parse(JSON.stringify({
+        user: userObj,
+        profile: profileObj,
+        enrollments: mappedEnrollments,
+        invoices,
+        typingResults,
+        mockResults
+      }))
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Renew student course enrollment (reset duration timer & toggle active)
+export async function renewStudentEnrollmentAdmin(enrollmentId: string) {
+  try {
+    await connectDB();
+    const enrollment = await Enrollment.findByIdAndUpdate(
+      enrollmentId,
+      { 
+        enrolledAt: new Date(), 
+        isActive: true 
+      },
+      { new: true }
+    );
+    if (!enrollment) throw new Error("Enrollment record not found");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Toggle enrollment status manually
+export async function toggleStudentEnrollmentActiveAdmin(enrollmentId: string, isActive: boolean) {
+  try {
+    await connectDB();
+    await Enrollment.findByIdAndUpdate(enrollmentId, { isActive });
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Permanently delete a student and all related database records
+export async function deleteStudentPermanentlyAdmin(profileId: string, userId: string) {
+  try {
+    await connectDB();
+
+    if (profileId) {
+      await StudentProfile.findByIdAndDelete(profileId);
+    }
+    if (userId) {
+      await User.findByIdAndDelete(userId);
+      await Enrollment.deleteMany({ userId });
+      await Invoice.deleteMany({ studentId: userId });
+      await TypingResult.deleteMany({ userId });
+      await MockTestResult.deleteMany({ studentId: userId });
+    }
+
+    revalidatePath("/admin/students");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// Fetch dashboard KPIs for Student Affairs overview
+export async function getStudentAffairsKPIs() {
+  try {
+    await connectDB();
+    
+    const startOfToday = new Date();
+    startOfToday.setHours(0,0,0,0);
+
+    const [totalStudents, typingToday, pendingCount] = await Promise.all([
+      User.countDocuments({ role: UserRole.STUDENT }),
+      TypingResult.countDocuments({ createdAt: { $gte: startOfToday } }),
+      StudentProfile.countDocuments({ status: "Pending" })
+    ]);
+
+    // Daily active users checking distinct student submissions today
+    const activeUserIdsToday = await TypingResult.distinct("userId", {
+      createdAt: { $gte: startOfToday }
+    });
+
+    return {
+      success: true,
+      kpis: {
+        totalStudents,
+        activeUsersToday: activeUserIdsToday.length,
+        typingToday,
+        pendingRegistrations: pendingCount
+      }
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
