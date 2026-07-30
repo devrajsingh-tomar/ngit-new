@@ -124,7 +124,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         // to appear together in the exercise switcher dropdown.
         const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : rawLang;
         if (exam.govExamId) {
-            query = `?govExamId=${exam.govExamId}&language=${queryLang}`;
+            const gId = typeof exam.govExamId === 'object' ? (exam.govExamId._id || exam.govExamId) : exam.govExamId;
+            query = `?govExamId=${gId}&language=${queryLang}`;
             if (exam.difficulty) query += `&difficulty=${exam.difficulty}`;
         } else if (exam.category === 'SPECIAL') {
             query = `?category=SPECIAL&language=${queryLang}`;

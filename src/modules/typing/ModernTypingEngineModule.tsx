@@ -114,7 +114,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     if (exam) {
         const queryLang = exam.language || config.language;
         if (exam.govExamId) {
-            query = `?govExamId=${exam.govExamId}&language=${queryLang}`;
+            const gId = typeof exam.govExamId === 'object' ? (exam.govExamId._id || exam.govExamId) : exam.govExamId;
+            query = `?govExamId=${gId}&language=${queryLang}`;
             if (exam.difficulty) query += `&difficulty=${exam.difficulty}`;
         } else if (exam.category === 'SPECIAL') {
             query = `?category=SPECIAL&language=${queryLang}`;
