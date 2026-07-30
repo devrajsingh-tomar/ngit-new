@@ -86,27 +86,9 @@ const menuGroups = [
         ]
     },
     {
-        groupLabel: "Website Builder (CMS)",
+        groupLabel: "Website Editor",
         items: [
-            {
-                label: "Website CMS",
-                href: "/admin/content",
-                icon: Layout,
-                subItems: [
-                    { label: "Website Overview", href: "/admin/content" },
-                    { label: "Homepage Builder", href: "/admin/content/home-builder" },
-                    { label: "Homepage Popup", href: "/admin/content/popup" },
-                    { label: "All Pages", href: "/admin/content/pages" },
-                    { label: "About Us", href: "/admin/content/about" },
-                    { label: "SEO Settings", href: "/admin/content/seo" },
-                    { label: "Forms & Leads", href: "/admin/content/forms" },
-                ]
-            },
-            { label: "Blog & Articles", href: "/admin/blogs", icon: FileText },
-            { label: "Media Gallery", href: "/admin/gallery", icon: ImageIcon },
-            { label: "Notices & Updates", href: "/admin/notices", icon: Bell },
-            { label: "Video Testimonials", href: "/admin/feedback", icon: MonitorPlay },
-            { label: "Events Calendar", href: "/admin/events", icon: Calendar },
+            { label: "Homepage Settings", href: "/admin/content", icon: Layout },
         ]
     },
     {

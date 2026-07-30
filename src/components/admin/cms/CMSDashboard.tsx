@@ -1,389 +1,928 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
-  LayoutDashboard,
-  FileText,
-  BookOpen,
-  Image as ImageIcon,
-  Menu,
-  Star,
-  Bell,
-  Search as SearchIcon,
-  Settings,
-  ChevronRight,
-  Plus,
-  Globe,
-  Eye,
-  UploadCloud,
-  PenLine,
-  Layers,
-  AlignLeft,
-  Navigation,
-  Footprints,
-  Megaphone,
-  MonitorPlay,
-  BarChart2,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  TrendingUp,
-  ArrowRight,
-  Hash,
-  Sliders,
-  Send,
-  MessageSquare,
-  X
+  Sliders, Plus, Trash2, Edit2, Check, X, Megaphone, Link as LinkIcon,
+  ExternalLink, Sparkles, Layers, Bell, Layout, ArrowRight, Eye, RefreshCw,
+  PlusCircle, AlertCircle, Info, ChevronRight
 } from "lucide-react";
-
-// ─── CMS Sidebar Nav ────────────────────────────────────────────────────────
-
-const cmsNav = [
-  { label: "Website Overview", href: "/admin/content", icon: LayoutDashboard },
-  { label: "Homepage Builder", href: "/admin/content/home-builder", icon: Layers },
-  { label: "Homepage Popup", href: "/admin/content/popup", icon: Megaphone },
-  { label: "Pages", href: "/admin/content/pages", icon: FileText },
-  { label: "Blogs & Articles", href: "/admin/blogs", icon: BookOpen },
-  { label: "Media Library", href: "/admin/gallery", icon: ImageIcon },
-  { label: "Announcements", href: "/admin/notices", icon: Bell },
-  { label: "Testimonials", href: "/admin/feedback", icon: Star },
-  { label: "Navigation Builder", href: "/admin/layout", icon: Navigation },
-  { label: "Footer Manager", href: "/admin/content/footer", icon: Footprints },
-  { label: "SEO Settings", href: "/admin/content/seo", icon: SearchIcon },
-  { label: "Website Settings", href: "/admin/settings", icon: Settings },
-  { label: "Forms & Leads", href: "/admin/content/forms", icon: MessageSquare },
-];
-
-export function CMSSidebar() {
-  const pathname = usePathname();
-  return (
-    <aside className="w-56 bg-white border-r border-slate-100 h-full flex flex-col shrink-0">
-      <div className="p-4 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-            <Globe className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <p className="text-xs font-black text-slate-900">Website CMS</p>
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Content Manager</p>
-          </div>
-        </div>
-      </div>
-      <nav className="flex-1 p-3 overflow-y-auto space-y-0.5">
-        {cmsNav.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all",
-                active
-                  ? "bg-violet-50 text-violet-700"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-              )}
-            >
-              <item.icon className={cn("w-3.5 h-3.5 shrink-0", active ? "text-violet-600" : "text-slate-400")} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="p-3 border-t border-slate-100">
-        <Link
-          href="/"
-          target="_blank"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all"
-        >
-          <Eye className="w-3.5 h-3.5 text-slate-400" />
-          Preview Website
-        </Link>
-      </div>
-    </aside>
-  );
-}
-
-// ─── Stat Card ──────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, icon: Icon, color, trend }: {
-  label: string;
-  value: string | number;
-  icon: React.ElementType;
-  color: string;
-  trend?: string;
-}) {
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
-      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", color)}>
-        <Icon className="w-4 h-4" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{label}</p>
-        <p className="text-xl font-black text-slate-900 leading-none mt-1">{value}</p>
-        {trend && <p className="text-[10px] font-semibold text-emerald-600 mt-1">{trend}</p>}
-      </div>
-    </div>
-  );
-}
-
-// ─── Quick Action Button ─────────────────────────────────────────────────────
-
-function QuickAction({ label, icon: Icon, href, color }: {
-  label: string;
-  icon: React.ElementType;
-  href: string;
-  color: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all group cursor-pointer",
-        "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
-      )}
-    >
-      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center transition-all group-hover:scale-110", color)}>
-        <Icon className="w-4 h-4" />
-      </div>
-      <span className="text-xs font-bold text-slate-600 group-hover:text-violet-700 text-center leading-tight">{label}</span>
-    </Link>
-  );
-}
-
-// ─── Section Status Badge ────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: "published" | "draft" | "review" | "scheduled" }) {
-  const map = {
-    published: "bg-emerald-50 text-emerald-700",
-    draft: "bg-slate-100 text-slate-500",
-    review: "bg-amber-50 text-amber-700",
-    scheduled: "bg-blue-50 text-blue-700",
-  };
-  return (
-    <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide", map[status])}>
-      {status}
-    </span>
-  );
-}
-
-// ─── CMS Dashboard Home ───────────────────────────────────────────────────────
+import { getNotices, createNotice, updateNotice, deleteNotice } from "@/app/actions/notice";
+import { 
+  getDynamicPageData, 
+  createCmsPage, 
+  createCmsSection, 
+  createCmsContentBlock, 
+  updateCmsContentBlock, 
+  deleteCmsContentBlock 
+} from "@/app/actions/cms";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function CMSDashboard() {
-  const [globalSearch, setGlobalSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("hero");
+  const [loading, setLoading] = useState(true);
 
-  const recentPages = [
-    { title: "Home Page", slug: "/", status: "published" as const, updated: "2 hrs ago" },
-    { title: "About Us", slug: "/about", status: "published" as const, updated: "1 day ago" },
-    { title: "Contact Us", slug: "/contact", status: "draft" as const, updated: "3 days ago" },
-    { title: "Privacy Policy", slug: "/privacy", status: "review" as const, updated: "5 days ago" },
-    { title: "Courses Page", slug: "/courses", status: "published" as const, updated: "1 week ago" },
-  ];
+  // Data states
+  const [slides, setSlides] = useState<any[]>([]);
+  const [notices, setNotices] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  const [quickSectionId, setQuickSectionId] = useState<string>("");
+  const [homePageId, setHomePageId] = useState<string>("");
 
-  const recentBlogs = [
-    { title: "How to Crack SSC CGL 2025", category: "Exam Tips", status: "published" as const, updated: "1 hr ago" },
-    { title: "Top 10 Typing Speed Tricks", category: "Typing", status: "draft" as const, updated: "4 hrs ago" },
-    { title: "CPCT Exam Pattern Explained", category: "CPCT", status: "scheduled" as const, updated: "Yesterday" },
-  ];
+  // Modals state
+  const [slideModalOpen, setSlideModalOpen] = useState(false);
+  const [editingSlide, setEditingSlide] = useState<any>(null);
+  const [noticeModalOpen, setNoticeModalOpen] = useState(false);
+  const [editingNotice, setEditingNotice] = useState<any>(null);
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<any>(null);
+
+  // Form states - Hero Slide
+  const [slideForm, setSlideForm] = useState({
+    title: "",
+    subtitle: "",
+    description: "",
+    cta1Text: "Learn More",
+    cta1Link: "/",
+    cta2Text: "Contact Us",
+    cta2Link: "/contact",
+    bgColor: "from-slate-900 via-indigo-950 to-slate-900",
+    imageUrl: "",
+    isActive: true,
+    order: 0
+  });
+
+  // Form states - Notice
+  const [noticeForm, setNoticeForm] = useState({
+    title: "",
+    description: "",
+    link: "",
+    isActive: true,
+    showInScroller: true
+  });
+
+  // Form states - Quick Link Card
+  const [cardForm, setCardForm] = useState({
+    title: "",
+    image: "",
+    button_link: ""
+  });
+
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  const loadAllData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch Hero Slides from API
+      const slidesRes = await fetch("/api/admin/hero-slides");
+      if (slidesRes.ok) {
+        const slidesData = await slidesRes.json();
+        setSlides(slidesData);
+      }
+
+      // 2. Fetch Notices using Server Action
+      const noticesRes = await getNotices(true);
+      if (noticesRes.success) {
+        setNotices(noticesRes.notices || []);
+      }
+
+      // 3. Fetch Page Data for Quick Links
+      const dynamicRes = await getDynamicPageData("home");
+      if (dynamicRes.success) {
+        setHomePageId(dynamicRes.page?._id || "");
+        const sections = dynamicRes.sections || [];
+        const quickSection = sections.find((s: any) => s.section_type === "QuickActionsGrid");
+        if (quickSection) {
+          setQuickSectionId(quickSection._id);
+          setCards(quickSection.blocks || []);
+        }
+      } else if (dynamicRes.error === "Page not found") {
+        console.log("Home page not initialized yet.");
+      }
+    } catch (err: any) {
+      toast.error("Failed to load homepage settings");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize Home Page & Quick Links section
+  const handleInitializeQuickSection = async () => {
+    setLoading(true);
+    try {
+      // Create home page entry
+      const pageRes = await createCmsPage({
+        page_name: "home",
+        title: "Home Page",
+        path: "/"
+      });
+
+      if (!pageRes.success) throw new Error(pageRes.error);
+
+      // Create quick links section
+      const sectionRes = await createCmsSection({
+        page_id: pageRes.page._id,
+        section_name: "Quick Navigation",
+        section_type: "QuickActionsGrid",
+        is_active: true,
+        sort_order: 1
+      });
+
+      if (!sectionRes.success) throw new Error(sectionRes.error);
+
+      toast.success("Quick Links Section Initialized!");
+      loadAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to initialize section");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─── Hero Slides Actions ────────────────────────────────────────────────────
+  const handleOpenSlideModal = (slide: any = null) => {
+    if (slide) {
+      setEditingSlide(slide);
+      setSlideForm({
+        title: slide.title || "",
+        subtitle: slide.subtitle || "",
+        description: slide.description || "",
+        cta1Text: slide.cta1Text || "Learn More",
+        cta1Link: slide.cta1Link || "/",
+        cta2Text: slide.cta2Text || "Contact Us",
+        cta2Link: slide.cta2Link || "/contact",
+        bgColor: slide.bgColor || "from-slate-900 via-indigo-950 to-slate-900",
+        imageUrl: slide.imageUrl || "",
+        isActive: slide.isActive !== false,
+        order: slide.order || 0
+      });
+    } else {
+      setEditingSlide(null);
+      setSlideForm({
+        title: "",
+        subtitle: "",
+        description: "",
+        cta1Text: "Learn More",
+        cta1Link: "/",
+        cta2Text: "Contact Us",
+        cta2Link: "/contact",
+        bgColor: "from-slate-900 via-indigo-950 to-slate-900",
+        imageUrl: "",
+        isActive: true,
+        order: slides.length
+      });
+    }
+    setSlideModalOpen(true);
+  };
+
+  const handleSaveSlide = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const url = editingSlide ? `/api/admin/hero-slides/${editingSlide._id}` : "/api/admin/hero-slides";
+      const method = editingSlide ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(slideForm)
+      });
+
+      if (!res.ok) throw new Error("Request failed");
+
+      toast.success(editingSlide ? "Slide updated successfully" : "Slide added successfully");
+      setSlideModalOpen(false);
+      loadAllData();
+    } catch (err) {
+      toast.error("Failed to save slide settings");
+    }
+  };
+
+  const handleDeleteSlide = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this slide?")) return;
+    try {
+      const res = await fetch(`/api/admin/hero-slides/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      toast.success("Slide deleted");
+      loadAllData();
+    } catch {
+      toast.error("Failed to delete slide");
+    }
+  };
+
+  const handleToggleSlideActive = async (slide: any) => {
+    try {
+      const res = await fetch(`/api/admin/hero-slides/${slide._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !slide.isActive })
+      });
+      if (!res.ok) throw new Error();
+      toast.success(`Slide ${!slide.isActive ? "activated" : "deactivated"}`);
+      loadAllData();
+    } catch {
+      toast.error("Failed to toggle status");
+    }
+  };
+
+  // ─── Notices/Announcements Actions ──────────────────────────────────────────
+  const handleOpenNoticeModal = (notice: any = null) => {
+    if (notice) {
+      setEditingNotice(notice);
+      setNoticeForm({
+        title: notice.title || "",
+        description: notice.description || "",
+        link: notice.link || "",
+        isActive: notice.isActive !== false,
+        showInScroller: notice.showInScroller !== false
+      });
+    } else {
+      setEditingNotice(null);
+      setNoticeForm({
+        title: "",
+        description: "",
+        link: "",
+        isActive: true,
+        showInScroller: true
+      });
+    }
+    setNoticeModalOpen(true);
+  };
+
+  const handleSaveNotice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      let res;
+      if (editingNotice) {
+        res = await updateNotice(editingNotice._id, noticeForm);
+      } else {
+        res = await createNotice(noticeForm);
+      }
+
+      if (!res.success) throw new Error(res.error);
+
+      toast.success(editingNotice ? "Announcement updated" : "Announcement published");
+      setNoticeModalOpen(false);
+      loadAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save announcement");
+    }
+  };
+
+  const handleDeleteNotice = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this notice?")) return;
+    try {
+      const res = await deleteNotice(id);
+      if (!res.success) throw new Error(res.error);
+      toast.success("Announcement deleted");
+      loadAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete notice");
+    }
+  };
+
+  const handleToggleNoticeActive = async (notice: any) => {
+    try {
+      const res = await updateNotice(notice._id, { isActive: !notice.isActive });
+      if (!res.success) throw new Error(res.error);
+      toast.success(`Announcement ${!notice.isActive ? "activated" : "deactivated"}`);
+      loadAllData();
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  // ─── Quick Navigation Cards Actions ─────────────────────────────────────────
+  const handleOpenCardModal = (card: any = null) => {
+    if (card) {
+      setEditingCard(card);
+      setCardForm({
+        title: card.title || "",
+        image: card.image || "",
+        button_link: card.button_link || ""
+      });
+    } else {
+      setEditingCard(null);
+      setCardForm({
+        title: "",
+        image: "",
+        button_link: ""
+      });
+    }
+    setCardModalOpen(true);
+  };
+
+  const handleSaveCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickSectionId) {
+      toast.error("Quick actions section not initialized properly");
+      return;
+    }
+
+    try {
+      let res;
+      if (editingCard) {
+        res = await updateCmsContentBlock(editingCard._id, cardForm);
+      } else {
+        res = await createCmsContentBlock({
+          section_id: quickSectionId,
+          ...cardForm,
+          is_active: true,
+          sort_order: cards.length
+        });
+      }
+
+      if (!res.success) throw new Error(res.error);
+
+      toast.success(editingCard ? "Navigation card updated" : "Navigation card created");
+      setCardModalOpen(false);
+      loadAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save card");
+    }
+  };
+
+  const handleDeleteCard = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this navigation card?")) return;
+    try {
+      const res = await deleteCmsContentBlock(id);
+      if (!res.success) throw new Error(res.error);
+      toast.success("Navigation card removed");
+      loadAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove card");
+    }
+  };
 
   return (
-    <div className="flex flex-col h-full bg-[#f5f7fb]">
-      {/* ── Top Header ── */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
+    <div className="flex flex-col h-full bg-[#f8fafc]">
+      {/* Top Title Section */}
+      <div className="bg-white border-b border-slate-200 px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Website CMS</h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">Manage your public website — pages, blogs, media, and more.</p>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <Layout className="w-5 h-5 text-indigo-600" /> Homepage Editor
+          </h1>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
+            Manage dynamic sections of your minimal single page website: hero slider, notification ticker, and workspace cards.
+          </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <SearchIcon className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              placeholder="Search pages, blogs..."
-              value={globalSearch}
-              onChange={(e) => setGlobalSearch(e.target.value)}
-              className="pl-8 pr-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400"
-            />
-          </div>
-          <Link href="/admin/content/pages/new" className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all shadow-sm">
-            <Plus className="w-3.5 h-3.5" /> New Page
-          </Link>
-          <Link href="/admin/blogs/new" className="flex items-center gap-1.5 px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm">
-            <PenLine className="w-3.5 h-3.5" /> New Blog
-          </Link>
-          <Link href="/" target="_blank" className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold rounded-lg transition-all">
-            <Eye className="w-3.5 h-3.5" /> Preview Site
-          </Link>
+        <div className="flex items-center gap-2">
+          <Button onClick={loadAllData} variant="outline" size="sm" className="h-8 text-xs font-semibold">
+            <RefreshCw className="w-3.5 h-3.5 mr-1" /> Reload
+          </Button>
+          <a 
+            href="/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all"
+          >
+            <Eye className="w-3.5 h-3.5" /> View Public Site
+          </a>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      {/* Main Container */}
+      <div className="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+          <TabsList className="bg-slate-200/60 p-1 rounded-xl h-10 w-full sm:w-max">
+            <TabsTrigger value="hero" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <Sliders className="w-3.5 h-3.5 mr-1.5 text-indigo-500" /> Hero Banners
+            </TabsTrigger>
+            <TabsTrigger value="notice" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <Bell className="w-3.5 h-3.5 mr-1.5 text-amber-500" /> Notifications Feed
+            </TabsTrigger>
+            <TabsTrigger value="cards" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <Layers className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Quick Link Cards
+            </TabsTrigger>
+          </TabsList>
 
-        {/* ── Stats Row ── */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard label="Total Pages" value="12" icon={FileText} color="bg-violet-50 text-violet-600" />
-          <StatCard label="Published Blogs" value="47" icon={BookOpen} color="bg-emerald-50 text-emerald-600" trend="↑ 3 this week" />
-          <StatCard label="Pending Drafts" value="5" icon={AlignLeft} color="bg-amber-50 text-amber-600" />
-          <StatCard label="Media Files" value="218" icon={ImageIcon} color="bg-blue-50 text-blue-600" />
-          <StatCard label="Active Notices" value="3" icon={Bell} color="bg-rose-50 text-rose-600" />
-        </div>
-
-        {/* ── Quick Actions ── */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Quick Actions</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
-            <QuickAction label="Edit Homepage" href="/admin/content/home-builder" icon={Layers} color="bg-violet-100 text-violet-600" />
-            <QuickAction label="New Blog Post" href="/admin/blogs/new" icon={PenLine} color="bg-emerald-100 text-emerald-600" />
-            <QuickAction label="Upload Media" href="/admin/gallery" icon={UploadCloud} color="bg-blue-100 text-blue-600" />
-            <QuickAction label="Post Notice" href="/admin/notices" icon={Megaphone} color="bg-amber-100 text-amber-600" />
-            <QuickAction label="Edit Navigation" href="/admin/layout" icon={Navigation} color="bg-rose-100 text-rose-600" />
-            <QuickAction label="SEO Settings" href="/admin/content/seo" icon={SearchIcon} color="bg-teal-100 text-teal-600" />
-            <QuickAction label="Site Settings" href="/admin/settings" icon={Settings} color="bg-slate-100 text-slate-600" />
-          </div>
-        </div>
-
-        {/* ── Two Column Layout ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Pages Table */}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-black text-slate-900">Pages</h2>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">All website pages and their status</p>
-              </div>
-              <Link href="/admin/content/pages" className="text-xs font-bold text-violet-600 hover:text-violet-800 flex items-center gap-1">
-                View All <ChevronRight className="w-3 h-3" />
-              </Link>
+          {/* TAB 1: HERO BANNERS */}
+          <TabsContent value="hero" className="mt-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Active Banners</h3>
+              <Button onClick={() => handleOpenSlideModal()} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Slide
+              </Button>
             </div>
-            <div className="divide-y divide-slate-100">
-              {recentPages.map((page) => (
-                <div key={page.slug} className="px-5 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors group">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{page.title}</p>
-                    <p className="text-[10px] font-mono text-slate-400">{page.slug}</p>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-20"><RefreshCw className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : slides.length === 0 ? (
+              <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 text-center text-slate-500 flex flex-col items-center">
+                <Sliders className="w-10 h-10 mb-3 opacity-20" />
+                <p className="font-bold text-slate-700">No Hero Banners added</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">Create slideshow banners containing background graphics, titles, and redirect CTAs to guide incoming students.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {slides.map((s, idx) => (
+                  <div key={s._id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                    {/* Slide Header mockup preview */}
+                    <div className={`p-6 bg-gradient-to-r ${s.bgColor} text-white min-h-[140px] flex flex-col justify-between relative`}>
+                      {s.imageUrl && (
+                        <div className="absolute inset-0 z-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url(${s.imageUrl})` }} />
+                      )}
+                      <div className="relative z-10 space-y-1">
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">{s.subtitle || "Featured Slide"}</span>
+                        <h4 className="text-lg font-black tracking-tight leading-tight">{s.title || "Untitled Slide"}</h4>
+                        <p className="text-xs font-semibold opacity-70 line-clamp-2 mt-2">{s.description}</p>
+                      </div>
+                      <div className="relative z-10 flex gap-2 mt-4">
+                        {s.cta1Text && <span className="bg-white/20 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{s.cta1Text}</span>}
+                        {s.cta2Text && <span className="bg-white/10 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{s.cta2Text}</span>}
+                      </div>
+                    </div>
+                    {/* Slide Settings actions */}
+                    <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-400">Order: {s.order}</span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${s.isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+                        <span className="text-[10px] font-black uppercase text-slate-500">{s.isActive ? "Active" : "Disabled"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button 
+                          onClick={() => handleToggleSlideActive(s)} 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-500 hover:text-slate-800"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleOpenSlideModal(s)} 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-500 hover:text-slate-800"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleDeleteSlide(s._id)} 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 ml-3 shrink-0">
-                    <StatusBadge status={page.status} />
-                    <span className="text-[10px] text-slate-400 hidden sm:block">{page.updated}</span>
-                    <Link href={`/admin/content/pages`} className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-violet-50 text-violet-600 transition-all">
-                      <PenLine className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-          {/* Blog Table */}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-black text-slate-900">Recent Blogs</h2>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Latest posts and their status</p>
-              </div>
-              <Link href="/admin/blogs" className="text-xs font-bold text-violet-600 hover:text-violet-800 flex items-center gap-1">
-                View All <ChevronRight className="w-3 h-3" />
-              </Link>
+          {/* TAB 2: NOTIFICATIONS FEED */}
+          <TabsContent value="notice" className="mt-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Ticker Feed</h3>
+              <Button onClick={() => handleOpenNoticeModal()} size="sm" className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-8 text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Post Announcement
+              </Button>
             </div>
-            <div className="divide-y divide-slate-100">
-              {recentBlogs.map((blog) => (
-                <div key={blog.title} className="px-5 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors group">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{blog.title}</p>
-                    <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{blog.category}</span>
-                  </div>
-                  <div className="flex items-center gap-3 ml-3 shrink-0">
-                    <StatusBadge status={blog.status} />
-                    <Link href="/admin/blogs" className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-violet-50 text-violet-600 transition-all">
-                      <PenLine className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-              <div className="px-5 py-3">
-                <Link href="/admin/blogs/new" className="flex items-center gap-2 text-xs font-bold text-violet-600 hover:text-violet-800 transition-colors">
-                  <Plus className="w-3.5 h-3.5" /> Write a new blog post
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* ── CMS Module Grid ── */}
-        <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">All Website Sections</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
-            {[
-              { label: "Homepage Builder", desc: "Hero, banners, sections", href: "/admin/content/home-builder", icon: Layers, color: "text-violet-600 bg-violet-50" },
-              { label: "Homepage Popup", desc: "Overlay modals & alert banners", href: "/admin/content/popup", icon: Megaphone, color: "text-rose-600 bg-rose-50" },
-              { label: "All Pages", desc: "Create & manage pages", href: "/admin/content/pages", icon: FileText, color: "text-blue-600 bg-blue-50" },
-              { label: "Blogs", desc: "Articles & posts", href: "/admin/blogs", icon: BookOpen, color: "text-emerald-600 bg-emerald-50" },
-              { label: "Media Library", desc: "Images, videos, docs", href: "/admin/gallery", icon: ImageIcon, color: "text-cyan-600 bg-cyan-50" },
-              { label: "Notices", desc: "Banners & alerts", href: "/admin/notices", icon: Bell, color: "text-amber-600 bg-amber-50" },
-              { label: "Testimonials", desc: "Reviews & feedback", href: "/admin/feedback", icon: Star, color: "text-yellow-600 bg-yellow-50" },
-              { label: "Navigation", desc: "Header & menus", href: "/admin/layout", icon: Menu, color: "text-rose-600 bg-rose-50" },
-              { label: "SEO", desc: "Meta tags & ranking", href: "/admin/content/seo", icon: SearchIcon, color: "text-teal-600 bg-teal-50" },
-              { label: "Forms & Leads", desc: "Enquiries & contacts", href: "/admin/content/forms", icon: MessageSquare, color: "text-indigo-600 bg-indigo-50" },
-              { label: "Events", desc: "Calendar & schedule", href: "/admin/events", icon: Clock, color: "text-orange-600 bg-orange-50" },
-              { label: "About Us", desc: "Mission, vision, team", href: "/admin/content/about", icon: AlignLeft, color: "text-purple-600 bg-purple-50" },
-              { label: "Site Settings", desc: "Logo, colors, info", href: "/admin/settings", icon: Settings, color: "text-slate-600 bg-slate-100" },
-            ].map((mod) => (
-              <Link
-                key={mod.href}
-                href={mod.href}
-                className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:border-violet-200 hover:shadow-md transition-all group flex flex-col"
-              >
-                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center mb-3 transition-transform group-hover:scale-110", mod.color)}>
-                  <mod.icon className="w-4 h-4" />
+            {loading ? (
+              <div className="flex justify-center items-center py-20"><RefreshCw className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : notices.length === 0 ? (
+              <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 text-center text-slate-500 flex flex-col items-center">
+                <Bell className="w-10 h-10 mb-3 opacity-20 text-amber-500" />
+                <p className="font-bold text-slate-700">No Announcements found</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">Publish real-time notification alerts, time-table updates, and official notice boards to show in the scrolling marquee ticker.</p>
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs font-semibold">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                        <th className="px-6 py-3.5">Title</th>
+                        <th className="px-6 py-3.5">Details</th>
+                        <th className="px-6 py-3.5">Target Link</th>
+                        <th className="px-6 py-3.5">Date</th>
+                        <th className="px-6 py-3.5">Status</th>
+                        <th className="px-6 py-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {notices.map((n) => (
+                        <tr key={n._id} className="hover:bg-slate-50/20 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="font-bold text-slate-900 leading-snug">{n.title}</span>
+                          </td>
+                          <td className="px-6 py-4 max-w-xs truncate">
+                            <span className="text-slate-500">{n.description}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {n.link ? (
+                              <a href={n.link} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1 font-bold">
+                                {n.link.substring(0, 30)}... <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            ) : (
+                              <span className="text-slate-400">None</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-slate-400">
+                            {new Date(n.date).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                              n.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"
+                            }`}>
+                              {n.isActive ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button 
+                                onClick={() => handleToggleNoticeActive(n)} 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-6 w-6 text-slate-400 hover:text-slate-700"
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button 
+                                onClick={() => handleOpenNoticeModal(n)} 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-6 w-6 text-slate-400 hover:text-slate-700"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                              <Button 
+                                onClick={() => handleDeleteNotice(n._id)} 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-6 w-6 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <p className="text-xs font-bold text-slate-900 leading-tight mb-1">{mod.label}</p>
-                <p className="text-[10px] text-slate-400 font-medium leading-tight">{mod.desc}</p>
-                <div className="mt-3 flex items-center text-[10px] font-black text-violet-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wide gap-1">
-                  Open <ArrowRight className="w-3 h-3" />
+              </div>
+            )}
+          </TabsContent>
+
+          {/* TAB 3: QUICK LINK CARDS */}
+          <TabsContent value="cards" className="mt-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Navigation Cards Grid</h3>
+              {quickSectionId ? (
+                <Button onClick={() => handleOpenCardModal()} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8 text-xs">
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Card
+                </Button>
+              ) : null}
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-20"><RefreshCw className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : !quickSectionId ? (
+              <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 text-center text-slate-500 flex flex-col items-center">
+                <AlertCircle className="w-10 h-10 mb-3 opacity-20 text-rose-500" />
+                <p className="font-bold text-slate-700">Quick links grids not initialized</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">To allow students to dynamically jump into the typing simulator or online shorthand apps, initialize the quick navigation hub.</p>
+                <Button onClick={handleInitializeQuickSection} className="bg-indigo-600 hover:bg-indigo-700 font-bold mt-4 h-9 text-xs">
+                  Initialize Quick Links
+                </Button>
+              </div>
+            ) : cards.length === 0 ? (
+              <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 text-center text-slate-500 flex flex-col items-center">
+                <Layers className="w-10 h-10 mb-3 opacity-20 text-emerald-500" />
+                <p className="font-bold text-slate-700">No custom navigation cards configured</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm mb-4">You are currently using the default system cards (Hindi/English Short-hand link, Typing simulator link, My Web App link).</p>
+                <Button onClick={() => handleOpenCardModal()} className="bg-emerald-600 hover:bg-emerald-700 font-bold h-9 text-xs">
+                  Add First Custom Card
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-sky-50 border border-sky-100 p-4 rounded-2xl flex items-start gap-3">
+                  <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                  <p className="text-xs font-semibold text-sky-800">
+                    Custom navigation cards configured here will overwrite the fallback system cards on the landing page workspace grid.
+                  </p>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Publishing Status Summary ── */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-          <h2 className="text-sm font-black text-slate-900 mb-4">Publishing Health</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <div>
-                <p className="text-xs font-black text-emerald-800">47 Published</p>
-                <p className="text-[10px] text-emerald-600">Live on website</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {cards.map((c, i) => (
+                    <div key={c._id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm group hover:shadow-md transition-all flex flex-col justify-between">
+                      <div>
+                        {/* Card image header */}
+                        <div className="w-full aspect-[2.4/1] relative overflow-hidden bg-slate-900 flex items-center justify-center">
+                          <img 
+                            src={c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600"} 
+                            alt={c.title} 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                        {/* Card label */}
+                        <div className="p-4 border-t border-slate-100 flex flex-col min-h-[90px] justify-between">
+                          <span className="font-bold text-slate-800 text-xs leading-snug line-clamp-2">{c.title}</span>
+                          <span className="text-[10px] text-indigo-600 font-bold truncate mt-2">{c.button_link || "#"}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Card actions */}
+                      <div className="p-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-[9px] font-bold text-slate-400">Position {i + 1}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Button 
+                            onClick={() => handleOpenCardModal(c)} 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-400 hover:text-slate-800"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </Button>
+                          <Button 
+                            onClick={() => handleDeleteCard(c._id)} 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-6 w-6 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl">
-              <AlignLeft className="w-5 h-5 text-amber-600 shrink-0" />
-              <div>
-                <p className="text-xs font-black text-amber-800">5 Drafts</p>
-                <p className="text-[10px] text-amber-600">Awaiting review</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
-              <Clock className="w-5 h-5 text-blue-600 shrink-0" />
-              <div>
-                <p className="text-xs font-black text-blue-800">2 Scheduled</p>
-                <p className="text-[10px] text-blue-600">Will publish soon</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-rose-50 rounded-xl">
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-              <div>
-                <p className="text-xs font-black text-rose-800">3 SEO Issues</p>
-                <p className="text-[10px] text-rose-600">Need attention</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* ── HERO SLIDE MODAL ── */}
+      <Dialog open={slideModalOpen} onOpenChange={setSlideModalOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black text-slate-900">
+              {editingSlide ? "Modify Hero Slide" : "Add New Hero Slide"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Input headers, subtitles, and redirects for the slideshow hero container.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveSlide} className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Slide Title</label>
+                <Input 
+                  value={slideForm.title} 
+                  onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })} 
+                  placeholder="e.g. India's Finest Shorthand Academy"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subtitle / Category</label>
+                <Input 
+                  value={slideForm.subtitle} 
+                  onChange={(e) => setSlideForm({ ...slideForm, subtitle: e.target.value })} 
+                  placeholder="e.g. CRACK GOVERNMENT EXAMS"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Description</label>
+              <Textarea 
+                value={slideForm.description} 
+                onChange={(e) => setSlideForm({ ...slideForm, description: e.target.value })} 
+                placeholder="Brief slide descriptive paragraph..."
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Button Label</label>
+                <Input 
+                  value={slideForm.cta1Text} 
+                  onChange={(e) => setSlideForm({ ...slideForm, cta1Text: e.target.value })} 
+                  placeholder="e.g. Try Simulator"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Button Link</label>
+                <Input 
+                  value={slideForm.cta1Link} 
+                  onChange={(e) => setSlideForm({ ...slideForm, cta1Link: e.target.value })} 
+                  placeholder="e.g. /typing"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Secondary Button Label</label>
+                <Input 
+                  value={slideForm.cta2Text} 
+                  onChange={(e) => setSlideForm({ ...slideForm, cta2Text: e.target.value })} 
+                  placeholder="e.g. Contact Us"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Secondary Button Link</label>
+                <Input 
+                  value={slideForm.cta2Link} 
+                  onChange={(e) => setSlideForm({ ...slideForm, cta2Link: e.target.value })} 
+                  placeholder="e.g. /contact"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Gradient / Background Color</label>
+                <Input 
+                  value={slideForm.bgColor} 
+                  onChange={(e) => setSlideForm({ ...slideForm, bgColor: e.target.value })} 
+                  placeholder="e.g. from-violet-900 to-indigo-950"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Graphic Image URL (Optional)</label>
+                <Input 
+                  value={slideForm.imageUrl} 
+                  onChange={(e) => setSlideForm({ ...slideForm, imageUrl: e.target.value })} 
+                  placeholder="e.g. https://domain.com/photo.jpg"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="flex items-center justify-between border border-slate-200 rounded-xl p-3 bg-slate-50/50">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Visible Status</span>
+                <Switch 
+                  checked={slideForm.isActive} 
+                  onCheckedChange={(checked) => setSlideForm({ ...slideForm, isActive: checked })} 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sorting Sequence Order</label>
+                <Input 
+                  type="number"
+                  value={slideForm.order} 
+                  onChange={(e) => setSlideForm({ ...slideForm, order: parseInt(e.target.value) || 0 })} 
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-slate-100">
+              <Button type="button" onClick={() => setSlideModalOpen(false)} variant="outline" className="h-9 text-xs font-semibold">
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 text-xs">
+                {editingSlide ? "Preserve Configuration" : "Deploy Banner"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── NOTIFICATION MODAL ── */}
+      <Dialog open={noticeModalOpen} onOpenChange={setNoticeModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black text-slate-900">
+              {editingNotice ? "Edit Announcement" : "Post New Announcement"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Post dynamic alerts that will scroll inside the website ticker.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveNotice} className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Announcement Title</label>
+              <Input 
+                value={noticeForm.title} 
+                onChange={(e) => setNoticeForm({ ...noticeForm, title: e.target.value })} 
+                placeholder="e.g. SSC CGL Mock Test Schedule Changed"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Detailed Content Text</label>
+              <Textarea 
+                value={noticeForm.description} 
+                onChange={(e) => setNoticeForm({ ...noticeForm, description: e.target.value })} 
+                placeholder="Enter complete notice summary details..."
+                rows={3}
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target Redirect URL (Optional)</label>
+              <Input 
+                value={noticeForm.link} 
+                onChange={(e) => setNoticeForm({ ...noticeForm, link: e.target.value })} 
+                placeholder="e.g. /typing/exam/..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="flex items-center justify-between border border-slate-200 rounded-xl p-3 bg-slate-50/50">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-mono">Active</span>
+                <Switch 
+                  checked={noticeForm.isActive} 
+                  onCheckedChange={(checked) => setNoticeForm({ ...noticeForm, isActive: checked })} 
+                />
+              </div>
+              <div className="flex items-center justify-between border border-slate-200 rounded-xl p-3 bg-slate-50/50">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-mono">Ticker Scroller</span>
+                <Switch 
+                  checked={noticeForm.showInScroller} 
+                  onCheckedChange={(checked) => setNoticeForm({ ...noticeForm, showInScroller: checked })} 
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-slate-100">
+              <Button type="button" onClick={() => setNoticeModalOpen(false)} variant="outline" className="h-9 text-xs font-semibold">
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-9 text-xs">
+                {editingNotice ? "Apply Updates" : "Publish Announcement"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── QUICK LINK CARD MODAL ── */}
+      <Dialog open={cardModalOpen} onOpenChange={setCardModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black text-slate-900">
+              {editingCard ? "Modify Navigation Card" : "Add Custom Navigation Card"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Create student workspace redirection link cards.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveCard} className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Card Title Label</label>
+              <Input 
+                value={cardForm.title} 
+                onChange={(e) => setCardForm({ ...cardForm, title: e.target.value })} 
+                placeholder="e.g. Hindi Stenography Engine"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Card Image URL</label>
+              <Input 
+                value={cardForm.image} 
+                onChange={(e) => setCardForm({ ...cardForm, image: e.target.value })} 
+                placeholder="e.g. https://images.unsplash.com/..."
+                required
+              />
+              <span className="text-[9px] text-slate-400 font-semibold block">Use online image hosts or paths starting with /uploads.</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Redirection Action Link</label>
+              <Input 
+                value={cardForm.button_link} 
+                onChange={(e) => setCardForm({ ...cardForm, button_link: e.target.value })} 
+                placeholder="e.g. /typing or external links like student.domain.com"
+                required
+              />
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-slate-100">
+              <Button type="button" onClick={() => setCardModalOpen(false)} variant="outline" className="h-9 text-xs font-semibold">
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 text-xs">
+                {editingCard ? "Preserve Card" : "Integrate Card"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

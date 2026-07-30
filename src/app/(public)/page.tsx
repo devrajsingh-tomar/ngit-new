@@ -4,20 +4,26 @@ import HeroSlider from "@/components/home/HeroSlider";
 import QuickActionsGrid from "@/components/public/QuickActionsGrid";
 import InteractiveTypingSandbox from "@/components/public/InteractiveTypingSandbox";
 import RedesignedCertification from "@/components/public/RedesignedCertification";
-import BlogSection from "@/components/public/BlogSection";
+import NotificationScroller from "@/components/public/NotificationScroller";
 
 import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
-import { listBlogPosts } from "@/app/actions/blog";
+import { getNotices } from "@/app/actions/notice";
 
 export default async function PublicHomePage() {
-    const [slidesRes, blogRes, dynamicRes] = await Promise.all([
+    const [slidesRes, dynamicRes, noticesRes] = await Promise.all([
         getHeroSlides(),
-        listBlogPosts({ status: "PUBLISHED", limit: 3, page: 1 }),
         getDynamicPageData("home"),
+        getNotices(false),
     ]);
 
     const heroSlides = slidesRes.success ? slidesRes.slides : [];
-    const publicBlogs = blogRes.success ? blogRes.data.posts : [];
+    const rawNotices = noticesRes.success ? noticesRes.notices : [];
+    
+    const notifications = rawNotices.map((n: any) => ({
+        id: n._id?.toString() || n._id,
+        text: `${n.title} - ${n.description}`,
+        link: n.link || undefined,
+    }));
     
     // Find dynamic Quick Navigation blocks configured by the admin
     const pageSections = dynamicRes.success && dynamicRes.sections ? dynamicRes.sections : [];
@@ -29,17 +35,17 @@ export default async function PublicHomePage() {
             {/* 1. Hero Slider */}
             <HeroSlider blocks={heroSlides} />
 
-            {/* 2. Quick Navigation */}
+            {/* 2. Notifications Scroller */}
+            <NotificationScroller notifications={notifications} />
+
+            {/* 3. Quick Navigation Workspace */}
             <QuickActionsGrid blocks={navigationBlocks} />
 
-            {/* 3. Typing Exam Section */}
+            {/* 4. Interactive Typing Sandbox */}
             <InteractiveTypingSandbox />
 
-            {/* 4. Certification Section */}
+            {/* 5. Certification Section */}
             <RedesignedCertification />
-
-            {/* 5. Blog Section */}
-            <BlogSection blogs={publicBlogs} />
         </div>
     );
 }
