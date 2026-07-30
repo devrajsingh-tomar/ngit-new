@@ -76,27 +76,23 @@ export default function TypingExamPage() {
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
-    fetch(`/api/typing/exams`)
+    fetch(`/api/typing/exams/${id}`)
       .then(res => {
         if (!res.ok) throw new Error("Server responded with an error");
         return res.json();
       })
       .then(data => {
         if (isMounted) {
-          if (Array.isArray(data)) {
-            const found = data.find((e: any) => e._id === id);
-            if (!found) {
-              console.warn(`Exam with ID ${id} not found in active exams list.`);
-            }
-            setExam(found);
+          if (data && data._id) {
+            setExam(data);
             
             // If we have language and layout in URL (from Step-by-Step flow), jump to engine
             if (initialLang && initialLayout && session) {
                setStep(3);
             }
           } else {
-            console.error("Received non-array data from exams API:", data);
-            toast.error("Format error: Could not load exam details");
+            console.error("Received invalid data from exams API:", data);
+            toast.error("Could not load exam details");
           }
           setLoading(false);
         }
@@ -109,7 +105,7 @@ export default function TypingExamPage() {
         }
       });
     return () => { isMounted = false; };
-  }, [id]);
+  }, [id, initialLang, initialLayout, session]);
 
   const handleComplete = useCallback(async (results: any) => {
     if (isSubmitting) return;

@@ -51,6 +51,11 @@ export async function GET(req: NextRequest) {
 
     if (govExamId && govExamId !== "null" && govExamId !== "undefined") {
       query.govExamId = govExamId;
+    } else {
+      query.$or = [
+        { govExamId: null },
+        { govExamId: { $exists: false } }
+      ];
     }
 
     if (difficulty) {
@@ -75,10 +80,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Add participant count to each exam
+    // Add participant count to each exam (only run database queries if list size is small)
+    const isLargeList = exams.length > 50;
     const examsWithCounts = await Promise.all(exams.map(async (exam) => {
       if (!exam) return null;
-      const count = await TypingResult.countDocuments({ examId: exam._id });
+      let count = 0;
+      if (!isLargeList) {
+        count = await TypingResult.countDocuments({ examId: exam._id });
+      }
       return { ...exam.toObject(), participantCount: count };
     }));
     

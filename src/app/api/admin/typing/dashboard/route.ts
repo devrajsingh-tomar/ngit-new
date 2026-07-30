@@ -98,7 +98,8 @@ export async function GET() {
         .populate({ path: "bookId", strictPopulate: false })
         .populate({ path: "govExamId", strictPopulate: false })
         .populate({ path: "rulePresetId", strictPopulate: false })
-        .sort({ createdAt: -1 }),
+        .sort({ createdAt: -1 })
+        .limit(200),
       TypingCategory.find().populate("parentCategoryId").sort({ name: 1 }),
       WordSet.find().sort({ category: 1 }),
       PracticeEssay.find().sort({ topic: 1 }),

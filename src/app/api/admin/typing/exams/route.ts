@@ -14,7 +14,8 @@ export async function GET() {
     await connectDB();
     const exams = await TypingExam.find()
       .populate("passageId")
-      .sort({ startTime: -1 });
+      .sort({ startTime: -1 })
+      .limit(200);
     return NextResponse.json(exams);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch exams" }, { status: 500 });
