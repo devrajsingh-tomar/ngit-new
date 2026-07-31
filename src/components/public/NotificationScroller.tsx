@@ -14,6 +14,11 @@ interface Notification {
 export default function NotificationScroller({ notifications = [] }: { notifications: Notification[] }) {
     if (!notifications || notifications.length === 0) return null;
 
+    // Double/triple list to ensure the marquee loop is seamless
+    const listToRender = notifications.length >= 4 
+        ? [...notifications, ...notifications] 
+        : [...notifications, ...notifications, ...notifications, ...notifications];
+
     return (
         <section className="bg-slate-50 py-12 border-y border-slate-100 overflow-hidden">
             <div className="container px-6 mx-auto">
@@ -35,12 +40,12 @@ export default function NotificationScroller({ notifications = [] }: { notificat
                 </div>
 
                 {/* Horizontal Scrollable Container */}
-                <div className="relative group">
-                    <div className="flex overflow-x-auto gap-6 pb-6 no-scrollbar scroll-smooth snap-x snap-mandatory">
-                        {notifications.map((item, index) => (
+                <div className="relative overflow-hidden w-full">
+                    <div className="animate-marquee hover:[animation-play-state:paused] flex gap-6 pb-6">
+                        {listToRender.map((item, index) => (
                             <div 
-                                key={item.id || index}
-                                className="flex-shrink-0 w-[300px] md:w-[380px] snap-center"
+                                key={`${item.id}-${index}`}
+                                className="flex-shrink-0 w-[300px] md:w-[380px]"
                             >
                                 <div className="h-full bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 group/card relative overflow-hidden">
                                     {/* Glass flare */}
@@ -56,14 +61,14 @@ export default function NotificationScroller({ notifications = [] }: { notificat
                                                     Update
                                                 </span>
                                             </div>
-                                            {index === 0 && (
-                                                <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter animate-bounce flex items-center gap-1">
+                                            {(index % notifications.length) === 0 && (
+                                                <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter flex items-center gap-1">
                                                     <Sparkles className="w-2.5 h-2.5" /> NEW
                                                 </span>
                                             )}
                                         </div>
 
-                                        <p className="text-sm font-bold text-slate-700 leading-relaxed line-clamp-3 flex-1">
+                                        <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-normal break-words line-clamp-3 flex-1">
                                             {item.text}
                                         </p>
 
@@ -85,13 +90,19 @@ export default function NotificationScroller({ notifications = [] }: { notificat
                             </div>
                         ))}
                     </div>
-                    
-                    {/* Shadow indicators for scroll */}
-                    <div className="absolute right-0 top-0 bottom-6 w-20 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity md:block hidden" />
                 </div>
             </div>
 
             <style jsx global>{`
+                @keyframes marquee {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-marquee {
+                    display: flex;
+                    width: max-content;
+                    animation: marquee 35s linear infinite;
+                }
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
