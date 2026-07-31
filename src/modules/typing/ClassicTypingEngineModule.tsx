@@ -274,7 +274,27 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       startTest();
     }
     resetIdleTimer();
-    setTypedText(e.target.value);
+
+    const val = e.target.value;
+    const isDeletion = val.length < typedText.length;
+
+    // Enforce backspace mode restrictions on input change
+    if (isDeletion) {
+      if (settings.backspaceMode === 'disabled') return;
+      if (settings.backspaceMode === 'word') {
+        if (typedText.endsWith(' ') && !val.endsWith(' ')) return;
+      }
+      if (settings.backspaceMode === 'upssssc') {
+        const typedWords = typedText.split(' ');
+        if (typedWords.length >= 3) {
+          const lockedWords = typedWords.slice(0, typedWords.length - 2);
+          const lockedText = lockedWords.join(' ') + ' ';
+          if (val.length < lockedText.length) return;
+        }
+      }
+    }
+
+    setTypedText(val);
     
     // Auto-scroll typing textarea
     if (inputRef.current) {
@@ -320,6 +340,18 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         if (typedText.endsWith(' ')) {
           e.preventDefault();
           return;
+        }
+      }
+
+      if (settings.backspaceMode === 'upssssc') {
+        const typedWords = typedText.split(' ');
+        if (typedWords.length >= 3) {
+          const lockedWords = typedWords.slice(0, typedWords.length - 2);
+          const lockedText = lockedWords.join(' ') + ' ';
+          if (typedText.length <= lockedText.length) {
+            e.preventDefault();
+            return;
+          }
         }
       }
       incrementBackspace();
