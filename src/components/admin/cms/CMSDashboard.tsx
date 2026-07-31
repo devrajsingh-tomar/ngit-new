@@ -74,6 +74,63 @@ export default function CMSDashboard() {
     button_link: ""
   });
 
+  const [uploadingSlide, setUploadingSlide] = useState(false);
+  const [uploadingCard, setUploadingCard] = useState(false);
+
+  const handleSlideImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingSlide(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setSlideForm(prev => ({ ...prev, imageUrl: data.url }));
+        toast.success("Banner image uploaded successfully!");
+      } else {
+        toast.error(data.error || "Failed to upload image");
+      }
+    } catch (err) {
+      toast.error("An error occurred during file upload.");
+    } finally {
+      setUploadingSlide(false);
+    }
+  };
+
+  const handleCardImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCard(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setCardForm(prev => ({ ...prev, image: data.url }));
+        toast.success("Card image uploaded successfully!");
+      } else {
+        toast.error(data.error || "Failed to upload image");
+      }
+    } catch (err) {
+      toast.error("An error occurred during file upload.");
+    } finally {
+      setUploadingCard(false);
+    }
+  };
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -757,12 +814,25 @@ export default function CMSDashboard() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Graphic Image URL (Optional)</label>
-                <Input 
-                  value={slideForm.imageUrl} 
-                  onChange={(e) => setSlideForm({ ...slideForm, imageUrl: e.target.value })} 
-                  placeholder="e.g. https://domain.com/photo.jpg"
-                />
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Graphic Image (Optional)</label>
+                <div className="flex gap-2 items-center">
+                  <Input 
+                    value={slideForm.imageUrl} 
+                    onChange={(e) => setSlideForm({ ...slideForm, imageUrl: e.target.value })} 
+                    placeholder="Image URL or upload..."
+                    className="flex-1"
+                  />
+                  <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 cursor-pointer transition-colors shrink-0 h-9 flex items-center">
+                    {uploadingSlide ? "Uploading..." : "Upload"}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleSlideImageUpload} 
+                      className="hidden" 
+                      disabled={uploadingSlide}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -892,14 +962,27 @@ export default function CMSDashboard() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Card Image URL</label>
-              <Input 
-                value={cardForm.image} 
-                onChange={(e) => setCardForm({ ...cardForm, image: e.target.value })} 
-                placeholder="e.g. https://images.unsplash.com/..."
-                required
-              />
-              <span className="text-[9px] text-slate-400 font-semibold block">Use online image hosts or paths starting with /uploads.</span>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Card Image</label>
+              <div className="flex gap-2 items-center">
+                <Input 
+                  value={cardForm.image} 
+                  onChange={(e) => setCardForm({ ...cardForm, image: e.target.value })} 
+                  placeholder="Image URL or upload..."
+                  className="flex-1"
+                  required
+                />
+                <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 cursor-pointer transition-colors shrink-0 h-9 flex items-center">
+                  {uploadingCard ? "Uploading..." : "Upload"}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleCardImageUpload} 
+                    className="hidden" 
+                    disabled={uploadingCard}
+                  />
+                </label>
+              </div>
+              <span className="text-[9px] text-slate-400 font-semibold block">Use online image hosts or upload a custom image.</span>
             </div>
 
             <div className="space-y-1.5">
