@@ -45,7 +45,7 @@ export default function HeroSlider({ blocks = [] }: HeroSliderProps) {
 
     return (
         <section className="w-full select-none bg-slate-50 py-4 overflow-hidden">
-            <div className="container-custom">
+            <div className="w-full px-4 md:px-6">
                 <div className="rounded-[2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.05)] border border-slate-100 bg-white">
                     <Swiper
                         modules={[Autoplay, Navigation, Pagination]}
