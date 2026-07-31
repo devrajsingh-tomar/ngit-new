@@ -743,103 +743,69 @@ export default function AdminTypingDashboard() {
                  </div>
               </div>
            </TabsContent>
-           <TabsContent value="rule-presets" className="mt-0">
-               <div className="mb-6 flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-                  <div>
-                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Rule Presets</h2>
-                     <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Define exam rules and tie them to Gov Exams</p>
-                  </div>
-                  <Button onClick={() => setShowRulePresetModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Rule Preset</Button>
-               </div>
+            <TabsContent value="rule-presets" className="mt-0">
+                <div className="mb-6 flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                   <div>
+                      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Exam Patterns &amp; Presets</h2>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Define exam rules and tie them to Gov Exams</p>
+                   </div>
+                   <Button onClick={() => setShowRulePresetModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Rule Preset</Button>
+                </div>
 
-               <div className="space-y-6">
-                  {/* Gov Exam Grouped Presets */}
-                  {govExams.map(gov => {
-                    const associatedPresets = rulePresets.filter(preset => {
-                      const gid = preset.govExamId?._id || preset.govExamId;
-                      return gid?.toString() === gov._id?.toString();
-                    });
-                    
-                    if (associatedPresets.length === 0) return null;
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                   {rulePresets.map(preset => {
+                     const gov = govExams.find(g => {
+                       const gid = preset.govExamId?._id || preset.govExamId;
+                       return gid?.toString() === g._id?.toString();
+                     });
 
-                    return (
-                      <div key={gov._id} className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-                        <div className="flex items-center gap-2 pb-2 border-b border-slate-200/80">
-                          {gov.logo && <img src={gov.logo} alt="" className="w-5 h-5 rounded-md object-contain bg-white" />}
-                          <h3 className="font-black text-slate-800 text-xs uppercase tracking-wider">{gov.title} Presets</h3>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
-                           {associatedPresets.map(preset => (
-                             <div key={preset._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
-                                <div className="flex justify-between items-start mb-2">
-                                   <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
-                                   <div className="flex items-center gap-1.5">
-                                     <button 
-                                       onClick={() => {
-                                         setEditingRulePreset(preset);
-                                         setShowRulePresetModal(true);
-                                       }} 
-                                       className="text-slate-300 hover:text-indigo-600 transition-colors p-1"
-                                     >
-                                       <Edit2 className="w-3.5 h-3.5"/>
-                                     </button>
-                                     <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 hover:text-rose-600 transition-colors p-1"><Trash2 className="w-3.5 h-3.5"/></button>
-                                   </div>
-                                </div>
-                                <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
-                                <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                   <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
-                                   <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
-                                   {preset.disableCopyPaste && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-bold uppercase">No Copy</span>}
-                                </div>
-                             </div>
-                           ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+                     return (
+                       <div key={preset._id} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors group flex flex-col justify-between">
+                          <div>
+                            <div className="flex justify-between items-start mb-3">
+                               <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
+                               <div className="flex items-center gap-1.5">
+                                 <button 
+                                   onClick={() => {
+                                     setEditingRulePreset(preset);
+                                     setShowRulePresetModal(true);
+                                   }} 
+                                   className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                                 >
+                                   <Edit2 className="w-3.5 h-3.5"/>
+                                 </button>
+                                 <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-400 hover:text-rose-600 transition-colors p-1"><Trash2 className="w-3.5 h-3.5"/></button>
+                               </div>
+                            </div>
+                            <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Exam Mode: {preset.examMode || "General"}</p>
+                            
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                               <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
+                               <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
+                               <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">Word Limit: {preset.wordLimit || "None"}</span>
+                               {preset.disableCopyPaste && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-bold uppercase font-mono">No Copy</span>}
+                            </div>
+                          </div>
 
-                  {/* Unassigned / General Presets */}
-                  {rulePresets.filter(preset => !preset.govExamId).length > 0 && (
-                    <div className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-                      <div className="flex items-center gap-2 pb-2 border-b border-slate-200/80">
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                        <h3 className="font-black text-slate-800 text-xs uppercase tracking-wider">General / Global Presets</h3>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
-                         {rulePresets.filter(preset => !preset.govExamId).map(preset => (
-                           <div key={preset._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
-                              <div className="flex justify-between items-start mb-2">
-                                 <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-4 h-4"/></div>
-                                 <div className="flex items-center gap-1.5">
-                                   <button 
-                                     onClick={() => {
-                                       setEditingRulePreset(preset);
-                                       setShowRulePresetModal(true);
-                                     }} 
-                                     className="text-slate-300 hover:text-indigo-600 transition-colors p-1"
-                                   >
-                                     <Edit2 className="w-3.5 h-3.5"/>
-                                   </button>
-                                   <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 hover:text-rose-600 transition-colors p-1"><Trash2 className="w-3.5 h-3.5"/></button>
-                                 </div>
-                              </div>
-                              <h4 className="font-bold text-slate-900 text-sm mb-1">{preset.name}</h4>
-                              <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                 <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
-                                 <span className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
-                                 {preset.disableCopyPaste && <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-bold uppercase">No Copy</span>}
-                              </div>
-                           </div>
-                         ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {rulePresets.length === 0 && (
-                    <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">No rule presets defined. Create one to standardize exam patterns.</div>
-                  )}
-               </div>
+                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                             <span>Linked Exam:</span>
+                             {gov ? (
+                               <span className="text-indigo-600 uppercase flex items-center gap-1">
+                                 {gov.logo && <img src={gov.logo} alt="" className="w-3.5 h-3.5 object-contain" />}
+                                 {gov.title}
+                               </span>
+                             ) : (
+                               <span className="text-slate-400 italic">None (General)</span>
+                             )}
+                          </div>
+                       </div>
+                     );
+                   })}
+                </div>
+                {rulePresets.length === 0 && (
+                  <div className="p-12 text-center text-slate-400 bg-white border border-slate-200 rounded-xl">No Exam Patterns configured.</div>
+                )}
             </TabsContent>
 
           {/* ... Add Passages Tab Content ... */}
