@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import HeroSlider from "@/components/home/HeroSlider";
 import QuickActionsGrid from "@/components/public/QuickActionsGrid";
 import TypingInformationSection from "@/components/public/TypingInformationSection";
+import AppDownloadSection from "@/components/public/AppDownloadSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
 
 import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
@@ -42,6 +43,9 @@ export default async function PublicHomePage() {
 
             {/* 4. Typing Software Module Information Section */}
             <TypingInformationSection />
+
+            {/* 5. Mobile App Download Section */}
+            <AppDownloadSection />
         </div>
     );
 }
