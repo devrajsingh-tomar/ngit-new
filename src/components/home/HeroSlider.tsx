@@ -72,7 +72,7 @@ export default function HeroSlider({ blocks = [] }: HeroSliderProps) {
                             const rel = slide.openInNewTab ? "noopener noreferrer" : undefined;
 
                             const slideContent = (
-                                <div className="relative w-full h-[240px] sm:h-[350px] md:h-[480px] lg:h-[500px] overflow-hidden group/slide">
+                                <div className="relative w-full h-[280px] sm:h-[400px] md:h-[550px] lg:h-[600px] overflow-hidden group/slide">
                                     <Image
                                         src={imageUrl}
                                         alt={slide.title || "Promotional Banner"}
