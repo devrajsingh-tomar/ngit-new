@@ -60,7 +60,7 @@ export default function PublicNavbar() {
         { label: "Blog", href: "/blog" },
         { label: "Mock Tests", href: "/student/login" },
         { label: "Typing Tests", href: "/student/login" },
-        { label: "ShortHand", href: "/student/login" },
+        { label: "ShortHand", href: "https://stenobyvishalsir.com/" },
         { label: "Results", href: "/results" },
         { label: "Gallery", href: "/gallery" },
         { label: "Faculty", href: "/faculty" },
