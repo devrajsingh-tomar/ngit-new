@@ -218,6 +218,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
       showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
       sourcePosition: config.sourcePosition || 'top',
+      examMode: config.examMode || 'General',
+      wordLimit: config.wordLimit || 0,
     });
     window.scrollTo({ top: 0, behavior: 'instant' });
 

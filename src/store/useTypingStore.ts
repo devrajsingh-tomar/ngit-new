@@ -13,6 +13,7 @@ interface TypingSettings {
   showScrollbar: boolean;
   layout: 'English' | 'Inscript';
   sourcePosition: 'top' | 'left' | 'right' | 'bottom';
+  examMode: string;
 }
 
 interface TypingState {
@@ -78,6 +79,7 @@ const initialSettings: TypingSettings = {
   showScrollbar: true,
   layout: 'English',
   sourcePosition: 'top',
+  examMode: 'General',
 };
 
 export const useTypingStore = create<TypingState>((set) => ({

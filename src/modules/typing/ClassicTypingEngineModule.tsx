@@ -235,6 +235,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
       showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
       sourcePosition: config.sourcePosition || 'top',
+      examMode: config.examMode || 'General',
+      wordLimit: config.wordLimit || 0,
     });
     // Scroll window to top so the exam starts from the top area
     window.scrollTo({ top: 0, behavior: 'instant' });
