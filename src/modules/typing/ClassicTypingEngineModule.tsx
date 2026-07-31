@@ -79,6 +79,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   useTypingEngine();
 
   const passageContainerRef = useRef<HTMLDivElement>(null);
+  const lockedLengthRef = useRef(0);
 
   const [passagesList, setPassagesList] = useState<any[]>([]);
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
@@ -225,6 +226,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
+    lockedLengthRef.current = 0;
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
@@ -269,6 +271,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       });
     }
   }, [isFinished, onComplete, wpm, rawWpm, accuracy, errorCount, typedText, backspaceCount, settings.duration, timeLeft, currentExam, isBookPractice]);
+  
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {
       startTest();
@@ -285,16 +288,26 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         if (typedText.endsWith(' ') && !val.endsWith(' ')) return;
       }
       if (settings.backspaceMode === 'upssssc') {
-        const typedWords = typedText.split(' ');
-        if (typedWords.length >= 3) {
-          const lockedWords = typedWords.slice(0, typedWords.length - 2);
-          const lockedText = lockedWords.join(' ') + ' ';
-          if (val.length < lockedText.length) return;
-        }
+        if (val.length < lockedLengthRef.current) return;
       }
     }
 
     setTypedText(val);
+
+    // Update lockedLengthRef monotonically
+    if (settings.backspaceMode === 'upssssc') {
+      const spaceIndices: number[] = [];
+      for (let i = 0; i < val.length; i++) {
+        if (val[i] === ' ' || val[i] === '\n') {
+          spaceIndices.push(i);
+        }
+      }
+      const S = spaceIndices.length;
+      if (S >= 2) {
+        const thresh = spaceIndices[S - 2] + 1;
+        lockedLengthRef.current = Math.max(lockedLengthRef.current, thresh);
+      }
+    }
     
     // Auto-scroll typing textarea
     if (inputRef.current) {
@@ -344,14 +357,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       }
 
       if (settings.backspaceMode === 'upssssc') {
-        const typedWords = typedText.split(' ');
-        if (typedWords.length >= 3) {
-          const lockedWords = typedWords.slice(0, typedWords.length - 2);
-          const lockedText = lockedWords.join(' ') + ' ';
-          if (typedText.length <= lockedText.length) {
-            e.preventDefault();
-            return;
-          }
+        if (typedText.length <= lockedLengthRef.current) {
+          e.preventDefault();
+          return;
         }
       }
       incrementBackspace();

@@ -76,6 +76,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   useTypingEngine();
 
   const passageContainerRef = useRef<HTMLDivElement>(null);
+  const lockedLengthRef = useRef(0);
 
   const [passagesList, setPassagesList] = useState<any[]>([]);
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
@@ -208,6 +209,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   // 1. Initial Setup & Cleanup
   useEffect(() => {
     resetTest();
+    lockedLengthRef.current = 0;
     setPassage(internalPassage);
     updateSettings({
       duration: internalDuration,
@@ -268,16 +270,26 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         if (typedText.endsWith(' ') && !val.endsWith(' ')) return;
       }
       if (settings.backspaceMode === 'upssssc') {
-        const typedWords = typedText.split(' ');
-        if (typedWords.length >= 3) {
-          const lockedWords = typedWords.slice(0, typedWords.length - 2);
-          const lockedText = lockedWords.join(' ') + ' ';
-          if (val.length < lockedText.length) return;
-        }
+        if (val.length < lockedLengthRef.current) return;
       }
     }
 
     setTypedText(val);
+
+    // Update lockedLengthRef monotonically
+    if (settings.backspaceMode === 'upssssc') {
+      const spaceIndices: number[] = [];
+      for (let i = 0; i < val.length; i++) {
+        if (val[i] === ' ' || val[i] === '\n') {
+          spaceIndices.push(i);
+        }
+      }
+      const S = spaceIndices.length;
+      if (S >= 2) {
+        const thresh = spaceIndices[S - 2] + 1;
+        lockedLengthRef.current = Math.max(lockedLengthRef.current, thresh);
+      }
+    }
     
     if (inputRef.current) {
         inputRef.current.scrollTop = inputRef.current.scrollHeight;
@@ -326,14 +338,9 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       }
 
       if (settings.backspaceMode === 'upssssc') {
-        const typedWords = typedText.split(' ');
-        if (typedWords.length >= 3) {
-          const lockedWords = typedWords.slice(0, typedWords.length - 2);
-          const lockedText = lockedWords.join(' ') + ' ';
-          if (typedText.length <= lockedText.length) {
-            e.preventDefault();
-            return;
-          }
+        if (typedText.length <= lockedLengthRef.current) {
+          e.preventDefault();
+          return;
         }
       }
       incrementBackspace();
