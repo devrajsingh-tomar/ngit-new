@@ -2,8 +2,7 @@ export const dynamic = "force-dynamic";
 
 import HeroSlider from "@/components/home/HeroSlider";
 import QuickActionsGrid from "@/components/public/QuickActionsGrid";
-import InteractiveTypingSandbox from "@/components/public/InteractiveTypingSandbox";
-import RedesignedCertification from "@/components/public/RedesignedCertification";
+import TypingInformationSection from "@/components/public/TypingInformationSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
 
 import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
@@ -41,11 +40,8 @@ export default async function PublicHomePage() {
             {/* 3. Quick Navigation Workspace */}
             <QuickActionsGrid blocks={navigationBlocks} />
 
-            {/* 4. Interactive Typing Sandbox */}
-            <InteractiveTypingSandbox />
-
-            {/* 5. Certification Section */}
-            <RedesignedCertification />
+            {/* 4. Typing Software Module Information Section */}
+            <TypingInformationSection />
         </div>
     );
 }
