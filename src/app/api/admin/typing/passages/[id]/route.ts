@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import TypingPassage from "@/models/TypingPassage";
 import TypingExam from "@/models/TypingExam";
 import GovExam from "@/models/GovExam";
+import TypingRulePreset from "@/models/TypingRulePreset";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 

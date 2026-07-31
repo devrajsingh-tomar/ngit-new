@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import GovExam from "@/models/GovExam";
+import TypingExam from "@/models/TypingExam";
+import TypingRulePreset from "@/models/TypingRulePreset";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -49,6 +51,45 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     
     if (!exam) {
       return NextResponse.json({ error: `Exam not found with ID: ${id}` }, { status: 404 });
+    }
+
+    // Automatically propagate linked rule preset configurations to all child Typing Exams
+    if (updateData.rulePresetId !== undefined) {
+      if (updateData.rulePresetId) {
+        const preset = await TypingRulePreset.findById(updateData.rulePresetId).lean();
+        if (preset) {
+          await TypingExam.updateMany(
+            { govExamId: id },
+            {
+              $set: {
+                rulePresetId: preset._id,
+                wordLimit: preset.wordLimit || 0,
+                backspaceMode: preset.backspaceMode || "full",
+                highlightMode: preset.highlightMode || "word",
+                autoScroll: preset.autoScroll !== undefined ? preset.autoScroll : true,
+                showScrollbar: preset.showScrollbar !== undefined ? preset.showScrollbar : true,
+                examMode: preset.examMode || "General"
+              }
+            }
+          );
+        }
+      } else {
+        // Preset was unlinked, clear preset reference from child exams
+        await TypingExam.updateMany(
+          { govExamId: id },
+          { 
+            $unset: { rulePresetId: "" },
+            $set: {
+              wordLimit: 0,
+              backspaceMode: "full",
+              highlightMode: "word",
+              autoScroll: true,
+              showScrollbar: true,
+              examMode: "General"
+            }
+          }
+        );
+      }
     }
 
     return NextResponse.json(exam);
