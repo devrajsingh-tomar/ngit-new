@@ -1,214 +1,138 @@
 import Link from "next/link";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Zap, ArrowUpRight, ShieldCheck, Globe, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-interface FooterLink {
-    label: string;
-    href: string;
-}
-
-interface FooterSection {
-    title: string;
-    links: FooterLink[];
-}
-
-interface SocialLink {
-    platform: string;
-    url: string;
-}
-
-interface FooterData {
-    logoImage?: string;
-    logoText?: string;
-    description?: string;
-    copyright?: string;
-    sections?: FooterSection[];
-    social?: SocialLink[];
-}
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, ShieldCheck, Smartphone } from "lucide-react";
 
 export default async function Footer() {
     const result = await getHeaderFooterData();
     const headerData = result.success ? result.header : null;
-
-    
-    // Default fallback data if everything fails
-    const defaultFooterData: FooterData = {
-        logoText: "NGIT",
-        description: "Architecting the future of technical education with precision, innovation, and industry-first success strategies.",
-        copyright: `© ${new Date().getFullYear()} All rights reserved to NGIT.`,
-        sections: [
-            {
-                title: "Quick Links",
-                links: [
-                    { label: "About Us", href: "/#about" },
-                    { label: "Contact", href: "/contact" },
-                ],
-            }
-        ],
-        social: [
-            { platform: "Facebook", url: "#" },
-            { platform: "Twitter", url: "#" },
-            { platform: "Instagram", url: "#" },
-        ]
-    };
-
-    const footerData: FooterData = (result.success && result.footer) ? result.footer : defaultFooterData;
+    const footerData = (result.success && result.footer) ? result.footer : {};
 
     const currentYear = new Date().getFullYear();
-    const contactSection = footerData.sections?.find(s => s.title.toLowerCase().includes('contact'));
-    const regularSections = footerData.sections?.filter(s => !s.title.toLowerCase().includes('contact')) || [];
-
-    const getIcon = (platform: string) => {
-        const p = platform.toLowerCase();
-        if (p.includes('facebook')) return <Facebook className="w-5 h-5" />;
-        if (p.includes('twitter')) return <Twitter className="w-5 h-5" />;
-        if (p.includes('instagram')) return <Instagram className="w-5 h-5" />;
-        if (p.includes('youtube')) return <Youtube className="w-5 h-5" />;
-        return <Globe className="w-5 h-5" />;
-    };
 
     return (
-        <footer className="relative bg-slate-950 text-slate-400 border-t border-white/5 pt-24 pb-12 overflow-hidden">
-            {/* Architectural Design Elements */}
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-600/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-600/5 rounded-full blur-[120px] -ml-64 -mb-64 pointer-events-none" />
-            
-            <div className="container-custom relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-20">
-                    {/* Brand Identity */}
-                    <div className="lg:col-span-5 space-y-10">
-                        <div className="space-y-8">
-                            <Link href="/" className="inline-block group transition-transform duration-500 hover:scale-105">
-                                {footerData.logoImage || headerData?.logoImage ? (
-                                    <div className="relative">
-                                        <img 
-                                            src={footerData.logoImage || headerData?.logoImage} 
-                                            alt="NGIT Logo" 
-                                            className="h-20 w-auto object-contain opacity-90 group-hover:opacity-100 transition-all" 
-                                        />
-                                        <div className="absolute -inset-4 bg-emerald-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl flex items-center justify-center font-black text-white text-3xl shadow-2xl shadow-emerald-500/20">
-                                            N
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <h3 className="text-3xl font-black tracking-tighter text-white uppercase italic leading-none">
-                                                {footerData.logoText || "NGIT"}
-                                            </h3>
-                                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] mt-1 ml-1">Institute</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </Link>
-                            
-                            <p className="text-lg text-slate-400 font-medium leading-relaxed max-w-md">
-                                {footerData.description || "Empowering the next generation with advanced technical education and strategic career development since 2010."}
-                            </p>
-                        </div>
+        <footer className="relative bg-slate-950 text-slate-400 border-t border-slate-900 pt-20 pb-10 overflow-hidden">
+            {/* Soft decorative background glow */}
+            <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-                        {/* Social Connectivity */}
-                        <div className="space-y-4">
-                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] ml-1">Connect with us</p>
-                            <div className="flex flex-wrap gap-4">
-                                {footerData.social?.map((social, idx) => (
-                                    <Link
-                                        key={idx}
-                                        href={social.url}
-                                        target="_blank"
-                                        className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-500 group"
-                                    >
-                                        {getIcon(social.platform)}
-                                    </Link>
-                                ))}
-                            </div>
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
+                    {/* Brand Column */}
+                    <div className="lg:col-span-5 space-y-6">
+                        <Link href="/" className="inline-flex items-center gap-3 group">
+                            {footerData.logoImage || headerData?.logoImage ? (
+                                <img 
+                                    src={footerData.logoImage || headerData?.logoImage} 
+                                    alt="NGIT Logo" 
+                                    className="h-12 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity" 
+                                />
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-emerald-600 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-lg">
+                                        N
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <h3 className="text-xl font-black tracking-tight text-white uppercase italic leading-none">
+                                            {footerData.logoText || "NGIT"}
+                                        </h3>
+                                        <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">Institute</span>
+                                    </div>
+                                </div>
+                            )}
+                        </Link>
+                        <p className="text-slate-400 font-medium text-sm leading-relaxed max-w-sm">
+                            {footerData.description || "Architecting the future of technical education with precision, innovation, and industry-first success strategies since 2010."}
+                        </p>
+                        
+                        {/* Social Links */}
+                        <div className="flex items-center gap-3">
+                            <a href="#" className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300">
+                                <Facebook className="w-4 h-4" />
+                            </a>
+                            <a href="#" className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300">
+                                <Twitter className="w-4 h-4" />
+                            </a>
+                            <a href="#" className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300">
+                                <Instagram className="w-4 h-4" />
+                            </a>
+                            <a href="#" className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300">
+                                <Youtube className="w-4 h-4" />
+                            </a>
                         </div>
                     </div>
-                    {/* Navigation Framework */}
-                    <div className="lg:col-span-7 flex flex-col sm:flex-row flex-wrap justify-between gap-12">
-                        {regularSections.map((section, idx) => (
-                            <div key={idx} className="space-y-8 min-w-[140px]">
-                                <h4 className="text-[11px] font-black uppercase text-emerald-500 tracking-[0.3em] flex items-center gap-3">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500/30" />
-                                    {section.title}
-                                </h4>
-                                <ul className="space-y-5">
-                                    {section.links?.map((link, linkIdx) => (
-                                        <li key={linkIdx}>
-                                            <Link
-                                                href={link.href}
-                                                className="group flex items-center gap-3 text-[15px] font-semibold text-slate-400 hover:text-white transition-all"
-                                            >
-                                                <span className="w-1.5 h-[1.5px] bg-emerald-500/40 group-hover:w-4 group-hover:bg-emerald-500 transition-all duration-300" />
-                                                <span>{link.label}</span>
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
 
-                        {/* Direct Support */}
-                        <div className="space-y-8 min-w-[260px] sm:max-w-[320px] flex-1">
-                            <h4 className="text-[11px] font-black uppercase text-emerald-500 tracking-[0.3em] flex items-center gap-3">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500/30" />
-                                {contactSection?.title || "SUPPORT"}
-                            </h4>
-                            <div className="space-y-4">
-                                {contactSection?.links?.map((link, idx) => {
-                                    const isPhone = link.href.startsWith("tel:");
-                                    const isMail = link.href.startsWith("mailto:");
- 
-                                    return (
-                                        <a 
-                                            key={idx} 
-                                            href={link.href} 
-                                            className="group flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all duration-500"
-                                        >
-                                            <div className={cn(
-                                                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 group-hover:scale-110 shadow-lg",
-                                                isPhone ? "bg-emerald-600/20 text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white group-hover:shadow-emerald-500/40" : 
-                                                isMail ? "bg-teal-600/20 text-teal-400 group-hover:bg-teal-600 group-hover:text-white group-hover:shadow-teal-500/40" :  
-                                                "bg-slate-700/30 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-900 group-hover:shadow-white/20"
-                                            )}>
-                                                {isPhone ? <Phone className="w-4 h-4" /> : isMail ? <Mail className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-[12px] font-bold text-white group-hover:translate-x-1 transition-transform break-words">
-                                                    {link.label.split(":")[1]?.trim() || link.label}
-                                                </p>
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">
-                                                    {isPhone ? "Call Center" : isMail ? "Email Support" : "HQ Office"}
-                                                </p>
-                                            </div>
-                                        </a>
-                                    );
-                                })}
-                            </div>
+                    {/* Navigation Columns */}
+                    <div className="lg:col-span-4 grid grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Sitemap</h4>
+                            <ul className="space-y-2.5 text-sm font-semibold">
+                                <li>
+                                    <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                                </li>
+                                <li>
+                                    <Link href="/about" className="hover:text-white transition-colors">About Us</Link>
+                                </li>
+                                <li>
+                                    <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+                                </li>
+                                <li>
+                                    <Link href="/verify" className="hover:text-white transition-colors">Verification</Link>
+                                </li>
+                            </ul>
                         </div>
+
+                        <div className="space-y-4">
+                            <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Learning Hub</h4>
+                            <ul className="space-y-2.5 text-sm font-semibold">
+                                <li>
+                                    <Link href="/typing" className="hover:text-white transition-colors">Typing Software</Link>
+                                </li>
+                                <li>
+                                    <Link href="/student/login" className="hover:text-white transition-colors">Student Portal</Link>
+                                </li>
+                                <li>
+                                    <Link href="/courses" className="hover:text-white transition-colors">All Courses</Link>
+                                </li>
+                                <li>
+                                    <Link href="/exams" className="hover:text-white transition-colors">Mock Tests</Link>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* Contact & Support Column */}
+                    <div className="lg:col-span-3 space-y-4">
+                        <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Contact support</h4>
+                        <ul className="space-y-3 text-sm font-semibold">
+                            <li className="flex items-center gap-3">
+                                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                                <a href="tel:+919876543210" className="hover:text-white transition-colors">+91 98765 43210</a>
+                            </li>
+                            <li className="flex items-center gap-3">
+                                <Mail className="w-4 h-4 text-indigo-400 shrink-0" />
+                                <a href="mailto:support@ngitedu.com" className="hover:text-white transition-colors">support@ngitedu.com</a>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                                <span className="text-slate-400 leading-tight">NGIT Campus, Main Road, New Delhi, India</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
                 {/* Footer Baseline */}
-                <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-10">
-                    <div className="text-center md:text-left space-y-2">
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">
-                            {footerData.copyright || `© ${currentYear} All rights reserved to NGIT.`}
+                <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-6">
+                    <div className="text-center sm:text-left space-y-1">
+                        <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+                            © {currentYear} All rights reserved to {footerData.logoText || "NGIT"}.
                         </p>
                         <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
                             ISO 9001:2015 Certified Institute • Skill India Partner
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap justify-center items-center gap-8">
-                        <div className="flex items-center gap-8">
-                            <Link href="/privacy" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors">Privacy Policy</Link>
-                            <Link href="/terms" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors">Terms of Service</Link>
-                        </div>
-                        <Link href="/verify" className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-emerald-600 text-[11px] font-black uppercase tracking-widest text-white hover:bg-emerald-700 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-1">
+                    <div className="flex items-center gap-6">
+                        <Link href="/verify" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-[10px] font-black uppercase tracking-widest text-white hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95">
                             <ShieldCheck className="w-4 h-4" />
                             Verify Certificate
                         </Link>
