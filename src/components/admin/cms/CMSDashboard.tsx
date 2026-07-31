@@ -213,10 +213,10 @@ export default function CMSDashboard() {
         title: slide.title || "",
         subtitle: slide.subtitle || "",
         description: slide.description || "",
-        cta1Text: slide.cta1Text || "Learn More",
-        cta1Link: slide.cta1Link || "/",
-        cta2Text: slide.cta2Text || "Contact Us",
-        cta2Link: slide.cta2Link || "/contact",
+        cta1Text: slide.cta1Text || "",
+        cta1Link: slide.cta1Link || "",
+        cta2Text: slide.cta2Text || "",
+        cta2Link: slide.cta2Link || "",
         bgColor: slide.bgColor || "from-slate-900 via-indigo-950 to-slate-900",
         imageUrl: slide.imageUrl || "",
         isActive: slide.isActive !== false,
@@ -228,10 +228,10 @@ export default function CMSDashboard() {
         title: "",
         subtitle: "",
         description: "",
-        cta1Text: "Learn More",
-        cta1Link: "/",
-        cta2Text: "Contact Us",
-        cta2Link: "/contact",
+        cta1Text: "",
+        cta1Link: "",
+        cta2Text: "",
+        cta2Link: "",
         bgColor: "from-slate-900 via-indigo-950 to-slate-900",
         imageUrl: "",
         isActive: true,
@@ -743,7 +743,6 @@ export default function CMSDashboard() {
                   value={slideForm.title} 
                   onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })} 
                   placeholder="e.g. India's Finest Shorthand Academy"
-                  required
                 />
               </div>
               <div className="space-y-1.5">
