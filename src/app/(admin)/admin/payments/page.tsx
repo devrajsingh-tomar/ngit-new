@@ -270,19 +270,19 @@ export default function AdminPaymentsPage() {
     });
 
     const filteredPayments = payments.filter(p =>
-        p.student?.toLowerCase().includes(search.toLowerCase()) ||
-        p.orderId?.toLowerCase().includes(search.toLowerCase()) ||
-        p.course?.toLowerCase().includes(search.toLowerCase())
+        (p.student || "").toLowerCase().includes(search.toLowerCase()) ||
+        (p.orderId || "").toLowerCase().includes(search.toLowerCase()) ||
+        (p.course || "").toLowerCase().includes(search.toLowerCase())
     );
 
     const filteredBalances = studentFeeRecords.filter(r =>
-        r.studentName.toLowerCase().includes(search.toLowerCase()) ||
-        r.courseName?.toLowerCase().includes(search.toLowerCase())
+        (r.studentName || "").toLowerCase().includes(search.toLowerCase()) ||
+        (r.courseName || "").toLowerCase().includes(search.toLowerCase())
     );
 
     const filteredInvoices = invoices.filter(i =>
-        i.studentId?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        i.invoiceNumber.toLowerCase().includes(search.toLowerCase())
+        (i.studentId?.name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (i.invoiceNumber || "").toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -424,6 +424,7 @@ export default function AdminPaymentsPage() {
                 ].map((t) => (
                     <button
                         key={t.id}
+                        type="button"
                         onClick={() => {
                             setActiveTab(t.id as ActiveTab);
                             setSearch("");
@@ -637,7 +638,7 @@ export default function AdminPaymentsPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-6">
-                                    {filteredInvoices.map((inv) => (
+                                    {(filteredInvoices || []).map((inv) => (
                                         <div key={inv._id} className="bg-slate-50/50 hover:bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-300">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 mb-4">
                                                 <div className="flex items-center gap-4">
@@ -646,25 +647,25 @@ export default function AdminPaymentsPage() {
                                                     </div>
                                                     <div>
                                                         <div className="flex items-center gap-2">
-                                                            <h4 className="font-black text-slate-900 text-lg capitalize">{inv.studentId?.name}</h4>
+                                                            <h4 className="font-black text-slate-900 text-lg capitalize">{inv.studentId?.name || "Deleted Student"}</h4>
                                                             <span className={cn(
                                                                 "text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md",
                                                                 inv.status === "PAID" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-amber-50 text-amber-600 border border-amber-100"
                                                             )}>
-                                                                {inv.status}
+                                                                {inv.status || "PENDING"}
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs font-bold text-slate-400 mt-1 uppercase">{inv.invoiceNumber} · {inv.courseId?.title}</p>
+                                                        <p className="text-xs font-bold text-slate-400 mt-1 uppercase">{inv.invoiceNumber} · {inv.courseId?.title || "Deleted Course"}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-6">
                                                     <div className="text-right">
                                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Total Amount</span>
-                                                        <span className="text-lg font-black text-slate-800">₹{inv.totalAmount.toLocaleString()}</span>
+                                                        <span className="text-lg font-black text-slate-800">₹{(inv.totalAmount || 0).toLocaleString()}</span>
                                                     </div>
                                                     <div className="text-right">
                                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Balance Due</span>
-                                                        <span className="text-lg font-black text-rose-500">₹{inv.balanceDue.toLocaleString()}</span>
+                                                        <span className="text-lg font-black text-rose-500">₹{(inv.balanceDue || 0).toLocaleString()}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -672,13 +673,13 @@ export default function AdminPaymentsPage() {
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Installment Phases</label>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    {inv.installments.map((inst: any, idx: number) => (
+                                                    {(inv.installments || []).map((inst: any, idx: number) => (
                                                         <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-100/80 shadow-sm flex items-center justify-between">
                                                             <div>
                                                                 <p className="text-xs font-bold text-slate-400">Phase {idx + 1}</p>
-                                                                <p className="text-base font-black text-slate-900 mt-1">₹{inst.amount.toLocaleString()}</p>
+                                                                <p className="text-base font-black text-slate-900 mt-1">₹{(inst.amount || 0).toLocaleString()}</p>
                                                                 <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1 mt-1">
-                                                                    <CalendarDays className="w-3 h-3" /> Due {new Date(inst.dueDate).toLocaleDateString()}
+                                                                    <CalendarDays className="w-3 h-3" /> Due {inst.dueDate ? new Date(inst.dueDate).toLocaleDateString() : "N/A"}
                                                                 </span>
                                                             </div>
                                                             {inst.status === "PAID" ? (
