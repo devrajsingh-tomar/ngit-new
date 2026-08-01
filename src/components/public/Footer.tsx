@@ -24,11 +24,11 @@ export default async function Footer() {
                                 <img 
                                     src={footerData.logoImage || headerData?.logoImage} 
                                     alt="NGIT Logo" 
-                                    className="h-12 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity" 
+                                    className="h-16 md:h-20 w-auto object-contain opacity-95 group-hover:opacity-100 transition-all duration-300" 
                                 />
                             ) : (
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-emerald-600 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-md">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-emerald-600 rounded-xl flex items-center justify-center font-black text-white text-2xl shadow-md">
                                         N
                                     </div>
                                     <div className="flex flex-col">
@@ -41,12 +41,18 @@ export default async function Footer() {
                             )}
                         </Link>
                         <p className="text-slate-500 font-medium text-sm leading-relaxed max-w-sm">
-                            {footerData.description || "Architecting the future of technical education with precision, innovation, and industry-first success strategies since 2010."}
+                            N.G.I.T is an IT institute where we provide multiple IT courses with Professionals Trainers and Teachers. We Performs exceptionally in every course or Training.We provides quality education so our Students Secured 100% results.
                         </p>
                         
                         {/* Social Links */}
                         <div className="flex items-center gap-3">
-                            <a href="#" className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300">
+                            <a 
+                                href="https://www.facebook.com/National-Genius-Institute-of-Technology-641229979714542" 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300"
+                                title="Follow NGIT on Facebook"
+                            >
                                 <Facebook className="w-4 h-4" />
                             </a>
                             <a href="#" className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all duration-300">
@@ -103,18 +109,30 @@ export default async function Footer() {
                     {/* Contact & Support Column */}
                     <div className="lg:col-span-3 space-y-4">
                         <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-[0.2em]">Contact support</h4>
-                        <ul className="space-y-3 text-sm font-semibold">
-                            <li className="flex items-center gap-3">
-                                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <a href="tel:+919876543210" className="hover:text-slate-900 transition-colors">+91 98765 43210</a>
+                        <ul className="space-y-3.5 text-sm font-semibold">
+                            <li className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                    <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                                    <a href="tel:+918840341525" className="hover:text-slate-900 transition-colors">+91 88403 41525</a>
+                                </div>
+                                <div className="flex items-center gap-2 pl-6">
+                                    <a href="tel:+918004958441" className="hover:text-slate-900 transition-colors text-slate-500 font-medium">+91 80049 58441</a>
+                                </div>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail className="w-4 h-4 text-indigo-500 shrink-0" />
-                                <a href="mailto:support@ngitedu.com" className="hover:text-slate-900 transition-colors">support@ngitedu.com</a>
+                                <a href="mailto:contact@ngit.org.in" className="hover:text-slate-900 transition-colors">contact@ngit.org.in</a>
                             </li>
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                                <span className="text-slate-500 leading-tight">NGIT Campus, Main Road, New Delhi, India</span>
+                                <a 
+                                    href="https://www.google.com/maps/place/National+Genius+Institute+Of+Technology/@25.4967301,81.853729,17z/data=!3m1!4b1!4m5!3m4!1s0x399acba945e652c3:0x2b9cca1b43a5302d!8m2!3d25.4967253!4d81.8559177" 
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-slate-500 hover:text-slate-900 transition-colors leading-relaxed"
+                                >
+                                    First Floor, Sainik Market, Rasulabad Ghat Road, near Mahila Polytechnic, Rasulabad, Teliarganj, Prayagraj, Uttar Pradesh 211004
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -132,7 +150,7 @@ export default async function Footer() {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <Link href="/verify" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-[10px] font-black uppercase tracking-widest text-white hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95">
+                        <Link href="/verify" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-[10px] font-black uppercase tracking-widest text-white hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 active:scale-95">
                             <ShieldCheck className="w-4 h-4" />
                             Verify Certificate
                         </Link>
