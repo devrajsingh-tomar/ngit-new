@@ -52,6 +52,15 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
         progressTrend: []
     };
 
+    // Calculate typing statistics
+    const totalTypingTests = typingResults?.length || 0;
+    const avgTypingSpeed = totalTypingTests > 0 
+        ? Math.round(typingResults.reduce((sum: number, r: any) => sum + (r.wpm || 0), 0) / totalTypingTests)
+        : 0;
+    const avgTypingAccuracy = totalTypingTests > 0
+        ? Math.round(typingResults.reduce((sum: number, r: any) => sum + (r.accuracy || 0), 0) / totalTypingTests)
+        : 0;
+
     return (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700 max-w-7xl mx-auto pb-20">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-white/40 backdrop-blur-xl p-10 rounded-[3rem] border border-slate-100 shadow-sm">
@@ -76,20 +85,14 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
                         </h1>
                         <p className="text-slate-500 mt-6 font-bold flex items-center gap-3">
                             <span className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-                            You have <span className="text-slate-900 font-black px-2 py-0.5 bg-slate-100 rounded-lg">{stats.activeCourses} active courses</span> in your learning path.
+                            All systems operational. Start your typing practice today!
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-6 bg-white p-4 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50">
-                    <div className="flex -space-x-4 overflow-hidden ml-2">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="inline-block h-12 w-12 rounded-2xl ring-4 ring-white bg-slate-100 border border-slate-200 shadow-sm" />
-                        ))}
-                    </div>
-                    <div className="h-12 w-px bg-slate-100 mx-2" />
-                    <Link href="/student/courses">
+                    <Link href="/student/typing">
                         <Button className="btn-primary h-14 px-8 rounded-2xl font-black text-xs uppercase tracking-widest gap-3 shadow-lg shadow-primary/20">
-                            Enter Classroom <ArrowRight className="w-4 h-4" />
+                            Start Typing Test <ArrowRight className="w-4 h-4" />
                         </Button>
                     </Link>
                 </div>
@@ -98,10 +101,10 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
             {/* Performance Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                 {[
-                    { label: "Overall Progress", val: `${stats.avgProgress}%`, icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-50/50", border: "border-blue-100/50" },
-                    { label: "Attendance", val: `${stats.attendancePercentage}%`, icon: CalendarCheck, color: "text-emerald-600", bg: "bg-emerald-50/50", border: "border-emerald-100/50" },
-                    { label: "Active Courses", val: stats.activeCourses.toString(), icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50/50", border: "border-indigo-100/50" },
-                    { label: "Tests Passed", val: stats.testsCompleted.toString(), icon: Trophy, color: "text-amber-600", bg: "bg-amber-50/50", border: "border-amber-100/50" },
+                    { label: "Typing Exams Taken", val: totalTypingTests.toString(), icon: Keyboard, color: "text-blue-600", bg: "bg-blue-50/50", border: "border-blue-100/50" },
+                    { label: "Attendance", val: `${stats.attendancePercentage || 0}%`, icon: CalendarCheck, color: "text-emerald-600", bg: "bg-emerald-50/50", border: "border-emerald-100/50" },
+                    { label: "Avg Typing Speed", val: `${avgTypingSpeed} WPM`, icon: Zap, color: "text-indigo-600", bg: "bg-indigo-50/50", border: "border-indigo-100/50" },
+                    { label: "Avg Accuracy", val: `${avgTypingAccuracy}%`, icon: CheckCircle2, color: "text-amber-600", bg: "bg-amber-50/50", border: "border-amber-100/50" },
                 ].map((stat, i) => (
                     <div key={i} className={cn("bg-white p-8 rounded-[2.8rem] border shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 group relative overflow-hidden", stat.border)}>
                         <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 opacity-50 group-hover:scale-150 transition-transform duration-700" />
@@ -134,77 +137,6 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Main Column */}
                 <div className="lg:col-span-2 space-y-12">
-                    {/* Active Courses */}
-                    <div className="space-y-8">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Active Courses</h2>
-                            <Link href="/student/courses">
-                                <Button variant="ghost" className="text-primary font-black gap-2 uppercase text-[10px] tracking-widest">Go to Classroom <ChevronRight className="w-4 h-4" /></Button>
-                            </Link>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-8">
-                            {enrollments.length > 0 ? enrollments.map((en: any) => (
-                                <div key={en._id} className="bg-white p-2 rounded-[2.5rem] border border-slate-100 shadow-sm group hover:border-primary/20 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 overflow-hidden">
-                                    <div className="flex flex-col md:flex-row gap-8 p-6">
-                                        <div className="w-full md:w-56 aspect-video bg-slate-100 rounded-[1.5rem] overflow-hidden relative shadow-inner">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:opacity-0 transition-opacity" />
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <PlayCircle className="w-12 h-12 text-primary opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 flex flex-col justify-center gap-4">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h3 className="font-black text-xl text-slate-900 tracking-tight">{en.courseId?.title || 'Untitled Course'}</h3>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <div className="px-2 py-0.5 rounded-md bg-indigo-50 text-[10px] font-black text-indigo-600 uppercase tracking-wider">Premium Course</div>
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                            {en.courseId?.category || 'General'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                {en.courseId?._id && (
-                                                    <Link href={`/student/courses/${en.courseId._id}`}>
-                                                        <Button variant="outline" className="w-12 h-12 rounded-2xl p-0 hover:bg-primary hover:text-white transition-all">
-                                                            <ArrowUpRight className="w-5 h-5" />
-                                                        </Button>
-                                                    </Link>
-                                                )}
-                                            </div>
-                                            
-                                            <div className="space-y-3 pt-2">
-                                                <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                    <span>Progression</span>
-                                                    <span className="text-slate-900">{en.progress}%</span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-inner flex">
-                                                    <div
-                                                        className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-1000 animate-shimmer"
-                                                        style={{ width: `${en.progress}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[3rem] p-16 text-center space-y-6">
-                                    <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-slate-200/50 flex items-center justify-center mx-auto border border-slate-100">
-                                        <BookOpen className="w-10 h-10 text-slate-300" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-black text-slate-900 tracking-tight">Your bookshelf is empty</h3>
-                                        <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2 font-medium">Unlock premium learning tracks and start building your future today.</p>
-                                    </div>
-                                    <Link href="/courses">
-                                        <Button className="btn-primary h-14 rounded-2xl px-10">Explore Catalog</Button>
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
                     {/* Typing Exams Section */}
                     <div className="space-y-8">
                         <div className="flex items-center justify-between">
@@ -294,43 +226,6 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
 
                 {/* Sidebar Column */}
                 <div className="space-y-10">
-                    <div className="bg-slate-900 rounded-[2.5rem] p-1 shadow-2xl shadow-primary/10 group overflow-hidden">
-                        <div className="bg-slate-800 h-full rounded-[2.3rem] p-8 relative overflow-hidden flex flex-col">
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full -mr-20 -mt-20 blur-[60px]" />
-                            
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="p-2.5 bg-white/5 rounded-xl border border-white/10">
-                                    <Trophy className="w-6 h-6 text-amber-500" />
-                                </div>
-                                <h3 className="text-xl font-black text-white tracking-tight">Active Tasks</h3>
-                            </div>
-
-                            {data?.upcomingQuiz ? (
-                                <div className="space-y-6 relative z-10">
-                                    <div className="p-5 rounded-3xl bg-white/5 border border-white/5 space-y-3">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Next Assessment</p>
-                                        <p className="font-black text-slate-100 text-lg leading-tight">{data.upcomingQuiz.title}</p>
-                                        <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
-                                            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {data.upcomingQuiz.settings?.timeLimit || 0}m</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                            <span>Ranked Exam</span>
-                                        </div>
-                                    </div>
-                                    <Link href="/student/quizzes">
-                                        <Button className="w-full h-14 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 font-black shadow-xl shadow-black/20">
-                                            Launch Portal
-                                        </Button>
-                                    </Link>
-                                </div>
-                            ) : (
-                                <div className="py-10 text-center space-y-4 opacity-50">
-                                    <CalendarCheck className="w-12 h-12 text-slate-600 mx-auto" />
-                                    <p className="text-xs font-black text-slate-600 uppercase tracking-widest">No pending exams</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
                     <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-8">
                         <div>
                             <h3 className="text-lg font-black text-slate-900 tracking-tight">Learning Hub</h3>
@@ -338,8 +233,8 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
                         </div>
                         <div className="space-y-6">
                             {[
-                                { t: "Revise your Physics notes before attempting tomorrow's session.", icon: CheckCircle2, iconColor: "text-emerald-500", bg: "bg-emerald-50" },
-                                { t: "Complete the module 3 assignment to unlock certificate access.", icon: Clock, iconColor: "text-blue-500", bg: "bg-blue-50" }
+                                { t: "Keep your wrists elevated and look straight at the screen while typing.", icon: CheckCircle2, iconColor: "text-emerald-500", bg: "bg-emerald-50" },
+                                { t: "Practice 15 minutes of touch typing daily to build muscle memory.", icon: Clock, iconColor: "text-blue-500", bg: "bg-blue-50" }
                             ].map((tip, i) => (
                                 <div key={i} className="flex gap-5">
                                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-black/5", tip.bg)}>

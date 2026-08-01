@@ -29,6 +29,26 @@ export async function proxy(request: NextRequest) {
     const token = await getToken({ req: request });
     const { pathname } = request.nextUrl;
 
+    // ─── Blocked Routes (Courses and Mock Tests) ───────────────────────────
+    const blockedPaths = [
+        "/student/courses",
+        "/student/quizzes",
+        "/student/results",
+        "/admin/courses",
+        "/admin/mock-tests",
+        "/admin/results"
+    ];
+    const isBlocked = blockedPaths.some(prefix => 
+        pathname === prefix || pathname.startsWith(prefix + "/")
+    );
+    if (isBlocked) {
+        if (pathname.startsWith("/admin")) {
+            return NextResponse.redirect(new URL("/admin", request.url));
+        } else {
+            return NextResponse.redirect(new URL("/student", request.url));
+        }
+    }
+
     // ─── Admin Route Protection ──────────────────────────────────────────────
     if (pathname.startsWith("/admin")) {
         if (pathname === "/admin/login") {
