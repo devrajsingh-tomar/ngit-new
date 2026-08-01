@@ -68,6 +68,7 @@ export async function createInvoice(data: {
         });
 
         revalidatePath("/admin/students/fees");
+        revalidatePath("/admin/payments");
         return { success: true, invoice: JSON.parse(JSON.stringify(invoice)) };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -116,7 +117,7 @@ export async function payInstallment(invoiceId: string, installmentIndex: number
         }
 
         await invoice.save();
-        revalidatePath("/admin/students/fees");
+        revalidatePath("/admin/payments");
 
         return { success: true };
     } catch (error: any) {

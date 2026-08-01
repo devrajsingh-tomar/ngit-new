@@ -56,7 +56,6 @@ const menuGroups = [
                 subItems: [
                     { label: "Registrations", href: "/admin/students" },
                     { label: "Website Users", href: "/admin/students/website-users" },
-                    { label: "Fee Management", href: "/admin/students/fees" },
                     { label: "Enrollments", href: "/admin/students/enrollments" }
                 ]
             },
