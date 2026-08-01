@@ -67,7 +67,6 @@ export async function createInvoice(data: {
             notes: data.notes
         });
 
-        revalidatePath("/admin/students/fees");
         revalidatePath("/admin/payments");
         return { success: true, invoice: JSON.parse(JSON.stringify(invoice)) };
     } catch (error: any) {

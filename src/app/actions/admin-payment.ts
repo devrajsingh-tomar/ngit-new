@@ -73,7 +73,7 @@ export const addManualPayment = createSafeAction(
             });
         }
 
-        revalidatePath("/admin/students/fees");
+        revalidatePath("/admin/payments");
         return JSON.parse(JSON.stringify(payment));
     }
 );
@@ -112,7 +112,7 @@ export const assignCourseOffline = createSafeAction(
         });
 
         revalidatePath("/admin/students/enrollments");
-        revalidatePath("/admin/students/fees");
+        revalidatePath("/admin/payments");
 
         return JSON.parse(JSON.stringify(enrollment));
     }
@@ -202,7 +202,6 @@ export const updatePaymentAction = createSafeAction(
         }
 
         revalidatePath("/admin/payments");
-        revalidatePath("/admin/students/fees");
         return { success: true };
     }
 );
@@ -222,7 +221,6 @@ export const deletePaymentAction = createSafeAction(
         }
 
         revalidatePath("/admin/payments");
-        revalidatePath("/admin/students/fees");
         return { success: true };
     }
 );

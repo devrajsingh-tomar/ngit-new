@@ -49,6 +49,11 @@ export async function proxy(request: NextRequest) {
         }
     }
 
+    // Redirect old Fee Management URL to the new unified Payments & Invoices dashboard
+    if (pathname === "/admin/students/fees" || pathname.startsWith("/admin/students/fees/")) {
+        return NextResponse.redirect(new URL("/admin/payments", request.url));
+    }
+
     // ─── Admin Route Protection ──────────────────────────────────────────────
     if (pathname.startsWith("/admin")) {
         if (pathname === "/admin/login") {
