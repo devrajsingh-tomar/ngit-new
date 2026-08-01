@@ -145,7 +145,8 @@ export const getGlobalPaymentsData = createSafeAction(
             }
 
             return {
-                id: p.razorpayOrderId ?? p._id.toString(),
+                id: p._id.toString(),
+                orderId: p.razorpayOrderId ?? p._id.toString(),
                 student: p.userId ? p.userId.name : "Unknown Student",
                 course: p.courseId ? p.courseId.title : "Unknown Course",
                 amount: p.amount,
@@ -160,5 +161,68 @@ export const getGlobalPaymentsData = createSafeAction(
             failedCount,
             payments: JSON.parse(JSON.stringify(formattedPayments))
         };
+    }
+);
+
+const UpdatePaymentSchema = z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Payment ID"),
+    amount: z.number().min(0),
+    status: z.nativeEnum(PaymentStatus),
+});
+
+export const updatePaymentAction = createSafeAction(
+    { schema: UpdatePaymentSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ id, amount, status }) => {
+        await connectDB();
+
+        const payment = await Payment.findById(id);
+        if (!payment) {
+            throw new Error("Payment transaction not found.");
+        }
+
+        payment.amount = amount;
+        payment.status = status;
+        await payment.save();
+
+        // If marked as successful, ensure student enrollment exists
+        if (status === PaymentStatus.SUCCESS) {
+            const existingEnrollment = await Enrollment.findOne({ 
+                userId: payment.userId, 
+                courseId: payment.courseId 
+            });
+            if (!existingEnrollment) {
+                await Enrollment.create({
+                    userId: payment.userId,
+                    courseId: payment.courseId,
+                    enrolledAt: new Date(),
+                    progress: 0,
+                    isActive: true
+                });
+            }
+        }
+
+        revalidatePath("/admin/payments");
+        revalidatePath("/admin/students/fees");
+        return { success: true };
+    }
+);
+
+const DeletePaymentSchema = z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Payment ID"),
+});
+
+export const deletePaymentAction = createSafeAction(
+    { schema: DeletePaymentSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ id }) => {
+        await connectDB();
+
+        const payment = await Payment.findByIdAndDelete(id);
+        if (!payment) {
+            throw new Error("Payment transaction not found.");
+        }
+
+        revalidatePath("/admin/payments");
+        revalidatePath("/admin/students/fees");
+        return { success: true };
     }
 );

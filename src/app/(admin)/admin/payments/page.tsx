@@ -11,9 +11,25 @@ import {
     Clock,
     CreditCard,
     ArrowUpRight,
-    Loader2
+    Loader2,
+    Edit2,
+    Trash2,
+    Save
 } from "lucide-react";
-import { getGlobalPaymentsData } from "@/app/actions/admin-payment";
+import { 
+    getGlobalPaymentsData, 
+    updatePaymentAction, 
+    deletePaymentAction 
+} from "@/app/actions/admin-payment";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function AdminPaymentsPage() {
     const [payments, setPayments] = useState<any[]>([]);
@@ -25,22 +41,30 @@ export default function AdminPaymentsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 
+    // Modal state
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<any>(null);
+    const [editAmount, setEditAmount] = useState<number>(0);
+    const [editStatus, setEditStatus] = useState<string>("PENDING");
+    const [updating, setUpdating] = useState(false);
+
+    const loadData = async () => {
+        setLoading(true);
+        const res = await getGlobalPaymentsData({});
+        if (res.success) {
+            setPayments(res.data.payments || []);
+            setStats({
+                totalRevenue: res.data.totalRevenue || 0,
+                pendingCount: res.data.pendingCount || 0,
+                failedCount: res.data.failedCount || 0
+            });
+        } else {
+            toast.error("Failed to fetch payments data");
+        }
+        setLoading(false);
+    };
+
     useEffect(() => {
-        const loadData = async () => {
-            setLoading(true);
-            const res = await getGlobalPaymentsData({});
-            if (res.success) {
-                setPayments(res.data.payments || []);
-                setStats({
-                    totalRevenue: res.data.totalRevenue || 0,
-                    pendingCount: res.data.pendingCount || 0,
-                    failedCount: res.data.failedCount || 0
-                });
-            } else {
-                toast.error("Failed to fetch payments data");
-            }
-            setLoading(false);
-        };
         loadData();
     }, []);
 
@@ -51,6 +75,47 @@ export default function AdminPaymentsPage() {
             case "FAILED": return <XCircle className="w-4 h-4 text-red-500" />;
             default: return null;
         }
+    };
+
+    const handleEditClick = (p: any) => {
+        setSelectedPayment(p);
+        setEditAmount(p.amount);
+        setEditStatus(p.status);
+        setEditModalOpen(true);
+    };
+
+    const handleSaveChanges = async () => {
+        if (!selectedPayment) return;
+        setUpdating(true);
+        const res = await updatePaymentAction({
+            id: selectedPayment.id,
+            amount: editAmount,
+            status: editStatus as any
+        });
+        if (res.success) {
+            toast.success("Payment transaction updated successfully!");
+            setEditModalOpen(false);
+            loadData();
+        } else {
+            toast.error(res.error || "Failed to update payment");
+        }
+        setUpdating(false);
+    };
+
+    const handleDeletePayment = async () => {
+        if (!selectedPayment) return;
+        if (!confirm(`Are you absolutely sure you want to delete this payment record for ${selectedPayment.student}? This cannot be undone.`)) return;
+        
+        setUpdating(true);
+        const res = await deletePaymentAction({ id: selectedPayment.id });
+        if (res.success) {
+            toast.success("Payment transaction deleted successfully!");
+            setEditModalOpen(false);
+            loadData();
+        } else {
+            toast.error(res.error || "Failed to delete payment");
+        }
+        setUpdating(false);
     };
 
     return (
@@ -106,23 +171,24 @@ export default function AdminPaymentsPage() {
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Course / Product</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y text-slate-600 font-medium">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-8 py-12 text-center text-slate-400">
+                                    <td colSpan={5} className="px-8 py-12 text-center text-slate-400">
                                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                                         Loading transactions...
                                     </td>
                                 </tr>
                             ) : payments.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-8 py-8 text-center text-slate-400 italic">No payments found.</td>
+                                    <td colSpan={5} className="px-8 py-8 text-center text-slate-400 italic">No payments found.</td>
                                 </tr>
                             ) : payments.filter(p =>
                                 p.student?.toLowerCase().includes(search.toLowerCase()) ||
-                                p.id?.toLowerCase().includes(search.toLowerCase())
+                                p.orderId?.toLowerCase().includes(search.toLowerCase())
                             ).map((p) => (
                                 <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-8 py-6">
@@ -132,7 +198,7 @@ export default function AdminPaymentsPage() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-900 capitalize">{p.student}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.id.slice(0, 20)}{p.id.length > 20 ? "..." : ""}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.orderId}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -149,12 +215,119 @@ export default function AdminPaymentsPage() {
                                     <td className="px-8 py-6 text-right">
                                         <p className="text-xl font-black text-slate-900">₹{p.amount.toLocaleString()}</p>
                                     </td>
+                                    <td className="px-8 py-6 text-right">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleEditClick(p)}
+                                            className="h-8 rounded-lg text-xs font-bold gap-1 border-slate-200"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" /> Manage
+                                        </Button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {/* EDIT/MANAGE DIALOG */}
+            <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+                <DialogContent className="max-w-md rounded-3xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black text-slate-900 tracking-tight">Manage Transaction</DialogTitle>
+                    </DialogHeader>
+                    {selectedPayment && (
+                        <div className="space-y-4 py-4">
+                            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl text-xs font-bold border">
+                                <div>
+                                    <span className="text-slate-400 uppercase tracking-wider block mb-0.5">Student</span>
+                                    <span className="text-slate-800 capitalize block text-sm font-extrabold">{selectedPayment.student}</span>
+                                </div>
+                                <div>
+                                    <span className="text-slate-400 uppercase tracking-wider block mb-0.5">Course</span>
+                                    <span className="text-slate-800 block text-sm font-extrabold">{selectedPayment.course}</span>
+                                </div>
+                                <div className="col-span-2 border-t pt-2 mt-2">
+                                    <span className="text-slate-400 uppercase tracking-wider block mb-0.5">Transaction Order ID</span>
+                                    <span className="text-slate-800 font-mono text-[10px] tracking-wide block">{selectedPayment.orderId}</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor="amount" className="font-bold text-slate-700">Transaction Amount (₹)</Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    value={editAmount}
+                                    onChange={(e) => setEditAmount(Number(e.target.value))}
+                                    className="rounded-xl h-11"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label className="font-bold text-slate-700">Payment Status</Label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {["PENDING", "SUCCESS", "FAILED"].map((st) => (
+                                        <button
+                                            key={st}
+                                            type="button"
+                                            onClick={() => setEditStatus(st)}
+                                            className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all border ${
+                                                editStatus === st
+                                                    ? st === "SUCCESS"
+                                                        ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20"
+                                                        : st === "PENDING"
+                                                        ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20"
+                                                        : "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
+                                                    : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                            }`}
+                                        >
+                                            {st}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDeletePayment}
+                            disabled={updating}
+                            className="w-full sm:w-auto h-11 rounded-xl font-bold gap-1 bg-red-600 hover:bg-red-700"
+                        >
+                            <Trash2 className="w-4 h-4" /> Delete
+                        </Button>
+                        <div className="flex gap-2 w-full sm:justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setEditModalOpen(false)}
+                                disabled={updating}
+                                className="h-11 rounded-xl font-bold border-slate-200 flex-1 sm:flex-none"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleSaveChanges}
+                                disabled={updating}
+                                className="h-11 rounded-xl font-bold gap-1 flex-1 sm:flex-none bg-primary hover:bg-primary/95 text-white"
+                            >
+                                {updating ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Save className="w-4 h-4" />
+                                )}
+                                Save Changes
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
