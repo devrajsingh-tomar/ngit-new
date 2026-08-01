@@ -154,9 +154,19 @@ export default function PublicNavbar() {
                                                         {session.user.role}
                                                     </p>
                                                 </div>
-                                                <div className="relative h-9 w-9 rounded-lg p-0 flex items-center justify-center bg-slate-900 text-white font-bold group-hover:bg-primary transition-colors shadow-sm text-sm">
-                                                    {session.user.name?.[0]}
-                                                </div>
+                                                {session.user.image ? (
+                                                     <div className="relative h-9 w-9 rounded-lg overflow-hidden border border-slate-200 shadow-sm flex items-center justify-center">
+                                                         <img 
+                                                             src={session.user.image} 
+                                                             alt={session.user.name || "Profile"} 
+                                                             className="h-full w-full object-cover"
+                                                         />
+                                                     </div>
+                                                 ) : (
+                                                     <div className="relative h-9 w-9 rounded-lg p-0 flex items-center justify-center bg-slate-900 text-white font-bold group-hover:bg-primary transition-colors shadow-sm text-sm">
+                                                         {session.user.name?.[0]}
+                                                     </div>
+                                                 )}
                                             </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent className="w-64 rounded-2xl p-2" align="end" sideOffset={8}>
@@ -236,9 +246,19 @@ export default function PublicNavbar() {
                                 {session ? (
                                     <>
                                         <div className="px-4 py-2 border rounded-2xl bg-slate-50 flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold">
-                                                {session.user.name?.[0]}
-                                            </div>
+                                             {session.user.image ? (
+                                                 <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200">
+                                                     <img 
+                                                         src={session.user.image} 
+                                                         alt={session.user.name || "Profile"} 
+                                                         className="h-full w-full object-cover"
+                                                     />
+                                                 </div>
+                                             ) : (
+                                                 <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold">
+                                                     {session.user.name?.[0]}
+                                                 </div>
+                                             )}
                                             <div>
                                                 <p className="text-sm font-bold">{session.user.name}</p>
                                                 <p className="text-xs text-slate-500">{session.user.role}</p>
