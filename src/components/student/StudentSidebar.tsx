@@ -15,7 +15,6 @@ const menuItems = [
     { label: "Dashboard", href: "/student", icon: Home },
     { label: "Global Leaderboard", href: "/student/leaderboard", icon: Award },
     { label: "Typing Exams", href: "/student/typing", icon: Keyboard },
-    { label: "Study Material", href: "/student/materials", icon: BookOpen },
     { label: "Payments", href: "/student/fees", icon: CreditCard },
     { label: "Attendance", href: "/student/attendance", icon: ClipboardList },
     { label: "Certificates", href: "/student/certificates", icon: Award },

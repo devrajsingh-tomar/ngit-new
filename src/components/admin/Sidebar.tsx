@@ -32,13 +32,6 @@ const menuGroups = [
         ]
     },
     {
-        groupLabel: "Academic Core",
-        items: [
-            { label: "Study Materials", href: "/admin/materials", icon: Library },
-            { label: "Faculty & Staff", href: "/admin/faculty", icon: GraduationCap },
-        ]
-    },
-    {
         groupLabel: "Assessments",
         items: [
             {
