@@ -79,7 +79,7 @@ export default function HeroSlider({ blocks = [] }: HeroSliderProps) {
                                         fill
                                         sizes="100vw"
                                         priority={idx === 0}
-                                        className="object-cover transition-transform duration-[8000ms] ease-out group-hover/slide:scale-105"
+                                        className="object-cover"
                                         loading={idx === 0 ? "eager" : "lazy"}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent pointer-events-none" />

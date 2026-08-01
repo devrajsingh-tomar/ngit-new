@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Sliders, Plus, Trash2, Edit2, Check, X, Megaphone, Link as LinkIcon,
   ExternalLink, Sparkles, Layers, Bell, Layout, ArrowRight, Eye, RefreshCw,
-  PlusCircle, AlertCircle, Info, ChevronRight
+  PlusCircle, AlertCircle, Info, ChevronRight, Image as ImageIcon
 } from "lucide-react";
 import { getNotices, createNotice, updateNotice, deleteNotice } from "@/app/actions/notice";
+import { getMediaGallery, deleteMediaItem } from "@/app/actions/media";
 import { 
   getDynamicPageData, 
   createCmsPage, 
@@ -34,6 +36,10 @@ export default function CMSDashboard() {
   const [cards, setCards] = useState<any[]>([]);
   const [quickSectionId, setQuickSectionId] = useState<string>("");
   const [homePageId, setHomePageId] = useState<string>("");
+  const [mediaList, setMediaList] = useState<any[]>([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState("all");
+  const [mediaSearch, setMediaSearch] = useState("");
 
   // Modals state
   const [slideModalOpen, setSlideModalOpen] = useState(false);
@@ -94,6 +100,7 @@ export default function CMSDashboard() {
       if (data.success && data.url) {
         setSlideForm(prev => ({ ...prev, imageUrl: data.url }));
         toast.success("Banner image uploaded successfully!");
+        loadMediaGallery();
       } else {
         toast.error(data.error || "Failed to upload image");
       }
@@ -121,6 +128,7 @@ export default function CMSDashboard() {
       if (data.success && data.url) {
         setCardForm(prev => ({ ...prev, image: data.url }));
         toast.success("Card image uploaded successfully!");
+        loadMediaGallery();
       } else {
         toast.error(data.error || "Failed to upload image");
       }
@@ -131,6 +139,37 @@ export default function CMSDashboard() {
     }
   };
 
+  const loadMediaGallery = async () => {
+    setLoadingMedia(true);
+    try {
+      const res = await getMediaGallery();
+      if (res.success && res.media) {
+        setMediaList(res.media);
+      } else {
+        toast.error(res.error || "Failed to load media gallery");
+      }
+    } catch {
+      toast.error("Failed to fetch media gallery");
+    } finally {
+      setLoadingMedia(false);
+    }
+  };
+
+  const handleDeleteMedia = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this image? This action cannot be undone and will delete the file from the server!")) return;
+    try {
+      const res = await deleteMediaItem(id);
+      if (res.success) {
+        toast.success(res.message || "Media deleted");
+        loadMediaGallery();
+      } else {
+        toast.error(res.error || "Failed to delete media");
+      }
+    } catch {
+      toast.error("Failed to delete media");
+    }
+  };
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -138,6 +177,9 @@ export default function CMSDashboard() {
   const loadAllData = async () => {
     setLoading(true);
     try {
+      // Load media gallery
+      await loadMediaGallery();
+
       // 1. Fetch Hero Slides from API
       const slidesRes = await fetch("/api/admin/hero-slides");
       if (slidesRes.ok) {
@@ -419,6 +461,13 @@ export default function CMSDashboard() {
     }
   };
 
+  const filteredMedia = mediaList.filter(item => {
+    const matchesSearch = (item.filename || "").toLowerCase().includes(mediaSearch.toLowerCase());
+    if (mediaFilter === "unused") return matchesSearch && !item.inUse;
+    if (mediaFilter === "used") return matchesSearch && item.inUse;
+    return matchesSearch;
+  });
+
   return (
     <div className="flex flex-col h-full bg-[#f8fafc]">
       {/* Top Title Section */}
@@ -458,6 +507,9 @@ export default function CMSDashboard() {
             </TabsTrigger>
             <TabsTrigger value="cards" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Layers className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Quick Link Cards
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <ImageIcon className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Gallery Manager
             </TabsTrigger>
           </TabsList>
 
@@ -717,6 +769,132 @@ export default function CMSDashboard() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* TAB 4: GALLERY & MEDIA MANAGER */}
+          <TabsContent value="gallery" className="mt-0 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Gallery & Media Manager</h3>
+                <p className="text-xs text-slate-400 mt-1">Manage uploaded assets and delete unused banner/thumbnail images to save disk space.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={loadMediaGallery} 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 text-xs font-bold"
+                  disabled={loadingMedia}
+                >
+                  <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", loadingMedia && "animate-spin")} />
+                  Refresh Gallery
+                </Button>
+              </div>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="bg-slate-100/50 border border-slate-200/60 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <Input 
+                value={mediaSearch}
+                onChange={(e) => setMediaSearch(e.target.value)}
+                placeholder="Search images by name..."
+                className="max-w-xs h-8 text-xs bg-white rounded-lg border-slate-200"
+              />
+              <div className="flex items-center gap-1 bg-slate-200/50 p-0.5 rounded-lg">
+                <button
+                  onClick={() => setMediaFilter("all")}
+                  className={cn(
+                    "px-3 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all",
+                    mediaFilter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  All ({mediaList.length})
+                </button>
+                <button
+                  onClick={() => setMediaFilter("unused")}
+                  className={cn(
+                    "px-3 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all",
+                    mediaFilter === "unused" ? "bg-rose-500 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  Unused ({mediaList.filter(m => !m.inUse).length})
+                </button>
+                <button
+                  onClick={() => setMediaFilter("used")}
+                  className={cn(
+                    "px-3 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all",
+                    mediaFilter === "used" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  In Use ({mediaList.filter(m => m.inUse).length})
+                </button>
+              </div>
+            </div>
+
+            {/* Gallery Grid */}
+            {loadingMedia ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200/60 rounded-[2rem] shadow-sm">
+                <RefreshCw className="w-8 h-8 text-slate-400 animate-spin" />
+                <p className="text-xs text-slate-400 mt-2 font-semibold">Scanning uploads & database records...</p>
+              </div>
+            ) : filteredMedia.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200/60 rounded-[2rem] shadow-sm text-center px-4">
+                <ImageIcon className="w-12 h-12 text-slate-300 mb-2" />
+                <p className="font-bold text-slate-700">No images match your filter</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">Upload images in the banner or quick link section to see them here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                {filteredMedia.map((m) => (
+                  <div key={m.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm group hover:shadow-md transition-all flex flex-col justify-between">
+                    <div>
+                      {/* Image Preview */}
+                      <div className="w-full aspect-square relative bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100">
+                        <img 
+                          src={m.url} 
+                          alt={m.filename} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                        {/* Usage Status Badge */}
+                        <div className="absolute top-2 right-2 z-10">
+                          {m.inUse ? (
+                            <span className="bg-emerald-500/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm">
+                              In Use
+                            </span>
+                          ) : (
+                            <span className="bg-rose-500/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm animate-pulse">
+                              Unused
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {/* File Details */}
+                      <div className="p-3 space-y-1">
+                        <p className="text-slate-800 font-bold text-xs truncate" title={m.filename}>
+                          {m.filename}
+                        </p>
+                        <div className="flex items-center justify-between text-[9px] text-slate-400 font-semibold">
+                          <span>{(m.size / 1024).toFixed(1)} KB</span>
+                          <span>{m.category}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Delete Action footer */}
+                    <div className="p-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end">
+                      <Button
+                        onClick={() => handleDeleteMedia(m.id)}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 w-full text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-slate-200 text-[10px] font-bold rounded-xl"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        Delete File
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </TabsContent>
