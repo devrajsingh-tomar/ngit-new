@@ -44,6 +44,19 @@ export default function BookChapterPracticePage() {
         const arr = Array.isArray(data) ? data : [];
         setChapters(arr);
 
+        // Auto-detect book language from its first chapter to set correct keyboard layout
+        if (arr.length > 0) {
+          const firstChapter = arr[0];
+          const rawLang = firstChapter.language || "English";
+          const normLang = rawLang.includes("Hindi") ? "Hindi" : "English";
+          setSelectedLanguage(normLang as any);
+          if (normLang === "Hindi") {
+            setSelectedLayout("Inscript");
+          } else {
+            setSelectedLayout("English");
+          }
+        }
+
         // If a chapterId is in the URL, auto-load that chapter
         if (chapterId) {
           const found = arr.find((c: any) => c._id === chapterId);

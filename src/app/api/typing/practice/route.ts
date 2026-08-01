@@ -26,15 +26,8 @@ export async function GET(req: Request) {
         }
         
         const query: any = { bookId: new mongoose.Types.ObjectId(bookId) };
-        if (lang) {
-            if (lang === 'Hindi') {
-                query.language = { $in: ['Hindi', 'Unicode Hindi', 'Krutidev Hindi'] };
-            } else {
-                query.language = lang;
-            }
-        }
         
-        console.log(`Fetching chapters for book: ${bookId}, lang: ${lang}`);
+        console.log(`Fetching chapters for book: ${bookId}`);
         const passages = await TypingPassage.find(query).sort({ createdAt: 1 }).lean();
         console.log(`Found ${passages.length} chapters`);
         
