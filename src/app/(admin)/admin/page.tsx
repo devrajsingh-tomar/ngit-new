@@ -51,14 +51,9 @@ export default async function AdminDashboard() {
                     </p>
                 </div>
                 <div className="flex gap-4">
-                    <Link href="/admin/mock-tests/list">
+                    <Link href="/admin/students">
                         <Button variant="outline" className="h-12 border-2 rounded-xl font-bold px-6">
-                            View All Tasks
-                        </Button>
-                    </Link>
-                    <Link href="/admin/mock-tests/new">
-                        <Button className="btn-primary h-12 px-8">
-                            New Assessment
+                            User Directory
                         </Button>
                     </Link>
                 </div>
@@ -89,86 +84,8 @@ export default async function AdminDashboard() {
                 />
             </div>
 
-            {/* Premium Assessment Hub Widget */}
-            <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-[3rem] blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                <div className="relative bg-white rounded-[2.8rem] p-1 shadow-2xl overflow-hidden border border-slate-100">
-                    <div className="bg-slate-50/50 backdrop-blur-sm rounded-[2.6rem] p-10 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-[40%] h-full bg-indigo-50 -skew-x-12 translate-x-1/2 opacity-30" />
-                        
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 relative z-10">
-                            <div className="space-y-4">
-                                <div className="inline-flex items-center gap-2 bg-indigo-100/50 text-indigo-700 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.25em] border border-indigo-200/50">
-                                    <BrainCircuit className="w-4 h-4" /> Intelligence Hub
-                                </div>
-                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter italic">
-                                    Mock Test <span className="text-gradient">Performance.</span>
-                                </h2>
-                                <p className="text-slate-500 font-bold max-w-md leading-relaxed">System-wide diagnostic metrics and student growth analytics portal.</p>
-                            </div>
-                            <Link href="/admin/results">
-                                <Button className="btn-primary h-20 px-12 rounded-[1.8rem] gap-4 shadow-2xl shadow-primary/30 group/btn">
-                                    Global Analytics <TrendingUp className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                                </Button>
-                            </Link>
-                        </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mt-16 relative z-10 border-t border-slate-100 pt-12">
-                            <StatItem label="Exams Conducted" value={s.mockMetrics?.totalTests || 0} icon={<Award className="w-6 h-6 text-amber-500" />} />
-                            <StatItem label="Global Attempts" value={s.mockMetrics?.totalAttempts || 0} icon={<Users className="w-6 h-6 text-blue-500" />} />
-                            <StatItem label="Zenith Score" value={s.mockMetrics?.highestScore || 0} icon={<Trophy className="w-6 h-6 text-indigo-500" />} unit="pts" />
-                            <StatItem label="Performance Mean" value={s.mockMetrics?.avgScore || 0} icon={<TrendingUp className="w-6 h-6 text-emerald-500" />} unit="%" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Global Live Feed */}
-                <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col h-[600px]">
-                    <div className="flex justify-between items-center mb-10">
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Recent Submissions</h2>
-                            <p className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest">Global Activity Stream</p>
-                        </div>
-                        <Link href="/admin/results"><Button variant="ghost" className="font-bold gap-2">View History <ChevronRight className="w-4 h-4" /></Button></Link>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto space-y-5 pr-4 scrollbar-hide">
-                        {s.recentAttempts.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-300">
-                                <ClipboardList className="w-16 h-16 mb-4 opacity-10" />
-                                <p className="font-black uppercase tracking-widest text-xs">Awaiting Activity</p>
-                            </div>
-                        ) : (
-                            s.recentAttempts.map((attempt: any) => (
-                                <div key={attempt._id} className="flex items-center justify-between p-6 rounded-3xl border border-transparent bg-slate-50/50 hover:bg-white hover:border-slate-100 hover:shadow-xl hover:shadow-slate-200/20 transition-all duration-300 group">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center font-black text-indigo-600 text-lg border-2 border-slate-50 group-hover:bg-primary group-hover:text-white group-hover:scale-105 transition-all">
-                                            {attempt.studentId?.name?.charAt(0) || "S"}
-                                        </div>
-                                        <div>
-                                            <p className="font-black text-slate-900 text-lg leading-tight">{attempt.studentId?.name || "Anonymous"}</p>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[150px]">
-                                                    {attempt.quizId?.title}
-                                                </span>
-                                                <div className="w-1 h-1 rounded-full bg-slate-300" />
-                                                <time className="text-[10px] font-bold text-slate-400">Just now</time>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-3">
-                                        <div className={`px-4 py-1.5 rounded-xl text-sm font-black shadow-sm ${attempt.isPassed ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                                            {attempt.totalScore} / {attempt.totalMarks}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
+            <div className="max-w-2xl mx-auto">
                 {/* Right panel - New Signups */}
                 <div className="bg-slate-900 rounded-[2.5rem] p-10 shadow-2xl text-white flex flex-col h-[600px] border border-white/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -mr-32 -mt-32 blur-[100px]" />

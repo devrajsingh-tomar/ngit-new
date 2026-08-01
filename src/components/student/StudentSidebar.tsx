@@ -13,9 +13,6 @@ import { useSession } from "next-auth/react";
 
 const menuItems = [
     { label: "Dashboard", href: "/student", icon: Home },
-    { label: "My Courses", href: "/student/courses", icon: PlayCircle },
-    { label: "My Mock Tests", href: "/student/quizzes", icon: Trophy },
-    { label: "Mock Test Results", href: "/student/results", icon: ClipboardList },
     { label: "Global Leaderboard", href: "/student/leaderboard", icon: Award },
     { label: "Typing Exams", href: "/student/typing", icon: Keyboard },
     { label: "Study Material", href: "/student/materials", icon: BookOpen },
