@@ -136,7 +136,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const passingWpm = isHindi ? 25 : (isUPPolice ? 35 : 30);
 
   const accuracy = totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00";
-  const isQualified = parseFloat(netWpm) >= passingWpm;
+  const isQualified = parseFloat(netWpm) >= passingWpm && parseFloat(accuracy) >= 85.00;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -245,11 +245,16 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                             <span className="text-[10px] font-black opacity-60 uppercase tracking-widest">Net WPM</span>
                         </div>
                     </div>
-                    <div className={cn(
-                        "w-full py-4 px-8 rounded-2xl font-black text-sm uppercase tracking-[0.3em] text-center shadow-lg transition-transform hover:scale-105",
-                        isQualified ? "bg-white text-emerald-600" : "bg-white text-rose-600"
-                    )}>
-                        {isQualified ? "Qualified" : "Not Qualified"}
+                    <div className="w-full">
+                        <div className={cn(
+                            "w-full py-4 px-8 rounded-2xl font-black text-sm uppercase tracking-[0.3em] text-center shadow-lg transition-transform hover:scale-105",
+                            isQualified ? "bg-white text-emerald-600" : "bg-white text-rose-600"
+                        )}>
+                            {isQualified ? "Qualified" : "Not Qualified"}
+                        </div>
+                        <p className="text-[10px] font-black text-white/70 text-center uppercase tracking-widest mt-3.5">
+                            Req: {passingWpm} WPM & 85% Accuracy
+                        </p>
                     </div>
                 </div>
             </div>
