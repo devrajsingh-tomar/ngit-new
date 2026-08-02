@@ -411,9 +411,17 @@ export default function AdminStudentsPage() {
                         <tr key={s._id} className="hover:bg-slate-50/20 transition-all">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
-                                {s.name[0]?.toUpperCase()}
-                              </div>
+                              {s.image ? (
+                                <img 
+                                  src={s.image} 
+                                  alt="Student avatar" 
+                                  className="w-8 h-8 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black shrink-0">
+                                  {s.name[0]?.toUpperCase()}
+                                </div>
+                              )}
                               <div>
                                 <p className="font-bold text-slate-900 leading-tight">{s.name}</p>
                                 <p className="text-[10px] text-slate-400 mt-0.5">{s.email}</p>
@@ -525,13 +533,36 @@ export default function AdminStudentsPage() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedStudent && (
             <>
-              <DialogHeader className="border-b border-slate-100 pb-4">
+               <DialogHeader className="border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg">
-                    {selectedStudent.name[0]?.toUpperCase()}
-                  </div>
+                  {!detailsLoading && studentDetails?.user?.image ? (
+                    <img 
+                      src={studentDetails.user.image} 
+                      alt="Student Avatar" 
+                      className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0">
+                      {selectedStudent.name[0]?.toUpperCase()}
+                    </div>
+                  )}
                   <div>
-                    <DialogTitle className="text-base font-black text-slate-900">{selectedStudent.name}</DialogTitle>
+                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+                      <DialogTitle className="text-base font-black text-slate-900">{selectedStudent.name}</DialogTitle>
+                      {!detailsLoading && studentDetails?.user?.image && (
+                        <a 
+                          href={studentDetails.user.image} 
+                          download={`${selectedStudent.name}_profile.jpg`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                        >
+                          <span className="inline-flex items-center gap-1 text-[9px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-wider bg-indigo-50 border border-indigo-100 rounded-md px-2 py-0.5 transition-colors cursor-pointer select-none">
+                            <Download className="w-2.5 h-2.5" /> Download Photo
+                          </span>
+                        </a>
+                      )}
+                    </div>
                     <DialogDescription className="text-xs text-slate-500">
                       Unified Student Profile &amp; Practice Records file
                     </DialogDescription>

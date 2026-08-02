@@ -56,6 +56,7 @@ export async function searchStudentsAdmin(queryText: string) {
         course: p.course || "",
         status: p.status || "Pending",
         idNo: p.idNo || "",
+        image: u.image || "",
         createdAt: p.createdAt
       };
     });
@@ -77,6 +78,7 @@ export async function searchStudentsAdmin(queryText: string) {
           course: "No Profile Yet",
           status: "Pending",
           idNo: "N/A",
+          image: u.image || "",
           createdAt: u.createdAt || new Date()
         });
       }
