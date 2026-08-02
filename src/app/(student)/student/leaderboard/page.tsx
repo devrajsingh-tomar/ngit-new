@@ -243,7 +243,6 @@ export default function LeaderboardPage() {
                                                         </div>
                                                         <div>
                                                             <p className="font-black text-slate-900 group-hover:text-primary transition-colors">{res.studentId?.name}</p>
-                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{res.studentId?.email}</p>
                                                         </div>
                                                     </div>
                                                 </td>
