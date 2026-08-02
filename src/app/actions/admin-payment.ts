@@ -224,3 +224,45 @@ export const deletePaymentAction = createSafeAction(
         return { success: true };
     }
 );
+
+const DeleteEnrollmentSchema = z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Enrollment ID"),
+});
+
+export const deleteEnrollmentAction = createSafeAction(
+    { schema: DeleteEnrollmentSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ id }) => {
+        await connectDB();
+
+        const enrollment = await Enrollment.findByIdAndDelete(id);
+        if (!enrollment) {
+            throw new Error("Enrollment record not found.");
+        }
+
+        revalidatePath("/admin/students/enrollments");
+        return { success: true };
+    }
+);
+
+const UpdateEnrollmentSchema = z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Enrollment ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Course ID"),
+});
+
+export const updateEnrollmentAction = createSafeAction(
+    { schema: UpdateEnrollmentSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ id, courseId }) => {
+        await connectDB();
+
+        const enrollment = await Enrollment.findById(id);
+        if (!enrollment) {
+            throw new Error("Enrollment record not found.");
+        }
+
+        enrollment.courseId = courseId;
+        await enrollment.save();
+
+        revalidatePath("/admin/students/enrollments");
+        return { success: true };
+    }
+);
