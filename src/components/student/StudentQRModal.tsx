@@ -51,6 +51,9 @@ export default function StudentQRModal({
         const printContent = document.getElementById("student-id-card-print-area");
         if (!printContent) return;
         
+        // Grab the direct SVG inner HTML to keep styling and details intact
+        const qrSvgHtml = printContent.querySelector('.id-card-qr-wrap')?.innerHTML || '';
+
         const windowUrl = 'about:blank';
         const uniqueName = new Date().getTime();
         const windowName = 'Print' + uniqueName;
@@ -67,12 +70,20 @@ export default function StudentQRModal({
                             body {
                                 margin: 0;
                                 padding: 0;
+                                background-color: #ffffff !important;
                                 -webkit-print-color-adjust: exact !important;
                                 print-color-adjust: exact !important;
                             }
                             @page {
-                                size: auto;
+                                size: portrait;
                                 margin: 0;
+                            }
+                            .id-card-container {
+                                transform: scale(1.8) !important;
+                                transform-origin: center center !important;
+                                margin: 0 auto !important;
+                                border: none !important;
+                                box-shadow: none !important;
                             }
                         }
                         body {
@@ -95,6 +106,8 @@ export default function StudentQRModal({
                             position: relative !important;
                             display: flex !important;
                             flex-direction: column !important;
+                            transform: scale(1.4);
+                            transform-origin: center center;
                         }
                         .id-card-header {
                             background-color: #0f172a !important;
@@ -262,6 +275,11 @@ export default function StudentQRModal({
                             border-radius: 8px !important;
                             border: 1px solid #f1f5f9 !important;
                         }
+                        .id-card-qr-wrap svg {
+                            display: block !important;
+                            width: 48px !important;
+                            height: 48px !important;
+                        }
                         .id-card-footer {
                             background-color: #f8fafc !important;
                             border-top: 1px solid #f1f5f9 !important;
@@ -333,10 +351,7 @@ export default function StudentQRModal({
                                     <p class="id-card-issue-val">${new Date().toLocaleDateString()}</p>
                                 </div>
                                 <div class="id-card-qr-wrap">
-                                    <svg width="48" height="48" viewBox="0 0 100 100" style="display: block;">
-                                        <!-- Keep original HTML print node QR target SVG -->
-                                        ${printContent.querySelector('.id-card-qr-wrap svg')?.innerHTML || ''}
-                                    </svg>
+                                    ${qrSvgHtml}
                                 </div>
                             </div>
                         </div>
@@ -543,6 +558,11 @@ export default function StudentQRModal({
                     padding: 4px !important;
                     border-radius: 8px !important;
                     border: 1px solid #f1f5f9 !important;
+                }
+                .id-card-qr-wrap svg {
+                    display: block !important;
+                    width: 48px !important;
+                    height: 48px !important;
                 }
                 .id-card-footer {
                     background-color: #f8fafc !important;
