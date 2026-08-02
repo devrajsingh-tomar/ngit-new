@@ -109,18 +109,54 @@ export default function TypingResultDetails({ params }: { params: { id: string }
 
   let fullMistakes = 0;
   let halfMistakes = 0;
-  submittedWords.forEach((word: string, idx: number) => {
+
+  const lang = result.examId?.language?.toLowerCase() || "";
+  const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
+
+  const maxWords = Math.max(originalWords.length, submittedWords.length);
+  for (let idx = 0; idx < maxWords; idx++) {
     const originalWord = originalWords[idx];
-    if (word !== originalWord) {
-      if (!originalWord || Math.abs(word.length - originalWord.length) > 2) {
-        fullMistakes++;
-      } else {
+    const typedWord = submittedWords[idx];
+
+    if (!originalWord) {
+      if (typedWord) fullMistakes++;
+      continue;
+    }
+    if (!typedWord) {
+      fullMistakes++;
+      continue;
+    }
+
+    if (typedWord === originalWord) {
+      continue;
+    }
+
+    let isHalf = false;
+    
+    // 1. Capitalization Mismatch (English Only)
+    if (!isHindi) {
+      if (typedWord.toLowerCase() === originalWord.toLowerCase()) {
         halfMistakes++;
+        isHalf = true;
       }
     }
-  });
 
-  const totalWrongWords = fullMistakes + halfMistakes;
+    // 2. Punctuation Mismatch/Omission
+    if (!isHalf) {
+      const cleanTyped = typedWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
+      const cleanOriginal = originalWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
+      if (cleanTyped === cleanOriginal && cleanTyped !== "") {
+        halfMistakes++;
+        isHalf = true;
+      }
+    }
+
+    // 3. Otherwise -> Full Mistake (Spelling, Substitution)
+    if (!isHalf) {
+      fullMistakes++;
+    }
+  }
+
   const isUPSSSC = result.examId?.examMode === "UPSSSC";
   const isAHC = result.examId?.examMode === "AHC";
   const isUPPolice = result.examId?.examMode === "UP_POLICE";
@@ -128,14 +164,19 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const timeDurationMins = result.examId?.duration || 10;
   
-  const grossWpm = timeTakenMins > 0 ? (totalStrokes / 5 / timeTakenMins).toFixed(2) : "0.00";
-  const netWpm = timeTakenMins > 0 ? (correctStrokes / 5 / timeTakenMins).toFixed(2) : "0.00";
+  const totalErrors = fullMistakes + (halfMistakes / 2);
+  const grossWpm = result.grossWpm !== undefined 
+    ? result.grossWpm.toFixed(2) 
+    : (timeTakenMins > 0 ? (totalStrokes / 5 / timeTakenMins).toFixed(2) : "0.00");
   
-  const lang = result.examId?.language?.toLowerCase() || "";
-  const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
+  const netWpm = result.netWpm !== undefined 
+    ? result.netWpm.toFixed(2) 
+    : (timeTakenMins > 0 ? (Math.max(0, (totalStrokes / 5) - totalErrors) / timeTakenMins).toFixed(2) : "0.00");
+  
   const passingWpm = isHindi ? 25 : (isUPPolice ? 35 : 30);
-
-  const accuracy = totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00";
+  const accuracy = result.accuracy !== undefined 
+    ? result.accuracy.toFixed(2) 
+    : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
   const isQualified = parseFloat(netWpm) >= passingWpm && parseFloat(accuracy) >= 85.00;
 
   const formatTime = (seconds: number) => {
