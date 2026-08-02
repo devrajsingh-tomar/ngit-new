@@ -1,7 +1,9 @@
 "use client";
 
-import React from "react";
-import { Link as LinkIcon } from "lucide-react";
+import React, { useState } from "react";
+import { Link as LinkIcon, X, Share2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface SocialItem {
     platform: string;
@@ -10,6 +12,7 @@ interface SocialItem {
 }
 
 export default function FloatingSocials({ socials = [] }: { socials: SocialItem[] }) {
+    const [isOpen, setIsOpen] = useState(false);
     const activeSocials = socials.filter(s => s.isActive !== false);
 
     if (activeSocials.length === 0) return null;
@@ -46,6 +49,16 @@ export default function FloatingSocials({ socials = [] }: { socials: SocialItem[
                 )
             };
         }
+        if (p.includes("facebook") || p.includes("fb")) {
+            return {
+                bg: "bg-[#1877F2] hover:shadow-[0_0_20px_rgba(24,119,242,0.5)]",
+                svg: (
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                )
+            };
+        }
         return {
             bg: "bg-slate-800 hover:shadow-[0_0_20px_rgba(51,65,85,0.5)]",
             svg: <LinkIcon className="w-5 h-5 text-white" />
@@ -53,22 +66,57 @@ export default function FloatingSocials({ socials = [] }: { socials: SocialItem[
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 items-center animate-slide-up">
-            {activeSocials.map((social, index) => {
-                const styles = getPlatformStyles(social.platform);
-                return (
-                    <a
-                        key={index}
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={social.platform}
-                        className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 group ${styles.bg}`}
+        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 items-end">
+            {/* 1. COLLAPSIBLE SOCIAL MEDIA STACK */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex flex-col gap-3 items-center mb-1 pr-1.5"
                     >
-                        {styles.svg}
-                    </a>
-                );
-            })}
+                        {activeSocials.map((social, index) => {
+                            const styles = getPlatformStyles(social.platform);
+                            return (
+                                <a
+                                    key={index}
+                                    href={social.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={social.platform}
+                                    className={cn(
+                                        "w-11 h-11 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300 hover:scale-110 active:scale-95",
+                                        styles.bg
+                                    )}
+                                >
+                                    {styles.svg}
+                                </a>
+                            );
+                        })}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 2. TOGGLE / TRIGGER BUTTON ("Click Here") */}
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="h-12 px-6 rounded-full bg-slate-950 text-white hover:bg-slate-900 shadow-2xl border border-slate-800 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
+            >
+                {isOpen ? (
+                    <>
+                        <X className="w-4 h-4 text-rose-500 animate-spin" />
+                        <span>Close / बंद करें</span>
+                    </>
+                ) : (
+                    <>
+                        <Share2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+                        <span>Click Here / सोशल मीडिया</span>
+                    </>
+                )}
+            </button>
         </div>
     );
 }
