@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Play, ExternalLink } from "lucide-react";
+import { X, Play, ExternalLink, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -15,15 +15,28 @@ interface PopupSettings {
     showOncePerSession: boolean;
 }
 
+const getCookie = (name: string): string | null => {
+    if (typeof window === "undefined") return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+};
+
+const setSessionCookie = (name: string, value: string) => {
+    if (typeof window === "undefined") return;
+    document.cookie = `${name}=${value}; path=/`;
+};
+
 export default function HomepagePopup({ settings }: { settings: PopupSettings | null }) {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         if (!settings || !settings.isActive) return;
 
-        // Check if shown in current session
+        // Check if shown in current session (sessionStorage + session cookie)
         if (settings.showOncePerSession) {
-            const hasBeenShown = sessionStorage.getItem("ngit_popup_shown");
+            const hasBeenShown = sessionStorage.getItem("ngit_popup_shown") || getCookie("ngit_popup_shown");
             if (hasBeenShown === "true") {
                 return; // already shown
             }
@@ -34,6 +47,7 @@ export default function HomepagePopup({ settings }: { settings: PopupSettings | 
             setIsOpen(true);
             if (settings.showOncePerSession) {
                 sessionStorage.setItem("ngit_popup_shown", "true");
+                setSessionCookie("ngit_popup_shown", "true");
             }
         }, 1200);
 
@@ -78,24 +92,11 @@ export default function HomepagePopup({ settings }: { settings: PopupSettings | 
                             <X className="w-5 h-5" />
                         </button>
 
-                        {/* Top Image / YouTube play button */}
+                        {/* Top Image / Bell Icon */}
                         <div className="mt-4 mb-6 flex justify-center">
-                            {settings.imageUrl ? (
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 bg-slate-50 shadow-sm">
-                                    <img src={settings.imageUrl} alt="Icon" className="w-full h-full object-cover" />
-                                </div>
-                            ) : (
-                                <div className={cn(
-                                    "w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner border",
-                                    isYoutubeLink ? "bg-red-50 text-red-500 border-red-100" : "bg-primary/5 text-primary border-primary/10"
-                                )}>
-                                    {isYoutubeLink ? (
-                                        <Play className="w-8 h-8 fill-current" />
-                                    ) : (
-                                        <ExternalLink className="w-7 h-7" />
-                                    )}
-                                </div>
-                            )}
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-red-50 text-red-500 border border-red-100 shadow-inner">
+                                <Bell className="w-8 h-8 fill-current animate-bounce" />
+                            </div>
                         </div>
 
                         {/* Title */}
