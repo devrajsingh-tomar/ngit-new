@@ -63,6 +63,30 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
 
     return (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700 max-w-7xl mx-auto pb-20">
+            {/* Warning Banner for Incomplete Profile */}
+            {data.isProfileComplete === false && (
+                <div className="bg-rose-50 border-2 border-rose-100 rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                            <span className="text-xl">⚠️</span>
+                        </div>
+                        <div>
+                            <h3 className="text-base font-black text-rose-950 uppercase tracking-wide">Profile Details Incomplete / प्रोफ़ाइल विवरण अधूरा है</h3>
+                            <p className="text-xs text-rose-700 font-bold mt-1 max-w-2xl leading-relaxed">
+                                Your student registration file is missing critical details (Father's Name, Mother's Name, DOB, Address, Aadhar Card, etc.). Please complete your profile to prevent account limitations.
+                                <br />
+                                आपके छात्र पंजीकरण फ़ाइल में महत्वपूर्ण जानकारी (पिता/माता का नाम, जन्मतिथि, पता, आधार कार्ड आदि) अधूरी है। कृपया इसे पूरा करें।
+                            </p>
+                        </div>
+                    </div>
+                    <Link href="/student/settings" className="shrink-0">
+                        <Button className="bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest px-6 py-4 h-12 rounded-xl shadow-lg shadow-rose-600/20 active:scale-95 transition-all">
+                            Complete Profile / प्रोफ़ाइल पूरी करें
+                        </Button>
+                    </Link>
+                </div>
+            )}
+
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-white/40 backdrop-blur-xl p-10 rounded-[3rem] border border-slate-100 shadow-sm">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                     {/* User Profile Image */}

@@ -13,6 +13,7 @@ import Attendance from "@/models/Attendance";
 import MockTestResult from "@/models/MockTestResult";
 import Quiz from "@/models/Quiz";
 import Question from "@/models/Question";
+import StudentProfile from "@/models/StudentProfile";
 import TypingResult from "@/models/TypingResult";
 import TypingExam from "@/models/TypingExam";
 
@@ -143,6 +144,26 @@ export async function getStudentDashboardData() {
             avgGrade: "A" // Placeholder if no grading logic yet
         };
 
+        // Check if the student's profile details are complete (contains no placeholders or empty strings)
+        const profile = await StudentProfile.findOne({ userId }).lean();
+        let isProfileComplete = true;
+        
+        if (!profile) {
+            isProfileComplete = false;
+        } else {
+            const requiredFields = [
+                "fatherName", "motherName", "dateOfBirth", "aadharNo",
+                "localAddress", "localPhone", "permanentAddress"
+            ];
+            for (const field of requiredFields) {
+                const val = (profile as any)[field];
+                if (!val || val.trim() === "" || val.trim() === "—" || val.trim() === "N/A") {
+                    isProfileComplete = false;
+                    break;
+                }
+            }
+        }
+
         return {
             success: true,
             stats,
@@ -154,7 +175,8 @@ export async function getStudentDashboardData() {
             userName: session.user.name,
             userImage: session.user.image,
             userId: session.user.id,
-            progressTrend: [65, 72, 68, 85, 90, 88, 92] // Placeholder for chart
+            progressTrend: [65, 72, 68, 85, 90, 88, 92], // Placeholder for chart
+            isProfileComplete // Return completeness flag
         };
     } catch (error: any) {
         return { success: false, error: error.message };

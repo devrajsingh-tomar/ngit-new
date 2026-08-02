@@ -2,6 +2,7 @@
 
 import connectDB from "@/lib/db";
 import User from "@/models/User";
+import StudentProfile from "@/models/StudentProfile";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -66,5 +67,71 @@ export const updateUserPassword = createSafeAction(
         await user.save();
 
         return { success: true };
+    }
+);
+
+// Fetch logged-in student profile
+export const getStudentProfile = createSafeAction(
+    { schema: z.object({}), requireAuth: true },
+    async (_, session) => {
+        await connectDB();
+        const userId = session.user.id;
+        let profile = await StudentProfile.findOne({ userId }).lean();
+        
+        if (!profile) {
+            // Auto-create stub profile if somehow missing
+            profile = await StudentProfile.create({
+                userId,
+                name: session.user.name || "Student",
+                dateOfBirth: "—",
+                fatherName: "—",
+                motherName: "—",
+                aadharNo: "—",
+                category: "General",
+                localAddress: "—",
+                localPhone: "—",
+                permanentAddress: "—",
+                course: "General Typing",
+                status: "Approved",
+            });
+        }
+        return JSON.parse(JSON.stringify(profile));
+    }
+);
+
+const UpdateStudentProfileSchema = z.object({
+    fatherName: z.string().min(2, "Father's name is too short").max(100),
+    motherName: z.string().min(2, "Mother's name is too short").max(100),
+    dateOfBirth: z.string().min(1, "Date of birth is required"),
+    aadharNo: z.string().min(12, "Aadhar must be exactly 12 digits").max(12, "Aadhar must be exactly 12 digits"),
+    category: z.string().min(1, "Category is required"),
+    localAddress: z.string().min(5, "Local address is too short"),
+    localPhone: z.string().min(10, "Local phone number must be at least 10 digits").max(15),
+    permanentAddress: z.string().min(5, "Permanent address is too short"),
+    permanentPhone: z.string().max(15).optional().nullable(),
+    gender: z.string().min(1, "Gender is required"),
+    nationality: z.string().min(1, "Nationality is required"),
+    religion: z.string().min(1, "Religion is required"),
+    abcId: z.string().optional().nullable(),
+    guardianPhone: z.string().optional().nullable(),
+    whatsappNo: z.string().optional().nullable(),
+});
+
+// Update logged-in student profile
+export const updateStudentProfile = createSafeAction(
+    { schema: UpdateStudentProfileSchema, requireAuth: true },
+    async (data, session) => {
+        await connectDB();
+        const userId = session.user.id;
+
+        const updated = await StudentProfile.findOneAndUpdate(
+            { userId },
+            { $set: data },
+            { new: true, upsert: true }
+        );
+
+        revalidatePath("/", "layout");
+        revalidatePath("/admin/students");
+        return JSON.parse(JSON.stringify(updated));
     }
 );
