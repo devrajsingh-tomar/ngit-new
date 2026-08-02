@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { getHeaderFooterData } from "@/app/actions/layoutContent";
 import {
     X,
     Download,
@@ -38,6 +39,16 @@ export default function StudentQRModal({
     photoUrl = ""
 }: StudentQRModalProps) {
     const [activeTab, setActiveTab] = useState<"qr" | "idcard">("qr");
+    const [logoUrl, setLogoUrl] = useState<string>("");
+
+    useEffect(() => {
+        if (!isOpen) return;
+        getHeaderFooterData().then(res => {
+            if (res.success && res.header?.logoImage) {
+                setLogoUrl(res.header.logoImage);
+            }
+        });
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -163,9 +174,13 @@ export default function StudentQRModal({
                                 >
                                     {/* Card Header Background */}
                                     <div className="bg-slate-950 text-white p-6 pb-4 text-center border-b-4 border-amber-500 flex flex-col items-center justify-center">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-emerald-500 rounded-lg flex items-center justify-center font-black text-white text-lg shadow-md mb-1.5">
-                                            N
-                                        </div>
+                                        {logoUrl ? (
+                                            <img src={logoUrl} alt="Logo" className="h-9 w-auto object-contain mb-1.5" />
+                                        ) : (
+                                            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-emerald-500 rounded-lg flex items-center justify-center font-black text-white text-lg shadow-md mb-1.5">
+                                                N
+                                            </div>
+                                        )}
                                         <h3 className="text-sm font-black tracking-widest uppercase leading-none">NGIT INSTITUTE</h3>
                                         <p className="text-[8px] font-bold tracking-[0.25em] text-slate-400 uppercase mt-1">Student ID Card</p>
                                     </div>
