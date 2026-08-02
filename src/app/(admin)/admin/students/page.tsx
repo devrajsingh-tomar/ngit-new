@@ -724,7 +724,7 @@ export default function AdminStudentsPage() {
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                       {/* Typing simulation attempts */}
                       <div className="space-y-3">
                         <h5 className="text-[9px] font-black text-indigo-500 uppercase tracking-wider">Typing Simulator Records ({studentDetails.typingResults?.length || 0})</h5>
@@ -741,29 +741,6 @@ export default function AdminStudentsPage() {
                                 <div className="text-right">
                                   <p className="font-bold text-indigo-600">{r.wpm} WPM</p>
                                   <p className="text-[9px] text-emerald-600">{r.accuracy}% Acc</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Mock test attempts */}
-                      <div className="space-y-3">
-                        <h5 className="text-[9px] font-black text-amber-500 uppercase tracking-wider">Mock Test Paper Records ({studentDetails.mockResults?.length || 0})</h5>
-                        {studentDetails.mockResults?.length === 0 ? (
-                          <div className="text-slate-400 text-center py-4 border border-dashed rounded-xl">No mock test records found.</div>
-                        ) : (
-                          <div className="max-h-48 overflow-y-auto space-y-2 pr-1 no-scrollbar">
-                            {studentDetails.mockResults.map((r: any) => (
-                              <div key={r._id} className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
-                                <div>
-                                  <p className="font-bold text-slate-800 truncate max-w-[200px]">{r.mockTestId?.title || "Offline Mock"}</p>
-                                  <p className="text-[8px] text-slate-400 mt-0.5">{new Date(r.attemptDate).toLocaleDateString()}</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-bold text-amber-600">{r.score}/{r.totalMarks} Marks</p>
-                                  <p className="text-[9px] text-slate-500">Rank: {r.rank || "—"}</p>
                                 </div>
                               </div>
                             ))}
