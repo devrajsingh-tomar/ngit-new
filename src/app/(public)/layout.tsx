@@ -5,6 +5,7 @@ import PublicNavbar from "@/components/public/PublicNavbar";
 import Footer from "@/components/public/Footer";
 import HomepagePopup from "@/components/public/HomepagePopup";
 import FloatingSocials from "@/components/public/FloatingSocials";
+import TypingNotificationPopup from "@/components/public/TypingNotificationPopup";
 import { getCMSContent } from "@/services/CMSService";
 import { getFloatingSocialsData } from "@/app/actions/layoutContent";
 
@@ -25,6 +26,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             <Footer />
             <HomepagePopup settings={popupSettings} />
             <FloatingSocials socials={socials} />
+            <TypingNotificationPopup />
         </div>
     );
 }
