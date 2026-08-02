@@ -40,7 +40,8 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
         userId,
         progressTrend,
         typingResults,
-        typingExams
+        typingExams,
+        profile
     } = data || {
         stats: { avgProgress: 0, activeCourses: 0, attendancePercentage: 0, testsCompleted: 0, avgGrade: '-' },
         enrollments: [],
@@ -49,7 +50,8 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
         userName: 'Student',
         userImage: null,
         userId: '',
-        progressTrend: []
+        progressTrend: [],
+        profile: null
     };
 
     // Calculate typing statistics
@@ -150,8 +152,9 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
                         </div>
                         <div className="space-y-2">
                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Digital Identity</p>
-                            <p className="text-2xl font-black text-white flex items-center gap-3 italic">
-                                Student ID <Zap className="w-5 h-5 text-primary" />
+                            <p className="text-xl font-black text-white flex flex-col gap-2 italic leading-tight">
+                                <span className="flex items-center gap-2">Student Card <Zap className="w-4 h-4 text-primary" /></span>
+                                <span className="text-[10px] font-mono tracking-widest text-slate-400 not-italic leading-none uppercase">ID: {profile?.idNo || "N/A"}</span>
                             </p>
                         </div>
                     </div>
@@ -277,8 +280,12 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
             <StudentQRModal
                 isOpen={qrOpen}
                 onClose={() => setQrOpen(false)}
-                studentId={userId}
+                studentId={profile?.idNo || "N/A"}
                 studentName={userName}
+                fatherName={profile?.fatherName}
+                course={profile?.course}
+                mobile={profile?.localPhone}
+                photoUrl={userImage}
             />
         </div>
     );

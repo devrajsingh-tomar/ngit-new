@@ -176,7 +176,8 @@ export async function getStudentDashboardData() {
             userImage: session.user.image,
             userId: session.user.id,
             progressTrend: [65, 72, 68, 85, 90, 88, 92], // Placeholder for chart
-            isProfileComplete // Return completeness flag
+            isProfileComplete, // Return completeness flag
+            profile: profile ? JSON.parse(JSON.stringify(profile)) : null
         };
     } catch (error: any) {
         return { success: false, error: error.message };
