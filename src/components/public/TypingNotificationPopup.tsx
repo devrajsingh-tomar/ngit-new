@@ -91,7 +91,7 @@ export default function TypingNotificationPopup() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        className="fixed bottom-6 right-6 z-[90] max-w-sm w-full bg-white/95 border border-slate-100 rounded-[2rem] shadow-2xl p-6 backdrop-blur-md flex flex-col gap-4 text-slate-800"
+                        className="fixed bottom-72 right-6 z-[90] max-w-sm w-full bg-white/95 border border-slate-100 rounded-[2rem] shadow-2xl p-6 backdrop-blur-md flex flex-col gap-4 text-slate-800"
                     >
                         <button
                             onClick={handleCloseToast}
