@@ -60,6 +60,28 @@ export async function searchStudentsAdmin(queryText: string) {
       };
     });
 
+    // Merge in stub profiles for users who match the search but don't have a StudentProfile document yet
+    const profileUserIds = new Set(
+      matchedProfiles.map((p: any) => p.userId?._id?.toString() || p.userId?.toString())
+    );
+
+    matchedUsers.forEach((u: any) => {
+      if (!profileUserIds.has(u._id.toString())) {
+        mapped.push({
+          _id: `temp_${u._id.toString()}`,
+          userId: u._id.toString(),
+          name: u.name || "Unknown",
+          email: u.email || "",
+          phone: u.mobile || "",
+          whatsapp: "",
+          course: "No Profile Yet",
+          status: "Pending",
+          idNo: "N/A",
+          createdAt: u.createdAt || new Date()
+        });
+      }
+    });
+
     return { success: true, students: JSON.parse(JSON.stringify(mapped)) };
   } catch (err: any) {
     return { success: false, error: err.message };
