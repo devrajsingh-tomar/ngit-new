@@ -60,6 +60,18 @@ export const registerStudent = createSafeAction(
             isActive: false, // pending admin approval
         });
 
+        // Generate a unique sequential idNo if not provided
+        let idNo = formData.idNo?.trim();
+        if (!idNo) {
+            const count = await StudentProfile.countDocuments();
+            let suffix = count + 1001;
+            idNo = `NGIT-${suffix}`;
+            while (await StudentProfile.exists({ idNo })) {
+                suffix++;
+                idNo = `NGIT-${suffix}`;
+            }
+        }
+
         // Save full student profile
         await StudentProfile.create({
             userId: user._id,
@@ -80,7 +92,7 @@ export const registerStudent = createSafeAction(
             // Offline Form Fields
             year: formData.year,
             mode: formData.mode,
-            idNo: formData.idNo,
+            idNo: idNo,
             gender: formData.gender,
             nationality: formData.nationality,
             religion: formData.religion,

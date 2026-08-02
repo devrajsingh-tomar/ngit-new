@@ -10,10 +10,85 @@ import MockTestResult from "@/models/MockTestResult";
 import Course from "@/models/Course";
 import { revalidatePath } from "next/cache";
 
+// Auto-heal helper to ensure all student accounts have a StudentProfile and a unique Student ID (idNo)
+export async function autoHealStudentProfiles() {
+  try {
+    await connectDB();
+    
+    // Find all users with role STUDENT
+    const users = await User.find({ role: UserRole.STUDENT }).lean();
+    
+    // Find all existing student profiles
+    const profiles = await StudentProfile.find({}).lean();
+    const profileUserIds = new Set(profiles.map(p => p.userId.toString()));
+    
+    // For any student user missing a StudentProfile, create a default one
+    let totalCount = await StudentProfile.countDocuments();
+    
+    for (const user of users) {
+      if (!profileUserIds.has(user._id.toString())) {
+        // Generate a unique sequential idNo
+        let suffix = totalCount + 1001;
+        let idNo = `NGIT-${suffix}`;
+        while (await StudentProfile.exists({ idNo })) {
+          suffix++;
+          idNo = `NGIT-${suffix}`;
+        }
+        
+        await StudentProfile.create({
+          userId: user._id,
+          name: user.name || "Unknown Student",
+          dateOfBirth: "—",
+          fatherName: "—",
+          motherName: "—",
+          aadharNo: "—",
+          category: "General",
+          localAddress: "—",
+          localPhone: user.mobile || "—",
+          permanentAddress: "—",
+          permanentPhone: user.mobile || "—",
+          course: "General Typing",
+          status: user.isActive ? "Approved" : "Pending",
+          idNo,
+          whatsappNo: user.mobile || "",
+        });
+        
+        totalCount++;
+      }
+    }
+    
+    // For any existing profile that has no idNo or empty/N/A idNo, assign one
+    const emptyProfiles = await StudentProfile.find({
+      $or: [
+        { idNo: { $exists: false } },
+        { idNo: null },
+        { idNo: "" },
+        { idNo: "N/A" }
+      ]
+    });
+    
+    if (emptyProfiles.length > 0) {
+      for (const profile of emptyProfiles) {
+        let suffix = totalCount + 1001;
+        let idNo = `NGIT-${suffix}`;
+        while (await StudentProfile.exists({ idNo })) {
+          suffix++;
+          idNo = `NGIT-${suffix}`;
+        }
+        await StudentProfile.findByIdAndUpdate(profile._id, { idNo });
+        totalCount++;
+      }
+    }
+  } catch (err) {
+    console.error("autoHealStudentProfiles error:", err);
+  }
+}
+
 // Search students globally (by name, email, phone, roll/id number)
 export async function searchStudentsAdmin(queryText: string) {
   try {
     await connectDB();
+    await autoHealStudentProfiles(); // Run profile healing on search
     const cleanQuery = queryText.trim();
     if (!cleanQuery) return { success: true, students: [] };
 
@@ -215,6 +290,7 @@ export async function deleteStudentPermanentlyAdmin(profileId: string, userId: s
 export async function getStudentAffairsKPIs() {
   try {
     await connectDB();
+    await autoHealStudentProfiles(); // Run profile healing on dashboard load
     
     const startOfToday = new Date();
     startOfToday.setHours(0,0,0,0);
