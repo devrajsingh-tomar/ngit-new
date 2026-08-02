@@ -290,6 +290,18 @@ export async function markSingleStudentAttendance(studentId: string, status: Att
             return { success: false, error: "Unauthorized" };
         }
 
+        let targetUserId = studentId;
+
+        // Convert sequential Student ID (NGIT-XXXX) to MongoDB User _id
+        if (studentId.startsWith("NGIT-")) {
+            const StudentProfile = (await import("@/models/StudentProfile")).default;
+            const profile = await StudentProfile.findOne({ idNo: studentId }).select("userId").lean();
+            if (!profile) {
+                return { success: false, error: `Student ID ${studentId} not found` };
+            }
+            targetUserId = profile.userId.toString();
+        }
+
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date();
@@ -300,7 +312,7 @@ export async function markSingleStudentAttendance(studentId: string, status: Att
 
         await Attendance.findOneAndUpdate(
             { 
-                studentId, 
+                studentId: targetUserId, 
                 batchId, 
                 date: { $gte: todayStart, $lte: todayEnd } 
             },
