@@ -155,7 +155,7 @@ export default function LeaderboardPage() {
                                 </div>
                                 <div className="text-center bg-slate-900 p-8 rounded-[3rem] shadow-2xl w-full text-white ring-8 ring-slate-50">
                                     <h4 className="text-xl font-black truncate mb-1">{topThree[0].studentId?.name}</h4>
-                                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-4">Master Architect</p>
+                                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-4">Typing Grandmaster</p>
                                     <div className="flex justify-center gap-2">
                                         <div className="px-4 py-2 bg-white/10 rounded-xl border border-white/10 flex flex-col items-center">
                                             <span className="text-[10px] text-white/50 uppercase font-black">Score</span>
