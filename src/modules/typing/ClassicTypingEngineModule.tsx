@@ -64,6 +64,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     setTypedText,
     settings,
     rawWpm,
+    netWpm,
+    grossWpm,
     backspaceCount,
     incrementBackspace,
     resetTest,
@@ -260,6 +262,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       onComplete({
         wpm,
         rawWpm,
+        netWpm,
+        grossWpm,
         accuracy,
         errorCount,
         totalCharacters: typedText.length,
@@ -270,7 +274,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         passageId: isBookPractice ? currentExam?._id : currentExam?.passageId?._id
       });
     }
-  }, [isFinished, onComplete, wpm, rawWpm, accuracy, errorCount, typedText, backspaceCount, settings.duration, timeLeft, currentExam, isBookPractice]);
+  }, [isFinished, onComplete, wpm, rawWpm, netWpm, grossWpm, accuracy, errorCount, typedText, backspaceCount, settings.duration, timeLeft, currentExam, isBookPractice]);
   
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {

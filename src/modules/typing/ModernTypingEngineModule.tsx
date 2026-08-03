@@ -62,6 +62,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     setTypedText,
     settings,
     rawWpm,
+    netWpm,
+    grossWpm,
     backspaceCount,
     incrementBackspace,
     resetTest,
@@ -242,6 +244,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       onComplete({
         wpm,
         rawWpm,
+        netWpm,
+        grossWpm,
         accuracy,
         errorCount,
         totalCharacters: typedText.length,
@@ -252,7 +256,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         passageId: passagesList[currentPassageIndex]?._id
       });
     }
-  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, settings.duration, timeLeft, typedText, wpm]);
+  }, [isFinished, accuracy, backspaceCount, currentPassageIndex, errorCount, onComplete, passagesList, rawWpm, netWpm, grossWpm, settings.duration, timeLeft, typedText, wpm]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!isActive && !isFinished && timeLeft > 0) {

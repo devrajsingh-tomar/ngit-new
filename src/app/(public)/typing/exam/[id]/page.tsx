@@ -77,8 +77,14 @@ export default function TypingExamPage() {
     if (!id) return;
     let isMounted = true;
     fetch(`/api/typing/exams/${id}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Server responded with an error");
+      .then(async res => {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          if (res.status === 403 && errData.requiresPayment) {
+            throw new Error("PAYMENT_REQUIRED");
+          }
+          throw new Error("Server responded with an error");
+        }
         return res.json();
       })
       .then(data => {
@@ -101,11 +107,16 @@ export default function TypingExamPage() {
         if (isMounted) {
           console.error("Fetch error in TypingExamPage:", err);
           setLoading(false);
-          toast.error("Failed to connect to examination server");
+          if (err.message === "PAYMENT_REQUIRED") {
+            toast.error("This is a paid exam. Redirecting to selection page...");
+            router.push("/typing/official");
+          } else {
+            toast.error("Failed to connect to examination server");
+          }
         }
       });
     return () => { isMounted = false; };
-  }, [id, initialLang, initialLayout, session]);
+  }, [id, initialLang, initialLayout, session, router]);
 
   const handleComplete = useCallback(async (results: any) => {
     if (isSubmitting) return;

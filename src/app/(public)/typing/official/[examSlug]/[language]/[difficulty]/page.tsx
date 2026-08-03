@@ -2,6 +2,8 @@ import React from "react";
 import connectDB from "@/lib/db";
 import GovExam from "@/models/GovExam";
 import TypingExam from "@/models/TypingExam";
+import TypingExamAccess from "@/models/TypingExamAccess";
+import StartOrUnlockButton from "@/components/typing/StartOrUnlockButton";
 import Link from "next/link";
 import { ArrowLeft, Clock, Keyboard, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
@@ -31,6 +33,14 @@ export default async function TestSelectionPage({
   }
 
   await connectDB();
+
+  // Fetch student's unlocked typing exams
+  const userAccess = session ? await TypingExamAccess.find({
+    userId: session.user.id,
+    status: "SUCCESS"
+  }).select("examId").lean() : [];
+  const unlockedExamIds = new Set(userAccess.map(acc => acc.examId.toString()));
+
   const exam = await GovExam.findOne({ 
     slug: { $regex: new RegExp(`^${params.examSlug}$`, "i") }, 
     active: true 
@@ -111,6 +121,7 @@ export default async function TestSelectionPage({
                   <th className="px-6 py-4">Word Count</th>
                   <th className="px-6 py-4">Keystrokes</th>
                   <th className="px-6 py-4">Time</th>
+                  <th className="px-6 py-4">Access Type</th>
                   <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -119,6 +130,10 @@ export default async function TestSelectionPage({
                   const content = (test.passageId as any)?.content || "";
                   const keystrokes = content.length;
                   const wordCount = content.trim().split(/\s+/).length;
+
+                  const isPaid = test.pricing?.type === "PAID";
+                  const isUnlocked = unlockedExamIds.has(test._id.toString());
+                  const amount = test.pricing?.amount || 0;
 
                   return (
                     <tr key={test._id.toString()} className="hover:bg-slate-50/50 transition-colors group">
@@ -153,12 +168,32 @@ export default async function TestSelectionPage({
                           {test.duration} Min
                         </div>
                       </td>
+                      <td className="px-6 py-5">
+                        {isPaid ? (
+                          isUnlocked ? (
+                            <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-wider">
+                              Unlocked
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-wider">
+                              Paid (₹{amount})
+                            </span>
+                          )
+                        ) : (
+                          <span className="px-2 py-1 rounded bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-wider">
+                            Free
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-5 text-right">
-                        <Link href={`/typing/exam/${test._id}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}`}>
-                          <button className="inline-flex items-center justify-center h-9 px-5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95">
-                            Start <Play className="w-3 h-3 ml-2" />
-                          </button>
-                        </Link>
+                        <StartOrUnlockButton
+                          testId={test._id.toString()}
+                          isPaid={isPaid}
+                          isUnlocked={isUnlocked}
+                          amount={amount}
+                          duration={test.duration}
+                          langFormatted={langFormatted}
+                        />
                       </td>
                     </tr>
                   );

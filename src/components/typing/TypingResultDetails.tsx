@@ -113,17 +113,13 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const lang = result.examId?.language?.toLowerCase() || "";
   const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
 
-  const maxWords = Math.max(originalWords.length, submittedWords.length);
+  const maxWords = submittedWords.length;
   for (let idx = 0; idx < maxWords; idx++) {
     const originalWord = originalWords[idx];
     const typedWord = submittedWords[idx];
 
     if (!originalWord) {
       if (typedWord) fullMistakes++;
-      continue;
-    }
-    if (!typedWord) {
-      fullMistakes++;
       continue;
     }
 
@@ -165,13 +161,42 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const timeDurationMins = result.examId?.duration || 10;
   
   const totalErrors = fullMistakes + (halfMistakes / 2);
+  
+  // Determine gross WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
+  let fallbackGrossWpm = 0;
+  if (timeTakenMins > 0) {
+    if (isUPPolice) {
+      fallbackGrossWpm = submittedWords.length / timeTakenMins;
+    } else {
+      fallbackGrossWpm = totalStrokes / 5 / timeTakenMins;
+    }
+  }
   const grossWpm = result.grossWpm !== undefined 
     ? result.grossWpm.toFixed(2) 
-    : (timeTakenMins > 0 ? (totalStrokes / 5 / timeTakenMins).toFixed(2) : "0.00");
+    : (result.rawWpm !== undefined 
+        ? result.rawWpm.toFixed(2) 
+        : fallbackGrossWpm.toFixed(2));
   
+  // Determine net WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
+  let fallbackNetWpm = 0;
+  if (timeTakenMins > 0) {
+    const wordCountBase = isUPPolice ? submittedWords.length : totalStrokes / 5;
+    if (isUPPolice) {
+      fallbackNetWpm = correctWords / timeTakenMins;
+    } else if (isUPSSSC) {
+      const penaltyWords = totalErrors > 5 ? (totalErrors - 5) * 5 : 0;
+      fallbackNetWpm = Math.max(0, wordCountBase - penaltyWords) / timeTakenMins;
+    } else if (isAHC) {
+      fallbackNetWpm = Math.max(0, wordCountBase - fullMistakes) / timeTakenMins;
+    } else {
+      fallbackNetWpm = Math.max(0, wordCountBase - totalErrors) / timeTakenMins;
+    }
+  }
   const netWpm = result.netWpm !== undefined 
     ? result.netWpm.toFixed(2) 
-    : (timeTakenMins > 0 ? (Math.max(0, (totalStrokes / 5) - totalErrors) / timeTakenMins).toFixed(2) : "0.00");
+    : (result.wpm !== undefined 
+        ? result.wpm.toFixed(2) 
+        : fallbackNetWpm.toFixed(2));
   
   const passingWpm = isHindi ? 25 : (isUPPolice ? 35 : 30);
   const accuracy = result.accuracy !== undefined 

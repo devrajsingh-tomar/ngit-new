@@ -22,6 +22,11 @@ export interface ITypingExam {
   endTime: Date;
   status: "Draft" | "Active" | "Expired";
   rules: string[];
+  pricing?: {
+    type: "FREE" | "PAID";
+    amount: number;
+    currency: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +54,11 @@ const TypingExamSchema = new Schema<ITypingExam>(
     endTime: { type: Date, required: true },
     status: { type: String, enum: ["Draft", "Active", "Expired"], default: "Draft" },
     rules: [{ type: String }],
+    pricing: {
+      type: { type: String, enum: ["FREE", "PAID"], default: "FREE" },
+      amount: { type: Number, default: 0 },
+      currency: { type: String, default: "INR" },
+    },
   },
   { timestamps: true }
 );
