@@ -1,4 +1,5 @@
 import { Smartphone, BookOpen, GraduationCap, Trophy, Play } from "lucide-react";
+import Image from "next/image";
 
 export default function AppDownloadSection() {
   return (
@@ -69,7 +70,7 @@ export default function AppDownloadSection() {
             {/* Playstore Button */}
             <div className="pt-4">
               <a 
-                href="https://play.google.com/store" 
+                href="https://play.google.com/store/apps/details?id=com.ngit.institute" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-4 bg-slate-950 border border-slate-800 hover:border-emerald-500 rounded-2xl px-6 py-3.5 hover:bg-slate-900 transition-all group duration-300 shadow-xl"
@@ -95,47 +96,19 @@ export default function AppDownloadSection() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-500/20 rounded-full blur-[60px]" />
             
             <div className="bg-slate-950/80 backdrop-blur-md rounded-[3rem] p-6 border border-slate-800 shadow-2xl relative w-72 md:w-80">
-              <div className="bg-slate-900 rounded-[2.5rem] overflow-hidden aspect-[9/18] relative border border-slate-800 flex flex-col justify-between p-6">
+              <div className="bg-slate-900 rounded-[2.5rem] overflow-hidden aspect-[9/18] relative border border-slate-800">
                 {/* Simulated Notch */}
-                <div className="w-32 h-4 bg-slate-950 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-xl" />
+                <div className="w-32 h-4 bg-slate-950 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-xl z-20" />
 
-                {/* Simulated Header */}
-                <div className="pt-4 flex justify-between items-center">
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Welcome back</p>
-                    <p className="text-xs font-black text-white">NGIT Student</p>
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center">
-                    <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                </div>
-
-                {/* Simulated Dashboard Content */}
-                <div className="my-auto space-y-4">
-                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Live Mock Test</span>
-                      <span className="text-[8px] bg-indigo-500/20 text-indigo-400 font-black px-1.5 py-0.5 rounded">ACTIVE</span>
-                    </div>
-                    <p className="text-xs font-black text-slate-100">UPSSSC Junior Assistant Mock #12</p>
-                    <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 w-3/4 rounded-full" />
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Course Progress</span>
-                      <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-black px-1.5 py-0.5 rounded">75% DONE</span>
-                    </div>
-                    <p className="text-xs font-black text-slate-100">Steno Shorthand Masterclass</p>
-                  </div>
-                </div>
-
-                {/* Simulated CTA */}
-                <div className="w-full bg-emerald-500 text-slate-950 text-center py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg">
-                  Start Learning Now
-                </div>
+                {/* Actual App Screenshot */}
+                <Image
+                  src="/images/app-home-screenshot.jpg"
+                  alt="NGIT Mobile App Home Screen"
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 768px) 100vw, 300px"
+                  priority
+                />
               </div>
             </div>
           </div>
