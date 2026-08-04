@@ -952,38 +952,38 @@ export default function CourseAssignmentPage() {
 
             {/* EDIT TYPING SUBSCRIPTION MODAL OVERLAY */}
             {isSubEditOpen && editSubscription && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-                        <header className="flex justify-between items-start mb-6">
+                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border border-slate-100/80 animate-in zoom-in-95 duration-200">
+                        <header className="flex justify-between items-center mb-6">
                             <div>
-                                <h3 className="text-xl font-black text-slate-900">Modify Subscription</h3>
-                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Change student's simulator license status</p>
+                                <h3 className="text-lg font-black text-slate-800 tracking-tight">Modify Subscription</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Edit student simulator access license</p>
                             </div>
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="rounded-xl" 
+                                className="rounded-lg w-8 h-8 text-slate-400 hover:text-slate-600" 
                                 onClick={() => { setIsSubEditOpen(false); setEditSubscription(null); }}
                             >
-                                <X className="w-5 h-5 text-slate-400" />
+                                <X className="w-4 h-4" />
                             </Button>
                         </header>
 
-                        <div className="space-y-6 text-left">
+                        <div className="space-y-4 text-left">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Student Name</label>
-                                <div className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center font-bold text-slate-800 text-sm">
+                                <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1.5 text-slate-400">Student Name</label>
+                                <div className="w-full h-11 px-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center font-bold text-slate-500 text-xs cursor-not-allowed">
                                     {editSubscription.userId?.name || "Unknown Student"}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Plan Type</label>
+                                    <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1.5 text-slate-400">Plan Type</label>
                                     <select
                                         value={editSubPlan}
                                         onChange={(e) => setEditSubPlan(e.target.value as any)}
-                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm outline-none cursor-pointer"
+                                        className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-xs outline-none cursor-pointer focus:border-indigo-500 focus:bg-white transition-all"
                                     >
                                         <option value="MONTHLY">MONTHLY</option>
                                         <option value="QUARTERLY">QUARTERLY</option>
@@ -992,11 +992,11 @@ export default function CourseAssignmentPage() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Status</label>
+                                    <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1.5 text-slate-400">Status</label>
                                     <select
                                         value={editSubStatus}
                                         onChange={(e) => setEditSubStatus(e.target.value as any)}
-                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm outline-none cursor-pointer"
+                                        className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-xs outline-none cursor-pointer focus:border-indigo-500 focus:bg-white transition-all"
                                     >
                                         <option value="ACTIVE">ACTIVE</option>
                                         <option value="EXPIRED">EXPIRED</option>
@@ -1005,49 +1005,49 @@ export default function CourseAssignmentPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Start Date</label>
+                                    <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1.5 text-slate-400">Start Date</label>
                                     <input 
                                         type="date"
                                         value={editSubStartDate}
                                         onChange={(e) => setEditSubStartDate(e.target.value)}
-                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 font-bold text-sm outline-none cursor-pointer text-slate-800"
+                                        className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-xs outline-none cursor-pointer focus:border-indigo-500 focus:bg-white transition-all text-slate-700"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">End Date</label>
+                                    <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1.5 text-slate-400">End Date</label>
                                     <input 
                                         type="date"
                                         value={editSubEndDate}
                                         onChange={(e) => setEditSubEndDate(e.target.value)}
-                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 font-bold text-sm outline-none cursor-pointer text-slate-800"
+                                        className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-xs outline-none cursor-pointer focus:border-indigo-500 focus:bg-white transition-all text-slate-700"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Amount Paid (₹)</label>
+                                <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1.5 text-slate-400">Amount Paid (₹)</label>
                                 <input 
                                     type="number"
                                     value={editSubAmount}
                                     onChange={(e) => setEditSubAmount(Number(e.target.value))}
-                                    className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm outline-none"
+                                    className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-xs outline-none focus:border-indigo-500 focus:bg-white transition-all"
                                 />
                             </div>
 
-                            <div className="flex gap-3 pt-4 border-t border-slate-100">
+                            <div className="flex gap-2.5 pt-4 border-t border-slate-100">
                                 <Button
                                     variant="outline"
-                                    className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                                    className="flex-1 h-11 rounded-xl text-xs font-black uppercase tracking-wider border-slate-200 text-slate-500 hover:bg-slate-50/80 cursor-pointer"
                                     onClick={() => { setIsSubEditOpen(false); setEditSubscription(null); }}
                                     disabled={actionLoading}
                                 >
                                     Cancel
                                 </Button>
                                 <Button
-                                    className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black text-white bg-indigo-650 hover:bg-indigo-700 border-none"
+                                    className="flex-1 h-11 rounded-xl text-xs font-black uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] border-none shadow-sm shadow-indigo-100 transition-all cursor-pointer"
                                     onClick={handleUpdateSubscription}
                                     disabled={actionLoading}
                                 >
