@@ -64,7 +64,7 @@ export default async function TestSelectionPage({
   })
     .sort({ createdAt: 1 })
     .limit(3)
-    .select("_id")
+    .populate("passageId")
     .lean();
   const freeExamIds = new Set(freeExams.map(e => e._id.toString()));
 
@@ -112,6 +112,58 @@ export default async function TestSelectionPage({
             {exam.title} • {langFormatted} • {diffFormatted}
           </p>
         </div>
+
+        {/* FREE TRYOUT CARDS SECTION */}
+        {freeExams.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <h2 className="text-xs font-black text-emerald-600 uppercase tracking-widest">
+                Free Tryout Tests (No Subscription Required)
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {freeExams.map((test, index) => {
+                const passageText = (test.passageId as any)?.content || "";
+                const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;
+                
+                return (
+                  <div key={test._id.toString()} className="bg-gradient-to-br from-indigo-50/50 to-white border border-indigo-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col justify-between space-y-4 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-full -mr-6 -mt-6" />
+                    <div className="space-y-2 relative z-10">
+                      <div className="flex justify-between items-center">
+                        <span className="bg-indigo-50 text-indigo-700 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
+                          Free Test {index + 1}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-400">
+                          #{test._id.toString().substring(18)}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-slate-900 text-sm leading-snug group-hover:text-indigo-650 transition-colors">
+                        {test.title}
+                      </h3>
+                      <div className="flex items-center gap-3 pt-1 text-slate-500 text-xs font-bold">
+                        <span className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">{wordCount} Words</span>
+                        <span className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-350" /> {test.duration} Min
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2 relative z-10">
+                      <Link 
+                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}`}
+                        className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-100 hover:shadow-lg flex items-center justify-center gap-2 group-hover:scale-[1.01] cursor-pointer"
+                      >
+                        Start Free <Play className="w-3 h-3 fill-white shrink-0" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {/* Search & Filters */}
