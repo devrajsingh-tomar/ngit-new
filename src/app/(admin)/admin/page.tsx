@@ -13,7 +13,8 @@ import {
     ChevronRight,
     BrainCircuit,
     Trophy,
-    ClipboardList
+    ClipboardList,
+    Keyboard
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export default async function AdminDashboard() {
         activeCourses: 0,
         totalRevenue: 0,
         pendingApprovals: 0,
+        activeSubscriptionsCount: 0,
         recentAttempts: [],
         recentStudents: []
     };
@@ -75,12 +77,12 @@ export default async function AdminDashboard() {
                     color="emerald"
                 />
                 <MetricCard
-                    label="Pending Actions"
-                    value={s.pendingApprovals}
-                    icon={<AlertCircle className="w-6 h-6 text-rose-600" />}
-                    trend="Needs Review"
-                    color="rose"
-                    alert={true}
+                    label="Active Typing Licenses"
+                    value={s.activeSubscriptionsCount || 0}
+                    icon={<Keyboard className="w-6 h-6 text-indigo-600" />}
+                    trend="Active Simulator Subs"
+                    color="indigo"
+                    alert={false}
                 />
             </div>
 

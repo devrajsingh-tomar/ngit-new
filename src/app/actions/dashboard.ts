@@ -16,6 +16,7 @@ import Question from "@/models/Question";
 import StudentProfile from "@/models/StudentProfile";
 import TypingResult from "@/models/TypingResult";
 import TypingExam from "@/models/TypingExam";
+import TypingSubscription from "@/models/TypingSubscription";
 
 export async function getMockTestStats() {
     try {
@@ -45,7 +46,7 @@ export async function getDashboardStats() {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const [totalStudents, activeCourses, payments, allAttempts, recentStudents, totalPublishedResults] = await Promise.all([
+        const [totalStudents, activeCourses, payments, allAttempts, recentStudents, totalPublishedResults, activeSubscriptionsCount] = await Promise.all([
             User.countDocuments({ role: "STUDENT" }),
             Course.countDocuments({ isPublished: true }),
             Payment.find({ status: PaymentStatus.SUCCESS }).lean(),
@@ -59,7 +60,11 @@ export async function getDashboardStats() {
                 .limit(5)
                 .select("name email createdAt")
                 .lean(),
-            MockTestResult.countDocuments()
+            MockTestResult.countDocuments(),
+            TypingSubscription.countDocuments({
+                status: "ACTIVE",
+                endDate: { $gt: new Date() }
+            })
         ]);
 
         const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -75,6 +80,7 @@ export async function getDashboardStats() {
             activeCourses,
             totalRevenue,
             pendingApprovals: mockTestAttempts - totalPublishedResults,
+            activeSubscriptionsCount,
             mockMetrics: {
                 totalTests: uniqueTests,
                 totalAttempts: mockTestAttempts,
