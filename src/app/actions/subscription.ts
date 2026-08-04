@@ -183,6 +183,24 @@ export const activateOrExtendSubscriptionAdminAction = createSafeAction(
         );
 
         revalidatePath("/admin/students");
+        revalidatePath("/admin/students/enrollments");
         return { success: true, subscription: JSON.parse(JSON.stringify(newSub)) };
+    }
+);
+
+const GetAdminTypingSubscriptionsSchema = z.object({});
+
+export const getAdminTypingSubscriptionsAction = createSafeAction(
+    { schema: GetAdminTypingSubscriptionsSchema, requireAuth: true, roles: [UserRole.ADMIN] },
+    async () => {
+        await connectDB();
+        await import("@/models/User");
+
+        const subscriptions = await TypingSubscription.find()
+            .populate("userId", "name email phone")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return { success: true, subscriptions: JSON.parse(JSON.stringify(subscriptions)) };
     }
 );
