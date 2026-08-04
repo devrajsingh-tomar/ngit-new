@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { Play, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { initiateTypingExamPayment, verifyTypingExamPayment } from "@/app/actions/typingPayment";
+import { initiateTypingSubscriptionPayment, verifyTypingSubscriptionPayment } from "@/app/actions/subscription";
 
 interface StartOrUnlockButtonProps {
   testId: string;
@@ -33,7 +33,7 @@ export default function StartOrUnlockButton({
     toast.info("Initiating checkout...");
 
     try {
-      const res = await initiateTypingExamPayment({ examId: testId });
+      const res = await initiateTypingSubscriptionPayment({});
 
       if (res.error) {
         toast.error(res.error || "Failed to initiate payment");
@@ -49,7 +49,7 @@ export default function StartOrUnlockButton({
       }
 
       if (data.instant) {
-        toast.success("Exam unlocked!");
+        toast.success("Subscription is already active!");
         router.refresh();
         setIsProcessing(false);
         return;
@@ -60,17 +60,17 @@ export default function StartOrUnlockButton({
         amount: data.amount,
         currency: data.currency,
         name: "NGIT Institute",
-        description: `Unlocking Typing Exam: ${data.examTitle}`,
+        description: "NGIT Typing Subscription (1 Month)",
         order_id: data.orderId,
         handler: async (response: any) => {
-          const verifyRes = await verifyTypingExamPayment({
+          const verifyRes = await verifyTypingSubscriptionPayment({
             razorpayOrderId: response.razorpay_order_id || data.orderId,
             razorpayPaymentId: response.razorpay_payment_id || "pay_dummy_123",
             razorpaySignature: response.razorpay_signature || "mock_signature_success"
           });
 
           if (verifyRes.data?.success) {
-            toast.success("Exam successfully unlocked!");
+            toast.success("Subscription successfully activated!");
             router.refresh();
           } else {
             toast.error(verifyRes.error || "Payment verification failed");
@@ -87,13 +87,13 @@ export default function StartOrUnlockButton({
       if (data.orderId?.startsWith("order_mock_")) {
         setTimeout(async () => {
           toast.info("Simulating payment gateway...");
-          const verifyRes = await verifyTypingExamPayment({
+          const verifyRes = await verifyTypingSubscriptionPayment({
             razorpayOrderId: data.orderId,
             razorpayPaymentId: "pay_dummy_123",
             razorpaySignature: "mock_signature_success"
           });
           if (verifyRes.data?.success) {
-            toast.success("Exam unlocked successfully (Sandbox)");
+            toast.success("Subscription activated successfully (Sandbox)");
             router.refresh();
           } else {
             toast.error(verifyRes.error || "Sandbox verification failed");
@@ -133,7 +133,7 @@ export default function StartOrUnlockButton({
         onClick={handleUnlock}
         className="inline-flex items-center justify-center h-9 px-4 rounded-lg bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
       >
-        {isProcessing ? "Processing..." : `Unlock (₹${amount})`} <Lock className="w-3 h-3 ml-2" />
+        {isProcessing ? "Processing..." : `Subscribe (₹${amount}/mo)`} <Lock className="w-3 h-3 ml-2" />
       </button>
     </>
   );

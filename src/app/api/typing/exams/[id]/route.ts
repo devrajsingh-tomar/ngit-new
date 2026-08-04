@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import TypingExam from "@/models/TypingExam";
 import TypingExamAccess from "@/models/TypingExamAccess";
+import TypingSubscription from "@/models/TypingSubscription";
 import "@/models/TypingPassage";
 import "@/models/TypingBook";
 import "@/models/TypingRulePreset";
@@ -31,25 +32,41 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
-    // Access check for PAID exams
-    if (exam.pricing && exam.pricing.type === "PAID") {
+    // Determine the 3 free exams (3 oldest active ones in the system)
+    const freeExams = await TypingExam.find({ status: "Active" })
+      .sort({ createdAt: 1 })
+      .limit(3)
+      .select("_id")
+      .lean();
+    const freeExamIds = freeExams.map(e => e._id.toString());
+    const isFree = freeExamIds.includes(exam._id.toString());
+
+    if (!isFree) {
       const session = await getServerSession(authOptions);
       if (!session) {
         return NextResponse.json({ error: "Unauthorized. Please log in.", requiresAuth: true }, { status: 401 });
       }
 
-      const hasAccess = await TypingExamAccess.findOne({
+      // Check active subscription
+      const activeSub = await TypingSubscription.findOne({
+        userId: session.user.id,
+        status: "ACTIVE",
+        endDate: { $gt: new Date() }
+      });
+
+      // Check legacy individual exam access
+      const hasLegacyAccess = await TypingExamAccess.findOne({
         userId: session.user.id,
         examId: exam._id,
         status: "SUCCESS"
       });
 
-      if (!hasAccess) {
+      if (!activeSub && !hasLegacyAccess) {
         return NextResponse.json({
-          error: "Payment required to access this exam.",
-          requiresPayment: true,
-          amount: exam.pricing.amount,
-          currency: exam.pricing.currency
+          error: "Subscription required to access this exam.",
+          requiresSubscription: true,
+          amount: 21,
+          currency: "INR"
         }, { status: 403 });
       }
     }

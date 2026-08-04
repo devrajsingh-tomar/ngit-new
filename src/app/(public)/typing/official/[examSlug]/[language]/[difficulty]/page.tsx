@@ -4,6 +4,7 @@ import GovExam from "@/models/GovExam";
 import TypingExam from "@/models/TypingExam";
 import TypingExamAccess from "@/models/TypingExamAccess";
 import StartOrUnlockButton from "@/components/typing/StartOrUnlockButton";
+import TypingSubscription from "@/models/TypingSubscription";
 import Link from "next/link";
 import { ArrowLeft, Clock, Keyboard, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
@@ -33,6 +34,22 @@ export default async function TestSelectionPage({
   }
 
   await connectDB();
+
+  // Fetch student's active typing subscription
+  const activeSub = session ? await TypingSubscription.findOne({
+    userId: session.user.id,
+    status: "ACTIVE",
+    endDate: { $gt: new Date() }
+  }).lean() : null;
+  const isSubscribed = !!activeSub;
+
+  // Determine the 3 free exams (3 oldest active ones in the system)
+  const freeExams = await TypingExam.find({ status: "Active" })
+    .sort({ createdAt: 1 })
+    .limit(3)
+    .select("_id")
+    .lean();
+  const freeExamIds = new Set(freeExams.map(e => e._id.toString()));
 
   // Fetch student's unlocked typing exams
   const userAccess = session ? await TypingExamAccess.find({
@@ -131,9 +148,10 @@ export default async function TestSelectionPage({
                   const keystrokes = content.length;
                   const wordCount = content.trim().split(/\s+/).length;
 
-                  const isPaid = test.pricing?.type === "PAID";
-                  const isUnlocked = unlockedExamIds.has(test._id.toString());
-                  const amount = test.pricing?.amount || 0;
+                  const isFree = freeExamIds.has(test._id.toString());
+                  const isPaid = !isFree;
+                  const isUnlocked = isSubscribed || unlockedExamIds.has(test._id.toString());
+                  const amount = 21; // Online subscription is 21 INR / month
 
                   return (
                     <tr key={test._id.toString()} className="hover:bg-slate-50/50 transition-colors group">
@@ -172,11 +190,11 @@ export default async function TestSelectionPage({
                         {isPaid ? (
                           isUnlocked ? (
                             <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-wider">
-                              Unlocked
+                              Subscribed
                             </span>
                           ) : (
                             <span className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-wider">
-                              Paid (₹{amount})
+                              Requires Sub (₹{amount})
                             </span>
                           )
                         ) : (

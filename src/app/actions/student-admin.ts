@@ -8,6 +8,7 @@ import Invoice from "@/models/Invoice";
 import TypingResult from "@/models/TypingResult";
 import MockTestResult from "@/models/MockTestResult";
 import Course from "@/models/Course";
+import TypingSubscription from "@/models/TypingSubscription";
 import { revalidatePath } from "next/cache";
 
 // Auto-heal helper to ensure all student accounts have a StudentProfile and a unique Student ID (idNo)
@@ -217,6 +218,11 @@ export async function getStudentFullDetailsAdmin(userId: string) {
       .sort({ attemptDate: -1 })
       .lean();
 
+    // Fetch Typing Subscription record
+    const typingSubscription = await TypingSubscription.findOne({ userId })
+      .sort({ endDate: -1 })
+      .lean();
+
     return {
       success: true,
       student: JSON.parse(JSON.stringify({
@@ -225,7 +231,8 @@ export async function getStudentFullDetailsAdmin(userId: string) {
         enrollments: mappedEnrollments,
         invoices,
         typingResults,
-        mockResults
+        mockResults,
+        typingSubscription
       }))
     };
   } catch (err: any) {

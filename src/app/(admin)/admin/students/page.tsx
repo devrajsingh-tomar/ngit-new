@@ -17,6 +17,7 @@ import {
   deleteStudentPermanentlyAdmin,
   getStudentAffairsKPIs
 } from "@/app/actions/student-admin";
+import { activateOrExtendSubscriptionAdminAction } from "@/app/actions/subscription";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -62,6 +63,32 @@ export default function AdminStudentsPage() {
   const [studentDetails, setStudentDetails] = useState<any>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  // Manual Subscription activation state
+  const [selectedPlanType, setSelectedPlanType] = useState<"MONTHLY" | "QUARTERLY" | "HALF_YEARLY">("MONTHLY");
+  const [isActivatingSub, setIsActivatingSub] = useState(false);
+
+  const handleActivateSubscription = async () => {
+    if (!selectedStudent || isActivatingSub) return;
+    setIsActivatingSub(true);
+    try {
+      const res = await activateOrExtendSubscriptionAdminAction({
+        userId: selectedStudent.userId,
+        planType: selectedPlanType,
+      });
+
+      if (res.success) {
+        toast.success("Typing subscription updated successfully!");
+        handleViewDetails(selectedStudent);
+      } else {
+        toast.error(res.error || "Failed to update subscription");
+      }
+    } catch (err: any) {
+      toast.error("Error activating subscription");
+    } finally {
+      setIsActivatingSub(false);
+    }
+  };
 
   // Load KPIs and Initial Data
   const loadInitialData = async () => {
@@ -606,57 +633,68 @@ export default function AdminStudentsPage() {
                       </div>
                     </div>
 
-                    {/* Enrollment Card */}
-                    <div className="bg-slate-50/50 border border-slate-200 rounded-3xl p-5 space-y-3.5">
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course Admission Status</h4>
-                      {studentDetails.enrollments?.length === 0 ? (
-                        <div className="text-slate-400 py-6 text-center">No active course enrollments found.</div>
-                      ) : (
-                        <div className="space-y-4">
-                          {studentDetails.enrollments.map((e: any) => (
-                            <div key={e._id} className="border border-slate-200/60 bg-white p-4 rounded-2xl flex flex-col justify-between gap-3">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <p className="font-bold text-slate-800 text-xs">{e.courseId?.title || "Enrolled Course"}</p>
-                                  <p className="text-[9px] text-slate-400 uppercase font-black mt-1">
-                                    Enrolled On: {new Date(e.enrolledAt).toLocaleDateString()}
-                                  </p>
-                                </div>
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase ${
-                                  e.isActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-                                }`}>
-                                  {e.isActive ? "Active Enrollment" : "Expired / Inactive"}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                                <div>
-                                  <p className="text-[9px] text-slate-400 font-black uppercase">Duration Status</p>
-                                  <p className="text-slate-700 font-bold text-xs mt-0.5">
-                                    {e.daysEnrolled} days enrolled ({30 - e.daysEnrolled > 0 ? `${30 - e.daysEnrolled} days left` : "Expired"})
-                                  </p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    onClick={() => handleToggleEnrollmentActive(e._id, e.originalIsActive)} 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-7 text-[9px] font-bold"
-                                  >
-                                    {e.originalIsActive ? "Deactivate" : "Activate"}
-                                  </Button>
-                                  <Button 
-                                    onClick={() => handleRenewEnrollment(e._id)} 
-                                    size="sm" 
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-7 text-[9px]"
-                                  >
-                                    Renew (1 Month)
-                                  </Button>
-                                </div>
-                              </div>
+                    {/* Typing Subscription Card */}
+                    <div className="bg-slate-50/50 border border-slate-200 rounded-3xl p-5 space-y-4">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Typing Simulator Subscription</h4>
+                      {studentDetails.typingSubscription ? (
+                        <div className="border border-slate-200/60 bg-white p-4 rounded-2xl flex flex-col justify-between gap-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-bold text-slate-800 text-xs">
+                                Plan: {studentDetails.typingSubscription.planType} ({studentDetails.typingSubscription.paymentType})
+                              </p>
+                              <p className="text-[9px] text-slate-400 uppercase font-black mt-1">
+                                Paid On: {new Date(studentDetails.typingSubscription.startDate).toLocaleDateString()}
+                              </p>
                             </div>
-                          ))}
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                              new Date(studentDetails.typingSubscription.endDate) > new Date() && studentDetails.typingSubscription.status === "ACTIVE"
+                                ? "bg-emerald-50 text-emerald-700" 
+                                : "bg-rose-50 text-rose-700"
+                            }`}>
+                              {new Date(studentDetails.typingSubscription.endDate) > new Date() && studentDetails.typingSubscription.status === "ACTIVE"
+                                ? "Active Subscription" 
+                                : "Expired / Inactive"}
+                            </span>
+                          </div>
+                          <div className="border-t border-slate-100 pt-3">
+                            <p className="text-[9px] text-slate-400 font-black uppercase">Duration Status</p>
+                            <p className="text-slate-700 font-bold text-xs mt-0.5">
+                              {new Date(studentDetails.typingSubscription.endDate) > new Date()
+                                ? `Valid till ${new Date(studentDetails.typingSubscription.endDate).toLocaleDateString()} (${Math.ceil((new Date(studentDetails.typingSubscription.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left)`
+                                : `Expired on ${new Date(studentDetails.typingSubscription.endDate).toLocaleDateString()}`
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-slate-400 py-2 text-center text-xs font-medium">
+                          No typing exam subscription history found.
                         </div>
                       )}
+
+                      {/* Admin manual activation/extension interface */}
+                      <div className="border-t border-slate-200/60 pt-4 space-y-3">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Activate/Extend Subscription Manually</p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <select 
+                            value={selectedPlanType}
+                            onChange={(e) => setSelectedPlanType(e.target.value as any)}
+                            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="MONTHLY">Monthly (1 Month - ₹21)</option>
+                            <option value="QUARTERLY">Quarterly (3 Months - ₹60)</option>
+                            <option value="HALF_YEARLY">6 Months (₹120)</option>
+                          </select>
+                          <Button 
+                            onClick={handleActivateSubscription}
+                            disabled={isActivatingSub}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 text-xs rounded-xl px-4 flex-1 sm:flex-none"
+                          >
+                            {isActivatingSub ? "Processing..." : "Activate / Extend"}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
