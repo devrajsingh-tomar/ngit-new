@@ -1,5 +1,19 @@
 import mongoose from "mongoose";
 
+// Pre-register schemas to prevent MissingSchemaError during populate calls
+import "@/models/User";
+import "@/models/Course";
+import "@/models/Enrollment";
+import "@/models/Invoice";
+import "@/models/Payment";
+import "@/models/TypingExam";
+import "@/models/TypingExamAccess";
+import "@/models/TypingSubscription";
+import "@/models/StudentProfile";
+import "@/models/TypingResult";
+import "@/models/MockTestResult";
+import "@/models/Quiz";
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 /**

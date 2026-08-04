@@ -19,7 +19,8 @@ import {
     CalendarDays,
     IndianRupee,
     User,
-    BookOpen
+    BookOpen,
+    FileText
 } from "lucide-react";
 import { 
     getGlobalPaymentsData, 
