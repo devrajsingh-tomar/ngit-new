@@ -271,7 +271,7 @@ export const getAdminTypingSubscriptionsAction = createSafeAction(
         await import("@/models/User");
 
         const subscriptions = await TypingSubscription.find()
-            .populate("userId", "name email phone")
+            .populate("userId", "name email mobile")
             .sort({ createdAt: -1 })
             .lean();
 

@@ -751,9 +751,9 @@ export default function CourseAssignmentPage() {
                                                 </td>
                                                 <td className="px-8 py-6 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        {sub.userId?.phone && (
+                                                        {sub.userId?.mobile && (
                                                             <a 
-                                                                href={`https://wa.me/${sub.userId.phone.replace(/\D/g, '').length === 10 ? '91' + sub.userId.phone.replace(/\D/g, '') : sub.userId.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                                href={`https://wa.me/${sub.userId.mobile.replace(/\D/g, '').length === 10 ? '91' + sub.userId.mobile.replace(/\D/g, '') : sub.userId.mobile.replace(/\D/g, '')}?text=${encodeURIComponent(
                                                                     isActive 
                                                                         ? `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) is active and valid until ${new Date(sub.endDate).toLocaleDateString()}. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
                                                                         : `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) has expired. Please renew it to continue practicing. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
@@ -853,9 +853,9 @@ export default function CourseAssignmentPage() {
                                                 <span className="text-base font-black text-slate-900">₹{sub.amount}</span>
                                             </div>
                                             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
-                                                {sub.userId?.phone && (
+                                                {sub.userId?.mobile && (
                                                     <a 
-                                                        href={`https://wa.me/${sub.userId.phone.replace(/\D/g, '').length === 10 ? '91' + sub.userId.phone.replace(/\D/g, '') : sub.userId.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                        href={`https://wa.me/${sub.userId.mobile.replace(/\D/g, '').length === 10 ? '91' + sub.userId.mobile.replace(/\D/g, '') : sub.userId.mobile.replace(/\D/g, '')}?text=${encodeURIComponent(
                                                             isActive 
                                                                 ? `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) is active and valid until ${new Date(sub.endDate).toLocaleDateString()}. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
                                                                 : `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) has expired. Please renew it to continue practicing. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
