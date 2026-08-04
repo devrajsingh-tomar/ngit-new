@@ -30,12 +30,16 @@ interface HeaderData {
     ctaButton?: NavLink;
 }
 
-export default function PublicNavbar() {
+interface PublicNavbarProps {
+    initialData?: HeaderData | null;
+}
+
+export default function PublicNavbar({ initialData }: PublicNavbarProps) {
     const { data: session } = useSession();
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [headerData, setHeaderData] = useState<HeaderData | null>(null);
+    const [headerData, setHeaderData] = useState<HeaderData | null>(initialData || null);
 
     useEffect(() => {
         let isMounted = true;
@@ -44,26 +48,25 @@ export default function PublicNavbar() {
         };
         window.addEventListener("scroll", handleScroll);
 
-        getHeaderFooterData().then(res => {
-            if (isMounted && res.success) setHeaderData(res.header);
-        });
+        if (!initialData) {
+            getHeaderFooterData().then(res => {
+                if (isMounted && res.success) setHeaderData(res.header);
+            });
+        }
 
         return () => {
             isMounted = false;
             window.removeEventListener("scroll", handleScroll);
         };
-    }, []);
+    }, [initialData]);
 
     const fallbackLinks: NavLink[] = [
         { label: "Home", href: "/" },
-        { label: "About", href: "/#about" },
-        { label: "Blog", href: "/blog" },
-        { label: "Mock Tests", href: "/student/login" },
-        { label: "Typing Tests", href: "/student/login" },
-        { label: "ShortHand", href: "https://stenobyvishalsir.com/" },
+        { label: "Mock Tests", href: "/exams" },
         { label: "Results", href: "/results" },
         { label: "Gallery", href: "/gallery" },
         { label: "Faculty", href: "/faculty" },
+        { label: "About", href: "/about" },
         { label: "Contact", href: "/contact" },
     ];
 
