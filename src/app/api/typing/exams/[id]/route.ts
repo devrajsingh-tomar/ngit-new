@@ -32,8 +32,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
-    // Determine the 3 free exams (3 oldest active ones in the system)
-    const freeExams = await TypingExam.find({ status: "Active" })
+    // Determine the 3 free exams in this category (3 oldest active ones under this govExamId, or where govExamId is null/undefined)
+    const categoryQuery: any = { status: "Active" };
+    if (exam.govExamId) {
+      categoryQuery.govExamId = exam.govExamId;
+    } else {
+      categoryQuery.govExamId = { $in: [null, undefined] };
+    }
+
+    const freeExams = await TypingExam.find(categoryQuery)
       .sort({ createdAt: 1 })
       .limit(3)
       .select("_id")

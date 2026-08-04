@@ -43,14 +43,6 @@ export default async function TestSelectionPage({
   }).lean() : null;
   const isSubscribed = !!activeSub;
 
-  // Determine the 3 free exams (3 oldest active ones in the system)
-  const freeExams = await TypingExam.find({ status: "Active" })
-    .sort({ createdAt: 1 })
-    .limit(3)
-    .select("_id")
-    .lean();
-  const freeExamIds = new Set(freeExams.map(e => e._id.toString()));
-
   // Fetch student's unlocked typing exams
   const userAccess = session ? await TypingExamAccess.find({
     userId: session.user.id,
@@ -64,6 +56,17 @@ export default async function TestSelectionPage({
   });
   
   if (!exam) return notFound();
+
+  // Determine the 3 free exams for this category (3 oldest active ones under this govExamId)
+  const freeExams = await TypingExam.find({ 
+    govExamId: exam._id,
+    status: "Active" 
+  })
+    .sort({ createdAt: 1 })
+    .limit(3)
+    .select("_id")
+    .lean();
+  const freeExamIds = new Set(freeExams.map(e => e._id.toString()));
 
   const langFormatted = params.language.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const diffFormatted = params.difficulty.charAt(0).toUpperCase() + params.difficulty.slice(1);

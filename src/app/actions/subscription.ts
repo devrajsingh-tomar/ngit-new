@@ -10,14 +10,21 @@ import { z } from "zod";
 import { createSafeAction } from "@/lib/safe-action";
 import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 
-const InitiateSubscriptionPaymentSchema = z.object({});
+const InitiateSubscriptionPaymentSchema = z.object({
+    planType: z.enum(["MONTHLY", "QUARTERLY", "HALF_YEARLY"]).default("MONTHLY"),
+});
 
 export const initiateTypingSubscriptionPayment = createSafeAction(
     { schema: InitiateSubscriptionPaymentSchema, requireAuth: true, rateLimit: RATE_LIMIT_CONFIGS.SENSITIVE },
-    async (_, session) => {
+    async ({ planType }, session) => {
         await connectDB();
 
-        const amount = 21; // fixed online subscription fee
+        const amountMap = {
+            MONTHLY: 21,
+            QUARTERLY: 51,
+            HALF_YEARLY: 99,
+        };
+        const amount = amountMap[planType] || 21;
         
         // Check if user already has an active subscription
         const existingSub = await TypingSubscription.findOne({
@@ -34,13 +41,12 @@ export const initiateTypingSubscriptionPayment = createSafeAction(
         const order = await createRazorpayOrder(amount);
 
         // Save Intention in DB as PENDING
-        // startDate and endDate can be set to now, they'll be corrected on successful payment
         await TypingSubscription.create({
             userId: session.user.id,
             startDate: new Date(),
             endDate: new Date(),
             status: "PENDING",
-            planType: "MONTHLY",
+            planType: planType,
             paymentType: "ONLINE",
             amount: amount,
             razorpayOrderId: order.id,
@@ -93,7 +99,16 @@ export const verifyTypingSubscriptionPayment = createSafeAction(
         if (subRecord.status !== "ACTIVE") {
             const startDate = new Date();
             const endDate = new Date();
-            endDate.setDate(startDate.getDate() + 30); // 1 month online subscription
+            
+            if (subRecord.planType === "MONTHLY") {
+                endDate.setDate(startDate.getDate() + 30);
+            } else if (subRecord.planType === "QUARTERLY") {
+                endDate.setDate(startDate.getDate() + 90);
+            } else if (subRecord.planType === "HALF_YEARLY") {
+                endDate.setDate(startDate.getDate() + 180);
+            } else {
+                endDate.setDate(startDate.getDate() + 30); // fallback
+            }
 
             subRecord.razorpayPaymentId = razorpayPaymentId;
             subRecord.razorpaySignature = razorpaySignature;
@@ -106,7 +121,7 @@ export const verifyTypingSubscriptionPayment = createSafeAction(
             await createNotification(
                 session.user.id,
                 "Typing Subscription Activated!",
-                `Your typing exam subscription has been successfully activated. You now have full access to all passages until ${endDate.toLocaleDateString()}!`,
+                `Your typing exam subscription (${subRecord.planType}) has been successfully activated. You now have full access to all passages until ${endDate.toLocaleDateString()}!`,
                 "SUCCESS",
                 "/student/typing"
             );
@@ -114,6 +129,22 @@ export const verifyTypingSubscriptionPayment = createSafeAction(
 
         revalidatePath("/student");
         return { success: true };
+    }
+);
+
+const GetActiveTypingSubscriptionSchema = z.object({});
+
+export const getActiveTypingSubscriptionAction = createSafeAction(
+    { schema: GetActiveTypingSubscriptionSchema, requireAuth: true },
+    async (_, session) => {
+        await connectDB();
+        const activeSub = await TypingSubscription.findOne({
+            userId: session.user.id,
+            status: "ACTIVE",
+            endDate: { $gt: new Date() }
+        }).sort({ endDate: -1 }).lean();
+
+        return { success: true, subscription: activeSub ? JSON.parse(JSON.stringify(activeSub)) : null };
     }
 );
 

@@ -4,25 +4,32 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Keyboard, Zap, Target, AlertTriangle, ChevronDown } from "lucide-react";
+import { Keyboard, Zap, Target, AlertTriangle, ChevronDown, Award } from "lucide-react";
 import Link from "next/link";
+import { getActiveTypingSubscriptionAction } from "@/app/actions/subscription";
 
 export default function StudentTypingDashboard() {
   const { data: session } = useSession();
   const [results, setResults] = useState<any[]>([]);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     if (session) {
-      fetch("/api/typing/results")
-        .then(res => res.json())
-        .then(resultsData => {
-          if (isMounted) {
-            setResults(Array.isArray(resultsData) ? resultsData : []);
-            setLoading(false);
+      setLoading(true);
+      Promise.all([
+        fetch("/api/typing/results").then(res => res.json()),
+        getActiveTypingSubscriptionAction({})
+      ]).then(([resultsData, subRes]) => {
+        if (isMounted) {
+          setResults(Array.isArray(resultsData) ? resultsData : []);
+          if (subRes.success && subRes.data) {
+            setSubscription(subRes.data.subscription);
           }
-        }).catch(() => {
+          setLoading(false);
+        }
+      }).catch(() => {
         if (isMounted) setLoading(false);
       });
     }
@@ -47,6 +54,47 @@ export default function StudentTypingDashboard() {
         </div>
       </div>
 
+      {/* Subscription Summary Card */}
+      {subscription ? (
+        <Card className="p-6 rounded-[2.2rem] border-emerald-100 bg-emerald-50/10 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-left">
+            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md">
+              <Award className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-black text-slate-900 text-sm leading-tight">Typing Simulator Access: ACTIVE</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                Valid until {format(new Date(subscription.endDate), "PPP")} ({subscription.planType} Plan)
+              </p>
+            </div>
+          </div>
+          <Link href="/student/typing/subscribe" className="w-full sm:w-auto shrink-0">
+            <button className="w-full sm:w-auto h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer">
+              Manage / Extend License
+            </button>
+          </Link>
+        </Card>
+      ) : (
+        <Card className="p-6 rounded-[2.2rem] border-amber-100 bg-amber-50/10 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-left">
+            <div className="w-10 h-10 bg-amber-505 bg-amber-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md animate-pulse">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-black text-slate-900 text-sm leading-tight">No Active Typing Subscription</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                Only first 3 oldest active exams in each category are free. Unlock full access now!
+              </p>
+            </div>
+          </div>
+          <Link href="/student/typing/subscribe" className="w-full sm:w-auto shrink-0">
+            <button className="w-full sm:w-auto h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-600/10 cursor-pointer">
+              Subscribe Now
+            </button>
+          </Link>
+        </Card>
+      )}
+
       {/* 1. Available Exams Section -> Replaced with Gov Exams CTA */}
       <section className="space-y-8">
         <div className="flex items-center gap-4">
@@ -68,7 +116,7 @@ export default function StudentTypingDashboard() {
             </p>
           </div>
           <Link href="/typing/official" className="relative z-10 w-full md:w-auto shrink-0">
-            <button className="w-full md:w-auto h-16 px-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 active:scale-95 flex items-center justify-center gap-3">
+            <button className="w-full md:w-auto h-16 px-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
               Explore Exams
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                 <Target className="w-4 h-4" />
@@ -117,7 +165,7 @@ export default function StudentTypingDashboard() {
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 flex-1 max-w-3xl">
                     {[
                       { l: 'Accuracy', v: `${result.accuracy}%`, c: 'text-emerald-600', bg: 'bg-emerald-50' },
-                      { l: 'Errors', v: result.errorCount, c: 'text-rose-600', bg: 'bg-rose-50' },
+                      { l: 'Errors', v: result.errorCount, vVal: result.errorCount, c: 'text-rose-600', bg: 'bg-rose-50' },
                       { l: 'Backspaces', v: result.backspaces || 0, c: 'text-amber-600', bg: 'bg-amber-50' },
                       { l: 'Net WPM', v: result.wpm, c: 'text-blue-600', bg: 'bg-blue-50' },
                       { l: 'Raw WPM', v: result.rawWpm, c: 'text-slate-600', bg: 'bg-slate-50' }
@@ -130,7 +178,7 @@ export default function StudentTypingDashboard() {
                   </div>
 
                   <Link href={`/typing/results/${result._id}`}>
-                    <button className="h-14 w-full lg:w-14 bg-slate-50 hover:bg-slate-900 hover:text-white rounded-2xl flex items-center justify-center transition-all group/btn border border-slate-100">
+                    <button className="h-14 w-full lg:w-14 bg-slate-50 hover:bg-slate-900 hover:text-white rounded-2xl flex items-center justify-center transition-all group/btn border border-slate-100 cursor-pointer">
                       <ChevronDown className="w-6 h-6 -rotate-90 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                   </Link>
