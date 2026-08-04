@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface QuickActionItem {
     title: string;
@@ -67,7 +68,14 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div className={cn(
+                    "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6",
+                    actionsToRender.length === 1 ? "lg:grid-cols-1" :
+                    actionsToRender.length === 2 ? "lg:grid-cols-2" :
+                    actionsToRender.length === 3 ? "lg:grid-cols-3" :
+                    actionsToRender.length === 5 ? "lg:grid-cols-5" :
+                    "lg:grid-cols-4" // default for 4 items
+                )}>
                     {actionsToRender.map((item, index) => {
                         const finalHref = item.href.startsWith("http") || item.href.startsWith("/") ? item.href : `https://${item.href}`;
                         const isExternal = finalHref.startsWith("http");
