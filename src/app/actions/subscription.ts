@@ -194,15 +194,26 @@ export const activateOrExtendSubscriptionAdminAction = createSafeAction(
             HALF_YEARLY: 120,
         };
 
-        const newSub = await TypingSubscription.create({
-            userId,
-            startDate,
-            endDate,
-            status: "ACTIVE",
-            planType,
-            paymentType: "MANUAL",
-            amount: amountMap[planType] || 0,
-        });
+        let finalSub;
+        if (activeSub) {
+            // Update the existing active subscription in-place
+            activeSub.endDate = endDate;
+            activeSub.planType = planType;
+            activeSub.amount += (amountMap[planType] || 0);
+            await activeSub.save();
+            finalSub = activeSub;
+        } else {
+            // Create a brand new subscription
+            finalSub = await TypingSubscription.create({
+                userId,
+                startDate,
+                endDate,
+                status: "ACTIVE",
+                planType,
+                paymentType: "MANUAL",
+                amount: amountMap[planType] || 0,
+            });
+        }
 
         // Notify user
         await createNotification(
@@ -215,7 +226,39 @@ export const activateOrExtendSubscriptionAdminAction = createSafeAction(
 
         revalidatePath("/admin/students");
         revalidatePath("/admin/students/enrollments");
-        return { success: true, subscription: JSON.parse(JSON.stringify(newSub)) };
+        return { success: true, subscription: JSON.parse(JSON.stringify(finalSub)) };
+    }
+);
+
+const UpdateSubscriptionAdminSchema = z.object({
+    subscriptionId: z.string().min(1),
+    planType: z.enum(["MONTHLY", "QUARTERLY", "HALF_YEARLY"]),
+    startDate: z.string().min(1),
+    endDate: z.string().min(1),
+    status: z.enum(["ACTIVE", "EXPIRED", "PENDING"]),
+    amount: z.number().nonnegative(),
+});
+
+export const updateSubscriptionAdminAction = createSafeAction(
+    { schema: UpdateSubscriptionAdminSchema, requireAuth: true, roles: [UserRole.ADMIN] },
+    async ({ subscriptionId, planType, startDate, endDate, status, amount }) => {
+        await connectDB();
+
+        const sub = await TypingSubscription.findById(subscriptionId);
+        if (!sub) {
+            throw new Error("Subscription record not found.");
+        }
+
+        sub.planType = planType;
+        sub.startDate = new Date(startDate);
+        sub.endDate = new Date(endDate);
+        sub.status = status;
+        sub.amount = amount;
+        await sub.save();
+
+        revalidatePath("/admin/students");
+        revalidatePath("/admin/students/enrollments");
+        return { success: true, subscription: JSON.parse(JSON.stringify(sub)) };
     }
 );
 

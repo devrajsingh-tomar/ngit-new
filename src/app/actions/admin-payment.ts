@@ -3,6 +3,7 @@
 import connectDB from "@/lib/db";
 import Payment, { PaymentStatus } from "@/models/Payment";
 import Enrollment from "@/models/Enrollment";
+import TypingSubscription from "@/models/TypingSubscription";
 import User, { UserRole } from "@/models/User";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -125,9 +126,16 @@ export const getGlobalPaymentsData = createSafeAction(
         await import("@/models/Course");
         await import("@/models/User");
 
+        // 1. Fetch Course payments
         const allPayments = await Payment.find({})
             .populate("userId", "name email")
             .populate("courseId", "title price")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // 2. Fetch Typing subscriptions
+        const allSubs = await TypingSubscription.find({})
+            .populate("userId", "name email")
             .sort({ createdAt: -1 })
             .lean();
 
@@ -146,6 +154,7 @@ export const getGlobalPaymentsData = createSafeAction(
 
             return {
                 id: p._id.toString(),
+                isSubscription: false,
                 orderId: p.razorpayOrderId ?? p._id.toString(),
                 student: p.userId ? p.userId.name : "Unknown Student",
                 course: p.courseId ? p.courseId.title : "Unknown Course",
@@ -155,11 +164,42 @@ export const getGlobalPaymentsData = createSafeAction(
             };
         });
 
+        const formattedSubs = allSubs.map((s: any) => {
+            let paymentStatus = "SUCCESS";
+            if (s.status === "PENDING") {
+                paymentStatus = "PENDING";
+            } else if (s.status === "EXPIRED") {
+                paymentStatus = "SUCCESS"; // Successful payment that has expired since
+            }
+
+            if (paymentStatus === "SUCCESS") {
+                totalRevenue += (s.amount || 0);
+            } else if (paymentStatus === "PENDING") {
+                pendingCount++;
+            }
+
+            return {
+                id: s._id.toString(),
+                isSubscription: true,
+                orderId: s.razorpayOrderId ?? s.razorpayPaymentId ?? s._id.toString(),
+                student: s.userId ? s.userId.name : "Unknown Student",
+                course: `Typing License (${s.planType})`,
+                amount: s.amount || 0,
+                status: paymentStatus,
+                date: new Date(s.createdAt || s.startDate).toLocaleString(),
+            };
+        });
+
+        // Combine and sort by date descending
+        const combined = [...formattedPayments, ...formattedSubs].sort((a, b) => {
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+
         return {
             totalRevenue,
             pendingCount,
             failedCount,
-            payments: JSON.parse(JSON.stringify(formattedPayments))
+            payments: JSON.parse(JSON.stringify(combined))
         };
     }
 );
@@ -175,30 +215,43 @@ export const updatePaymentAction = createSafeAction(
     async ({ id, amount, status }) => {
         await connectDB();
 
-        const payment = await Payment.findById(id);
-        if (!payment) {
-            throw new Error("Payment transaction not found.");
-        }
+        let payment = await Payment.findById(id);
+        if (payment) {
+            payment.amount = amount;
+            payment.status = status;
+            await payment.save();
 
-        payment.amount = amount;
-        payment.status = status;
-        await payment.save();
-
-        // If marked as successful, ensure student enrollment exists
-        if (status === PaymentStatus.SUCCESS) {
-            const existingEnrollment = await Enrollment.findOne({ 
-                userId: payment.userId, 
-                courseId: payment.courseId 
-            });
-            if (!existingEnrollment) {
-                await Enrollment.create({
-                    userId: payment.userId,
-                    courseId: payment.courseId,
-                    enrolledAt: new Date(),
-                    progress: 0,
-                    isActive: true
+            // If marked as successful, ensure student enrollment exists
+            if (status === PaymentStatus.SUCCESS) {
+                const existingEnrollment = await Enrollment.findOne({ 
+                    userId: payment.userId, 
+                    courseId: payment.courseId 
                 });
+                if (!existingEnrollment) {
+                    await Enrollment.create({
+                        userId: payment.userId,
+                        courseId: payment.courseId,
+                        enrolledAt: new Date(),
+                        progress: 0,
+                        isActive: true
+                    });
+                }
             }
+        } else {
+            // Check in TypingSubscription
+            const typingSub = await TypingSubscription.findById(id);
+            if (!typingSub) {
+                throw new Error("Transaction record not found.");
+            }
+            typingSub.amount = amount;
+            if (status === PaymentStatus.SUCCESS) {
+                typingSub.status = "ACTIVE";
+            } else if (status === PaymentStatus.PENDING) {
+                typingSub.status = "PENDING";
+            } else if (status === PaymentStatus.FAILED) {
+                typingSub.status = "EXPIRED";
+            }
+            await typingSub.save();
         }
 
         revalidatePath("/admin/payments");
@@ -215,9 +268,12 @@ export const deletePaymentAction = createSafeAction(
     async ({ id }) => {
         await connectDB();
 
-        const payment = await Payment.findByIdAndDelete(id);
+        let payment = await Payment.findByIdAndDelete(id);
         if (!payment) {
-            throw new Error("Payment transaction not found.");
+            const typingSub = await TypingSubscription.findByIdAndDelete(id);
+            if (!typingSub) {
+                throw new Error("Transaction record not found.");
+            }
         }
 
         revalidatePath("/admin/payments");

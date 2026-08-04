@@ -29,9 +29,16 @@ import {
 } from "@/app/actions/admin-payment";
 import { 
     getAdminTypingSubscriptionsAction, 
-    activateOrExtendSubscriptionAdminAction 
+    activateOrExtendSubscriptionAdminAction,
+    updateSubscriptionAdminAction
 } from "@/app/actions/subscription";
 import { cn } from "@/lib/utils";
+
+const WhatsappIcon = (props: any) => (
+    <svg viewBox="0 0 24 24" width="24" height="24" className={props.className}>
+        <path fill="currentColor" d="M12.031 2c-5.516 0-9.99 4.474-9.99 9.99 0 1.761.461 3.473 1.336 4.985l-1.422 5.195 5.305-1.392c1.46.797 3.09 1.218 4.772 1.218 5.51 0 9.986-4.47 9.986-9.986 0-5.522-4.476-9.996-9.986-9.996zm6.276 14.195c-.258.725-1.485 1.341-2.035 1.411-.497.063-1.144.103-3.327-.803-2.793-1.157-4.595-4.004-4.736-4.192-.14-.188-1.127-1.498-1.127-2.86 0-1.36.705-2.03.957-2.302.253-.272.553-.341.737-.341.184 0 .369.002.531.01.171.008.398-.066.623.478.23.557.785 1.916.852 2.053.067.137.111.296.02.478-.09.182-.136.296-.272.455-.136.159-.286.355-.409.478-.137.136-.28.285-.12.56.16.275.71.1.1.1.1 1.17.472 2.11 1.29 2.84.819.73 1.5 1.222 2.378 1.564.28.109.444.092.609-.1.165-.192.705-.82.893-1.1.188-.28.375-.23.633-.133.258.096 1.637.772 1.918.913.28.14.467.21.536.329.07.118.07.685-.187 1.41z"/>
+    </svg>
+);
 
 type TabOption = "courses" | "typing";
 type SubFilterOption = "all" | "active" | "expired" | "pending";
@@ -64,6 +71,15 @@ export default function CourseAssignmentPage() {
     const [subSearch, setSubSearch] = useState("");
     const [subListSearch, setSubListSearch] = useState("");
     const [subFilter, setSubFilter] = useState<SubFilterOption>("all");
+
+    // Subscription Edit Modal State
+    const [editSubscription, setEditSubscription] = useState<any | null>(null);
+    const [editSubPlan, setEditSubPlan] = useState<"MONTHLY" | "QUARTERLY" | "HALF_YEARLY">("MONTHLY");
+    const [editSubStartDate, setEditSubStartDate] = useState<string>("");
+    const [editSubEndDate, setEditSubEndDate] = useState<string>("");
+    const [editSubStatus, setEditSubStatus] = useState<"ACTIVE" | "EXPIRED" | "PENDING">("ACTIVE");
+    const [editSubAmount, setEditSubAmount] = useState<number>(0);
+    const [isSubEditOpen, setIsSubEditOpen] = useState(false);
 
     const loadData = async () => {
         setLoading(true);
@@ -193,6 +209,44 @@ export default function CourseAssignmentPage() {
         }
     };
 
+    const openSubEditModal = (sub: any) => {
+        setEditSubscription(sub);
+        setEditSubPlan(sub.planType);
+        setEditSubStartDate(new Date(sub.startDate).toISOString().split('T')[0]);
+        setEditSubEndDate(new Date(sub.endDate).toISOString().split('T')[0]);
+        setEditSubStatus(sub.status);
+        setEditSubAmount(sub.amount || 0);
+        setIsSubEditOpen(true);
+    };
+
+    const handleUpdateSubscription = async () => {
+        if (!editSubscription) return;
+
+        setActionLoading(true);
+        try {
+            const res = await updateSubscriptionAdminAction({
+                subscriptionId: editSubscription._id,
+                planType: editSubPlan,
+                startDate: editSubStartDate,
+                endDate: editSubEndDate,
+                status: editSubStatus,
+                amount: Number(editSubAmount),
+            });
+            if (res.success && res.data?.success) {
+                toast.success("Subscription updated successfully.");
+                setIsSubEditOpen(false);
+                setEditSubscription(null);
+                loadData();
+            } else {
+                toast.error(res.error || "Failed to update subscription.");
+            }
+        } catch (error) {
+            toast.error("An error occurred while updating subscription.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     // ── Filter Logics ──
     const filteredStudentsCourse = data.students.filter(s =>
         s.name.toLowerCase().includes(courseSearch.toLowerCase()) ||
@@ -221,6 +275,10 @@ export default function CourseAssignmentPage() {
         if (subFilter === "pending") return sub.status === "PENDING";
         return true;
     });
+
+    const activeSubForSelected = subscriptions.find(
+        (sub) => sub.userId?._id === selectedSubStudent && sub.status === "ACTIVE" && new Date(sub.endDate) > new Date()
+    );
 
     return (
         <div className="space-y-8 pb-20 max-w-7xl mx-auto px-4 md:px-8">
@@ -542,17 +600,22 @@ export default function CourseAssignmentPage() {
                                     </button>
                                 ))}
                             </div>
+                            {activeSubForSelected && (
+                                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-xs font-bold animate-in fade-in duration-200">
+                                    💡 Student has an active subscription: <span className="font-extrabold">{activeSubForSelected.planType}</span> (Expires: {new Date(activeSubForSelected.endDate).toLocaleDateString()}). Modifying/activating will extend this license.
+                                </div>
+                            )}
                         </div>
 
                         {/* Activate Action */}
                         <div className="md:col-span-1 flex items-end">
                             <Button
                                 onClick={handleActivateSubscription}
-                                className="w-full h-14 rounded-2xl gap-2 font-bold text-lg bg-indigo-600 hover:bg-indigo-700 text-white"
+                                className="w-full h-14 rounded-2xl gap-2 font-bold text-lg bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
                                 disabled={!selectedSubStudent || actionLoading}
                             >
                                 {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-                                Activate / Extend
+                                {activeSubForSelected ? "Extend Active Subscription" : "Activate / Extend"}
                             </Button>
                         </div>
                     </div>
@@ -600,7 +663,6 @@ export default function CourseAssignmentPage() {
                     </div>
 
                     {/* Subscriptions Table */}
-                    {/* Desktop View Table */}
                     <div className="hidden md:block bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
                         <table className="w-full text-left">
                             <thead>
@@ -610,19 +672,20 @@ export default function CourseAssignmentPage() {
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">License Status</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Gateway / Source</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y text-slate-600 font-medium">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={5} className="text-center py-12 text-slate-400">
+                                        <td colSpan={6} className="text-center py-12 text-slate-400">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
                                             Loading subscriptions...
                                         </td>
                                     </tr>
                                 ) : filteredSubscriptions.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="text-center py-10 text-slate-400 italic">
+                                        <td colSpan={6} className="text-center py-10 text-slate-400 italic">
                                             No typing subscriptions found matching filter.
                                         </td>
                                     </tr>
@@ -684,7 +747,34 @@ export default function CourseAssignmentPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-8 py-6 text-right">
-                                                    <p className="text-lg font-black text-slate-900">₹{sub.amount}</p>
+                                                    <p className="text-lg font-black text-slate-900 font-bold">₹{sub.amount}</p>
+                                                </td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {sub.userId?.phone && (
+                                                            <a 
+                                                                href={`https://wa.me/${sub.userId.phone.replace(/\D/g, '').length === 10 ? '91' + sub.userId.phone.replace(/\D/g, '') : sub.userId.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                                    isActive 
+                                                                        ? `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) is active and valid until ${new Date(sub.endDate).toLocaleDateString()}. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
+                                                                        : `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) has expired. Please renew it to continue practicing. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
+                                                                )}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center shrink-0"
+                                                                title="Send WhatsApp Reminder"
+                                                            >
+                                                                <WhatsappIcon className="w-5 h-5" />
+                                                            </a>
+                                                        )}
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="icon" 
+                                                            className="w-8 h-8 rounded-lg border-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer"
+                                                            onClick={() => openSubEditModal(sub)}
+                                                        >
+                                                            <Edit2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -762,6 +852,30 @@ export default function CourseAssignmentPage() {
                                                 <span className="text-slate-400 font-black uppercase tracking-wide text-[9px]">Amount:</span>
                                                 <span className="text-base font-black text-slate-900">₹{sub.amount}</span>
                                             </div>
+                                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
+                                                {sub.userId?.phone && (
+                                                    <a 
+                                                        href={`https://wa.me/${sub.userId.phone.replace(/\D/g, '').length === 10 ? '91' + sub.userId.phone.replace(/\D/g, '') : sub.userId.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                            isActive 
+                                                                ? `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) is active and valid until ${new Date(sub.endDate).toLocaleDateString()}. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
+                                                                : `Hello ${sub.userId.name}, your NGIT Typing Simulator subscription (${sub.planType}) has expired. Please renew it to continue practicing. Renew here: http://ngitedu.com/student/typing/subscribe Thank you!`
+                                                        )}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                                                    >
+                                                        <WhatsappIcon className="w-4 h-4" /> Message
+                                                    </a>
+                                                )}
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="rounded-lg text-[10px] font-black uppercase tracking-wider h-8 cursor-pointer"
+                                                    onClick={() => openSubEditModal(sub)}
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5 mr-1" /> Edit
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -827,6 +941,115 @@ export default function CourseAssignmentPage() {
                                     className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black text-white bg-primary"
                                     onClick={handleUpdate}
                                     disabled={actionLoading || !editCourseId}
+                                >
+                                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT TYPING SUBSCRIPTION MODAL OVERLAY */}
+            {isSubEditOpen && editSubscription && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <header className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900">Modify Subscription</h3>
+                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Change student's simulator license status</p>
+                            </div>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="rounded-xl" 
+                                onClick={() => { setIsSubEditOpen(false); setEditSubscription(null); }}
+                            >
+                                <X className="w-5 h-5 text-slate-400" />
+                            </Button>
+                        </header>
+
+                        <div className="space-y-6 text-left">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Student Name</label>
+                                <div className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center font-bold text-slate-800 text-sm">
+                                    {editSubscription.userId?.name || "Unknown Student"}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Plan Type</label>
+                                    <select
+                                        value={editSubPlan}
+                                        onChange={(e) => setEditSubPlan(e.target.value as any)}
+                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm outline-none cursor-pointer"
+                                    >
+                                        <option value="MONTHLY">MONTHLY</option>
+                                        <option value="QUARTERLY">QUARTERLY</option>
+                                        <option value="HALF_YEARLY">HALF_YEARLY</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Status</label>
+                                    <select
+                                        value={editSubStatus}
+                                        onChange={(e) => setEditSubStatus(e.target.value as any)}
+                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm outline-none cursor-pointer"
+                                    >
+                                        <option value="ACTIVE">ACTIVE</option>
+                                        <option value="EXPIRED">EXPIRED</option>
+                                        <option value="PENDING">PENDING</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Start Date</label>
+                                    <input 
+                                        type="date"
+                                        value={editSubStartDate}
+                                        onChange={(e) => setEditSubStartDate(e.target.value)}
+                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 font-bold text-sm outline-none cursor-pointer text-slate-800"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">End Date</label>
+                                    <input 
+                                        type="date"
+                                        value={editSubEndDate}
+                                        onChange={(e) => setEditSubEndDate(e.target.value)}
+                                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 font-bold text-sm outline-none cursor-pointer text-slate-800"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Amount Paid (₹)</label>
+                                <input 
+                                    type="number"
+                                    value={editSubAmount}
+                                    onChange={(e) => setEditSubAmount(Number(e.target.value))}
+                                    className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm outline-none"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-4 border-t border-slate-100">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                                    onClick={() => { setIsSubEditOpen(false); setEditSubscription(null); }}
+                                    disabled={actionLoading}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black text-white bg-indigo-650 hover:bg-indigo-700 border-none"
+                                    onClick={handleUpdateSubscription}
+                                    disabled={actionLoading}
                                 >
                                     {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
                                 </Button>
