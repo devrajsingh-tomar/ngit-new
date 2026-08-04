@@ -1645,15 +1645,15 @@ export default function AdminTypingDashboard() {
 
       {showGovExamModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100/80 overflow-hidden animate-in zoom-in-95 duration-200">
-             <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white/95">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100/80 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+             <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white/95 shrink-0">
                 <h2 className="text-xl font-black text-slate-900 tracking-tight">{editingGovExam ? "Edit Government Exam" : "Add Government Exam"}</h2>
                 <button onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); setModalLogo(""); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
              </div>
              <form 
                key={editingGovExam?._id || 'new-gov-exam'}
                onSubmit={handleAddGovExam} 
-               className="p-6 space-y-5"
+               className="p-6 space-y-5 overflow-y-auto flex-1 scrollbar-thin"
              >
                  <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase">Exam Title</label>
@@ -2018,15 +2018,15 @@ export default function AdminTypingDashboard() {
       {/* RULE PRESET MODAL */}
       {showRulePresetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100/80 overflow-hidden animate-in zoom-in-95 duration-200">
-             <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white/95">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100/80 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+             <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white/95 shrink-0">
                 <h2 className="text-xl font-black text-slate-900 tracking-tight">{editingRulePreset ? "Edit Rule Preset" : "Add Rule Preset"}</h2>
-                <button onClick={() => { setShowRulePresetModal(false); setEditingRulePreset(null); }} className="p-2 text-slate-400 hover:text-slate-655 hover:bg-slate-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
+                <button onClick={() => { setShowRulePresetModal(false); setEditingRulePreset(null); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
              </div>
              <form 
                key={editingRulePreset?._id || 'new-preset'}
                onSubmit={handleAddRulePreset} 
-               className="p-6 space-y-5"
+               className="p-6 space-y-5 overflow-y-auto flex-1 scrollbar-thin"
              >
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1.5 col-span-2">
