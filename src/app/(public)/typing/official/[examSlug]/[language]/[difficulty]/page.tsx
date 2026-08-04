@@ -194,7 +194,7 @@ export default async function TestSelectionPage({
                             </span>
                           ) : (
                             <span className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-wider">
-                              Requires Sub (₹{amount})
+                              Requires Subscription
                             </span>
                           )
                         ) : (
