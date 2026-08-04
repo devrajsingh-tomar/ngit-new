@@ -347,7 +347,8 @@ export default function CourseAssignmentPage() {
                     </div>
 
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Active Course Enrollments</h2>
-                    <div className="bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
+                    {/* Desktop View Table */}
+                    <div className="hidden md:block bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="border-b">
@@ -387,7 +388,7 @@ export default function CourseAssignmentPage() {
                                             <td className="px-8 py-6 text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <BookOpen className="w-4 h-4 text-slate-400" />
-                                                    <p className="font-bold">{en.courseId?.title}</p>
+                                                    <p className="font-bold">{en.courseId?.title || "Deleted Course"}</p>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-sm text-slate-400">
@@ -418,6 +419,60 @@ export default function CourseAssignmentPage() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile View Cards */}
+                    <div className="md:hidden space-y-4">
+                        {loading ? (
+                            <div className="text-center py-10 text-slate-400 bg-white border rounded-2xl p-6 shadow-sm animate-pulse">
+                                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+                                Loading enrollments...
+                            </div>
+                        ) : data.enrollments.length === 0 ? (
+                            <div className="text-center py-10 text-slate-400 bg-white border rounded-2xl p-6 shadow-sm">
+                                No enrollments found.
+                            </div>
+                        ) : (
+                            data.enrollments.map((en) => (
+                                <div key={en._id} className="bg-white border rounded-[2rem] p-6 shadow-sm space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                                            <User className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-slate-900 text-base">
+                                                {data.students.find(s => s._id === en.userId)?.name || "Unknown"}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                                Enrolled: {new Date(en.enrolledAt).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border">
+                                        <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <p className="font-extrabold text-sm text-slate-700">{en.courseId?.title || "Deleted Course"}</p>
+                                    </div>
+                                    <div className="flex gap-2 pt-2 border-t justify-end">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-lg h-9 font-bold text-xs gap-1 border-slate-200"
+                                            onClick={() => openEditModal(en)}
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" /> Modify
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-lg h-9 font-bold text-xs gap-1 border-slate-200 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                            onClick={() => handleDelete(en._id)}
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" /> Remove
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}
@@ -545,7 +600,8 @@ export default function CourseAssignmentPage() {
                     </div>
 
                     {/* Subscriptions Table */}
-                    <div className="bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
+                    {/* Desktop View Table */}
+                    <div className="hidden md:block bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="border-b">
@@ -636,6 +692,81 @@ export default function CourseAssignmentPage() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile View Cards */}
+                    <div className="md:hidden space-y-4">
+                        {loading ? (
+                            <div className="text-center py-10 text-slate-400 bg-white border rounded-2xl p-6 shadow-sm animate-pulse">
+                                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+                                Loading subscriptions...
+                            </div>
+                        ) : filteredSubscriptions.length === 0 ? (
+                            <div className="text-center py-10 text-slate-400 bg-white border rounded-2xl p-6 shadow-sm">
+                                No typing subscriptions found matching filter.
+                            </div>
+                        ) : (
+                            filteredSubscriptions.map((sub) => {
+                                const isExpired = new Date(sub.endDate) <= new Date() || sub.status === "EXPIRED";
+                                const isActive = new Date(sub.endDate) > new Date() && sub.status === "ACTIVE";
+
+                                return (
+                                    <div key={sub._id} className="bg-white border rounded-[2rem] p-6 shadow-sm space-y-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shrink-0">
+                                                <User className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-slate-900 text-base capitalize">{sub.userId?.name || "Deleted Student"}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{sub.userId?.email || "N/A"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-50 p-4 rounded-xl border text-xs font-bold space-y-2.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-slate-400 font-black uppercase tracking-wide text-[9px]">License Status:</span>
+                                                <span className={cn(
+                                                    "text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded border",
+                                                    isActive 
+                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
+                                                        : isExpired
+                                                        ? "bg-red-50 text-red-600 border-red-100"
+                                                        : "bg-amber-50 text-amber-600 border-amber-100"
+                                                )}>
+                                                    {isActive ? "Active" : isExpired ? "Expired" : sub.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-slate-400 font-black uppercase tracking-wide text-[9px]">Duration:</span>
+                                                <span className="text-slate-700 font-extrabold flex items-center gap-1">
+                                                    {new Date(sub.startDate).toLocaleDateString()} - {new Date(sub.endDate).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-slate-400 font-black uppercase tracking-wide text-[9px]">Gateway / Source:</span>
+                                                <div className="flex items-center gap-1">
+                                                    <span className={cn(
+                                                        "text-[8px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded text-white",
+                                                        sub.paymentType === "ONLINE" ? "bg-emerald-500" : "bg-indigo-600"
+                                                    )}>
+                                                        {sub.paymentType}
+                                                    </span>
+                                                    <span className="font-mono text-[9px] text-slate-400 max-w-[120px] truncate">
+                                                        {sub.paymentType === "ONLINE" 
+                                                            ? sub.razorpayPaymentId || sub.razorpayOrderId || "Gateway Pending"
+                                                            : "Admin"
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                                                <span className="text-slate-400 font-black uppercase tracking-wide text-[9px]">Amount:</span>
+                                                <span className="text-base font-black text-slate-900">₹{sub.amount}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             )}

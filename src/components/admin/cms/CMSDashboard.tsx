@@ -498,7 +498,7 @@ export default function CMSDashboard() {
       {/* Main Container */}
       <div className="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-          <TabsList className="bg-slate-200/60 p-1 rounded-xl h-10 w-full sm:w-max">
+          <TabsList className="bg-slate-200/60 p-1 rounded-xl h-10 w-full flex overflow-x-auto scrollbar-none justify-start sm:w-max sm:justify-center whitespace-nowrap">
             <TabsTrigger value="hero" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Sliders className="w-3.5 h-3.5 mr-1.5 text-indigo-500" /> Hero Banners
             </TabsTrigger>
