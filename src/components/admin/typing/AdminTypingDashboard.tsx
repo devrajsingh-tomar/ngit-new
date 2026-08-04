@@ -521,6 +521,11 @@ export default function AdminTypingDashboard() {
 
   // Filter components
   const filteredExams = exams.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const activeExamsSorted = [...exams]
+    .filter(e => e.status === "Active")
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const freeExamIds = new Set(activeExamsSorted.slice(0, 3).map(e => String(e._id)));
+
   const paginatedExams = filteredExams.slice((examPage - 1) * itemsPerPage, examPage * itemsPerPage);
   const totalExamPages = Math.ceil(filteredExams.length / itemsPerPage);
 
@@ -675,13 +680,13 @@ export default function AdminTypingDashboard() {
                                 </div>
                               </td>
                               <td className="px-6 py-4.5">
-                                 {exam.pricing && exam.pricing.type === "PAID" ? (
-                                   <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-full text-[10px] font-black uppercase tracking-wider w-max font-bold">
-                                     Paid (₹{exam.pricing.amount})
-                                   </span>
-                                 ) : (
+                                 {freeExamIds.has(String(exam._id)) ? (
                                    <span className="px-2.5 py-1 bg-indigo-50 text-indigo-750 border border-indigo-100 rounded-full text-[10px] font-black uppercase tracking-wider w-max font-bold">
                                      Free
+                                   </span>
+                                 ) : (
+                                   <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-full text-[10px] font-black uppercase tracking-wider w-max font-bold">
+                                     Subscription
                                    </span>
                                  )}
                               </td>
@@ -1308,30 +1313,8 @@ export default function AdminTypingDashboard() {
                               <option value="Expired">Expired</option>
                            </select>
                          </div>
-                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Pricing Type</label>
-                            <select 
-                              name="pricingType" 
-                              value={editPricingType}
-                              onChange={(e) => setEditPricingType(e.target.value)} 
-                              className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 bg-white"
-                            >
-                               <option value="FREE">Free</option>
-                               <option value="PAID">Paid</option>
-                            </select>
-                          </div>
-                          {editPricingType === "PAID" && (
-                            <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                              <label className="text-xs font-bold text-slate-500 uppercase">Amount (INR)</label>
-                              <input 
-                                type="number" 
-                                name="pricingAmount" 
-                                defaultValue={editingExam?.pricing?.amount || 0}
-                                required 
-                                className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" 
-                              />
-                            </div>
-                          )}
+                         <input type="hidden" name="pricingType" value="FREE" />
+                         <input type="hidden" name="pricingAmount" value="0" />
                       </div>
                       <div className="pt-5 flex justify-end gap-3 border-t border-slate-100/80">
                          <Button type="button" variant="outline" onClick={() => { setShowExamModal(false); setEditingExam(null); }} className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl px-5 py-2.5 transition-all">Cancel</Button>
@@ -1602,33 +1585,6 @@ export default function AdminTypingDashboard() {
                                {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
                              </select>
                           </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                               <label className="text-xs font-bold text-slate-500 uppercase">Pricing Type</label>
-                               <select 
-                                 value={wizardPricingType} 
-                                 onChange={(e) => setWizardPricingType(e.target.value)}
-                                 required
-                                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                               >
-                                 <option value="FREE">Free</option>
-                                 <option value="PAID">Paid</option>
-                               </select>
-                            </div>
-                            {wizardPricingType === "PAID" && (
-                              <div className="space-y-1.5">
-                                 <label className="text-xs font-bold text-slate-500 uppercase">Amount (INR)</label>
-                                 <input 
-                                   type="number" 
-                                   value={wizardPricingAmount} 
-                                   onChange={(e) => setWizardPricingAmount(Number(e.target.value))} 
-                                   required 
-                                   className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" 
-                                 />
-                              </div>
-                            )}
-                          </div>
                         </div>
                         
                         <div className="flex justify-end gap-3 max-w-xl mx-auto pt-5 border-t border-slate-100">
@@ -1664,7 +1620,6 @@ export default function AdminTypingDashboard() {
                              <div><span className="text-slate-400 font-medium">Evaluation Mode:</span> <span className="font-bold text-slate-800">{wizardExamMode} Official Formula</span></div>
                              <div><span className="text-slate-400 font-medium">Duration:</span> <span className="font-bold text-slate-800">{wizardDuration} Minutes</span></div>
                              <div><span className="text-slate-400 font-medium">Min Pass Speed:</span> <span className="font-bold text-slate-800">{wizardTargetSpeed} WPM</span></div>
-                             <div><span className="text-slate-400 font-medium">Access Type:</span> <span className="font-bold text-slate-800">{wizardPricingType === "PAID" ? `Paid (₹${wizardPricingAmount})` : "Free"}</span></div>
                           </div>
                         </div>
                         
