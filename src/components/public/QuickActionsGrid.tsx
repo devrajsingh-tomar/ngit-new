@@ -29,6 +29,11 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
             title: "English Steno Software (Login/Register)",
             image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600", // Writing pad/pen banner
             href: "https://svshorthandsoftware.blogspot.com"
+        },
+        {
+            title: "University Courses (Admission Open)",
+            image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600", // University theme graduation caps
+            href: "/university-courses"
         }
     ];
 
@@ -62,7 +67,7 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                     {actionsToRender.map((item, index) => {
                         const finalHref = item.href.startsWith("http") || item.href.startsWith("/") ? item.href : `https://${item.href}`;
                         const isExternal = finalHref.startsWith("http");
