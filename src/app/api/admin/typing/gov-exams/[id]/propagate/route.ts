@@ -6,10 +6,36 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 /**
+ * GET /api/admin/typing/gov-exams/[id]/propagate
+ * Returns all TypingExams under this GovExam (for admin to select which ones to update)
+ */
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const exams = await TypingExam.find({ govExamId: id, status: { $ne: "Inactive" } })
+      .select("_id title language difficulty examMode duration category status")
+      .sort({ title: 1 })
+      .lean();
+
+    return NextResponse.json(exams);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+/**
  * POST /api/admin/typing/gov-exams/[id]/propagate
- * Body: { examMode: "AHC" | "UPSSSC" | "UP_POLICE" | "General" | ... , duration?: number }
+ * Body: { examMode, duration?, examIds?: string[] }
  * 
- * Sets examMode (and optionally duration) on ALL child TypingExams under this GovExam.
+ * If examIds provided: update only those specific exams.
+ * If examIds is empty/missing: update ALL child exams.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,7 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const body = await req.json();
-    const { examMode, duration } = body;
+    const { examMode, duration, examIds } = body;
 
     const validModes = ["General", "SSC", "CPCT", "Court", "Steno", "UPSSSC", "AHC", "UP_POLICE"];
     if (examMode && !validModes.includes(examMode)) {
@@ -42,10 +68,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "No fields to update (provide examMode and/or duration)" }, { status: 400 });
     }
 
-    const result = await TypingExam.updateMany(
-      { govExamId: id },
-      { $set: updateFields }
-    );
+    // Build filter: if specific IDs provided, update only those; else update all under this govExam
+    const filter: any = { govExamId: id };
+    if (examIds && Array.isArray(examIds) && examIds.length > 0) {
+      filter._id = { $in: examIds };
+    }
+
+    const result = await TypingExam.updateMany(filter, { $set: updateFields });
 
     return NextResponse.json({
       success: true,

@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import TypingResult from "@/models/TypingResult";
 import "@/models/TypingExam";
 import "@/models/TypingPassage";
+import "@/models/GovExamCategory";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -17,7 +18,10 @@ export async function GET(
       .populate("userId", "name image email")
       .populate({
         path: "examId",
-        populate: { path: "passageId" }
+        populate: [
+          { path: "passageId" },
+          { path: "govExamCategoryId", strictPopulate: false }
+        ]
       });
 
     if (!result) {

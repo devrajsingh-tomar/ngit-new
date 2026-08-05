@@ -113,9 +113,14 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const lang = result.examId?.language?.toLowerCase() || "";
   const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
 
-  const isUPSSSC = result.examId?.examMode === "UPSSSC";
-  const isAHC = result.examId?.examMode === "AHC";
-  const isUPPolice = result.examId?.examMode === "UP_POLICE";
+  const categoryConfig = result.examId?.govExamCategoryId;
+  
+  const examMode = categoryConfig?.examMode || result.examId?.examMode || "General";
+  const isUPSSSC = examMode === "UPSSSC";
+  const isAHC = examMode === "AHC";
+  const isUPPolice = examMode === "UP_POLICE";
+  
+  const allowHalfMistakes = categoryConfig ? categoryConfig.allowHalfMistakes : !isAHC;
 
   const maxWords = submittedWords.length;
   for (let idx = 0; idx < maxWords; idx++) {
@@ -133,7 +138,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
 
     // AHC RO/ARO: No concept of half-mistakes. Every error is a full mistake.
     // (Spelling, omitted/skipped words, extra words, capitalization, punctuation — all full penalty)
-    if (isAHC) {
+    if (!allowHalfMistakes) {
       fullMistakes++;
       continue;
     }
@@ -165,7 +170,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   }
 
   // Also count omitted/skipped words (original words not typed at all)
-  if (isAHC) {
+  if (!allowHalfMistakes) {
     for (let idx = submittedWords.length; idx < originalWords.length; idx++) {
       if (originalWords[idx]) fullMistakes++;
     }
@@ -174,12 +179,14 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const timeDurationMins = result.examId?.duration || 10;
   
-  const totalErrors = isAHC ? fullMistakes : fullMistakes + (halfMistakes / 2);
+  const totalErrors = !allowHalfMistakes ? fullMistakes : fullMistakes + (halfMistakes / 2);
 
-  // AHC RO/ARO Marks Calculation: 50 base marks, -0.1 per error
-  const ahcTotalMarks = 50;
-  const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * 0.1)) : 0;
-  const ahcQualifyingMarks = 25;
+  // Marks Calculation: AHC RO/ARO standard or dynamically configured
+  const ahcTotalMarks = categoryConfig ? (categoryConfig.totalMarks || 50) : 50;
+  const errorPenalty = categoryConfig ? (categoryConfig.errorPenalty || 0.1) : 0.1;
+  const ahcQualifyingMarks = categoryConfig ? (categoryConfig.qualifyingMarks || 25) : 25;
+  
+  const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * errorPenalty)) : 0;
   
   // Determine gross WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
   let fallbackGrossWpm = 0;
@@ -218,7 +225,8 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         : fallbackNetWpm.toFixed(2));
   
   // AHC RO/ARO: passing WPM is 25. Others: Hindi 25, UP Police 35, rest 30.
-  const passingWpm = isAHC ? 25 : (isHindi ? 25 : (isUPPolice ? 35 : 30));
+  const passingWpm = categoryConfig ? (categoryConfig.minWpm || 25) : (isAHC ? 25 : (isHindi ? 25 : (isUPPolice ? 35 : 30)));
+  const minAccuracy = categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00;
   const accuracy = result.accuracy !== undefined 
     ? result.accuracy.toFixed(2) 
     : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
@@ -226,7 +234,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   // AHC dual qualifying rule: Net WPM >= 25 AND Marks >= 25/50
   const isQualified = isAHC
     ? (parseFloat(netWpm) >= passingWpm && ahcMarksObtained >= ahcQualifyingMarks)
-    : (parseFloat(netWpm) >= passingWpm && parseFloat(accuracy) >= 85.00);
+    : (parseFloat(netWpm) >= passingWpm && parseFloat(accuracy) >= minAccuracy);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -353,7 +361,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                           </>
                         ) : (
                           <p className="text-[10px] font-black text-white/70 text-center uppercase tracking-widest mt-3.5">
-                              Req: {passingWpm} WPM & 85% Accuracy
+                              Req: {passingWpm} WPM & {minAccuracy}% Accuracy
                           </p>
                         )}
                     </div>

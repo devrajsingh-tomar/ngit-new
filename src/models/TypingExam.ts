@@ -14,6 +14,7 @@ export interface ITypingExam {
   examMode: "SSC" | "CPCT" | "Court" | "General" | "UPSSSC" | "AHC" | "UP_POLICE";
   bookId?: mongoose.Types.ObjectId;
   govExamId?: mongoose.Types.ObjectId; // References GovExam
+  govExamCategoryId?: mongoose.Types.ObjectId; // References GovExamCategory (sub-category)
   rulePresetId?: mongoose.Types.ObjectId; // References TypingRulePreset
   difficulty?: "Easy" | "Medium" | "Hard";
   sourcePosition?: "top" | "left" | "right" | "bottom";
@@ -46,6 +47,7 @@ const TypingExamSchema = new Schema<ITypingExam>(
     examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General", "Steno", "UPSSSC", "AHC", "UP_POLICE"], default: "General" },
     bookId: { type: Schema.Types.ObjectId, ref: "TypingBook" },
     govExamId: { type: Schema.Types.ObjectId, ref: "GovExam" },
+    govExamCategoryId: { type: Schema.Types.ObjectId, ref: "GovExamCategory" },
     rulePresetId: { type: Schema.Types.ObjectId, ref: "TypingRulePreset" },
     difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], default: "Medium" },
     sourcePosition: { type: String, enum: ["top", "left", "right", "bottom"], default: "top" },
