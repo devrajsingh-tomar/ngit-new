@@ -124,33 +124,40 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     let query = '';
     if (exam) {
         const rawLang = exam.language || config.language || '';
-        // Normalize all Hindi variants to "Hindi" so the API regex matches ALL of them,
-        // causing all Hindi exercises (Unicode Hindi, Mangal Hindi, Krutidev Hindi, Hindi)
-        // to appear together in the exercise switcher dropdown.
         const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : rawLang;
         if (exam.govExamId) {
             const gId = typeof exam.govExamId === 'object' ? (exam.govExamId._id || exam.govExamId) : exam.govExamId;
             query = `?govExamId=${gId}&language=${queryLang}`;
-            if (exam.difficulty) query += `&difficulty=${exam.difficulty}`;
-        } else if (exam.category === 'SPECIAL') {
-            query = `?category=SPECIAL&language=${queryLang}`;
+        } else if (exam.category) {
+            query = `?category=${encodeURIComponent(exam.category)}&language=${queryLang}`;
+        } else {
+            query = `?language=${queryLang}`;
         }
     }
 
     fetch(`/api/typing/exams${query}`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-           const sorted = data.sort((a,b) => a.title.localeCompare(b.title));
+        if (Array.isArray(data) && data.length > 0) {
+           const sorted = data.sort((a: any, b: any) => (a.title || '').localeCompare(b.title || ''));
            setPassagesList(sorted);
-           const foundIdx = sorted.findIndex(e => e._id === exam?._id);
+           const foundIdx = sorted.findIndex((e: any) => e._id?.toString() === exam?._id?.toString());
            if (foundIdx !== -1) {
                setCurrentPassageIndex(foundIdx);
                setCurrentExam(sorted[foundIdx]);
            }
+        } else if (exam) {
+           setPassagesList([exam]);
+           setCurrentPassageIndex(0);
         }
       })
-      .catch(e => console.error("Failed to load related exercises", e));
+      .catch(e => {
+        console.error("Failed to load related exercises", e);
+        if (exam) {
+           setPassagesList([exam]);
+           setCurrentPassageIndex(0);
+        }
+      });
   }, [showExerciseSwitcher, isBookPractice, exam, config.language]);
 
 

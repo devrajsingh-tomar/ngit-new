@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     if (govExamId && govExamId !== "null" && govExamId !== "undefined") {
       query.govExamId = govExamId;
-    } else {
+    } else if (govExamId === "null") {
       query.$or = [
         { govExamId: null },
         { govExamId: { $exists: false } }
