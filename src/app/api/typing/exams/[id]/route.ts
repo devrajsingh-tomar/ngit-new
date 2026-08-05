@@ -34,13 +34,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     // Determine if the exam is free:
     // 1. Explicitly PAID -> not free
-    // 2. Explicitly FREE -> free
-    // 3. Fallback to oldest-3 active exams, excluding other explicit paid exams.
+    // 2. Otherwise, check if it's one of the 3 oldest active exams in this category
     let isFree = false;
     if (exam.pricing?.type === "PAID") {
       isFree = false;
-    } else if (exam.pricing?.type === "FREE") {
-      isFree = true;
     } else {
       const categoryQuery: any = { status: "Active" };
       if (exam.govExamId) {

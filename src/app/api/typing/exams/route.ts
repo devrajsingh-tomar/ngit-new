@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
     const examsWithCounts = await Promise.all(exams.map(async (exam) => {
       if (!exam) return null;
       
-      const isFree = freeExamIdsSet.has(exam._id.toString());
+      const isFree = (exam.pricing?.type !== "PAID") && freeExamIdsSet.has(exam._id.toString());
       const isAccessible = hasFullAccess || isFree || legacyAccessList.includes(exam._id.toString());
       
       let count = 0;

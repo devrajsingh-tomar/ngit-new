@@ -82,14 +82,7 @@ export async function getRecentTypingExams() {
         
         // Helper to format/sanitize exam object before sending to client
         const processExam = (exam: any) => {
-            let isFree = false;
-            if (exam.pricing?.type === "PAID") {
-              isFree = false;
-            } else if (exam.pricing?.type === "FREE") {
-              isFree = true;
-            } else {
-              isFree = freeExamIdsSet.has(exam._id.toString());
-            }
+            const isFree = (exam.pricing?.type !== "PAID") && freeExamIdsSet.has(exam._id.toString());
             const isAccessible = hasFullAccess || isFree || legacyAccessList.includes(exam._id.toString());
             
             const examObj = JSON.parse(JSON.stringify(exam));
