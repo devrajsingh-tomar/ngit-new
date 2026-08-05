@@ -113,6 +113,10 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const lang = result.examId?.language?.toLowerCase() || "";
   const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
 
+  const isUPSSSC = result.examId?.examMode === "UPSSSC";
+  const isAHC = result.examId?.examMode === "AHC";
+  const isUPPolice = result.examId?.examMode === "UP_POLICE";
+
   const maxWords = submittedWords.length;
   for (let idx = 0; idx < maxWords; idx++) {
     const originalWord = originalWords[idx];
@@ -124,6 +128,13 @@ export default function TypingResultDetails({ params }: { params: { id: string }
     }
 
     if (typedWord === originalWord) {
+      continue;
+    }
+
+    // AHC RO/ARO: No concept of half-mistakes. Every error is a full mistake.
+    // (Spelling, omitted/skipped words, extra words, capitalization, punctuation — all full penalty)
+    if (isAHC) {
+      fullMistakes++;
       continue;
     }
 
@@ -153,14 +164,22 @@ export default function TypingResultDetails({ params }: { params: { id: string }
     }
   }
 
-  const isUPSSSC = result.examId?.examMode === "UPSSSC";
-  const isAHC = result.examId?.examMode === "AHC";
-  const isUPPolice = result.examId?.examMode === "UP_POLICE";
-  
+  // Also count omitted/skipped words (original words not typed at all)
+  if (isAHC) {
+    for (let idx = submittedWords.length; idx < originalWords.length; idx++) {
+      if (originalWords[idx]) fullMistakes++;
+    }
+  }
+
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const timeDurationMins = result.examId?.duration || 10;
   
-  const totalErrors = fullMistakes + (halfMistakes / 2);
+  const totalErrors = isAHC ? fullMistakes : fullMistakes + (halfMistakes / 2);
+
+  // AHC RO/ARO Marks Calculation: 50 base marks, -0.1 per error
+  const ahcTotalMarks = 50;
+  const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * 0.1)) : 0;
+  const ahcQualifyingMarks = 25;
   
   // Determine gross WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
   let fallbackGrossWpm = 0;
@@ -198,11 +217,16 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         ? result.wpm.toFixed(2) 
         : fallbackNetWpm.toFixed(2));
   
-  const passingWpm = isHindi ? 25 : (isUPPolice ? 35 : 30);
+  // AHC RO/ARO: passing WPM is 25. Others: Hindi 25, UP Police 35, rest 30.
+  const passingWpm = isAHC ? 25 : (isHindi ? 25 : (isUPPolice ? 35 : 30));
   const accuracy = result.accuracy !== undefined 
     ? result.accuracy.toFixed(2) 
     : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
-  const isQualified = parseFloat(netWpm) >= passingWpm && parseFloat(accuracy) >= 85.00;
+  
+  // AHC dual qualifying rule: Net WPM >= 25 AND Marks >= 25/50
+  const isQualified = isAHC
+    ? (parseFloat(netWpm) >= passingWpm && ahcMarksObtained >= ahcQualifyingMarks)
+    : (parseFloat(netWpm) >= passingWpm && parseFloat(accuracy) >= 85.00);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -318,9 +342,20 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                         )}>
                             {isQualified ? "Qualified" : "Not Qualified"}
                         </div>
-                        <p className="text-[10px] font-black text-white/70 text-center uppercase tracking-widest mt-3.5">
-                            Req: {passingWpm} WPM & 85% Accuracy
-                        </p>
+                        {isAHC ? (
+                          <>
+                            <p className="text-[10px] font-black text-white/70 text-center uppercase tracking-widest mt-3.5">
+                              Marks: {ahcMarksObtained.toFixed(1)}/{ahcTotalMarks}
+                            </p>
+                            <p className="text-[10px] font-black text-white/70 text-center uppercase tracking-widest mt-1">
+                              Req: ≥{passingWpm} WPM & ≥{ahcQualifyingMarks}/{ahcTotalMarks} Marks
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-[10px] font-black text-white/70 text-center uppercase tracking-widest mt-3.5">
+                              Req: {passingWpm} WPM & 85% Accuracy
+                          </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -356,7 +391,11 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     
                     <MetricRow label="Backspaces" value={result.backspaces || 0} icon={ArrowLeft} />
                     <MetricRow label="Full Mistakes" value={fullMistakes} icon={AlertCircle} color="rose" />
-                    <MetricRow label="Half Mistakes" value={halfMistakes} icon={Scissors} color="amber" />
+                    {isAHC ? (
+                      <MetricRow label="Marks Obtained" value={`${ahcMarksObtained.toFixed(1)} / ${ahcTotalMarks}`} icon={Trophy} color="indigo" highlight />
+                    ) : (
+                      <MetricRow label="Half Mistakes" value={halfMistakes} icon={Scissors} color="amber" />
+                    )}
                 </div>
             </div>
 
@@ -366,19 +405,22 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                 </div>
                 <div className="space-y-3">
                     <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-1 leading-none">
-                      Calculation Parameters {(isUPSSSC || isAHC || isUPPolice) && `(${isAHC ? "AHC" : isUPPolice ? "UP Police ASI/CO" : "UPSSSC / Junior Assistant"} Standard)`}
+                      Calculation Parameters {(isUPSSSC || isAHC || isUPPolice) && `(${isAHC ? "AHC RO/ARO" : isUPPolice ? "UP Police ASI/CO" : "UPSSSC / Junior Assistant"} Standard)`}
                     </p>
                     <p className="text-lg font-bold text-slate-800 leading-snug">
-                        {isUPPolice 
-                            ? "Net Speed is calculated by taking (Total Correct Words / Time Taken). For UP Police, a word is counted after every space typed."
-                            : (isUPSSSC || isAHC)
-                                ? "Net Speed is calculated as [(Total Keystrokes / 5) - Full Mistakes] divided by Time. One word is considered equivalent to 5 keystrokes."
-                                : "Standard Calculation: Net Speed = [Words Typed - Weighted Errors] / Time. Errors are weighted as 1.0 for Full Mistakes and 0.5 for Half Mistakes."
+                        {isAHC
+                            ? "AHC RO/ARO: Net Speed = [(Total Keystrokes / 5) − Full Errors] ÷ Time. Marks = 50 − (Errors × 0.1). No half-mistakes. All errors (spelling, omission, extra words, capitalization, punctuation) are penalised equally. Dual Qualifying Rule: Net WPM ≥ 25 AND Marks ≥ 25/50."
+                            : isUPPolice 
+                                ? "Net Speed is calculated by taking (Total Correct Words / Time Taken). For UP Police, a word is counted after every space typed."
+                                : isUPSSSC
+                                    ? "Net Speed is calculated as [(Total Keystrokes / 5) - Full Mistakes] divided by Time. One word is considered equivalent to 5 keystrokes."
+                                    : "Standard Calculation: Net Speed = [Words Typed - Weighted Errors] / Time. Errors are weighted as 1.0 for Full Mistakes and 0.5 for Half Mistakes."
                         }
                     </p>
-                    <div className="flex gap-4 pt-2">
-                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-rose-500" /> Full Mistake: {fullMistakes}</div>
-                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-amber-500" /> Half Mistake: {halfMistakes}</div>
+                    <div className="flex flex-wrap gap-4 pt-2">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-rose-500" /> {isAHC ? "Errors (All Full)" : "Full Mistake"}: {fullMistakes}</div>
+                        {!isAHC && <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-amber-500" /> Half Mistake: {halfMistakes}</div>}
+                        {isAHC && <div className="flex items-center gap-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-indigo-500" /> Marks: {ahcMarksObtained.toFixed(1)}/{ahcTotalMarks} (Qualifying: {ahcQualifyingMarks})</div>}
                     </div>
                 </div>
             </div>
