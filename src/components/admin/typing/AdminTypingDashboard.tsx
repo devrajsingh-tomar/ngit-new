@@ -1823,11 +1823,53 @@ export default function AdminTypingDashboard() {
                  </div>
                  <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase">Exam Logo</label>
-                    <ImageUpload 
-                       value={modalLogo}
-                       onChange={(url) => setModalLogo(url)}
-                       label="Upload Logo"
-                    />
+                    <div className="grid grid-cols-1 gap-3">
+                      <ImageUpload 
+                         value={modalLogo}
+                         onChange={(url) => setModalLogo(url)}
+                         label="Upload Logo"
+                      />
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={modalLogo} 
+                          onChange={(e) => setModalLogo(e.target.value)} 
+                          placeholder="Or paste direct image URL here..." 
+                          className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold"
+                        />
+                        {modalLogo && (
+                          <button 
+                            type="button" 
+                            onClick={() => setModalLogo("")} 
+                            className="text-xs text-rose-500 hover:text-rose-700 font-bold"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Logo Gallery of already uploaded logos */}
+                      {govExams.filter(g => g.logo).length > 0 && (
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Select from Uploaded Logos:</span>
+                          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto p-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                            {Array.from(new Set(govExams.map(g => g.logo).filter(Boolean))).map((logoUrl: any, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setModalLogo(logoUrl)}
+                                className={cn(
+                                  "w-10 h-10 rounded-lg p-1 bg-white border flex items-center justify-center hover:border-indigo-500 hover:scale-105 transition-all shadow-sm",
+                                  modalLogo === logoUrl ? "border-indigo-600 ring-2 ring-indigo-500/10" : "border-slate-200"
+                                )}
+                              >
+                                <img src={logoUrl} alt="" className="w-full h-full object-contain" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <input type="hidden" name="logo" value={modalLogo} />
                  </div>
                  <div className="flex items-center gap-3.5 p-3.5 bg-slate-50/55 rounded-2xl border border-slate-100">
