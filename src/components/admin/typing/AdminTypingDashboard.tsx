@@ -349,9 +349,19 @@ export default function AdminTypingDashboard() {
   };
 
   const handleDeleteGovExam = async (id: string) => {
-    if (!confirm("Delete Government Exam?")) return;
-    await fetch(`/api/admin/typing/gov-exams/${id}`, { method: "DELETE" });
-    fetchData();
+    if (!confirm("Delete Government Exam? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/admin/typing/gov-exams/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Government Exam deleted.");
+        fetchData();
+      } else {
+        const err = await res.json().catch(() => ({ error: "Delete failed" }));
+        toast.error(err.error || "Failed to delete exam.");
+      }
+    } catch {
+      toast.error("Network error. Could not delete exam.");
+    }
   };
 
   const handleAddLanguage = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -746,7 +756,7 @@ export default function AdminTypingDashboard() {
 
             <TabsContent value="gov-exams" className="mt-0">
                <div className="mb-4 flex justify-end">
-                  <Button onClick={() => { setModalLogo(""); setShowGovExamModal(true); }} className="bg-slate-900 hover:bg-black text-white font-bold h-10 px-4 rounded-xl text-sm shadow-sm transition-all duration-200 active:scale-[0.98] flex items-center gap-2"><Plus className="w-4 h-4 mr-1 stroke-[3px]"/> Add Gov Exam</Button>
+                  <Button onClick={() => { setEditingGovExam(null); setModalLogo(""); setShowGovExamModal(true); }} className="bg-slate-900 hover:bg-black text-white font-bold h-10 px-4 rounded-xl text-sm shadow-sm transition-all duration-200 active:scale-[0.98] flex items-center gap-2"><Plus className="w-4 h-4 mr-1 stroke-[3px]"/> Add Gov Exam</Button>
                </div>
                <div className="bg-white border border-slate-200/80 rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
                   <div className="overflow-x-auto">

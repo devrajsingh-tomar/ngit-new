@@ -42,9 +42,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       updateData.defaultDuration = data.defaultDuration === "" ? 10 : Number(data.defaultDuration);
     }
     
-    // Auto-update slug if title changed
+    // Auto-update slug if title changed — replace all non-alphanumeric (including /) with dash
     if (data.title) {
-      updateData.slug = data.title.toLowerCase().replace(/\s+/g, '-');
+      updateData.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
 
     const exam = await GovExam.findByIdAndUpdate(id, { $set: updateData }, { new: true });
