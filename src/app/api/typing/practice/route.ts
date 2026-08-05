@@ -7,6 +7,9 @@ import CurrentPassage, { ICurrentPassage } from "@/models/CurrentPassage";
 import TypingPassage from "@/models/TypingPassage";
 import TypingBook from "@/models/TypingBook";
 import "@/models/TypingBook"; // Side-effect to ensure model is registered
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import TypingSubscription from "@/models/TypingSubscription";
 
 export async function GET(req: Request) {
   try {
@@ -27,11 +30,32 @@ export async function GET(req: Request) {
         
         const query: any = { bookId: new mongoose.Types.ObjectId(bookId) };
         
+        const session = await getServerSession(authOptions);
+        let hasFullAccess = false;
+        if (session) {
+          const activeSub = await TypingSubscription.findOne({
+            userId: session.user.id,
+            status: "ACTIVE",
+            endDate: { $gt: new Date() }
+          });
+          if (activeSub) hasFullAccess = true;
+        }
+
         console.log(`Fetching chapters for book: ${bookId}`);
         const passages = await TypingPassage.find(query).sort({ createdAt: 1 }).lean();
         console.log(`Found ${passages.length} chapters`);
         
-        return NextResponse.json(passages);
+        const passagesWithAccess = passages.map((p, idx) => {
+          const isFree = idx < 3; // First 3 chapters free
+          const isAccessible = hasFullAccess || isFree;
+          const pObj = { ...p, isFree, isAccessible };
+          if (!isAccessible) {
+             pObj.content = "";
+          }
+          return pObj;
+        });
+        
+        return NextResponse.json(passagesWithAccess);
     }
 
     if (type === 'BOOK' && val) {

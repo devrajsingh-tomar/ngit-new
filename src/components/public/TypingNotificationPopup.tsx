@@ -42,28 +42,28 @@ export default function TypingNotificationPopup() {
     };
 
     useEffect(() => {
-        // Only show once per session across tabs
-        const hasBeenShown = sessionStorage.getItem("ngit_exams_toast_shown") || getCookie("ngit_exams_toast_shown");
-        if (hasBeenShown === "true") return;
-
-        // Fetch recent tests to check if any exist before showing toast
         const checkAndSetPopup = async () => {
             try {
+                setLoading(true);
                 const res = await getRecentTypingExams();
                 if (res.success && res.exams && res.exams.length > 0) {
                     setExams(res.exams);
                     
-                    // Trigger toast after 4 seconds for elegant UX
-                    const timer = setTimeout(() => {
-                        setShowToast(true);
-                        sessionStorage.setItem("ngit_exams_toast_shown", "true");
-                        setSessionCookie("ngit_exams_toast_shown", "true");
-                    }, 4000);
+                    const hasBeenShown = sessionStorage.getItem("ngit_exams_toast_shown") || getCookie("ngit_exams_toast_shown");
+                    if (hasBeenShown !== "true") {
+                        const timer = setTimeout(() => {
+                            setShowToast(true);
+                            sessionStorage.setItem("ngit_exams_toast_shown", "true");
+                            setSessionCookie("ngit_exams_toast_shown", "true");
+                        }, 2500);
 
-                    return () => clearTimeout(timer);
+                        return () => clearTimeout(timer);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load toast exams", err);
+            } finally {
+                setLoading(false);
             }
         };
 

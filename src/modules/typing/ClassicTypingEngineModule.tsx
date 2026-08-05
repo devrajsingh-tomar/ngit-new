@@ -90,6 +90,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [internalLanguage, setInternalLanguage] = useState(config.language || 'English');
   const [internalLayout, setInternalLayout] = useState(config.layout || 'English');
   const [currentExam, setCurrentExam] = useState(exam);
+  const [showPaywallModal, setShowPaywallModal] = useState(false);
+  const [lockedTargetExam, setLockedTargetExam] = useState<any>(null);
 
   const isBookPractice = exam?.section === 'Book' || exam?.category === 'BOOK';
 
@@ -484,7 +486,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                           const newIdx = currentPassageIndex - 1;
                           const newItem = passagesList[newIdx];
                           if (newItem.isAccessible === false) {
-                             toast.error("This is a premium passage. Please subscribe to access.");
+                             setLockedTargetExam(newItem);
+                             setShowPaywallModal(true);
+                             toast.error("🔒 Subscription required for this exercise");
                              return;
                           }
                           setCurrentPassageIndex(newIdx);
@@ -503,7 +507,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                        const newIdx = Number(e.target.value);
                        const newItem = passagesList[newIdx];
                        if (newItem.isAccessible === false) {
-                          toast.error("This is a premium passage. Please subscribe to access.");
+                          setLockedTargetExam(newItem);
+                          setShowPaywallModal(true);
+                          toast.error("🔒 Subscription required for this exercise");
                           return;
                        }
                        setCurrentPassageIndex(newIdx);
@@ -514,15 +520,23 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
 
                     }}
                     disabled={isActive && !isFinished && typedText.length > 0}
-                    className="border border-gray-400 px-2 py-1 bg-white outline-none flex-1 focus:ring-2 focus:ring-blue-500 min-w-0 truncate cursor-pointer"
+                    className="border border-gray-400 px-2 py-1 bg-white outline-none flex-1 focus:ring-2 focus:ring-blue-500 min-w-0 truncate cursor-pointer font-medium text-slate-800"
                  >
                     {passagesList.length > 0 ? (
-                      passagesList.map((p, i) => (
-                         <option key={p._id || i} value={i}>
-                            {isBookPractice ? `Ch. ${i + 1}/${passagesList.length} - ${p.title?.substring(0, 40)}` : `Exercise: ${i + 1}/${passagesList.length} - ${p.title?.substring(0, 30)}`}
+                      passagesList.map((p, i) => {
+                         const isLocked = p.isAccessible === false;
+                         const titleText = p.title || `Passage ${i + 1}`;
+                         const truncated = titleText.length > 28 ? titleText.substring(0, 28) + '...' : titleText;
+                         const displayLabel = isBookPractice 
+                            ? `Ch. ${i + 1}/${passagesList.length} - ${truncated} ${isLocked ? '🔒 (Locked)' : ''}` 
+                            : `Exercise: ${i + 1}/${passagesList.length} - ${truncated} ${isLocked ? '🔒 (Locked)' : ''}`;
 
-                         </option>
-                      ))
+                         return (
+                            <option key={p._id || i} value={i}>
+                               {displayLabel}
+                            </option>
+                         );
+                      })
                     ) : (
                       <option value={0}>Loading Exercises...</option>
                     )}
@@ -533,7 +547,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                           const newIdx = currentPassageIndex + 1;
                           const newItem = passagesList[newIdx];
                           if (newItem.isAccessible === false) {
-                             toast.error("This is a premium passage. Please subscribe to access.");
+                             setLockedTargetExam(newItem);
+                             setShowPaywallModal(true);
+                             toast.error("🔒 Subscription required for this exercise");
                              return;
                           }
                           setCurrentPassageIndex(newIdx);
@@ -692,6 +708,58 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
           </button>
         </div>
       </div>
+
+      {/* Subscription Paywall Modal */}
+      {showPaywallModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+             <button 
+                onClick={() => setShowPaywallModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors font-bold text-sm"
+             >
+                ✕
+             </button>
+             
+             <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-100 shadow-sm">
+                <span className="text-3xl">🔒</span>
+             </div>
+
+             <h3 className="text-2xl font-black text-slate-900 mb-2">Exercise Locked</h3>
+             <p className="text-sm font-medium text-slate-500 mb-6">
+                <span className="font-bold text-slate-800">"{lockedTargetExam?.title || "This Passage"}"</span> requires an active NGIT Typing Subscription. Purchase a plan to unlock all passages!
+             </p>
+
+             <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 text-left space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                   <span className="text-emerald-500 font-extrabold">✓</span> Access 100+ Official Exam Passages
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                   <span className="text-emerald-500 font-extrabold">✓</span> Real Government Exam Pattern Engine
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                   <span className="text-emerald-500 font-extrabold">✓</span> Detailed Speed & Accuracy Reports
+                </div>
+             </div>
+
+             <div className="flex flex-col gap-3">
+                <a 
+                  href="/student/typing/subscribe" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider"
+                >
+                  Buy Subscription Now (₹21 / Month) &rarr;
+                </a>
+                <button 
+                  onClick={() => setShowPaywallModal(false)}
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl text-xs uppercase tracking-wider transition-colors"
+                >
+                  Continue Free Practice
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
