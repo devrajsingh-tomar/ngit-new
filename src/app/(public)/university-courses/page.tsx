@@ -18,7 +18,8 @@ import {
     Settings, 
     Send,
     MessageCircle,
-    CheckCircle2
+    CheckCircle2,
+    Cpu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,20 +43,21 @@ export default function UniversityCoursesPage() {
     const [notes, setNotes] = useState("");
 
     const courses: CourseItem[] = [
-        { id: "ba", title: "B.A.", fullName: "Bachelor of Arts", icon: BookOpen, color: "from-blue-500 to-indigo-500", category: "Undergraduate" },
+        { id: "pgdca", title: "PGDCA", fullName: "Post Graduate Diploma in Computer Applications", icon: Code, color: "from-purple-500 to-pink-500", category: "Diploma" },
+        { id: "mba", title: "MBA", fullName: "Master of Business Administration", icon: Building, color: "from-indigo-500 to-purple-500", category: "Postgraduate" },
+        { id: "bca", title: "BCA", fullName: "Bachelor of Computer Applications", icon: Laptop, color: "from-violet-500 to-purple-500", category: "Undergraduate" },
         { id: "bcom", title: "B.Com.", fullName: "Bachelor of Commerce", icon: TrendingUp, color: "from-cyan-500 to-blue-500", category: "Undergraduate" },
         { id: "bba", title: "BBA", fullName: "Bachelor of Business Administration", icon: Briefcase, color: "from-sky-500 to-indigo-500", category: "Undergraduate" },
-        { id: "bca", title: "BCA", fullName: "Bachelor of Computer Applications", icon: Laptop, color: "from-violet-500 to-purple-500", category: "Undergraduate" },
-        { id: "pgdca", title: "PGDCA", fullName: "Post Graduate Diploma in Computer Applications", icon: Code, color: "from-purple-500 to-pink-500", category: "Diploma" },
         { id: "ma", title: "M.A.", fullName: "Master of Arts", icon: GraduationCap, color: "from-emerald-500 to-teal-500", category: "Postgraduate" },
-        { id: "mcom", title: "M.Com.", fullName: "Master of Commerce", icon: LineChart, color: "from-teal-500 to-cyan-500", category: "Postgraduate" },
         { id: "blib", title: "B.Lib.", fullName: "Bachelor of Library Science", icon: Library, color: "from-orange-500 to-amber-500", category: "Undergraduate" },
+        { id: "llb", title: "LLB", fullName: "Bachelor of Laws", icon: Scale, color: "from-slate-700 to-slate-900", category: "Professional" },
+        { id: "yoga", title: "YOGA", fullName: "Diploma / Degree in Yoga Science", icon: Activity, color: "from-green-500 to-emerald-500", category: "Professional" },
+        { id: "ba", title: "B.A.", fullName: "Bachelor of Arts", icon: BookOpen, color: "from-blue-500 to-indigo-500", category: "Undergraduate" },
+        { id: "mcom", title: "M.Com.", fullName: "Master of Commerce", icon: LineChart, color: "from-teal-500 to-cyan-500", category: "Postgraduate" },
         { id: "mlib", title: "M.Lib.", fullName: "Master of Library Science", icon: Library, color: "from-amber-500 to-yellow-500", category: "Postgraduate" },
         { id: "msc", title: "M.Sc.", fullName: "Master of Science", icon: Atom, color: "from-rose-500 to-pink-500", category: "Postgraduate" },
-        { id: "mba", title: "MBA", fullName: "Master of Business Administration", icon: Building, color: "from-indigo-500 to-purple-500", category: "Postgraduate" },
         { id: "mca", title: "MCA", fullName: "Master of Computer Applications", icon: Terminal, color: "from-fuchsia-500 to-purple-500", category: "Postgraduate" },
-        { id: "yoga", title: "YOGA", fullName: "Diploma / Degree in Yoga Science", icon: Activity, color: "from-green-500 to-emerald-500", category: "Professional" },
-        { id: "llb", title: "LLB", fullName: "Bachelor of Laws", icon: Scale, color: "from-slate-700 to-slate-900", category: "Professional" },
+        { id: "btech", title: "B.Tech", fullName: "Bachelor of Technology", icon: Cpu, color: "from-red-500 to-rose-600", category: "Professional" },
         { id: "polytechnic", title: "POLYTECHNIC", fullName: "Diploma in Engineering", icon: Settings, color: "from-amber-600 to-orange-600", category: "Diploma" }
     ];
 

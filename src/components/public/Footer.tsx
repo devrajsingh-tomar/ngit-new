@@ -211,6 +211,13 @@ export default async function Footer() {
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                             ISO 9001:2015 Certified Institute • Skill India Partner
                         </p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-black uppercase tracking-wider text-slate-400 pt-2 justify-center sm:justify-start">
+                            <Link href="/terms-and-conditions" className="hover:text-indigo-600 transition-colors">Terms & Conditions</Link>
+                            <span>•</span>
+                            <Link href="/privacy-policy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
+                            <span>•</span>
+                            <Link href="/refund-policy" className="hover:text-indigo-600 transition-colors">Refund Policy</Link>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-6">
