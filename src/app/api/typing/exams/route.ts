@@ -62,6 +62,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    let categoryRules: any = null;
+    if (govExamCategoryId && mongoose.Types.ObjectId.isValid(govExamCategoryId)) {
+      const GovExamCategory = (await import("@/models/GovExamCategory")).default;
+      categoryRules = await GovExamCategory.findById(govExamCategoryId).populate("govExamId").lean();
+    }
+
     // Only apply date constraints for general timed live contests when not fetching all active practice tests
     if (!govExamId && !govExamCategoryId && !category && !bookId && !includeAll) {
         query.startTime = { $lte: now };
@@ -174,6 +180,14 @@ export async function GET(req: NextRequest) {
       }
       
       const examObj = exam.toObject();
+      if (categoryRules) {
+        examObj.govExamCategoryId = categoryRules;
+        examObj.examMode = categoryRules.examMode;
+        examObj.duration = categoryRules.duration;
+        if (categoryRules.govExamId) {
+          examObj.govExamId = categoryRules.govExamId;
+        }
+      }
       if (!isAccessible && examObj.passageId) {
         examObj.passageId.content = ""; // Clear content to prevent unauthorized access
       }
