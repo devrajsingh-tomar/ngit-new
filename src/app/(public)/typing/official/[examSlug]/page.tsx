@@ -32,7 +32,7 @@ export default async function LanguageSelectionPage({ params: paramsPromise }: {
   // Group all Hindi variants (Unicode Hindi, Krutidev Hindi, Mangal Hindi) under "Hindi"
   const rawLanguages = await TypingExam.distinct("language", { 
     govExamId: exam._id,
-    status: "Active"
+    status: { $ne: "Inactive" }
   });
 
   const hasEnglish = rawLanguages.some((l: string) => l.toLowerCase().includes("english"));

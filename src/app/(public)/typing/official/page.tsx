@@ -16,7 +16,7 @@ export default async function TypingExamsPage({ searchParams: searchParamsPromis
   const examsWithCounts = await Promise.all(exams.map(async (exam) => {
     const count = await TypingExam.countDocuments({ 
       govExamId: exam._id,
-      status: "Active"
+      status: { $ne: "Inactive" }
     });
     return { 
       ...exam.toObject(), 

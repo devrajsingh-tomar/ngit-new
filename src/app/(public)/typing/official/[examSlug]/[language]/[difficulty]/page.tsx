@@ -60,7 +60,7 @@ export default async function TestSelectionPage({
   // Determine the 3 free exams for this category (3 oldest active ones under this govExamId)
   const freeExams = await TypingExam.find({ 
     govExamId: exam._id,
-    status: "Active" 
+    status: { $ne: "Inactive" }
   })
     .sort({ createdAt: 1 })
     .limit(3)
@@ -80,7 +80,7 @@ export default async function TestSelectionPage({
     govExamId: exam._id,
     language: langFilter,
     difficulty: diffFormatted,
-    status: "Active"
+    status: { $ne: "Inactive" }
   };
 
   // Fetch typing tests that match the criteria with pagination
