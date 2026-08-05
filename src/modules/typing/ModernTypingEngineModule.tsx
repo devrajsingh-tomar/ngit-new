@@ -115,6 +115,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         return;
     }
 
+    // For Gov / Special exams: fetch all related exercises in that language stream
     let query = '';
     if (exam) {
         let gId: string | null = null;
@@ -126,7 +127,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
             }
         }
         
-        const cat = exam.category ? encodeURIComponent(exam.category) : '';
+        const catVal = exam.category || (typeof exam.govExamId === 'object' && exam.govExamId ? ((exam.govExamId as any).category || (exam.govExamId as any).title) : '') || '';
+        const cat = catVal ? encodeURIComponent(catVal) : '';
         const rawLang = exam.language || config.language || 'English';
         const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : 'English';
 

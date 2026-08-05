@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/db";
 import TypingExam from "@/models/TypingExam";
 import "@/models/TypingPassage";
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
     const includeAll = searchParams.get("all") === "true";
     
     const now = new Date();
-    const query: any = { status: "Active" };
+    const query: any = { status: { $ne: "Inactive" } };
 
     // Only apply date constraints for general timed live contests when not fetching all active practice tests
     if (!govExamId && !category && !bookId && !includeAll) {
@@ -73,17 +74,23 @@ export async function GET(req: NextRequest) {
     }
 
     const validGovExamId = govExamId && govExamId !== "null" && govExamId !== "undefined" && govExamId !== "[object Object]" ? govExamId : null;
-    const validCategory = category && category !== "All" && category !== "undefined" && category !== "null" ? category : null;
+    const validCategory = category && category !== "All" && category !== "undefined" && category !== "null" ? decodeURIComponent(category) : null;
 
-    if (validGovExamId && validCategory) {
-      query.$or = [
-        { govExamId: validGovExamId },
-        { category: validCategory }
-      ];
-    } else if (validGovExamId) {
-      query.govExamId = validGovExamId;
-    } else if (validCategory) {
-      query.category = validCategory;
+    const orConditions: any[] = [];
+
+    if (validGovExamId) {
+      orConditions.push({ govExamId: validGovExamId });
+      if (mongoose.Types.ObjectId.isValid(validGovExamId)) {
+        orConditions.push({ govExamId: new mongoose.Types.ObjectId(validGovExamId) });
+      }
+    }
+
+    if (validCategory) {
+      orConditions.push({ category: { $regex: new RegExp(`^${validCategory}$`, 'i') } });
+    }
+
+    if (orConditions.length > 0) {
+      query.$or = orConditions;
     } else if (govExamId === "null") {
       query.$or = [
         { govExamId: null },

@@ -132,7 +132,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             }
         }
         
-        const cat = exam.category ? encodeURIComponent(exam.category) : '';
+        const catVal = exam.category || (typeof exam.govExamId === 'object' && exam.govExamId ? ((exam.govExamId as any).category || (exam.govExamId as any).title) : '') || '';
+        const cat = catVal ? encodeURIComponent(catVal) : '';
         const rawLang = exam.language || config.language || 'English';
         const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : 'English';
 
