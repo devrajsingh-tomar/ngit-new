@@ -14,6 +14,7 @@ interface StartOrUnlockButtonProps {
   amount: number;
   duration: number;
   langFormatted: string;
+  govExamCategoryId?: string;
 }
 
 export default function StartOrUnlockButton({
@@ -22,7 +23,8 @@ export default function StartOrUnlockButton({
   isUnlocked,
   amount,
   duration,
-  langFormatted
+  langFormatted,
+  govExamCategoryId
 }: StartOrUnlockButtonProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -121,7 +123,8 @@ export default function StartOrUnlockButton({
     return (
       <button
         onClick={() => {
-          router.push(`/typing/exam/${testId}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}`);
+          const categoryQuery = govExamCategoryId ? `&govExamCategoryId=${govExamCategoryId}` : "";
+          router.push(`/typing/exam/${testId}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}${categoryQuery}`);
         }}
         className="inline-flex items-center justify-center h-9 px-5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-650 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
       >

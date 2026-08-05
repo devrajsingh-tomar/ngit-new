@@ -19,10 +19,11 @@ export default async function TestSelectionPage({
   searchParams: searchParamsPromise
 }: { 
   params: Promise<{ examSlug: string, language: string, difficulty: string }>,
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string, category?: string }>
 }) {
   const params = await paramsPromise;
   const searchParams = await searchParamsPromise;
+  const categorySlug = searchParams.category;
   const page = parseInt(searchParams.page || "1");
   const limit = 20;
   const skip = (page - 1) * limit;
@@ -58,14 +59,21 @@ export default async function TestSelectionPage({
   
   if (!exam) return notFound();
 
-  // Determine the 3 free exams for this category (3 oldest active ones under this govExamId or its categories)
+  let categoryId = "";
+  if (categorySlug) {
+    const categoryDoc = await GovExamCategory.findOne({ govExamId: exam._id, slug: categorySlug }).select("_id").lean();
+    if (categoryDoc) categoryId = categoryDoc._id.toString();
+  }
+
+  // Determine the 3 free exams for this category (3 oldest active ones under this govExamId or its categories, or general)
   const parentCategories = await GovExamCategory.find({ govExamId: exam._id }).select("_id").lean();
   const categoryIds = parentCategories.map(c => c._id);
 
   const freeExams = await TypingExam.find({ 
     $or: [
       { govExamId: exam._id },
-      { govExamCategoryId: { $in: categoryIds } }
+      { govExamCategoryId: { $in: categoryIds } },
+      { govExamId: { $in: [null, undefined] } }
     ],
     status: { $ne: "Inactive" }
   })
@@ -86,7 +94,8 @@ export default async function TestSelectionPage({
   const query = {
     $or: [
       { govExamId: exam._id },
-      { govExamCategoryId: { $in: categoryIds } }
+      { govExamCategoryId: { $in: categoryIds } },
+      { govExamId: { $in: [null, undefined] } }
     ],
     language: langFilter,
     difficulty: diffFormatted,
@@ -276,6 +285,7 @@ export default async function TestSelectionPage({
                           amount={amount}
                           duration={test.duration}
                           langFormatted={langFormatted}
+                          govExamCategoryId={categoryId || undefined}
                         />
                       </td>
                     </tr>

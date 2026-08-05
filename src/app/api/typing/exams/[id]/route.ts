@@ -32,6 +32,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const govExamCategoryId = searchParams.get("govExamCategoryId");
+    
+    let examObj = exam.toObject();
+
+    if (govExamCategoryId && mongoose.Types.ObjectId.isValid(govExamCategoryId)) {
+      const GovExamCategory = (await import("@/models/GovExamCategory")).default;
+      const category = await GovExamCategory.findById(govExamCategoryId).populate("govExamId").lean();
+      if (category) {
+        examObj.govExamCategoryId = category;
+        examObj.examMode = category.examMode;
+        examObj.duration = category.duration;
+        if (category.govExamId) {
+          examObj.govExamId = category.govExamId;
+        }
+      }
+    }
+
     // Determine if the exam is free:
     // 1. Explicitly PAID -> not free
     // 2. Otherwise, check if it's one of the 3 oldest active exams in this category
@@ -86,7 +104,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       }
     }
 
-    return NextResponse.json(exam);
+    return NextResponse.json(examObj);
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to fetch exam" }, { status: 500 });
   }

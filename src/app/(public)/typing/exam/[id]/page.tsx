@@ -73,10 +73,13 @@ export default function TypingExamPage() {
     };
   }, [exam, selectedLanguage, selectedLayout]);
 
+  const categoryId = searchParams?.get("govExamCategoryId");
+
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
-    fetch(`/api/typing/exams/${id}`)
+    const categoryQuery = categoryId ? `?govExamCategoryId=${categoryId}` : "";
+    fetch(`/api/typing/exams/${id}${categoryQuery}`)
       .then(async res => {
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
