@@ -120,20 +120,28 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         return;
     }
 
-    // For Gov / Special exams: fetch from exams API
+    // For Gov / Special exams: fetch all related exercises in that exam stream
     let query = '';
     if (exam) {
-        const rawLang = exam.language || config.language || '';
-        const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : rawLang;
+        let gId: string | null = null;
+        if (exam.govExamId) {
+            if (typeof exam.govExamId === 'string') {
+                gId = exam.govExamId;
+            } else if (typeof exam.govExamId === 'object' && exam.govExamId !== null) {
+                gId = (exam.govExamId as any)._id?.toString() || (exam.govExamId as any).id?.toString() || null;
+            }
+        }
         
-        const gId = exam.govExamId?._id?.toString() || (typeof exam.govExamId === 'string' ? exam.govExamId : (typeof exam.govExamId === 'object' && exam.govExamId ? (exam.govExamId._id || exam.govExamId) : null));
-        
-        if (gId) {
-            query = `?govExamId=${gId}&language=${queryLang}&all=true`;
-        } else if (exam.category) {
-            query = `?category=${encodeURIComponent(exam.category)}&language=${queryLang}&all=true`;
+        const cat = exam.category ? encodeURIComponent(exam.category) : '';
+
+        if (gId && cat) {
+            query = `?govExamId=${gId}&category=${cat}&all=true`;
+        } else if (gId) {
+            query = `?govExamId=${gId}&all=true`;
+        } else if (cat) {
+            query = `?category=${cat}&all=true`;
         } else {
-            query = `?language=${queryLang}&all=true`;
+            query = `?all=true`;
         }
     }
 
@@ -160,7 +168,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
            setCurrentPassageIndex(0);
         }
       });
-  }, [showExerciseSwitcher, isBookPractice, exam, config.language]);
+  }, [showExerciseSwitcher, isBookPractice, exam]);
 
 
   // Sync internal state with props if they change
@@ -171,6 +179,24 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     setInternalLayout(config.layout || 'English');
     setCurrentExam(exam);
   }, [passage, config.duration, config.language, config.layout, exam]);
+
+  const selectExercise = (newItem: any, newIdx: number) => {
+    if (newItem.isAccessible === false) {
+       setLockedTargetExam(newItem);
+       setShowPaywallModal(true);
+       toast.error("🔒 Subscription required for this exercise");
+       return;
+    }
+    setCurrentPassageIndex(newIdx);
+    setCurrentExam(newItem);
+    setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+    
+    const targetLang = newItem.language || config.language || 'English';
+    const targetLayout = targetLang.toLowerCase().includes('hindi') ? 'Inscript' : 'English';
+    setInternalLanguage(targetLang);
+    setInternalLayout(targetLayout);
+    updateSettings({ duration: internalDuration, language: targetLang, layout: targetLayout });
+  };
   
   // Handle Fullscreen natively
   useEffect(() => {
@@ -493,18 +519,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     onClick={() => {
                        if (currentPassageIndex > 0) {
                           const newIdx = currentPassageIndex - 1;
-                          const newItem = passagesList[newIdx];
-                          if (newItem.isAccessible === false) {
-                             setLockedTargetExam(newItem);
-                             setShowPaywallModal(true);
-                             toast.error("🔒 Subscription required for this exercise");
-                             return;
-                          }
-                          setCurrentPassageIndex(newIdx);
-                          setCurrentExam(newItem);
-                          setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
-                          setInternalLanguage(newItem.language || config.language || 'English');
-                          updateSettings({ duration: internalDuration, language: newItem.language || config.language });
+                          selectExercise(passagesList[newIdx], newIdx);
                        }
                     }}
                     disabled={currentPassageIndex <= 0 || (isActive && !isFinished && typedText.length > 0)}
@@ -514,19 +529,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     value={currentPassageIndex}
                     onChange={(e) => {
                        const newIdx = Number(e.target.value);
-                       const newItem = passagesList[newIdx];
-                       if (newItem.isAccessible === false) {
-                          setLockedTargetExam(newItem);
-                          setShowPaywallModal(true);
-                          toast.error("🔒 Subscription required for this exercise");
-                          return;
-                       }
-                       setCurrentPassageIndex(newIdx);
-                        setCurrentExam(newItem);
-                        setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
-                        setInternalLanguage(newItem.language || config.language || 'English');
-                        updateSettings({ duration: internalDuration, language: newItem.language || config.language });
-
+                       selectExercise(passagesList[newIdx], newIdx);
                     }}
                     disabled={isActive && !isFinished && typedText.length > 0}
                     className="border border-gray-400 px-2 py-1 bg-white outline-none flex-1 focus:ring-2 focus:ring-blue-500 min-w-0 truncate cursor-pointer font-medium text-slate-800"
@@ -534,11 +537,12 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     {passagesList.length > 0 ? (
                       passagesList.map((p, i) => {
                          const isLocked = p.isAccessible === false;
+                         const langTag = p.language?.toLowerCase().includes('hindi') ? '[HI]' : '[EN]';
                          const titleText = p.title || `Passage ${i + 1}`;
-                         const truncated = titleText.length > 28 ? titleText.substring(0, 28) + '...' : titleText;
+                         const truncated = titleText.length > 25 ? titleText.substring(0, 25) + '...' : titleText;
                          const displayLabel = isBookPractice 
-                            ? `Ch. ${i + 1}/${passagesList.length} - ${truncated} ${isLocked ? '🔒 (Locked)' : ''}` 
-                            : `Exercise: ${i + 1}/${passagesList.length} - ${truncated} ${isLocked ? '🔒 (Locked)' : ''}`;
+                            ? `Ch. ${i + 1}/${passagesList.length} ${langTag} - ${truncated} ${isLocked ? '🔒 (Locked)' : ''}` 
+                            : `Exercise: ${i + 1}/${passagesList.length} ${langTag} - ${truncated} ${isLocked ? '🔒 (Locked)' : ''}`;
 
                          return (
                             <option key={p._id || i} value={i}>
@@ -554,18 +558,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     onClick={() => {
                        if (currentPassageIndex < passagesList.length - 1) {
                           const newIdx = currentPassageIndex + 1;
-                          const newItem = passagesList[newIdx];
-                          if (newItem.isAccessible === false) {
-                             setLockedTargetExam(newItem);
-                             setShowPaywallModal(true);
-                             toast.error("🔒 Subscription required for this exercise");
-                             return;
-                          }
-                          setCurrentPassageIndex(newIdx);
-                           setCurrentExam(newItem);
-                           setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
-                           setInternalLanguage(newItem.language || config.language || 'English');
-                           updateSettings({ duration: internalDuration, language: newItem.language || config.language });
+                          selectExercise(passagesList[newIdx], newIdx);
                        }
                     }}
                     disabled={currentPassageIndex >= passagesList.length - 1 || (isActive && !isFinished && typedText.length > 0)}

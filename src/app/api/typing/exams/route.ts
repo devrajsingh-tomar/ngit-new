@@ -53,18 +53,13 @@ export async function GET(req: NextRequest) {
     const query: any = { status: "Active" };
 
     // Only apply date constraints for general timed live contests when not fetching all active practice tests
-    if (!govExamId && !bookId && !includeAll) {
+    if (!govExamId && !category && !bookId && !includeAll) {
         query.startTime = { $lte: now };
         query.endTime = { $gte: now };
     }
 
-    if (category && category !== "All") {
-      query.category = category;
-    }
-
-    if (lang) {
+    if (lang && lang !== "All" && lang !== "undefined" && lang !== "null") {
       // If the language param is any Hindi variant, match ALL Hindi variants
-      // so exercises from 'Unicode Hindi', 'Mangal Hindi', 'Krutidev Hindi', and 'Hindi' are all grouped together
       if (lang.toLowerCase().includes('hindi')) {
         query.language = { $regex: /hindi/i };
       } else {
@@ -76,8 +71,18 @@ export async function GET(req: NextRequest) {
       query.bookId = bookId;
     }
 
-    if (govExamId && govExamId !== "null" && govExamId !== "undefined") {
-      query.govExamId = govExamId;
+    const validGovExamId = govExamId && govExamId !== "null" && govExamId !== "undefined" && govExamId !== "[object Object]" ? govExamId : null;
+    const validCategory = category && category !== "All" && category !== "undefined" && category !== "null" ? category : null;
+
+    if (validGovExamId && validCategory) {
+      query.$or = [
+        { govExamId: validGovExamId },
+        { category: validCategory }
+      ];
+    } else if (validGovExamId) {
+      query.govExamId = validGovExamId;
+    } else if (validCategory) {
+      query.category = validCategory;
     } else if (govExamId === "null") {
       query.$or = [
         { govExamId: null },
@@ -85,7 +90,7 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    if (difficulty) {
+    if (difficulty && difficulty !== "All") {
       query.difficulty = difficulty;
     }
 
