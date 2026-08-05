@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle, Award, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle, Award, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,7 @@ export default function AdminTypingDashboard() {
   const [showWordSetModal, setShowWordSetModal] = useState(false);
   const [showGovExamModal, setShowGovExamModal] = useState(false);
   const [showRulePresetModal, setShowRulePresetModal] = useState(false);
+  const [propagateTarget, setPropagateTarget] = useState<any>(null); // { _id, title } of gov exam to propagate
   const [activeTab, setActiveTab] = useState("exams");
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
@@ -362,6 +363,32 @@ export default function AdminTypingDashboard() {
     } catch {
       toast.error("Network error. Could not delete exam.");
     }
+  };
+
+  const handlePropagateExamMode = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!propagateTarget) return;
+    setSubmitting(true);
+    const fd = new FormData(e.currentTarget);
+    const examMode = fd.get("examMode") as string;
+    const duration = fd.get("duration") as string;
+    try {
+      const res = await fetch(`/api/admin/typing/gov-exams/${propagateTarget._id}/propagate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examMode, duration: duration ? Number(duration) : undefined }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`✅ ${data.modifiedCount} exams updated to ${examMode} mode (${propagateTarget.title})`);
+        setPropagateTarget(null);
+      } else {
+        toast.error(data.error || "Propagation failed");
+      }
+    } catch {
+      toast.error("Network error during propagation.");
+    }
+    setSubmitting(false);
   };
 
   const handleAddLanguage = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -793,6 +820,7 @@ export default function AdminTypingDashboard() {
                               </td>
                               <td className="px-6 py-4 text-right">
                                  <div className="flex items-center justify-end gap-2">
+                                    <button title="Set Exam Mode for all tests" onClick={() => setPropagateTarget(exam)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50/60 rounded-xl transition-all"><Zap className="w-4 h-4"/></button>
                                     <button onClick={() => { setEditingGovExam(exam); setModalLogo(exam.logo || ""); setShowGovExamModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/60 rounded-xl transition-all"><Edit2 className="w-4 h-4"/></button>
                                     <button onClick={() => handleDeleteGovExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50/60 rounded-xl transition-all"><Trash2 className="w-4 h-4"/></button>
                                  </div>
@@ -1709,6 +1737,47 @@ export default function AdminTypingDashboard() {
                     <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-5 py-2.5 shadow-md shadow-indigo-100 hover:shadow-lg transition-all active:scale-[0.98]">Save Changes</Button>
                  </div>
               </form>
+          </div>
+        </div>
+      )}
+      {/* PROPAGATE EXAM MODE MODAL */}
+      {propagateTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-slate-100/80 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100/80 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2"><Zap className="w-5 h-5 text-amber-500"/> Propagate Exam Mode</h2>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Apply settings to ALL tests under <span className="text-indigo-600 font-bold">{propagateTarget.title}</span></p>
+              </div>
+              <button onClick={() => setPropagateTarget(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
+            </div>
+            <form onSubmit={handlePropagateExamMode} className="p-6 space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase">Exam Mode</label>
+                <select name="examMode" required className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200">
+                  <option value="AHC">AHC (Allahabad High Court RO/ARO)</option>
+                  <option value="General">General</option>
+                  <option value="UPSSSC">UPSSSC / Junior Assistant</option>
+                  <option value="UP_POLICE">UP Police ASI/CO</option>
+                  <option value="CPCT">CPCT</option>
+                  <option value="SSC">SSC</option>
+                  <option value="Court">Court Typing</option>
+                  <option value="Steno">Steno</option>
+                </select>
+                <p className="text-[10px] text-slate-400 font-semibold">This sets the scoring/result calculation method for all tests under this exam.</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase">Duration (Minutes) — leave blank to keep existing</label>
+                <input type="number" name="duration" min="1" max="120" placeholder="e.g. 20 for AHC RO/ARO" className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" />
+              </div>
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                <p className="text-xs font-bold text-amber-700">⚠️ This will update examMode on ALL typing tests under <strong>{propagateTarget.title}</strong>. This action cannot be undone.</p>
+              </div>
+              <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                <Button type="button" variant="outline" onClick={() => setPropagateTarget(null)} className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl px-5 py-2.5 transition-all">Cancel</Button>
+                <Button type="submit" disabled={submitting} className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl px-5 py-2.5 shadow-md shadow-amber-100 hover:shadow-lg transition-all active:scale-[0.98] flex items-center gap-2"><Zap className="w-4 h-4"/> Apply to All Tests</Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
