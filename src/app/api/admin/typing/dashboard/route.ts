@@ -9,6 +9,7 @@ import CurrentPassage from "@/models/CurrentPassage";
 import TypingResult from "@/models/TypingResult";
 import TypingBook from "@/models/TypingBook";
 import GovExam from "@/models/GovExam";
+import GovExamCategory from "@/models/GovExamCategory";
 import TypingRulePreset from "@/models/TypingRulePreset";
 import TypingLanguage from "@/models/TypingLanguage";
 import TypingDifficulty from "@/models/TypingDifficulty";
@@ -91,7 +92,7 @@ export async function GET() {
       }
     }
 
-    const [passages, exams, categories, wordSets, essays, current, books, govExams, rulePresets, topics, settings] = await Promise.all([
+    const [passages, exams, categories, wordSets, essays, current, books, govExams, rulePresets, topics, settings, govCategories] = await Promise.all([
       TypingPassage.find().populate({ path: "bookId", model: "TypingBook" }).sort({ createdAt: -1 }),
       TypingExam.find()
         .populate("passageId")
@@ -108,7 +109,8 @@ export async function GET() {
       GovExam.find().sort({ title: 1 }),
       TypingRulePreset.find().populate("govExamId").sort({ name: 1 }),
       TypingTopic.find().sort({ category: 1, name: 1 }),
-      TypingSetting.find().sort({ key: 1 })
+      TypingSetting.find().sort({ key: 1 }),
+      GovExamCategory.find().populate("govExamId").sort({ name: 1 })
     ]);
 
     // Fetch results separately to prevent user population errors blocking the dashboard
@@ -133,7 +135,8 @@ export async function GET() {
       languages,
       difficulties,
       topics,
-      settings
+      settings,
+      govCategories
     });
   } catch (error: any) {
     console.error("DASHBOARD_FETCH_ERROR:", {

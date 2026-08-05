@@ -25,9 +25,12 @@ export default function AdminTypingDashboard() {
   const [difficulties, setDifficulties] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
   const [settings, setSettings] = useState<any[]>([]);
+  const [govCategories, setGovCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // UI States
+  const [showGovCategoryModal, setShowGovCategoryModal] = useState(false);
+  const [editingGovCategory, setEditingGovCategory] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list" | "table">("list");
   
@@ -136,6 +139,7 @@ export default function AdminTypingDashboard() {
       setDifficulties(data.difficulties || []);
       setTopics(data.topics || []);
       setSettings(data.settings || []);
+      setGovCategories(data.govCategories || []);
       setLoading(false);
     } catch (error) {
       toast.error("Failed to refresh data");
@@ -362,6 +366,53 @@ export default function AdminTypingDashboard() {
       }
     } catch {
       toast.error("Network error. Could not delete exam.");
+    }
+  };
+
+  const handleAddGovCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const fd = new FormData(e.currentTarget);
+    const data: any = Object.fromEntries(fd.entries());
+    data.active = fd.get('active') === 'on';
+    data.allowHalfMistakes = fd.get('allowHalfMistakes') === 'on';
+
+    try {
+      if (editingGovCategory) {
+        const res = await fetch(`/api/admin/typing/gov-exam-categories/${editingGovCategory._id}`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        toast.success("Updated Sub-Category!");
+      } else {
+        const res = await fetch("/api/admin/typing/gov-exam-categories", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        toast.success("Added Sub-Category!");
+      }
+      setShowGovCategoryModal(false);
+      setEditingGovCategory(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteGovCategory = async (id: string) => {
+    if (!confirm("Delete Sub-Category? This will unlink existing tests.")) return;
+    try {
+      const res = await fetch(`/api/admin/typing/gov-exam-categories/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Sub-Category deleted.");
+        fetchData();
+      } else {
+        toast.error("Failed to delete category.");
+      }
+    } catch {
+      toast.error("Network error.");
     }
   };
 
@@ -658,6 +709,7 @@ export default function AdminTypingDashboard() {
               <TabsList className="flex w-max bg-transparent p-0 gap-1 rounded-none border-0 h-auto overflow-x-auto scrollbar-none">
                 <TabsTrigger value="exams" className="rounded-xl font-bold text-xs px-4 py-2.5 text-slate-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/10 hover:text-slate-900 transition-all duration-200 border border-transparent">Published Tests</TabsTrigger>
                 <TabsTrigger value="gov-exams" className="rounded-xl font-bold text-xs px-4 py-2.5 text-slate-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/10 hover:text-slate-900 transition-all duration-200 border border-transparent">Exam Library</TabsTrigger>
+                <TabsTrigger value="gov-categories" className="rounded-xl font-bold text-xs px-4 py-2.5 text-slate-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/10 hover:text-slate-900 transition-all duration-200 border border-transparent">Sub-Categories</TabsTrigger>
                 <TabsTrigger value="rule-presets" className="rounded-xl font-bold text-xs px-4 py-2.5 text-slate-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/10 hover:text-slate-900 transition-all duration-200 border border-transparent">Exam Patterns</TabsTrigger>
                 <TabsTrigger value="passages" className="rounded-xl font-bold text-xs px-4 py-2.5 text-slate-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/10 hover:text-slate-900 transition-all duration-200 border border-transparent">Passages</TabsTrigger>
                 <TabsTrigger value="books" className="rounded-xl font-bold text-xs px-4 py-2.5 text-slate-500 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-indigo-500/10 hover:text-slate-900 transition-all duration-200 border border-transparent">Books</TabsTrigger>
@@ -1201,7 +1253,57 @@ export default function AdminTypingDashboard() {
                 ))}
              </div>
           </TabsContent>
-        </Tabs>
+
+           <TabsContent value="gov-categories" className="mt-0">
+              <div className="mb-4 flex justify-end">
+                 <Button onClick={() => { setEditingGovCategory(null); setShowGovCategoryModal(true); }} className="bg-slate-900 hover:bg-black text-white font-bold h-10 px-4 rounded-xl text-sm shadow-sm transition-all duration-200 active:scale-[0.98] flex items-center gap-2"><Plus className="w-4 h-4 mr-1 stroke-[3px]"/> Add Sub-Category</Button>
+              </div>
+              <div className="bg-white border border-slate-200/80 rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
+                 <div className="overflow-x-auto">
+                     <table className="w-full text-left border-collapse text-sm min-w-[1000px]">
+                       <thead>
+                         <tr className="bg-slate-50/50 border-b border-slate-200/80">
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Gov Exam</th>
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Category Name</th>
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Exam Mode</th>
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Duration</th>
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Requirements</th>
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest text-right">Actions</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {govCategories.map(cat => (
+                           <tr key={cat._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/40 transition-colors">
+                             <td className="px-6 py-4 font-bold text-slate-600">{cat.govExamId?.title || "N/A"}</td>
+                             <td className="px-6 py-4 font-black text-slate-900">{cat.name}</td>
+                             <td className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{cat.examMode}</td>
+                             <td className="px-6 py-4 text-slate-700 font-bold">{cat.duration} Min</td>
+                             <td className="px-6 py-4 text-xs text-slate-600">
+                               {cat.examMode === "AHC" ? (
+                                 <span>Marks: {cat.totalMarks} (Pass: {cat.qualifyingMarks}) • WPM: ≥{cat.minWpm}</span>
+                               ) : (
+                                 <span>WPM: ≥{cat.minWpm} • Acc: ≥{cat.minAccuracy}%</span>
+                               )}
+                             </td>
+                             <td className="px-6 py-4 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                   <button onClick={() => { setEditingGovCategory(cat); setShowGovCategoryModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/60 rounded-xl transition-all"><Edit2 className="w-4 h-4"/></button>
+                                   <button onClick={() => handleDeleteGovCategory(cat._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50/60 rounded-xl transition-all"><Trash2 className="w-4 h-4"/></button>
+                                </div>
+                             </td>
+                           </tr>
+                         ))}
+                         {govCategories.length === 0 && (
+                           <tr>
+                             <td colSpan={6} className="p-12 text-center text-slate-400 font-medium text-sm">No sub-categories defined. Add a sub-category under your Gov Exams.</td>
+                           </tr>
+                         )}
+                       </tbody>
+                     </table>
+                 </div>
+              </div>
+           </TabsContent>
+         </Tabs>
       </div>
 
       {/* GORGEOUS GUIDED WIZARD MODAL FOR PUBLISHING TESTS */}
@@ -2090,6 +2192,108 @@ export default function AdminTypingDashboard() {
                    <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-5 py-2.5 shadow-md shadow-indigo-100 hover:shadow-lg transition-all active:scale-[0.98]">Create Topic</Button>
                 </div>
              </form>
+          </div>
+        </div>
+      )}
+
+      {/* GOV EXAM CATEGORY MODAL */}
+      {showGovCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100/80 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+             <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white/95 shrink-0">
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">{editingGovCategory ? "Edit Sub-Category" : "Add Sub-Category"}</h2>
+                <button onClick={() => { setShowGovCategoryModal(false); setEditingGovCategory(null); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
+             </div>
+             <form 
+               key={editingGovCategory?._id || 'new-gov-category'}
+               onSubmit={handleAddGovCategory} 
+               className="p-6 space-y-5 overflow-y-auto flex-1 scrollbar-thin"
+             >
+                 <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Parent Gov Exam</label>
+                    <select name="govExamId" defaultValue={editingGovCategory?.govExamId?._id || editingGovCategory?.govExamId || ""} required className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 bg-white">
+                       <option value="">Select Parent Exam...</option>
+                       {govExams.map(gov => <option key={gov._id} value={gov._id}>{gov.title}</option>)}
+                    </select>
+                 </div>
+                 <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Sub-Category Name</label>
+                    <input name="name" defaultValue={editingGovCategory?.name} required placeholder="e.g. RO/ARO, Clerk, Typist" className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" />
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-500 uppercase">Exam Mode / Rules</label>
+                       <select name="examMode" defaultValue={editingGovCategory?.examMode || "General"} className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200">
+                          <option value="General">General</option>
+                          <option value="AHC">AHC (Allahabad High Court)</option>
+                          <option value="UPSSSC">UPSSSC</option>
+                          <option value="UP_POLICE">UP Police</option>
+                          <option value="CPCT">CPCT</option>
+                          <option value="SSC">SSC</option>
+                          <option value="Court">Court Typing</option>
+                          <option value="Steno">Steno</option>
+                       </select>
+                    </div>
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-500 uppercase">Duration (Minutes)</label>
+                       <input type="number" name="duration" defaultValue={editingGovCategory?.duration || 10} required className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" />
+                    </div>
+                 </div>
+
+                 <div className="bg-slate-50/80 p-4.5 rounded-2xl border border-slate-100 space-y-4">
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider border-b pb-1.5 border-slate-200">Scoring &amp; Passing Parameters</h3>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Total Marks</label>
+                          <input type="number" name="totalMarks" defaultValue={editingGovCategory?.totalMarks || 0} placeholder="e.g. 50" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none bg-white" />
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Passing Marks</label>
+                          <input type="number" name="qualifyingMarks" defaultValue={editingGovCategory?.qualifyingMarks || 0} placeholder="e.g. 25" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none bg-white" />
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Penalty/Error</label>
+                          <input type="number" step="0.01" name="errorPenalty" defaultValue={editingGovCategory?.errorPenalty || 0} placeholder="e.g. 0.1" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none bg-white" />
+                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Minimum WPM</label>
+                          <input type="number" name="minWpm" defaultValue={editingGovCategory?.minWpm || 30} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none bg-white" />
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Min Accuracy (%)</label>
+                          <input type="number" name="minAccuracy" defaultValue={editingGovCategory?.minAccuracy || 85} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none bg-white" />
+                       </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <input type="checkbox" name="allowHalfMistakes" id="allowHalfMistakes" defaultChecked={editingGovCategory ? editingGovCategory.allowHalfMistakes : true} className="w-4 h-4 text-indigo-650 rounded-lg border-slate-350" />
+                        <label htmlFor="allowHalfMistakes" className="text-xs font-bold text-slate-700 cursor-pointer">Allow Half-Mistakes (capitalization/punctuation counts as 0.5 error)</label>
+                    </div>
+                 </div>
+
+                 <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Description</label>
+                    <textarea 
+                      name="description" 
+                      defaultValue={editingGovCategory?.description} 
+                      placeholder="Category description..." 
+                      className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 min-h-[60px]"
+                    />
+                 </div>
+                 
+                 <div className="flex items-center gap-3">
+                     <input type="checkbox" name="active" id="cat-active" defaultChecked={editingGovCategory ? editingGovCategory.active : true} className="w-4 h-4 text-indigo-650 rounded-lg border-slate-350" />
+                     <label htmlFor="cat-active" className="text-sm font-bold text-slate-700 cursor-pointer">Active</label>
+                 </div>
+                 <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <Button type="button" variant="outline" onClick={() => { setShowGovCategoryModal(false); setEditingGovCategory(null); }} className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl px-5 py-2.5 transition-all">Cancel</Button>
+                    <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-5 py-2.5 shadow-md shadow-indigo-100 hover:shadow-lg transition-all active:scale-[0.98]">Save Changes</Button>
+                 </div>
+              </form>
           </div>
         </div>
       )}
