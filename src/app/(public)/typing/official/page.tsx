@@ -25,11 +25,8 @@ export default async function TypingExamsPage({ searchParams: searchParamsPromis
     };
   }));
 
-  // Filter to only show exams with at least 1 active test
-  // and sort by test count (highest first) so available exams are on top
-  const activeExams = examsWithCounts
-    .filter(exam => exam.testCount > 0)
-    .sort((a, b) => b.testCount - a.testCount);
+  // Sort exams by test count (highest first) so available exams are on top
+  const activeExams = examsWithCounts.sort((a, b) => b.testCount - a.testCount);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans py-12 px-4 sm:px-6 lg:px-8">

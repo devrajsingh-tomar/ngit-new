@@ -1,6 +1,7 @@
 import React from "react";
 import connectDB from "@/lib/db";
 import GovExam from "@/models/GovExam";
+import GovExamCategory from "@/models/GovExamCategory";
 import TypingExam from "@/models/TypingExam";
 import TypingExamAccess from "@/models/TypingExamAccess";
 import StartOrUnlockButton from "@/components/typing/StartOrUnlockButton";
@@ -57,9 +58,15 @@ export default async function TestSelectionPage({
   
   if (!exam) return notFound();
 
-  // Determine the 3 free exams for this category (3 oldest active ones under this govExamId)
+  // Determine the 3 free exams for this category (3 oldest active ones under this govExamId or its categories)
+  const parentCategories = await GovExamCategory.find({ govExamId: exam._id }).select("_id").lean();
+  const categoryIds = parentCategories.map(c => c._id);
+
   const freeExams = await TypingExam.find({ 
-    govExamId: exam._id,
+    $or: [
+      { govExamId: exam._id },
+      { govExamCategoryId: { $in: categoryIds } }
+    ],
     status: { $ne: "Inactive" }
   })
     .sort({ createdAt: 1 })
@@ -77,7 +84,10 @@ export default async function TestSelectionPage({
   const langFilter = isHindi ? { $regex: /hindi/i } : langFormatted;
 
   const query = {
-    govExamId: exam._id,
+    $or: [
+      { govExamId: exam._id },
+      { govExamCategoryId: { $in: categoryIds } }
+    ],
     language: langFilter,
     difficulty: diffFormatted,
     status: { $ne: "Inactive" }

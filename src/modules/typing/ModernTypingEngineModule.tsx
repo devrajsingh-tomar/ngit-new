@@ -127,12 +127,23 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
             }
         }
         
+        let cId: string | null = null;
+        if (exam.govExamCategoryId) {
+            if (typeof exam.govExamCategoryId === 'string') {
+                cId = exam.govExamCategoryId;
+            } else if (typeof exam.govExamCategoryId === 'object' && exam.govExamCategoryId !== null) {
+                cId = (exam.govExamCategoryId as any)._id?.toString() || (exam.govExamCategoryId as any).id?.toString() || null;
+            }
+        }
+        
         const catVal = exam.category || (typeof exam.govExamId === 'object' && exam.govExamId ? ((exam.govExamId as any).category || (exam.govExamId as any).title) : '') || '';
         const cat = catVal ? encodeURIComponent(catVal) : '';
         const rawLang = exam.language || config.language || 'English';
         const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : 'English';
 
-        if (gId && cat) {
+        if (cId) {
+            query = `?govExamCategoryId=${cId}&language=${queryLang}&all=true`;
+        } else if (gId && cat) {
             query = `?govExamId=${gId}&category=${cat}&language=${queryLang}&all=true`;
         } else if (gId) {
             query = `?govExamId=${gId}&language=${queryLang}&all=true`;

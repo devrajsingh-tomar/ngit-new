@@ -35,8 +35,8 @@ export default async function LanguageSelectionPage({ params: paramsPromise }: {
     status: { $ne: "Inactive" }
   });
 
-  const hasEnglish = rawLanguages.some((l: string) => l.toLowerCase().includes("english"));
-  const hasHindi = rawLanguages.some((l: string) => l.toLowerCase().includes("hindi"));
+  const hasEnglish = rawLanguages.length === 0 || rawLanguages.some((l: string) => l.toLowerCase().includes("english"));
+  const hasHindi = rawLanguages.length === 0 || rawLanguages.some((l: string) => l.toLowerCase().includes("hindi"));
 
   const allLanguages = [
     { id: "English", name: "English Typing", icon: "⌨️", description: "Standard QWERTY layout practice" },

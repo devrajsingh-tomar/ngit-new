@@ -1,6 +1,7 @@
 import React from "react";
 import connectDB from "@/lib/db";
 import GovExam from "@/models/GovExam";
+import GovExamCategory from "@/models/GovExamCategory";
 import TypingExam from "@/models/TypingExam";
 import Link from "next/link";
 import { ArrowLeft, Zap, Target, Flame } from "lucide-react";
@@ -37,11 +38,18 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
     ? { $regex: /hindi/i } 
     : langFormatted;
 
+  // Find categories
+  const parentCategories = await GovExamCategory.find({ govExamId: exam._id }).select("_id").lean();
+  const categoryIds = parentCategories.map(c => c._id);
+
   // Find which difficulties actually have tests for this exam + language
   const availableDifficulties = await TypingExam.distinct("difficulty", { 
-    govExamId: exam._id,
+    $or: [
+      { govExamId: exam._id },
+      { govExamCategoryId: { $in: categoryIds } }
+    ],
     language: langFilter,
-    status: "Active"
+    status: { $ne: "Inactive" }
   });
 
   const allDifficulties = [
@@ -71,7 +79,9 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
     }
   ];
 
-  const difficulties = allDifficulties.filter(diff => availableDifficulties.includes(diff.id));
+  const difficulties = allDifficulties.filter(diff => 
+    availableDifficulties.length === 0 ? true : availableDifficulties.includes(diff.id)
+  );
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans py-12 px-4 sm:px-6 lg:px-8">

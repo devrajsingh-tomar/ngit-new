@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
     const lang = searchParams.get("language") || searchParams.get("lang");
     const bookId = searchParams.get("bookId");
     const govExamId = searchParams.get("govExamId");
+    const govExamCategoryId = searchParams.get("govExamCategoryId");
     const difficulty = searchParams.get("difficulty");
     
     const includeAll = searchParams.get("all") === "true";
@@ -53,8 +54,16 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const query: any = { status: { $ne: "Inactive" } };
 
+    if (govExamCategoryId && govExamCategoryId !== "null" && govExamCategoryId !== "undefined") {
+      if (mongoose.Types.ObjectId.isValid(govExamCategoryId)) {
+        query.govExamCategoryId = new mongoose.Types.ObjectId(govExamCategoryId);
+      } else {
+        query.govExamCategoryId = govExamCategoryId;
+      }
+    }
+
     // Only apply date constraints for general timed live contests when not fetching all active practice tests
-    if (!govExamId && !category && !bookId && !includeAll) {
+    if (!govExamId && !govExamCategoryId && !category && !bookId && !includeAll) {
         query.startTime = { $lte: now };
         query.endTime = { $gte: now };
     }
