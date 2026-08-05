@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, User, Mail, Phone, CheckCircle2, XCircle } from "lucide-react";
+import { Search, User, Mail, Phone, CheckCircle2, XCircle, Download } from "lucide-react";
 import { toast } from "sonner";
 import { getWebsiteUsers } from "@/app/actions/registration";
 
@@ -48,6 +48,35 @@ export default function WebsiteUsersPage() {
         );
     });
 
+    const handleDownloadCSV = () => {
+        if (!filtered || filtered.length === 0) {
+            toast.error("No user data available to download");
+            return;
+        }
+
+        const headers = ["User ID", "Full Name", "Email Address", "Mobile Number", "Status", "Registered Date & Time"];
+        
+        const rows = filtered.map(u => [
+            `"${u._id}"`,
+            `"${u.name.replace(/"/g, '""')}"`,
+            `"${u.email.replace(/"/g, '""')}"`,
+            `"${u.mobile || 'N/A'}"`,
+            `"${u.isActive ? 'Active' : 'Inactive'}"`,
+            `"${new Date(u.createdAt).toLocaleString('en-IN')}"`
+        ]);
+
+        const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `website_users_${new Date().toISOString().split("T")[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(`Successfully downloaded ${filtered.length} user records!`);
+    };
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -71,7 +100,7 @@ export default function WebsiteUsersPage() {
 
             {/* Table Card */}
             <div className="bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
-                {/* Search */}
+                {/* Search & Actions */}
                 <div className="p-8 border-b bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -82,6 +111,14 @@ export default function WebsiteUsersPage() {
                             className="w-full h-12 bg-white border rounded-xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                         />
                     </div>
+
+                    <button
+                        onClick={handleDownloadCSV}
+                        disabled={loading || filtered.length === 0}
+                        className="w-full md:w-auto px-6 py-3.5 bg-slate-900 hover:bg-black text-white font-black rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Download className="w-4 h-4" /> Download Users Data (CSV)
+                    </button>
                 </div>
 
                 {loading ? (
@@ -91,7 +128,7 @@ export default function WebsiteUsersPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                        <table className="w-full text-left min-w-[900px]">
                             <thead>
                                 <tr className="border-b">
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">User Details</th>
