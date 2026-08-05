@@ -120,7 +120,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         return;
     }
 
-    // For Gov / Special exams: fetch all related exercises in that exam stream
+    // For Gov / Special exams: fetch all related exercises in that language stream
     let query = '';
     if (exam) {
         let gId: string | null = null;
@@ -133,15 +133,17 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         }
         
         const cat = exam.category ? encodeURIComponent(exam.category) : '';
+        const rawLang = exam.language || config.language || 'English';
+        const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : 'English';
 
         if (gId && cat) {
-            query = `?govExamId=${gId}&category=${cat}&all=true`;
+            query = `?govExamId=${gId}&category=${cat}&language=${queryLang}&all=true`;
         } else if (gId) {
-            query = `?govExamId=${gId}&all=true`;
+            query = `?govExamId=${gId}&language=${queryLang}&all=true`;
         } else if (cat) {
-            query = `?category=${cat}&all=true`;
+            query = `?category=${cat}&language=${queryLang}&all=true`;
         } else {
-            query = `?all=true`;
+            query = `?language=${queryLang}&all=true`;
         }
     }
 

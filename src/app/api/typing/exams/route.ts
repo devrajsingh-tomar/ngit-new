@@ -59,11 +59,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (lang && lang !== "All" && lang !== "undefined" && lang !== "null") {
-      // If the language param is any Hindi variant, match ALL Hindi variants
       if (lang.toLowerCase().includes('hindi')) {
         query.language = { $regex: /hindi/i };
+      } else if (lang.toLowerCase().includes('english')) {
+        query.language = { $regex: /english/i };
       } else {
-        query.language = { $regex: new RegExp(`^${lang}$`, 'i') };
+        query.language = { $regex: new RegExp(lang, 'i') };
       }
     }
 
