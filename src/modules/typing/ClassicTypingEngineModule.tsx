@@ -125,13 +125,15 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     if (exam) {
         const rawLang = exam.language || config.language || '';
         const queryLang = rawLang.toLowerCase().includes('hindi') ? 'Hindi' : rawLang;
-        if (exam.govExamId) {
-            const gId = typeof exam.govExamId === 'object' ? (exam.govExamId._id || exam.govExamId) : exam.govExamId;
-            query = `?govExamId=${gId}&language=${queryLang}`;
+        
+        const gId = exam.govExamId?._id?.toString() || (typeof exam.govExamId === 'string' ? exam.govExamId : (typeof exam.govExamId === 'object' && exam.govExamId ? (exam.govExamId._id || exam.govExamId) : null));
+        
+        if (gId) {
+            query = `?govExamId=${gId}&language=${queryLang}&all=true`;
         } else if (exam.category) {
-            query = `?category=${encodeURIComponent(exam.category)}&language=${queryLang}`;
+            query = `?category=${encodeURIComponent(exam.category)}&language=${queryLang}&all=true`;
         } else {
-            query = `?language=${queryLang}`;
+            query = `?language=${queryLang}&all=true`;
         }
     }
 

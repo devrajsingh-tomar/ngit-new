@@ -47,12 +47,13 @@ export async function GET(req: NextRequest) {
     const govExamId = searchParams.get("govExamId");
     const difficulty = searchParams.get("difficulty");
     
+    const includeAll = searchParams.get("all") === "true";
+    
     const now = new Date();
     const query: any = { status: "Active" };
 
-    // Only apply date constraints for general timed exams, 
-    // allow practice flow to access all active tests.
-    if (!govExamId && !bookId) {
+    // Only apply date constraints for general timed live contests when not fetching all active practice tests
+    if (!govExamId && !bookId && !includeAll) {
         query.startTime = { $lte: now };
         query.endTime = { $gte: now };
     }
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
       if (lang.toLowerCase().includes('hindi')) {
         query.language = { $regex: /hindi/i };
       } else {
-        query.language = lang;
+        query.language = { $regex: new RegExp(`^${lang}$`, 'i') };
       }
     }
 
