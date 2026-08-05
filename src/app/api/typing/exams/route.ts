@@ -7,11 +7,37 @@ import "@/models/TypingRulePreset";
 import "@/models/GovExam";
 import TypingResult from "@/models/TypingResult";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import TypingSubscription from "@/models/TypingSubscription";
+import TypingExamAccess from "@/models/TypingExamAccess";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
+    
+    const session = await getServerSession(authOptions);
+    let hasFullAccess = false;
+    let legacyAccessList: string[] = [];
+
+    if (session) {
+      const activeSub = await TypingSubscription.findOne({
+        userId: session.user.id,
+        status: "ACTIVE",
+        endDate: { $gt: new Date() }
+      });
+      if (activeSub) {
+        hasFullAccess = true;
+      } else {
+        const legacyAccess = await TypingExamAccess.find({
+          userId: session.user.id,
+          status: "SUCCESS"
+        }).select("examId").lean();
+        legacyAccessList = legacyAccess.map(a => a.examId.toString());
+      }
+    }
     
     // Use req.nextUrl for safer access to searchParams in Next.js
     const searchParams = req.nextUrl.searchParams;
@@ -81,14 +107,60 @@ export async function GET(req: NextRequest) {
     }
 
     // Add participant count to each exam (only run database queries if list size is small)
+    // Find all distinct govExamIds in the retrieved list (plus null/undefined)
+    const govExamIds = Array.from(new Set(exams.map(e => e.govExamId?.toString()).filter(Boolean)));
+    const freeExamIdsSet = new Set<string>();
+    
+    // 3 oldest with null/undefined govExamId
+    const freeNullExams = await TypingExam.find({
+      status: "Active",
+      $or: [
+        { govExamId: null },
+        { govExamId: { $exists: false } }
+      ]
+    })
+    .sort({ createdAt: 1 })
+    .limit(3)
+    .select("_id")
+    .lean();
+    freeNullExams.forEach(e => freeExamIdsSet.add(e._id.toString()));
+    
+    // 3 oldest for each distinct govExamId
+    for (const gId of govExamIds) {
+      const freeGovExams = await TypingExam.find({
+        status: "Active",
+        govExamId: gId
+      })
+      .sort({ createdAt: 1 })
+      .limit(3)
+      .select("_id")
+      .lean();
+      freeGovExams.forEach(e => freeExamIdsSet.add(e._id.toString()));
+    }
+
     const isLargeList = exams.length > 50;
     const examsWithCounts = await Promise.all(exams.map(async (exam) => {
       if (!exam) return null;
+      
+      const isFree = freeExamIdsSet.has(exam._id.toString());
+      const isAccessible = hasFullAccess || isFree || legacyAccessList.includes(exam._id.toString());
+      
       let count = 0;
       if (!isLargeList) {
         count = await TypingResult.countDocuments({ examId: exam._id });
       }
-      return { ...exam.toObject(), participantCount: count };
+      
+      const examObj = exam.toObject();
+      if (!isAccessible && examObj.passageId) {
+        examObj.passageId.content = ""; // Clear content to prevent unauthorized access
+      }
+      
+      return { 
+        ...examObj, 
+        isFree,
+        isAccessible,
+        participantCount: count 
+      };
     }));
     
     return NextResponse.json(examsWithCounts.filter(Boolean));

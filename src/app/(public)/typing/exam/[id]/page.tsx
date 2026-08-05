@@ -80,10 +80,13 @@ export default function TypingExamPage() {
       .then(async res => {
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          if (res.status === 403 && errData.requiresPayment) {
+          if (res.status === 401) {
+            throw new Error("AUTH_REQUIRED");
+          }
+          if (res.status === 403 && (errData.requiresPayment || errData.requiresSubscription)) {
             throw new Error("PAYMENT_REQUIRED");
           }
-          throw new Error("Server responded with an error");
+          throw new Error(errData.error || "Server responded with an error");
         }
         return res.json();
       })
@@ -107,11 +110,14 @@ export default function TypingExamPage() {
         if (isMounted) {
           console.error("Fetch error in TypingExamPage:", err);
           setLoading(false);
-          if (err.message === "PAYMENT_REQUIRED") {
-            toast.error("This is a paid exam. Redirecting to selection page...");
-            router.push("/typing/official");
+          if (err.message === "AUTH_REQUIRED") {
+            toast.error("Please login to access this exam");
+            router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.href)}`);
+          } else if (err.message === "PAYMENT_REQUIRED") {
+            toast.error("This is a premium exam. Please purchase a subscription to access.");
+            router.push("/student/typing/subscribe");
           } else {
-            toast.error("Failed to connect to examination server");
+            toast.error(err.message || "Failed to connect to examination server");
           }
         }
       });

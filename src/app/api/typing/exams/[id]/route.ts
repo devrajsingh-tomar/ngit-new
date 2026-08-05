@@ -32,21 +32,32 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
-    // Determine the 3 free exams in this category (3 oldest active ones under this govExamId, or where govExamId is null/undefined)
-    const categoryQuery: any = { status: "Active" };
-    if (exam.govExamId) {
-      categoryQuery.govExamId = exam.govExamId;
+    // Determine if the exam is free:
+    // 1. Explicitly PAID -> not free
+    // 2. Explicitly FREE -> free
+    // 3. Fallback to oldest-3 active exams, excluding other explicit paid exams.
+    let isFree = false;
+    if (exam.pricing?.type === "PAID") {
+      isFree = false;
+    } else if (exam.pricing?.type === "FREE") {
+      isFree = true;
     } else {
-      categoryQuery.govExamId = { $in: [null, undefined] };
-    }
+      const categoryQuery: any = { status: "Active" };
+      if (exam.govExamId) {
+        categoryQuery.govExamId = exam.govExamId;
+      } else {
+        categoryQuery.govExamId = { $in: [null, undefined] };
+      }
+      categoryQuery["pricing.type"] = { $ne: "PAID" };
 
-    const freeExams = await TypingExam.find(categoryQuery)
-      .sort({ createdAt: 1 })
-      .limit(3)
-      .select("_id")
-      .lean();
-    const freeExamIds = freeExams.map(e => e._id.toString());
-    const isFree = freeExamIds.includes(exam._id.toString());
+      const freeExams = await TypingExam.find(categoryQuery)
+        .sort({ createdAt: 1 })
+        .limit(3)
+        .select("_id")
+        .lean();
+      const freeExamIds = freeExams.map(e => e._id.toString());
+      isFree = freeExamIds.includes(exam._id.toString());
+    }
 
     if (!isFree) {
       const session = await getServerSession(authOptions);

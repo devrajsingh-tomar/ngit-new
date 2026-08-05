@@ -203,9 +203,16 @@ export default async function TestSelectionPage({
                   const keystrokes = content.length;
                   const wordCount = content.trim().split(/\s+/).length;
 
-                  const isFree = freeExamIds.has(test._id.toString());
+                  let isFree = false;
+                  if (test.pricing?.type === "PAID") {
+                    isFree = false;
+                  } else if (test.pricing?.type === "FREE") {
+                    isFree = true;
+                  } else {
+                    isFree = freeExamIds.has(test._id.toString());
+                  }
                   const isPaid = !isFree;
-                  const isUnlocked = isSubscribed || unlockedExamIds.has(test._id.toString());
+                  const isUnlocked = isSubscribed || unlockedExamIds.has(test._id.toString()) || isFree;
                   const amount = 21; // Online subscription is 21 INR / month
 
                   return (

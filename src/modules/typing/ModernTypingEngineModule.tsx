@@ -482,8 +482,12 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                         onClick={() => {
                           if (currentPassageIndex > 0) {
                               const newIdx = currentPassageIndex - 1;
-                              setCurrentPassageIndex(newIdx);
                               const newItem = passagesList[newIdx];
+                              if (newItem.isAccessible === false) {
+                                  toast.error("This is a premium passage. Please subscribe to access.");
+                                  return;
+                              }
+                              setCurrentPassageIndex(newIdx);
                               setCurrentExam(newItem);
                               setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
                               setInternalLanguage(newItem.language || config.language || 'English');
@@ -497,8 +501,12 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                         value={currentPassageIndex}
                         onChange={(e) => {
                           const newIdx = Number(e.target.value);
-                          setCurrentPassageIndex(newIdx);
                           const newItem = passagesList[newIdx];
+                          if (newItem.isAccessible === false) {
+                              toast.error("This is a premium passage. Please subscribe to access.");
+                              return;
+                          }
+                          setCurrentPassageIndex(newIdx);
                           setCurrentExam(newItem);
                           setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
                           setInternalLanguage(newItem.language || config.language || 'English');
@@ -521,8 +529,12 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                         onClick={() => {
                           if (currentPassageIndex < passagesList.length - 1) {
                               const newIdx = currentPassageIndex + 1;
-                              setCurrentPassageIndex(newIdx);
                               const newItem = passagesList[newIdx];
+                              if (newItem.isAccessible === false) {
+                                  toast.error("This is a premium passage. Please subscribe to access.");
+                                  return;
+                              }
+                              setCurrentPassageIndex(newIdx);
                               setCurrentExam(newItem);
                               setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
                               setInternalLanguage(newItem.language || config.language || 'English');
