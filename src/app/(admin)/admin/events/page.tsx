@@ -68,8 +68,8 @@ export default function AdminEventsPage() {
                 </Link>
             </div>
 
-            <div className="bg-white border rounded-[2.5rem] overflow-hidden shadow-sm">
-                <table className="w-full text-left border-collapse">
+            <div className="bg-white border rounded-[2.5rem] overflow-x-auto shadow-sm">
+                <table className="w-full text-left border-collapse min-w-[900px]">
                     <thead>
                         <tr className="bg-slate-50/50 border-b border-slate-100">
                             <th className="px-8 py-6 text-xs font-black uppercase tracking-widest text-slate-400">Event Details</th>

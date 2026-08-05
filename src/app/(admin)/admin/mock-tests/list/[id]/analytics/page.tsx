@@ -130,7 +130,7 @@ export default async function QuizAnalyticsPage({ params }: { params: Promise<{ 
                     <Button variant="outline" size="sm">Export CSV</Button>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left font-medium">
+                    <table className="w-full text-left font-medium min-w-[900px]">
                         <thead>
                             <tr className="border-b text-slate-400 text-[10px] uppercase font-black tracking-widest">
                                 <th className="px-8 py-5">Rank</th>

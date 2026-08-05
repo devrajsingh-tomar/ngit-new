@@ -249,7 +249,7 @@ export default function QuestionBankPage() {
 
             {/* Table */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
-                <Table>
+                <Table className="min-w-[1000px]">
                     <TableHeader className="bg-slate-900">
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="w-14 py-8 pl-6 md:pl-10">

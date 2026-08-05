@@ -98,7 +98,7 @@ export default function AdminMaterialsPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[900px]">
                         <thead>
                             <tr className="border-b bg-slate-50/30">
                                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Material Info</th>

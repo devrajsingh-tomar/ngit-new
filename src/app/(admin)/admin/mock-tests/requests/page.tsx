@@ -94,9 +94,8 @@ export default function PaidRequestsPage() {
                 </div>
             </div>
 
-            {/* Table */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-hidden">
-                <Table>
+                <Table className="min-w-[1000px]">
                     <TableHeader className="bg-slate-900">
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 pl-10">Student</TableHead>

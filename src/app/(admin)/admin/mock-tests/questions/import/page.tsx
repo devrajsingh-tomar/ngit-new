@@ -476,8 +476,8 @@ export default function ImportQuestionsPage() {
                         <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-widest mb-6 italic flex items-center justify-center gap-2">
                             <AlertCircle className="w-3 h-3" /> Data Preview (Correct Mapping for Question Types)
                         </p>
-                        <div className="overflow-hidden rounded-2xl border border-slate-100">
-                            <table className="w-full text-xs">
+                        <div className="overflow-x-auto rounded-2xl border border-slate-100">
+                            <table className="w-full text-xs min-w-[700px]">
                                 <thead className="bg-slate-50 text-slate-400 font-black uppercase">
                                     <tr>
                                         <th className="px-4 py-3 text-left">Type</th>

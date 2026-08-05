@@ -422,7 +422,7 @@ export default function AdminStudentsPage() {
             ) : (
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs font-semibold">
+                  <table className="w-full text-left border-collapse text-xs font-semibold min-w-[1000px]">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <th className="px-6 py-3.5">Student</th>
@@ -501,7 +501,7 @@ export default function AdminStudentsPage() {
               <div className="space-y-4">
                 <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs font-semibold">
+                    <table className="w-full text-left border-collapse text-xs font-semibold min-w-[1000px]">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           <th className="px-6 py-3.5">Student Details</th>
@@ -704,8 +704,8 @@ export default function AdminStudentsPage() {
                     {studentDetails.invoices?.length === 0 ? (
                       <div className="text-slate-400 text-center py-4">No billing history found.</div>
                     ) : (
-                      <div className="overflow-hidden border border-slate-100 rounded-xl">
-                        <table className="w-full text-left text-xs font-semibold">
+                      <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                        <table className="w-full text-left text-xs font-semibold min-w-[900px]">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                               <th className="px-4 py-2.5">Invoice #</th>

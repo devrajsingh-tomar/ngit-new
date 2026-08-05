@@ -260,9 +260,8 @@ export default function MockTestResultsAdminPage() {
                 </div>
             </div>
 
-            {/* Table */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
-                <Table>
+                <Table className="min-w-[1100px]">
                     <TableHeader className="bg-slate-900">
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 pl-10">Candidate</TableHead>

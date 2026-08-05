@@ -466,7 +466,7 @@ export default function AdminPaymentsPage() {
                 <div className="overflow-x-auto">
                     {/* TAB 1: TRANSACTIONS STREAM */}
                     {activeTab === "transactions" && (
-                        <table className="w-full text-left">
+                        <table className="w-full text-left min-w-[1000px]">
                             <thead>
                                 <tr className="border-b">
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Transaction Details</th>
@@ -534,7 +534,7 @@ export default function AdminPaymentsPage() {
 
                     {/* TAB 2: STUDENT LEDGERS */}
                     {activeTab === "balances" && (
-                        <table className="w-full text-left">
+                        <table className="w-full text-left min-w-[1000px]">
                             <thead>
                                 <tr className="border-b">
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Student</th>

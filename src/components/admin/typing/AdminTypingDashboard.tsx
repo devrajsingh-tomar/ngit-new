@@ -640,7 +640,7 @@ export default function AdminTypingDashboard() {
           <TabsContent value="exams" className="mt-0">
              <div className="bg-white border border-slate-200/80 rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-sm">
+                    <table className="w-full text-left border-collapse text-sm min-w-[1000px]">
                       <thead>
                         <tr className="bg-slate-50/50 border-b border-slate-200/80">
                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest text-center w-12">#</th>
@@ -750,7 +750,7 @@ export default function AdminTypingDashboard() {
                </div>
                <div className="bg-white border border-slate-200/80 rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
                   <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse text-sm">
+                      <table className="w-full text-left border-collapse text-sm min-w-[900px]">
                         <thead>
                           <tr className="bg-slate-50/50 border-b border-slate-200/80">
                             <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest text-center w-16">Logo</th>
@@ -866,8 +866,8 @@ export default function AdminTypingDashboard() {
              <div className="mb-4 flex justify-end">
                 <Button onClick={() => { setEditingPassage(null); setModalSection("Government"); setShowPassageModal(true); }} className="bg-slate-900 hover:bg-black text-white font-bold h-10 px-4 rounded-xl text-sm shadow-sm transition-all duration-200 active:scale-[0.98] flex items-center gap-2"><Plus className="w-4 h-4 mr-1 stroke-[3px]"/> Add Passage</Button>
              </div>
-             <div className="bg-white border border-slate-200/80 rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
-                <table className="w-full text-left border-collapse text-sm">
+             <div className="bg-white border border-slate-200/80 rounded-2xl shadow-md shadow-slate-100/50 overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm min-w-[900px]">
                   <thead>
                     <tr className="bg-slate-50/50 border-b border-slate-200/80">
                       <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Title</th>
@@ -985,7 +985,7 @@ export default function AdminTypingDashboard() {
                        <Badge variant="outline" className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-lg">{exams.filter(e => e.category === 'SPECIAL').length} Tests</Badge>
                     </div>
                     <div className="overflow-x-auto">
-                       <table className="w-full text-left text-xs">
+                       <table className="w-full text-left text-xs min-w-[600px]">
                           <thead>
                              <tr className="bg-slate-50/50 border-b border-slate-200/80 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                 <th className="px-6 py-3.5">Title</th>
@@ -1048,7 +1048,7 @@ export default function AdminTypingDashboard() {
                      <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Showing last 100 entries</span>
                   </div>
                   <div className="overflow-x-auto">
-                     <table className="w-full text-left border-collapse text-sm">
+                     <table className="w-full text-left border-collapse text-sm min-w-[800px]">
                        <thead>
                          <tr className="bg-slate-50/50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                            <th className="px-6 py-4">Candidate</th>
@@ -1715,7 +1715,7 @@ export default function AdminTypingDashboard() {
                 <button onClick={() => setSelectedExam(null)} className="p-2 text-slate-400 hover:text-slate-650 hover:bg-slate-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
              </div>
              <div className="flex-1 overflow-auto bg-slate-50/30 p-6">
-                <table className="w-full text-left border-collapse text-sm bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-md shadow-slate-100/50">
+                <table className="w-full text-left border-collapse text-sm bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-md shadow-slate-100/50 min-w-[900px]">
                   <thead>
                     <tr className="bg-slate-50/50 border-b border-slate-200/85 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                       <th className="px-6 py-4">Student</th>

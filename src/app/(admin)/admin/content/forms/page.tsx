@@ -115,8 +115,8 @@ export default function FormsLeadsPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse text-sm">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm min-w-[900px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</th>

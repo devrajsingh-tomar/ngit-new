@@ -270,7 +270,7 @@ export default function AdminCertificatesPage() {
             {/* Content Table */}
             <div className="bg-white rounded-[2rem] border overflow-hidden shadow-sm pt-4">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left font-medium">
+                    <table className="w-full text-left font-medium min-w-[1000px]">
                         <thead>
                             <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">
                                 <th className="px-8 py-4">Certificate ID</th>

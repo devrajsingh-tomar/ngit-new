@@ -100,7 +100,8 @@ export default function AdminQuizzesPage() {
                     </div>
                 ) : (
                     <>
-                        <table className="w-full text-left">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left min-w-[900px]">
                             <thead>
                                 <tr className="border-b bg-slate-50/50">
                                     <th className="px-6 md:px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Assessment Detail</th>
@@ -207,6 +208,7 @@ export default function AdminQuizzesPage() {
                                 ))}
                             </tbody>
                         </table>
+                        </div>
 
                         {/* Pagination */}
                         {totalPages > 1 && (
