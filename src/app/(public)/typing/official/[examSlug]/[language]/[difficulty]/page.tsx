@@ -60,10 +60,16 @@ export default async function TestSelectionPage({
   if (!exam) return notFound();
 
   let categoryId = "";
+  let categoryDuration: number | null = null;
   if (categorySlug) {
-    const categoryDoc = await GovExamCategory.findOne({ govExamId: exam._id, slug: categorySlug }).select("_id").lean();
-    if (categoryDoc) categoryId = categoryDoc._id.toString();
+    const categoryDoc = await GovExamCategory.findOne({ govExamId: exam._id, slug: categorySlug }).select("_id duration").lean();
+    if (categoryDoc) {
+      categoryId = categoryDoc._id.toString();
+      categoryDuration = categoryDoc.duration;
+    }
   }
+
+  const resolvedDuration = categoryDuration || exam.defaultDuration || 10;
 
   // Determine the 3 free exams for this category (3 oldest active ones under this govExamId or its categories, or general)
   const parentCategories = await GovExamCategory.find({ govExamId: exam._id }).select("_id").lean();
@@ -164,14 +170,14 @@ export default async function TestSelectionPage({
                       <div className="flex items-center gap-3 pt-1 text-slate-500 text-xs font-bold">
                         <span className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">{wordCount} Words</span>
                         <span className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-350" /> {test.duration} Min
+                          <Clock className="w-3.5 h-3.5 text-slate-350" /> {resolvedDuration} Min
                         </span>
                       </div>
                     </div>
                     
                     <div className="pt-2 relative z-10">
                       <Link 
-                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}`}
+                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}${categoryId ? `&govExamCategoryId=${categoryId}` : ''}`}
                         className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-100 hover:shadow-lg flex items-center justify-center gap-2 group-hover:scale-[1.01] cursor-pointer"
                       >
                         Start Free <Play className="w-3 h-3 fill-white shrink-0" />
@@ -257,7 +263,7 @@ export default async function TestSelectionPage({
                       <td className="px-6 py-5">
                         <div className="flex items-center text-xs font-bold text-slate-600">
                           <Clock className="w-3.5 h-3.5 mr-2 text-slate-300" />
-                          {test.duration} Min
+                          {resolvedDuration} Min
                         </div>
                       </td>
                       <td className="px-6 py-5">
@@ -283,7 +289,7 @@ export default async function TestSelectionPage({
                           isPaid={isPaid}
                           isUnlocked={isUnlocked}
                           amount={amount}
-                          duration={test.duration}
+                          duration={resolvedDuration}
                           langFormatted={langFormatted}
                           govExamCategoryId={categoryId || undefined}
                         />
