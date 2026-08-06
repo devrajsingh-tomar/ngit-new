@@ -94,6 +94,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [lockedTargetExam, setLockedTargetExam] = useState<any>(null);
 
   const isBookPractice = exam?.section === 'Book' || exam?.category === 'BOOK';
+  const isOfficialExam = !!(exam?.govExamId || exam?.govExamCategoryId);
 
   // Load available exams/passages matching current criteria
   useEffect(() => {
@@ -515,16 +516,22 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         <div className="bg-[#e0e0e0] border-b border-gray-400 p-2 flex flex-wrap items-center gap-6 text-sm font-bold text-gray-800 shadow-sm relative z-10 px-6">
           <div className="flex items-center gap-2">
               <span className="text-gray-700">Duration:</span>
-              <select 
-                value={internalDuration} 
-                onChange={(e) => setInternalDuration(Number(e.target.value))}
-                className="border border-gray-400 px-2 py-1 bg-white outline-none min-w-[120px] focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                disabled={isActive && !isFinished && typedText.length > 0}
-              >
-                {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
-                  <option key={min} value={min}>{min} Minutes</option>
-                ))}
-              </select>
+              {isOfficialExam ? (
+                <span className="border border-gray-400 px-3 py-1 bg-gray-100 rounded text-slate-600 font-extrabold select-none">
+                  {internalDuration} Minutes
+                </span>
+              ) : (
+                <select 
+                  value={internalDuration} 
+                  onChange={(e) => setInternalDuration(Number(e.target.value))}
+                  className="border border-gray-400 px-2 py-1 bg-white outline-none min-w-[120px] focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  disabled={isActive && !isFinished && typedText.length > 0}
+                >
+                  {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
+                    <option key={min} value={min}>{min} Minutes</option>
+                  ))}
+                </select>
+              )}
           </div>
           <div className="flex items-center gap-2 flex-1 max-w-[400px]">
               <span className="text-gray-700">Exercise:</span>

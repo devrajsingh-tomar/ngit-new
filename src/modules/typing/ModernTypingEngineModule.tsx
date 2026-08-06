@@ -91,6 +91,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   const [lockedTargetExam, setLockedTargetExam] = useState<any>(null);
 
   const isBookPractice = exam?.section === 'Book' || exam?.category === 'BOOK';
+  const isOfficialExam = !!(exam?.govExamId || exam?.govExamCategoryId);
 
   useEffect(() => {
     if (!showExerciseSwitcher) return;
@@ -520,16 +521,22 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
             <div className="bg-slate-50 border border-slate-200 rounded-3xl p-4 flex flex-wrap items-center gap-6 text-sm font-bold text-slate-600 mb-2">
               <div className="flex items-center gap-3">
                   <span className="text-[10px] font-black uppercase opacity-60">Duration:</span>
-                  <select 
-                    value={internalDuration} 
-                    onChange={(e) => setInternalDuration(Number(e.target.value))}
-                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-4 focus:ring-indigo-100 transition-all cursor-pointer font-bold text-slate-900"
-                    disabled={isActive && !isFinished && typedText.length > 0}
-                  >
-                    {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
-                      <option key={min} value={min}>{min} Minutes</option>
-                    ))}
-                  </select>
+                  {isOfficialExam ? (
+                    <span className="bg-slate-100 border border-slate-200 rounded-xl px-4 py-2 text-slate-500 font-extrabold select-none">
+                      {internalDuration} Minutes
+                    </span>
+                  ) : (
+                    <select 
+                      value={internalDuration} 
+                      onChange={(e) => setInternalDuration(Number(e.target.value))}
+                      className="bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-4 focus:ring-indigo-100 transition-all cursor-pointer font-bold text-slate-900"
+                      disabled={isActive && !isFinished && typedText.length > 0}
+                    >
+                      {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
+                        <option key={min} value={min}>{min} Minutes</option>
+                      ))}
+                    </select>
+                  )}
               </div>
               <div className="flex items-center gap-3 flex-1">
                   <span className="text-[10px] font-black uppercase opacity-60">Exercise:</span>
