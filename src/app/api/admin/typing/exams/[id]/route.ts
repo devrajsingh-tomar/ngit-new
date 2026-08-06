@@ -49,11 +49,30 @@ export async function PATCH(
     if (!updateData.govExamId || updateData.govExamId === "" || updateData.govExamId === "None") {
         updateData.govExamId = null;
     }
+    if (!updateData.govExamCategoryId || updateData.govExamCategoryId === "" || updateData.govExamCategoryId === "None") {
+        updateData.govExamCategoryId = null;
+    }
     if (!updateData.rulePresetId || updateData.rulePresetId === "" || updateData.rulePresetId === "None") {
         updateData.rulePresetId = null;
     }
     if (!updateData.bookId || updateData.bookId === "" || updateData.bookId === "None") {
         updateData.bookId = null;
+    }
+
+    // Auto-inherit duration/rules from Sub-Category or Parent Gov Exam if provided
+    if (updateData.govExamCategoryId) {
+      const GovExamCategory = (await import("@/models/GovExamCategory")).default;
+      const cat = await GovExamCategory.findById(updateData.govExamCategoryId).lean();
+      if (cat) {
+        updateData.duration = cat.duration;
+        updateData.examMode = cat.examMode;
+      }
+    } else if (updateData.govExamId) {
+      const GovExam = (await import("@/models/GovExam")).default;
+      const gov = await GovExam.findById(updateData.govExamId).lean();
+      if (gov) {
+        updateData.duration = gov.defaultDuration || updateData.duration || 10;
+      }
     }
 
     const updatedExam = await TypingExam.findByIdAndUpdate(

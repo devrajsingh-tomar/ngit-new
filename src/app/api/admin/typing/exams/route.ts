@@ -34,12 +34,28 @@ export async function POST(req: Request) {
     
     // Sanitize ObjectIds (convert empty strings to null to avoid BSON casting errors)
     const sanitizedData = { ...data };
-    const idFields = ["rulePresetId", "govExamId", "bookId", "passageId"];
+    const idFields = ["rulePresetId", "govExamId", "govExamCategoryId", "bookId", "passageId"];
     idFields.forEach(field => {
       if (sanitizedData[field] === "") {
         sanitizedData[field] = null;
       }
     });
+
+    // Auto-inherit duration/rules from Sub-Category or Parent Gov Exam if provided
+    if (sanitizedData.govExamCategoryId) {
+      const GovExamCategory = (await import("@/models/GovExamCategory")).default;
+      const cat = await GovExamCategory.findById(sanitizedData.govExamCategoryId).lean();
+      if (cat) {
+        sanitizedData.duration = cat.duration;
+        sanitizedData.examMode = cat.examMode;
+      }
+    } else if (sanitizedData.govExamId) {
+      const GovExam = (await import("@/models/GovExam")).default;
+      const gov = await GovExam.findById(sanitizedData.govExamId).lean();
+      if (gov) {
+        sanitizedData.duration = gov.defaultDuration || sanitizedData.duration || 10;
+      }
+    }
 
     // Auto-fill missing required fields
     const examData = {

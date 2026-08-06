@@ -28,6 +28,7 @@ export default function AdminTypingDashboard() {
   const [govCategories, setGovCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+
   // UI States
   const [showGovCategoryModal, setShowGovCategoryModal] = useState(false);
   const [editingGovCategory, setEditingGovCategory] = useState<any>(null);
@@ -79,8 +80,19 @@ export default function AdminTypingDashboard() {
   const [examCategory, setExamCategory] = useState("");
   const [examPresetId, setExamPresetId] = useState("");
   const [examDuration, setExamDuration] = useState(10);
-  const [selectedGovExamId, setSelectedGovExamId] = useState("");
   const [customOverrides, setCustomOverrides] = useState(false);
+  const [selectedGovExamId, setSelectedGovExamId] = useState("");
+  const [selectedGovExamCategoryId, setSelectedGovExamCategoryId] = useState("");
+
+  useEffect(() => {
+    if (editingExam) {
+      setSelectedGovExamId(editingExam.govExamId?._id || editingExam.govExamId || "");
+      setSelectedGovExamCategoryId(editingExam.govExamCategoryId?._id || editingExam.govExamCategoryId || "");
+    } else {
+      setSelectedGovExamId("");
+      setSelectedGovExamCategoryId("");
+    }
+  }, [editingExam]);
   const [wizardPricingType, setWizardPricingType] = useState("FREE");
   const [wizardPricingAmount, setWizardPricingAmount] = useState(0);
   const [editPricingType, setEditPricingType] = useState("FREE");
@@ -1377,75 +1389,105 @@ export default function AdminTypingDashboard() {
                  <form onSubmit={handleAddExam} className="space-y-6">
                     <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                           <label className="text-xs font-bold text-slate-500 uppercase">Exam Library Target</label>
-                           <select 
-                             name="govExamId" 
-                             defaultValue={editingExam?.govExamId?._id || editingExam?.govExamId || ""}
-                             className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                           >
-                             <option value="">General Practice (Unassigned)</option>
-                             {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
-                           </select>
-                         </div>
-                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                           <label className="text-xs font-bold text-slate-500 uppercase">Test Title</label>
-                           <input name="title" defaultValue={editingExam?.title} required placeholder="e.g. Test 1" className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" />
-                         </div>
-                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                          <label className="text-xs font-bold text-slate-500 uppercase">Exam Mode Formula</label>
-                          <select name="examMode" defaultValue={editingExam?.examMode || "General"} className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200">
-                            <option value="General">General Practice</option>
-                            <option value="SSC">SSC</option>
-                            <option value="CPCT">CPCT</option>
-                            <option value="Court">Court</option>
-                            <option value="Steno">Steno</option>
-                            <option value="UPSSSC">UPSSSC</option>
-                            <option value="AHC">AHC</option>
-                            <option value="UP_POLICE">UP Police</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                           <label className="text-xs font-bold text-slate-500 uppercase">Exam Category Tag</label>
-                           <select 
-                             name="category" 
-                             defaultValue={editingExam?.category || ""}
-                             required 
-                             className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                           >
-                              <option value="">Select Category...</option>
-                              {govExams.map(g => <option key={g._id} value={g.title}>{g.title}</option>)}
-                              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                            <label className="text-xs font-bold text-slate-500 uppercase">Exam Library Target</label>
+                            <select 
+                              name="govExamId" 
+                              value={selectedGovExamId}
+                              onChange={(e) => {
+                                setSelectedGovExamId(e.target.value);
+                                setSelectedGovExamCategoryId("");
+                              }}
+                              className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 bg-white"
+                            >
+                              <option value="">General Practice (Unassigned)</option>
+                              {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
+                            </select>
+                          </div>
+                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Sub-Category Target</label>
+                            <select 
+                              name="govExamCategoryId" 
+                              value={selectedGovExamCategoryId}
+                              onChange={(e) => setSelectedGovExamCategoryId(e.target.value)}
+                              disabled={!selectedGovExamId}
+                              className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 disabled:opacity-50 bg-white"
+                            >
+                              <option value="">No Sub-Category (Inherit Parent Rules)</option>
+                              {govCategories
+                                .filter(c => (c.govExamId?._id || c.govExamId) === selectedGovExamId)
+                                .map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                            </select>
+                          </div>
+                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Test Title</label>
+                            <input name="title" defaultValue={editingExam?.title} required placeholder="e.g. Test 1" className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" />
+                          </div>
+                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                           <label className="text-xs font-bold text-slate-500 uppercase">Exam Mode Formula</label>
+                           <select name="examMode" defaultValue={editingExam?.examMode || "General"} className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200">
+                             <option value="General">General Practice</option>
+                             <option value="SSC">SSC</option>
+                             <option value="CPCT">CPCT</option>
+                             <option value="Court">Court</option>
+                             <option value="Steno">Steno</option>
+                             <option value="UPSSSC">UPSSSC</option>
+                             <option value="AHC">AHC</option>
+                             <option value="UP_POLICE">UP Police</option>
                            </select>
                          </div>
                          <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                           <label className="text-xs font-bold text-slate-500 uppercase">Active Exam Pattern Preset</label>
-                           <select 
-                             name="rulePresetId" 
-                             defaultValue={editingExam?.rulePresetId?._id || editingExam?.rulePresetId || ""}
-                             className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                           >
+                            <label className="text-xs font-bold text-slate-500 uppercase">Exam Category Tag</label>
+                            <select 
+                              name="category" 
+                              defaultValue={editingExam?.category || ""}
+                              required 
+                              className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                            >
+                              <option value="">Select Category...</option>
+                              {govExams.map(g => <option key={g._id} value={g.title}>{g.title}</option>)}
+                              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Active Exam Pattern Preset</label>
+                            <select 
+                              name="rulePresetId" 
+                              defaultValue={editingExam?.rulePresetId?._id || editingExam?.rulePresetId || ""}
+                              className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                            >
                               <option value="">No Preset (Use custom/default rules)</option>
                               {rulePresets.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
-                           </select>
+                            </select>
+                          </div>
+                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Practice Passage</label>
+                            <select name="passageId" defaultValue={editingExam?.passageId?._id || editingExam?.passageId} required className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 bg-white">
+                              <option value="">Select Passage...</option>
+                              {passages.map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
+                            </select>
+                          </div>
+                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                           <label className="text-xs font-bold text-slate-500 uppercase">Duration (Min)</label>
+                           {selectedGovExamCategoryId || selectedGovExamId ? (
+                             <div className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 select-none flex items-center justify-between">
+                               <span>
+                                 {selectedGovExamCategoryId
+                                   ? `${govCategories.find(c => c._id === selectedGovExamCategoryId)?.duration || 10} Mins (Inherited)`
+                                   : `${govExams.find(g => g._id === selectedGovExamId)?.defaultDuration || 10} Mins (Inherited)`}
+                               </span>
+                               <span className="text-[9px] uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">From Library</span>
+                             </div>
+                           ) : (
+                             <input 
+                               type="number" 
+                               name="duration" 
+                               defaultValue={editingExam?.duration || 10}
+                               required 
+                               className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" 
+                             />
+                           )}
                          </div>
-                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                           <label className="text-xs font-bold text-slate-500 uppercase">Practice Passage</label>
-                           <select name="passageId" defaultValue={editingExam?.passageId?._id || editingExam?.passageId} required className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200">
-                             <option value="">Select Passage...</option>
-                             {passages.map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
-                           </select>
-                         </div>
-                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                          <label className="text-xs font-bold text-slate-500 uppercase">Duration (Min)</label>
-                          <input 
-                            type="number" 
-                            name="duration" 
-                            defaultValue={editingExam?.duration || 10}
-                            required 
-                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" 
-                          />
-                        </div>
-                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                         <div className="space-y-1.5 col-span-2 sm:col-span-1">
                            <label className="text-xs font-bold text-slate-500 uppercase">Publishing Status</label>
                            <select name="status" defaultValue={editingExam?.status || "Active"} className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200">
                               <option value="Active">Active (Visible)</option>
