@@ -15,7 +15,10 @@ export default async function TypingExamsPage({ searchParams: searchParamsPromis
   // Get test counts per exam and attach to exam object
   const examsWithCounts = await Promise.all(exams.map(async (exam) => {
     const count = await TypingExam.countDocuments({ 
-      govExamId: exam._id,
+      $or: [
+        { govExamId: exam._id },
+        { govExamId: { $in: [null, undefined] } }
+      ],
       status: { $ne: "Inactive" }
     });
     return { 

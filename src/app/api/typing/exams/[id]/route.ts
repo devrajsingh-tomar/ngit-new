@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/db";
 import TypingExam from "@/models/TypingExam";
 import TypingExamAccess from "@/models/TypingExamAccess";
