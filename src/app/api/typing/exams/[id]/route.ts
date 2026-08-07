@@ -26,6 +26,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         },
         strictPopulate: false
       })
+      .populate({ path: "govExamCategoryId", strictPopulate: false })
       .populate({ path: "rulePresetId", strictPopulate: false });
 
     if (!exam) {
@@ -36,6 +37,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const govExamCategoryId = searchParams.get("govExamCategoryId");
     
     let examObj = exam.toObject();
+
+    // Auto-inherit rules from database populates
+    if (examObj.govExamCategoryId) {
+      examObj.examMode = examObj.govExamCategoryId.examMode || examObj.examMode;
+      examObj.duration = examObj.govExamCategoryId.duration || examObj.duration;
+    } else if (examObj.govExamId) {
+      examObj.duration = examObj.govExamId.defaultDuration || examObj.duration;
+    }
 
     if (govExamCategoryId && mongoose.Types.ObjectId.isValid(govExamCategoryId)) {
       const GovExamCategory = (await import("@/models/GovExamCategory")).default;

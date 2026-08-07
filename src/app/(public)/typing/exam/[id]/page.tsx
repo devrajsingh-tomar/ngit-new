@@ -40,7 +40,7 @@ export default function TypingExamPage() {
     // If a rule preset exists, it overrides the individual exam settings.
     // Otherwise, if the exam belongs to a GovExam, inherit from the GovExam's rule preset!
     const preset = exam?.rulePresetId || exam?.govExamId?.rulePresetId;
-    const duration = exam?.duration || exam?.govExamId?.defaultDuration || 10;
+    const duration = exam?.govExamCategoryId?.duration || exam?.govExamId?.defaultDuration || exam?.duration || 10;
     
     return {
       title: exam?.title || "",
