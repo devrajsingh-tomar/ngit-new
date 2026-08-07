@@ -428,6 +428,42 @@ export default function AdminTypingDashboard() {
     }
   };
 
+  const handleToggleGovExamActive = async (exam: any) => {
+    try {
+      const res = await fetch(`/api/admin/typing/gov-exams/${exam._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !exam.active })
+      });
+      if (res.ok) {
+        toast.success(`${exam.title} is now ${!exam.active ? "Active" : "Inactive"}`);
+        fetchData();
+      } else {
+        toast.error("Failed to toggle status");
+      }
+    } catch {
+      toast.error("Network error.");
+    }
+  };
+
+  const handleToggleGovCategoryActive = async (cat: any) => {
+    try {
+      const res = await fetch(`/api/admin/typing/gov-exam-categories/${cat._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !cat.active })
+      });
+      if (res.ok) {
+        toast.success(`${cat.name} is now ${!cat.active ? "Active" : "Inactive"}`);
+        fetchData();
+      } else {
+        toast.error("Failed to toggle status");
+      }
+    } catch {
+      toast.error("Network error.");
+    }
+  };
+
   const handlePropagateExamMode = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!propagateTarget) return;
@@ -877,10 +913,16 @@ export default function AdminTypingDashboard() {
 
                               <td className="px-6 py-4 text-slate-500 font-mono text-xs font-semibold">{exam.slug}</td>
                               <td className="px-6 py-4">
-                                 <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex w-max items-center gap-1.5 border", exam.active ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100')}>
+                                 <button 
+                                   onClick={() => handleToggleGovExamActive(exam)}
+                                   className={cn(
+                                     "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex w-max items-center gap-1.5 border hover:scale-105 transition-all cursor-pointer",
+                                     exam.active ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'
+                                   )}
+                                 >
                                     {exam.active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>}
                                     {exam.active ? "Active" : "Inactive"}
-                                 </span>
+                                 </button>
                               </td>
                               <td className="px-6 py-4 text-right">
                                  <div className="flex items-center justify-end gap-2">
@@ -1280,6 +1322,7 @@ export default function AdminTypingDashboard() {
                            <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Exam Mode</th>
                            <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Duration</th>
                            <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Requirements</th>
+                           <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest">Status</th>
                            <th className="px-6 py-4 font-bold text-slate-400 text-[10px] uppercase tracking-widest text-right">Actions</th>
                          </tr>
                        </thead>
@@ -1297,6 +1340,18 @@ export default function AdminTypingDashboard() {
                                  <span>WPM: ≥{cat.minWpm} • Acc: ≥{cat.minAccuracy}%</span>
                                )}
                              </td>
+                             <td className="px-6 py-4">
+                                <button 
+                                  onClick={() => handleToggleGovCategoryActive(cat)}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex w-max items-center gap-1.5 border hover:scale-105 transition-all cursor-pointer",
+                                    cat.active ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'
+                                  )}
+                                >
+                                  {cat.active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>}
+                                  {cat.active ? "Active" : "Inactive"}
+                                </button>
+                             </td>
                              <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-2">
                                    <button onClick={() => { setEditingGovCategory(cat); setShowGovCategoryModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/60 rounded-xl transition-all"><Edit2 className="w-4 h-4"/></button>
@@ -1307,7 +1362,7 @@ export default function AdminTypingDashboard() {
                          ))}
                          {govCategories.length === 0 && (
                            <tr>
-                             <td colSpan={6} className="p-12 text-center text-slate-400 font-medium text-sm">No sub-categories defined. Add a sub-category under your Gov Exams.</td>
+                             <td colSpan={7} className="p-12 text-center text-slate-400 font-medium text-sm">No sub-categories defined. Add a sub-category under your Gov Exams.</td>
                            </tr>
                          )}
                        </tbody>
