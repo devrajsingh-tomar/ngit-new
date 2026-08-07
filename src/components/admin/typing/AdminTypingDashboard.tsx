@@ -2371,10 +2371,11 @@ export default function AdminTypingDashboard() {
                           <option value="SSC">SSC</option>
                           <option value="Court">Court Typing</option>
                           <option value="Steno">Steno</option>
+                          <option value="BSF">BSF Head Constable</option>
                        </select>
                     </div>
                     <div className="space-y-1.5">
-<label className="text-xs font-bold text-slate-500 uppercase">Duration (Minutes)</label>
+                       <label className="text-xs font-bold text-slate-500 uppercase">Duration (Minutes)</label>
                        <input type="number" name="duration" defaultValue={editingGovCategory?.duration || 10} required className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200" />
                     </div>
                  </div>

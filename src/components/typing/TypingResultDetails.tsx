@@ -119,6 +119,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const isUPSSSC = examMode === "UPSSSC";
   const isAHC = examMode === "AHC";
   const isUPPolice = examMode === "UP_POLICE";
+  const isBSF = examMode === "BSF";
   const categorySlug = categoryConfig?.slug || "";
   const isAHCJA = isAHC && categorySlug.includes("junior-assistant");
   
@@ -211,6 +212,8 @@ export default function TypingResultDetails({ params }: { params: { id: string }
     const wordCountBase = isUPPolice ? submittedWords.length : totalStrokes / 5;
     if (isUPPolice) {
       fallbackNetWpm = correctWords / timeTakenMins;
+    } else if (isBSF) {
+      fallbackNetWpm = (correctStrokes / 5) / timeTakenMins;
     } else if (isUPSSSC) {
       const penaltyWords = totalErrors > 5 ? (totalErrors - 5) * 5 : 0;
       fallbackNetWpm = Math.max(0, wordCountBase - penaltyWords) / timeTakenMins;
@@ -226,11 +229,11 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         ? result.wpm.toFixed(2) 
         : fallbackNetWpm.toFixed(2));
 
-  // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. UP Police: Hindi 25, English 30.
+  // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. UP Police: Hindi 25, English 30. BSF: Hindi 30, English 35.
   const passingWpm = isAHCJA 
     ? (isHindi ? 25 : 30) 
-    : (isAHC ? 25 : (isUPPolice ? (isHindi ? 25 : 30) : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : 30))));
-  const minAccuracy = isUPPolice ? 85.00 : (categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00);
+    : (isAHC ? 25 : (isUPPolice ? (isHindi ? 25 : 30) : (isBSF ? (isHindi ? 30 : 35) : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : 30)))));
+  const minAccuracy = isBSF ? 95.00 : (isUPPolice ? 85.00 : (categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00));
   const accuracy = result.accuracy !== undefined 
     ? result.accuracy.toFixed(2) 
     : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
@@ -417,10 +420,12 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                 </div>
                 <div className="space-y-3">
                     <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-1 leading-none">
-                      Calculation Parameters {(isUPSSSC || isAHC || isUPPolice) && `(${isAHCJA ? "AHC Junior Assistant" : isAHC ? "AHC RO/ARO" : isUPPolice ? "UP Police ASI/CO" : "UPSSSC / Junior Assistant"} Standard)`}
+                      Calculation Parameters {(isUPSSSC || isAHC || isUPPolice || isBSF) && `(${isAHCJA ? "AHC Junior Assistant" : isAHC ? "AHC RO/ARO" : isUPPolice ? "UP Police ASI/CO" : isBSF ? "BSF Head Constable" : "UPSSSC / Junior Assistant"} Standard)`}
                     </p>
                     <p className="text-lg font-bold text-slate-800 leading-snug">
-                        {isAHC
+                        {isBSF
+                            ? "BSF Head Constable: Net Speed = (Correct Key Depressions / 5) ÷ Time. Hindi Qualifying: 30 WPM, English Qualifying: 35 WPM. Accuracy Requirement: ≥95.00%."
+                            : isAHC
                             ? "AHC RO/ARO: Net Speed = [(Total Keystrokes / 5) − Full Errors] ÷ Time. Marks = 50 − (Errors × 0.1). No half-mistakes. All errors (spelling, omission, extra words, capitalization, punctuation) are penalised equally. Dual Qualifying Rule: Net WPM ≥ 25 AND Marks ≥ 25/50."
                             : isUPPolice 
                                 ? "Net Speed is calculated by taking (Total Correct Words / Time Taken). For UP Police, a word is counted after every space typed."

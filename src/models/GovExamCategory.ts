@@ -33,7 +33,7 @@ const GovExamCategorySchema = new Schema<IGovExamCategory>(
 
     examMode: {
       type: String,
-      enum: ["General", "SSC", "CPCT", "Court", "Steno", "UPSSSC", "AHC", "UP_POLICE"],
+      enum: ["General", "SSC", "CPCT", "Court", "Steno", "UPSSSC", "AHC", "UP_POLICE", "BSF"],
       default: "General",
     },
     duration: { type: Number, default: 10 },

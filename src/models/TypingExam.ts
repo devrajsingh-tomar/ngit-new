@@ -44,7 +44,7 @@ const TypingExamSchema = new Schema<ITypingExam>(
     highlightMode: { type: String, enum: ["word", "word_error", "letter", "none"], default: "word" },
     autoScroll: { type: Boolean, default: true },
     showScrollbar: { type: Boolean, default: true },
-    examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General", "Steno", "UPSSSC", "AHC", "UP_POLICE"], default: "General" },
+    examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General", "Steno", "UPSSSC", "AHC", "UP_POLICE", "BSF"], default: "General" },
     bookId: { type: Schema.Types.ObjectId, ref: "TypingBook" },
     govExamId: { type: Schema.Types.ObjectId, ref: "GovExam" },
     govExamCategoryId: { type: Schema.Types.ObjectId, ref: "GovExamCategory" },
