@@ -225,10 +225,12 @@ export default function TypingResultDetails({ params }: { params: { id: string }
     : (result.wpm !== undefined 
         ? result.wpm.toFixed(2) 
         : fallbackNetWpm.toFixed(2));
-  
-  // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. Others: Hindi 25, UP Police 35, rest 30.
-  const passingWpm = isAHCJA ? (isHindi ? 25 : 30) : (isAHC ? 25 : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : (isUPPolice ? 35 : 30))));
-  const minAccuracy = categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00;
+
+  // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. UP Police: Hindi 25, English 30.
+  const passingWpm = isAHCJA 
+    ? (isHindi ? 25 : 30) 
+    : (isAHC ? 25 : (isUPPolice ? (isHindi ? 25 : 30) : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : 30))));
+  const minAccuracy = isUPPolice ? 85.00 : (categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00);
   const accuracy = result.accuracy !== undefined 
     ? result.accuracy.toFixed(2) 
     : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
