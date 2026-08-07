@@ -363,6 +363,15 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     }
     resetIdleTimer();
 
+    // Block disabled keys: Delete, Enter, Tab, Escape, Ctrl, F1-F12, Home, End, Insert on AHC / Court exam modes
+    if (isOfficialExam && settings.examMode === "AHC") {
+      const blockedKeys = ["Delete", "Tab", "Escape", "Home", "End", "Insert", "Enter", "Control"];
+      if (blockedKeys.includes(e.key) || e.ctrlKey || e.key.match(/^F[1-9]$|^F1[0-2]$/)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // 1. Physical Inscript Mapping (Government Exam Standard)
     if (settings.layout === 'Inscript' && settings.language === 'Hindi') {
         const mappedChar = mapEventToInscript(e);

@@ -119,6 +119,8 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const isUPSSSC = examMode === "UPSSSC";
   const isAHC = examMode === "AHC";
   const isUPPolice = examMode === "UP_POLICE";
+  const categorySlug = categoryConfig?.slug || "";
+  const isAHCJA = isAHC && categorySlug.includes("junior-assistant");
   
   const allowHalfMistakes = isAHC ? false : (categoryConfig ? categoryConfig.allowHalfMistakes : true);
 
@@ -181,10 +183,10 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   
   const totalErrors = !allowHalfMistakes ? fullMistakes : fullMistakes + (halfMistakes / 2);
 
-  // Marks Calculation: AHC RO/ARO standard or dynamically configured
-  const ahcTotalMarks = isAHC ? 50 : (categoryConfig ? (categoryConfig.totalMarks || 50) : 50);
-  const errorPenalty = isAHC ? 0.1 : (categoryConfig ? (categoryConfig.errorPenalty || 0.1) : 0.1);
-  const ahcQualifyingMarks = isAHC ? 25 : (categoryConfig ? (categoryConfig.qualifyingMarks || 25) : 25);
+  // Marks Calculation: AHC RO/ARO or Junior Assistant standard or dynamically configured
+  const ahcTotalMarks = isAHCJA ? 25 : (isAHC ? 50 : (categoryConfig ? (categoryConfig.totalMarks || 50) : 50));
+  const errorPenalty = isAHCJA ? (25 / Math.max(1, originalWords.length)) : (isAHC ? 0.1 : (categoryConfig ? (categoryConfig.errorPenalty || 0.1) : 0.1));
+  const ahcQualifyingMarks = isAHCJA ? 10 : (isAHC ? 25 : (categoryConfig ? (categoryConfig.qualifyingMarks || 25) : 25));
   
   const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * errorPenalty)) : 0;
   
@@ -224,8 +226,8 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         ? result.wpm.toFixed(2) 
         : fallbackNetWpm.toFixed(2));
   
-  // AHC RO/ARO: passing WPM is 25. Others: Hindi 25, UP Police 35, rest 30.
-  const passingWpm = isAHC ? 25 : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : (isUPPolice ? 35 : 30)));
+  // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. Others: Hindi 25, UP Police 35, rest 30.
+  const passingWpm = isAHCJA ? (isHindi ? 25 : 30) : (isAHC ? 25 : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : (isUPPolice ? 35 : 30))));
   const minAccuracy = categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00;
   const accuracy = result.accuracy !== undefined 
     ? result.accuracy.toFixed(2) 
@@ -413,7 +415,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                 </div>
                 <div className="space-y-3">
                     <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-1 leading-none">
-                      Calculation Parameters {(isUPSSSC || isAHC || isUPPolice) && `(${isAHC ? "AHC RO/ARO" : isUPPolice ? "UP Police ASI/CO" : "UPSSSC / Junior Assistant"} Standard)`}
+                      Calculation Parameters {(isUPSSSC || isAHC || isUPPolice) && `(${isAHCJA ? "AHC Junior Assistant" : isAHC ? "AHC RO/ARO" : isUPPolice ? "UP Police ASI/CO" : "UPSSSC / Junior Assistant"} Standard)`}
                     </p>
                     <p className="text-lg font-bold text-slate-800 leading-snug">
                         {isAHC
