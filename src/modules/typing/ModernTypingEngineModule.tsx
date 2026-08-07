@@ -517,7 +517,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
         )}
         onContextMenu={(e) => config.disableRightClick !== false && e.preventDefault()}
         >
-          {showExerciseSwitcher && (
+          {showExerciseSwitcher && !isOfficialExam && (
             <div className="bg-slate-50 border border-slate-200 rounded-3xl p-4 flex flex-wrap items-center gap-6 text-sm font-bold text-slate-600 mb-2">
               <div className="flex items-center gap-3">
                   <span className="text-[10px] font-black uppercase opacity-60">Duration:</span>

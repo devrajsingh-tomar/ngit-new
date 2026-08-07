@@ -511,8 +511,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         <span>Language: {settings.language}</span>
       </div>
 
-      {/* Exercise and Duration Controls – only in official exam mode */}
-      {showExerciseSwitcher && (
+      {/* Exercise and Duration Controls – hidden for official gov exams */}
+      {showExerciseSwitcher && !isOfficialExam && (
         <div className="bg-[#e0e0e0] border-b border-gray-400 p-2 flex flex-wrap items-center gap-6 text-sm font-bold text-gray-800 shadow-sm relative z-10 px-6">
           <div className="flex items-center gap-2">
               <span className="text-gray-700">Duration:</span>
