@@ -46,7 +46,8 @@ export default async function DifficultySelectionPage({ params: paramsPromise }:
   const availableDifficulties = await TypingExam.distinct("difficulty", { 
     $or: [
       { govExamId: exam._id },
-      { govExamCategoryId: { $in: categoryIds } }
+      { govExamCategoryId: { $in: categoryIds } },
+      { govExamId: { $in: [null, undefined] } }
     ],
     language: langFilter,
     status: { $ne: "Inactive" }

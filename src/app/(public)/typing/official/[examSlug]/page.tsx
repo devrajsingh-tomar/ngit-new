@@ -84,7 +84,10 @@ export default async function LanguageSelectionPage({
   // Find which languages actually have tests for this exam
   // Group all Hindi variants (Unicode Hindi, Krutidev Hindi, Mangal Hindi) under "Hindi"
   const rawLanguages = await TypingExam.distinct("language", { 
-    govExamId: exam._id,
+    $or: [
+      { govExamId: exam._id },
+      { govExamId: { $in: [null, undefined] } }
+    ],
     status: { $ne: "Inactive" }
   });
 
