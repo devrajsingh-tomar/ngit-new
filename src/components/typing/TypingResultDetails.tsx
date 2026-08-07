@@ -120,7 +120,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const isAHC = examMode === "AHC";
   const isUPPolice = examMode === "UP_POLICE";
   
-  const allowHalfMistakes = categoryConfig ? categoryConfig.allowHalfMistakes : !isAHC;
+  const allowHalfMistakes = isAHC ? false : (categoryConfig ? categoryConfig.allowHalfMistakes : true);
 
   const maxWords = submittedWords.length;
   for (let idx = 0; idx < maxWords; idx++) {
@@ -182,9 +182,9 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const totalErrors = !allowHalfMistakes ? fullMistakes : fullMistakes + (halfMistakes / 2);
 
   // Marks Calculation: AHC RO/ARO standard or dynamically configured
-  const ahcTotalMarks = categoryConfig ? (categoryConfig.totalMarks || 50) : 50;
-  const errorPenalty = categoryConfig ? (categoryConfig.errorPenalty || 0.1) : 0.1;
-  const ahcQualifyingMarks = categoryConfig ? (categoryConfig.qualifyingMarks || 25) : 25;
+  const ahcTotalMarks = isAHC ? 50 : (categoryConfig ? (categoryConfig.totalMarks || 50) : 50);
+  const errorPenalty = isAHC ? 0.1 : (categoryConfig ? (categoryConfig.errorPenalty || 0.1) : 0.1);
+  const ahcQualifyingMarks = isAHC ? 25 : (categoryConfig ? (categoryConfig.qualifyingMarks || 25) : 25);
   
   const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * errorPenalty)) : 0;
   
@@ -225,7 +225,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         : fallbackNetWpm.toFixed(2));
   
   // AHC RO/ARO: passing WPM is 25. Others: Hindi 25, UP Police 35, rest 30.
-  const passingWpm = categoryConfig ? (categoryConfig.minWpm || 25) : (isAHC ? 25 : (isHindi ? 25 : (isUPPolice ? 35 : 30)));
+  const passingWpm = isAHC ? 25 : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : (isUPPolice ? 35 : 30)));
   const minAccuracy = categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00;
   const accuracy = result.accuracy !== undefined 
     ? result.accuracy.toFixed(2) 
