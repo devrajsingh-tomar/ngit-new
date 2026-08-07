@@ -35,6 +35,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     const { searchParams } = new URL(req.url);
     const govExamCategoryId = searchParams.get("govExamCategoryId");
+    const govExamId = searchParams.get("govExamId");
     
     let examObj = exam.toObject();
 
@@ -56,6 +57,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         if (category.govExamId) {
           examObj.govExamId = category.govExamId;
         }
+      }
+    } else if (govExamId && mongoose.Types.ObjectId.isValid(govExamId)) {
+      const GovExam = (await import("@/models/GovExam")).default;
+      const gov = await GovExam.findById(govExamId).lean();
+      if (gov) {
+        examObj.govExamId = gov;
+        examObj.duration = gov.defaultDuration || examObj.duration;
       }
     }
 

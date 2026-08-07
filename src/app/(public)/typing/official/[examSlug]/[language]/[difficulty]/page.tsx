@@ -177,7 +177,7 @@ export default async function TestSelectionPage({
                     
                     <div className="pt-2 relative z-10">
                       <Link 
-                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}${categoryId ? `&govExamCategoryId=${categoryId}` : ''}`}
+                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}${categoryId ? `&govExamCategoryId=${categoryId}` : ''}${exam ? `&govExamId=${exam._id.toString()}` : ''}`}
                         className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-100 hover:shadow-lg flex items-center justify-center gap-2 group-hover:scale-[1.01] cursor-pointer"
                       >
                         Start Free <Play className="w-3 h-3 fill-white shrink-0" />
@@ -292,6 +292,7 @@ export default async function TestSelectionPage({
                           duration={resolvedDuration}
                           langFormatted={langFormatted}
                           govExamCategoryId={categoryId || undefined}
+                          govExamId={exam._id.toString()}
                         />
                       </td>
                     </tr>

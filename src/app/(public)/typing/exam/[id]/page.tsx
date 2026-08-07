@@ -74,12 +74,16 @@ export default function TypingExamPage() {
   }, [exam, selectedLanguage, selectedLayout]);
 
   const categoryId = searchParams?.get("govExamCategoryId");
+  const govExamId = searchParams?.get("govExamId");
 
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
-    const categoryQuery = categoryId ? `?govExamCategoryId=${categoryId}` : "";
-    fetch(`/api/typing/exams/${id}${categoryQuery}`)
+    const paramsList = [];
+    if (categoryId) paramsList.push(`govExamCategoryId=${categoryId}`);
+    if (govExamId) paramsList.push(`govExamId=${govExamId}`);
+    const queryString = paramsList.length > 0 ? `?${paramsList.join("&")}` : "";
+    fetch(`/api/typing/exams/${id}${queryString}`)
       .then(async res => {
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
