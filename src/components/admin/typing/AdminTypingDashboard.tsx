@@ -125,6 +125,39 @@ export default function AdminTypingDashboard() {
     }
   }, [showExamModal, editingExam]);
 
+  const [selectedGovExams, setSelectedGovExams] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (showPassageModal) {
+      if (editingPassage) {
+        const initialSelected = govExams.filter(gov => {
+          return exams.some(ex => {
+            const pid = ex.passageId?._id || ex.passageId;
+            const gid = ex.govExamId?._id || ex.govExamId;
+            return pid === editingPassage._id && gid?.toString() === gov._id?.toString();
+          });
+        }).map(gov => gov._id.toString());
+        setSelectedGovExams(initialSelected);
+      } else {
+        setSelectedGovExams([]);
+      }
+    }
+  }, [showPassageModal, editingPassage, govExams, exams]);
+
+  const handleToggleGovExam = (id: string) => {
+    setSelectedGovExams(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllGovExams = (checked: boolean) => {
+    if (checked) {
+      setSelectedGovExams(govExams.map(g => g._id.toString()));
+    } else {
+      setSelectedGovExams([]);
+    }
+  };
+
   // Pagination
   const [examPage, setExamPage] = useState(1);
   const [passagePage, setPassagePage] = useState(1);
@@ -532,7 +565,7 @@ export default function AdminTypingDashboard() {
   const handleAddRulePreset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
-    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    const data: any = Object.fromEntries(new FormData(e.currentTarget).entries());
     
     // Explicitly parse disableCopyPaste checkbox
     data.disableCopyPaste = (e.currentTarget.elements.namedItem("disableCopyPaste") as HTMLInputElement)?.checked;
@@ -2121,16 +2154,23 @@ export default function AdminTypingDashboard() {
                     )}
                     {modalSection === 'Government' && (
                       <div className="col-span-2 space-y-2 animate-in slide-in-from-top-2 duration-300">
-                        <label className="text-xs font-bold text-slate-500 uppercase block">Assign to Government Exams</label>
+                        <div className="flex justify-between items-center">
+                          <label className="text-xs font-bold text-slate-500 uppercase block">Assign to Government Exams</label>
+                          {govExams.length > 0 && (
+                            <label className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-750 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={selectedGovExams.length === govExams.length}
+                                onChange={(e) => handleSelectAllGovExams(e.target.checked)}
+                                className="w-3.5 h-3.5 text-indigo-650 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                              />
+                              Select All
+                            </label>
+                          )}
+                        </div>
                         <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50/50 border border-slate-200 rounded-2xl max-h-48 overflow-y-auto shadow-inner">
                           {govExams.map(gov => {
-                            const isChecked = editingPassage 
-                              ? exams.some(ex => {
-                                  const pid = ex.passageId?._id || ex.passageId;
-                                  const gid = ex.govExamId?._id || ex.govExamId;
-                                  return pid === editingPassage._id && gid?.toString() === gov._id?.toString();
-                                })
-                              : false;
+                            const isChecked = selectedGovExams.includes(gov._id.toString());
                             
                             return (
                               <label key={gov._id} className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-indigo-650 transition-colors">
@@ -2138,7 +2178,8 @@ export default function AdminTypingDashboard() {
                                   type="checkbox" 
                                   name="govExamIds" 
                                   value={gov._id} 
-                                  defaultChecked={isChecked}
+                                  checked={isChecked}
+                                  onChange={() => handleToggleGovExam(gov._id.toString())}
                                   className="w-4 h-4 text-indigo-650 rounded border-slate-350 focus:ring-indigo-500 cursor-pointer" 
                                 />
                                 {gov.title}
