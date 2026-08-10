@@ -5,8 +5,8 @@ export default function TypingInformationSection() {
   const features = [
     {
       icon: <Award className="w-8 h-8 text-amber-500" />,
-      title: "Official Exam Simulation",
-      description: "Practice on patterns exactly mimicking UPSSSC Junior Assistant, Allahabad High Court (AHC), and SSC rules. Includes precise backspace patterns and calculations."
+      title: "Best for Government Typing Exam Preparation",
+      description: "Practice with tailored rule configurations and calculations to optimize your speed and accuracy."
     },
     {
       icon: <Keyboard className="w-8 h-8 text-indigo-500" />,
