@@ -27,9 +27,9 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
             href: "/typing"
         },
         {
-            title: "English Steno Software (Login/Register)",
+            title: "Shorthand Software (Coming Soon)",
             image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600", // Writing pad/pen banner
-            href: "https://svshorthandsoftware.blogspot.com"
+            href: "/shorthand"
         },
         {
             title: "University Courses (Admission Open)",
