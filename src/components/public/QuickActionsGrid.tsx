@@ -89,7 +89,7 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
                             >
                                 <div className="w-full">
                                     {/* Card Image Header */}
-                                    <div className="w-full aspect-[2.4/1] relative overflow-hidden bg-slate-900 flex items-center justify-center">
+                                    <div className="w-full aspect-square relative overflow-hidden bg-slate-900 flex items-center justify-center">
                                         <img 
                                             src={item.image} 
                                             alt={item.title} 

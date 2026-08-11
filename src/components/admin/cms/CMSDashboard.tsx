@@ -730,7 +730,7 @@ export default function CMSDashboard() {
                     <div key={c._id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm group hover:shadow-md transition-all flex flex-col justify-between">
                       <div>
                         {/* Card image header */}
-                        <div className="w-full aspect-[2.4/1] relative overflow-hidden bg-slate-900 flex items-center justify-center">
+                        <div className="w-full aspect-square relative overflow-hidden bg-slate-900 flex items-center justify-center">
                           <img 
                             src={c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600"} 
                             alt={c.title} 
