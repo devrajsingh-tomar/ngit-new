@@ -33,6 +33,7 @@ interface CourseItem {
     icon: any;
     color: string;
     category: "Undergraduate" | "Postgraduate" | "Diploma" | "Professional";
+    image: string;
 }
 
 export default function UniversityCoursesPage() {
@@ -43,22 +44,150 @@ export default function UniversityCoursesPage() {
     const [notes, setNotes] = useState("");
 
     const courses: CourseItem[] = [
-        { id: "pgdca", title: "PGDCA", fullName: "Post Graduate Diploma in Computer Applications", icon: Code, color: "from-purple-500 to-pink-500", category: "Diploma" },
-        { id: "mba", title: "MBA", fullName: "Master of Business Administration", icon: Building, color: "from-indigo-500 to-purple-500", category: "Postgraduate" },
-        { id: "bca", title: "BCA", fullName: "Bachelor of Computer Applications", icon: Laptop, color: "from-violet-500 to-purple-500", category: "Undergraduate" },
-        { id: "bcom", title: "B.Com.", fullName: "Bachelor of Commerce", icon: TrendingUp, color: "from-cyan-500 to-blue-500", category: "Undergraduate" },
-        { id: "bba", title: "BBA", fullName: "Bachelor of Business Administration", icon: Briefcase, color: "from-sky-500 to-indigo-500", category: "Undergraduate" },
-        { id: "ma", title: "M.A.", fullName: "Master of Arts", icon: GraduationCap, color: "from-emerald-500 to-teal-500", category: "Postgraduate" },
-        { id: "blib", title: "B.Lib.", fullName: "Bachelor of Library Science", icon: Library, color: "from-orange-500 to-amber-500", category: "Undergraduate" },
-        { id: "llb", title: "LLB", fullName: "Bachelor of Laws", icon: Scale, color: "from-slate-700 to-slate-900", category: "Professional" },
-        { id: "yoga", title: "YOGA", fullName: "Diploma / Degree in Yoga Science", icon: Activity, color: "from-green-500 to-emerald-500", category: "Professional" },
-        { id: "ba", title: "B.A.", fullName: "Bachelor of Arts", icon: BookOpen, color: "from-blue-500 to-indigo-500", category: "Undergraduate" },
-        { id: "mcom", title: "M.Com.", fullName: "Master of Commerce", icon: LineChart, color: "from-teal-500 to-cyan-500", category: "Postgraduate" },
-        { id: "mlib", title: "M.Lib.", fullName: "Master of Library Science", icon: Library, color: "from-amber-500 to-yellow-500", category: "Postgraduate" },
-        { id: "msc", title: "M.Sc.", fullName: "Master of Science", icon: Atom, color: "from-rose-500 to-pink-500", category: "Postgraduate" },
-        { id: "mca", title: "MCA", fullName: "Master of Computer Applications", icon: Terminal, color: "from-fuchsia-500 to-purple-500", category: "Postgraduate" },
-        { id: "btech", title: "B.Tech", fullName: "Bachelor of Technology", icon: Cpu, color: "from-red-500 to-rose-600", category: "Professional" },
-        { id: "polytechnic", title: "POLYTECHNIC", fullName: "Diploma in Engineering", icon: Settings, color: "from-amber-600 to-orange-600", category: "Diploma" }
+        { 
+            id: "pgdca", 
+            title: "PGDCA", 
+            fullName: "Post Graduate Diploma in Computer Applications", 
+            icon: Code, 
+            color: "from-purple-500 to-pink-500", 
+            category: "Diploma",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (16).jpeg"
+        },
+        { 
+            id: "mba", 
+            title: "MBA", 
+            fullName: "Master of Business Administration", 
+            icon: Building, 
+            color: "from-indigo-500 to-purple-500", 
+            category: "Postgraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (15).jpeg"
+        },
+        { 
+            id: "bca", 
+            title: "BCA", 
+            fullName: "Bachelor of Computer Applications", 
+            icon: Laptop, 
+            color: "from-violet-500 to-purple-500", 
+            category: "Undergraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (14).jpeg"
+        },
+        { 
+            id: "bcom", 
+            title: "B.Com.", 
+            fullName: "Bachelor of Commerce", 
+            icon: TrendingUp, 
+            color: "from-cyan-500 to-blue-500", 
+            category: "Undergraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (13).jpeg"
+        },
+        { 
+            id: "bba", 
+            title: "BBA", 
+            fullName: "Bachelor of Business Administration", 
+            icon: Briefcase, 
+            color: "from-sky-500 to-indigo-500", 
+            category: "Undergraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (12).jpeg"
+        },
+        { 
+            id: "ma", 
+            title: "M.A.", 
+            fullName: "Master of Arts", 
+            icon: GraduationCap, 
+            color: "from-emerald-500 to-teal-500", 
+            category: "Postgraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (11).jpeg"
+        },
+        { 
+            id: "blib", 
+            title: "B.Lib.", 
+            fullName: "Bachelor of Library Science", 
+            icon: Library, 
+            color: "from-orange-500 to-amber-500", 
+            category: "Undergraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (10).jpeg"
+        },
+        { 
+            id: "llb", 
+            title: "LLB", 
+            fullName: "Bachelor of Laws", 
+            icon: Scale, 
+            color: "from-slate-700 to-slate-900", 
+            category: "Professional",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (9).jpeg"
+        },
+        { 
+            id: "yoga", 
+            title: "YOGA", 
+            fullName: "Diploma / Degree in Yoga Science", 
+            icon: Activity, 
+            color: "from-green-500 to-emerald-500", 
+            category: "Professional",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (8).jpeg"
+        },
+        { 
+            id: "ba", 
+            title: "B.A.", 
+            fullName: "Bachelor of Arts", 
+            icon: BookOpen, 
+            color: "from-blue-500 to-indigo-500", 
+            category: "Undergraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (7).jpeg"
+        },
+        { 
+            id: "mcom", 
+            title: "M.Com.", 
+            fullName: "Master of Commerce", 
+            icon: LineChart, 
+            color: "from-teal-500 to-cyan-500", 
+            category: "Postgraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (5).jpeg"
+        },
+        { 
+            id: "mlib", 
+            title: "M.Lib.", 
+            fullName: "Master of Library Science", 
+            icon: Library, 
+            color: "from-amber-500 to-yellow-500", 
+            category: "Postgraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (4).jpeg"
+        },
+        { 
+            id: "msc", 
+            title: "M.Sc.", 
+            fullName: "Master of Science", 
+            icon: Atom, 
+            color: "from-rose-500 to-pink-500", 
+            category: "Postgraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (3).jpeg"
+        },
+        { 
+            id: "mca", 
+            title: "MCA", 
+            fullName: "Master of Computer Applications", 
+            icon: Terminal, 
+            color: "from-fuchsia-500 to-purple-500", 
+            category: "Postgraduate",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (2).jpeg"
+        },
+        { 
+            id: "btech", 
+            title: "B.Tech", 
+            fullName: "Bachelor of Technology", 
+            icon: Cpu, 
+            color: "from-red-500 to-rose-600", 
+            category: "Professional",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM (1).jpeg"
+        },
+        { 
+            id: "polytechnic", 
+            title: "POLYTECHNIC", 
+            fullName: "Diploma in Engineering", 
+            icon: Settings, 
+            color: "from-amber-600 to-orange-600", 
+            category: "Diploma",
+            image: "/images/WhatsApp Image 2026-08-11 at 10.33.12 AM.jpeg"
+        }
     ];
 
     const handleSendWhatsApp = (e: React.FormEvent) => {
@@ -145,28 +274,35 @@ Sent from NGIT University Admission Portal`;
                                     <button
                                         key={course.id}
                                         onClick={() => setSelectedCourse(course.id)}
-                                        className={`group relative text-left p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between min-h-[150px] ${
+                                        className={`group relative text-left p-3 rounded-3xl border transition-all duration-300 flex flex-col justify-between ${
                                             isSelected 
                                                 ? "bg-white border-primary shadow-xl ring-2 ring-primary/25 -translate-y-1" 
                                                 : "bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5"
                                         }`}
                                     >
-                                        <div className="flex justify-between items-start w-full">
-                                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${course.color} flex items-center justify-center text-white shadow-md`}>
-                                                <IconComponent className="w-5 h-5" />
+                                        <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-3 border border-slate-100 bg-slate-100 shadow-inner">
+                                            <img 
+                                                src={course.image} 
+                                                alt={course.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                            <div className="absolute top-2 left-2 flex gap-1">
+                                                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${course.color} flex items-center justify-center text-white shadow-md`}>
+                                                    <IconComponent className="w-4 h-4" />
+                                                </div>
                                             </div>
                                             {isSelected && (
-                                                <span className="bg-primary/10 text-primary p-1 rounded-full">
-                                                    <CheckCircle2 className="w-4 h-4 fill-current text-primary" />
+                                                <span className="absolute top-2 right-2 bg-primary text-white p-1 rounded-full shadow-md">
+                                                    <CheckCircle2 className="w-4 h-4 fill-current" />
                                                 </span>
                                             )}
                                         </div>
 
-                                        <div className="mt-4">
+                                        <div className="px-2 pb-2">
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
                                                 {course.category}
                                             </span>
-                                            <h3 className="text-xl font-black text-slate-900 mt-0.5">
+                                            <h3 className="text-lg font-black text-slate-900 mt-0.5 leading-tight">
                                                 {course.title}
                                             </h3>
                                             <p className="text-xs font-bold text-slate-500 mt-1 line-clamp-1">
@@ -190,6 +326,16 @@ Sent from NGIT University Admission Portal`;
                             </p>
 
                             <form onSubmit={handleSendWhatsApp} className="space-y-4">
+                                {selectedCourse && (
+                                    <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 mb-4 shadow-sm bg-slate-50">
+                                        <img 
+                                            src={courses.find(c => c.id === selectedCourse)?.image} 
+                                            alt="Selected Course Banner" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+
                                 <div className="space-y-1.5">
                                     <Label htmlFor="name" className="text-xs font-black uppercase text-slate-500 tracking-wider">
                                         Your Full Name <span className="text-rose-500">*</span>
