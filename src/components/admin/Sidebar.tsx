@@ -67,6 +67,7 @@ const menuGroups = [
         groupLabel: "Website Editor",
         items: [
             { label: "Homepage Settings", href: "/admin/content", icon: Layout },
+            { label: "Blogs & Articles", href: "/admin/blogs", icon: FileText },
         ]
     },
     {
