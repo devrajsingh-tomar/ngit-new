@@ -5,19 +5,23 @@ import QuickActionsGrid from "@/components/public/QuickActionsGrid";
 import TypingInformationSection from "@/components/public/TypingInformationSection";
 import AppDownloadSection from "@/components/public/AppDownloadSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
+import BlogSection from "@/components/public/BlogSection";
 
 import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
 import { getNotices } from "@/app/actions/notice";
+import { listBlogPosts } from "@/app/actions/blog";
 
 export default async function PublicHomePage() {
-    const [slidesRes, dynamicRes, noticesRes] = await Promise.all([
+    const [slidesRes, dynamicRes, noticesRes, blogRes] = await Promise.all([
         getHeroSlides(),
         getDynamicPageData("home"),
         getNotices(false),
+        listBlogPosts({ status: "PUBLISHED", limit: 3, page: 1 }),
     ]);
 
     const heroSlides = slidesRes.success ? slidesRes.slides : [];
     const rawNotices = noticesRes.success ? noticesRes.notices : [];
+    const blogs = blogRes.success && blogRes.data ? (blogRes.data.posts || []) : [];
     
     const notifications = rawNotices.map((n: any) => ({
         id: n._id?.toString() || n._id,
@@ -46,7 +50,11 @@ export default async function PublicHomePage() {
 
             {/* 5. Mobile App Download Section */}
             <AppDownloadSection />
+
+            {/* 6. Blog Grid Section */}
+            <BlogSection blogs={blogs} />
         </div>
     );
 }
+
 

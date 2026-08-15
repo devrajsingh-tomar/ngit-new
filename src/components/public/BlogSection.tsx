@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Calendar, User, Clock, Zap } from "lucide-react";
+import { ArrowRight, Calendar, User, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -9,10 +9,11 @@ interface BlogPost {
     _id: string;
     title: string;
     slug: string;
-    excerpt: string;
-    thumbnail: string;
-    category: string;
-    author: { name: string };
+    excerpt?: string;
+    content?: string;
+    thumbnail?: string;
+    category?: string;
+    author?: { name: string };
     createdAt: string;
 }
 
@@ -20,6 +21,50 @@ export default function BlogSection({ blogs = [], data }: { blogs?: BlogPost[], 
     const title = data?.section_name || "Latest Insights & Knowledge";
     const subtitle = data?.subtitle || "Storytelling & SEO Ecosystem";
     const description = data?.description || "Expert perspectives on education, technology, and success strategies from our experienced faculty and industry leaders.";
+
+    const fallbackBlogs: BlogPost[] = [
+        {
+            _id: "demo-1",
+            title: "Top Computer Courses for Career Advancement in 2026",
+            slug: "top-computer-courses-2026",
+            excerpt: "Discover the most in-demand technical certifications and skills that top employers look for in modern job candidates.",
+            thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1000",
+            category: "Career & Guidance",
+            author: { name: "NGIT Editorial" },
+            createdAt: new Date().toISOString()
+        },
+        {
+            _id: "demo-2",
+            title: "Mastering Speed & Accuracy for Government Typing Exams",
+            slug: "mastering-typing-speed-exams",
+            excerpt: "Essential tips, daily drills, and posture advice to clear high-stakes government typing tests effortlessly.",
+            thumbnail: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?q=80&w=1000",
+            category: "Exam Prep",
+            author: { name: "NGIT Faculty" },
+            createdAt: new Date().toISOString()
+        },
+        {
+            _id: "demo-3",
+            title: "How Practical IT Training Transforms Technical Skill Sets",
+            slug: "practical-it-training-benefits",
+            excerpt: "Hands-on projects and laboratory experience are crucial for bridging the gap between theory and industry needs.",
+            thumbnail: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1000",
+            category: "Technology",
+            author: { name: "Admin" },
+            createdAt: new Date().toISOString()
+        }
+    ];
+
+    const displayBlogs = blogs && blogs.length > 0 ? blogs : fallbackBlogs;
+
+    const getExcerpt = (post: BlogPost) => {
+        if (post.excerpt && post.excerpt.trim()) return post.excerpt;
+        if (post.content) {
+            const cleanText = post.content.replace(/<[^>]*>?/gm, "").trim();
+            if (cleanText) return cleanText.slice(0, 140) + "...";
+        }
+        return "Dive deep into our latest article exploring the intersections of academic excellence and modern skill development...";
+    };
 
     return (
         <section id="blog" className="py-24 bg-slate-50 relative overflow-hidden">
@@ -44,9 +89,9 @@ export default function BlogSection({ blogs = [], data }: { blogs?: BlogPost[], 
 
                 {/* Blogs Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {blogs.slice(0, 3).map((post, idx) => (
+                    {displayBlogs.slice(0, 3).map((post, idx) => (
                         <motion.div
-                            key={post._id}
+                            key={post._id || idx}
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -55,14 +100,14 @@ export default function BlogSection({ blogs = [], data }: { blogs?: BlogPost[], 
                         >
                             <div className="h-full bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden hover:shadow-2xl hover:border-primary/20 transition-all duration-500 flex flex-col">
                                 {/* Image Container */}
-                                <div className="aspect-[16/10] relative overflow-hidden">
+                                <div className="aspect-[16/10] relative overflow-hidden bg-slate-100">
                                     <img 
-                                        src={post.thumbnail || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070"} 
+                                        src={post.thumbnail && post.thumbnail.trim() ? post.thumbnail : "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070"} 
                                         alt={post.title}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                     <div className="absolute top-6 left-6 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[9px] font-black text-slate-900 uppercase tracking-widest shadow-xl">
-                                        {post.category || "Education"}
+                                        {post.category && post.category.trim() ? post.category : "Education"}
                                     </div>
                                 </div>
 
@@ -71,12 +116,12 @@ export default function BlogSection({ blogs = [], data }: { blogs?: BlogPost[], 
                                     <div className="flex items-center gap-4 mb-6">
                                         <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                             <Calendar className="w-3.5 h-3.5" />
-                                            {new Date(post.createdAt).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently"}
                                         </div>
                                         <span className="w-1 h-1 rounded-full bg-slate-200" />
                                         <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                             <User className="w-3.5 h-3.5 text-primary" />
-                                            By {post.author?.name || "Admin"}
+                                            By {post.author?.name || "NGIT Team"}
                                         </div>
                                     </div>
 
@@ -85,7 +130,7 @@ export default function BlogSection({ blogs = [], data }: { blogs?: BlogPost[], 
                                     </h3>
                                     
                                     <p className="text-slate-500 font-medium leading-relaxed line-clamp-3 flex-1">
-                                        {post.excerpt || "Dive deep into our latest article exploring the intersections of academic excellence and modern skill development..."}
+                                        {getExcerpt(post)}
                                     </p>
 
                                     <Link href={`/blog/${post.slug}`} className="mt-8 block">
