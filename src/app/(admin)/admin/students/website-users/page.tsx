@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, User, Mail, Phone, CheckCircle2, XCircle, Download } from "lucide-react";
+import { Search, User, Mail, Phone, CheckCircle2, XCircle, Download, KeyRound, Lock, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { getWebsiteUsers } from "@/app/actions/registration";
+import { resetStudentPasswordAdmin } from "@/app/actions/student-admin";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface WebsiteUser {
     _id: string;
@@ -18,6 +22,44 @@ export default function WebsiteUsersPage() {
     const [users, setUsers] = useState<WebsiteUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+
+    // Password reset state
+    const [resetModalOpen, setResetModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<WebsiteUser | null>(null);
+    const [newPasswordVal, setNewPasswordVal] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [resetting, setResetting] = useState(false);
+
+    const handleGeneratePassword = () => {
+        const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let pwd = "Ngit@";
+        for (let i = 0; i < 4; i++) {
+            pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        setNewPasswordVal(pwd);
+    };
+
+    const handleResetPassword = async () => {
+        if (!selectedUser || !newPasswordVal || newPasswordVal.length < 6) {
+            toast.error("Password must be at least 6 characters long");
+            return;
+        }
+        setResetting(true);
+        try {
+            const res = await resetStudentPasswordAdmin(selectedUser._id, newPasswordVal);
+            if (res.success) {
+                toast.success(res.message || "Password updated successfully!");
+                setResetModalOpen(false);
+                setNewPasswordVal("");
+            } else {
+                toast.error(res.error || "Failed to reset password");
+            }
+        } catch (err) {
+            toast.error("Error resetting password");
+        } finally {
+            setResetting(false);
+        }
+    };
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -135,6 +177,7 @@ export default function WebsiteUsersPage() {
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Contact Info</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Registered On</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -189,6 +232,20 @@ export default function WebsiteUsersPage() {
                                                 })}
                                             </p>
                                         </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <Button 
+                                                onClick={() => {
+                                                    setSelectedUser(u);
+                                                    setNewPasswordVal("");
+                                                    setResetModalOpen(true);
+                                                }}
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 text-xs font-bold text-amber-700 border-amber-200 hover:bg-amber-50 rounded-xl"
+                                            >
+                                                <KeyRound className="w-3.5 h-3.5 mr-1" /> Reset Pwd
+                                            </Button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -201,6 +258,73 @@ export default function WebsiteUsersPage() {
                     </div>
                 )}
             </div>
+
+            {/* Reset Password Modal */}
+            <Dialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
+                <DialogContent className="max-w-md rounded-3xl">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                                <KeyRound className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-base font-black text-slate-900">Reset User Password</DialogTitle>
+                                <DialogDescription className="text-xs text-slate-500">
+                                    Update login password for <span className="font-bold text-slate-800">{selectedUser?.name}</span> ({selectedUser?.email})
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-3">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-700 flex justify-between items-center">
+                                <span>New Password</span>
+                                <button 
+                                    type="button"
+                                    onClick={handleGeneratePassword}
+                                    className="text-[10px] text-amber-600 hover:underline font-bold flex items-center gap-1"
+                                >
+                                    <Lock className="w-3 h-3" /> Auto-Generate
+                                </button>
+                            </label>
+                            <div className="relative">
+                                <Input 
+                                    type={showPassword ? "text" : "password"}
+                                    value={newPasswordVal}
+                                    onChange={(e) => setNewPasswordVal(e.target.value)}
+                                    placeholder="Enter new password (min 6 characters)..."
+                                    className="h-10 text-xs font-mono pr-10 bg-slate-50 border-slate-200 rounded-xl"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button 
+                            onClick={() => setResetModalOpen(false)} 
+                            variant="outline" 
+                            className="h-9 text-xs font-semibold rounded-xl"
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleResetPassword}
+                            disabled={resetting || !newPasswordVal}
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-9 text-xs rounded-xl px-5"
+                        >
+                            {resetting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "Confirm Reset"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

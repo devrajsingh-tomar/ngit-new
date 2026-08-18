@@ -5,7 +5,7 @@ import Link from "next/link";
 import { 
   Check, X, Search, Mail, Phone, UserCheck, UserX, CreditCard, 
   FileText, Eye, BookOpen, Calendar, MapPin, User, ChevronLeft, ChevronRight,
-  Trash2, Send, Download, RefreshCw, UserPlus, Info, CheckCircle2, Clock, Smartphone
+  Trash2, Send, Download, RefreshCw, UserPlus, Info, CheckCircle2, Clock, Smartphone, KeyRound, EyeOff, Lock
 } from "lucide-react";
 import { toast } from "sonner";
 import { getStudentRegistrations, approveStudent, rejectStudent } from "@/app/actions/registration";
@@ -15,7 +15,8 @@ import {
   renewStudentEnrollmentAdmin, 
   toggleStudentEnrollmentActiveAdmin,
   deleteStudentPermanentlyAdmin,
-  getStudentAffairsKPIs
+  getStudentAffairsKPIs,
+  resetStudentPasswordAdmin
 } from "@/app/actions/student-admin";
 import { activateOrExtendSubscriptionAdminAction } from "@/app/actions/subscription";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,44 @@ export default function AdminStudentsPage() {
   const [studentDetails, setStudentDetails] = useState<any>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  // Reset Password State
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
+  const [resetTargetStudent, setResetTargetStudent] = useState<StudentProfile | null>(null);
+  const [newPasswordVal, setNewPasswordVal] = useState("");
+  const [showPasswordText, setShowPasswordText] = useState(false);
+  const [isResettingPwd, setIsResettingPwd] = useState(false);
+
+  const handleGeneratePassword = () => {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let pwd = "Ngit@";
+    for (let i = 0; i < 4; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPasswordVal(pwd);
+  };
+
+  const handleResetPasswordSubmit = async (userId: string) => {
+    if (!newPasswordVal.trim() || newPasswordVal.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    setIsResettingPwd(true);
+    try {
+      const res = await resetStudentPasswordAdmin(userId, newPasswordVal);
+      if (res.success) {
+        toast.success(res.message || "Student password updated successfully!");
+        setNewPasswordVal("");
+        setResetPasswordModalOpen(false);
+      } else {
+        toast.error(res.error || "Failed to reset password");
+      }
+    } catch (err) {
+      toast.error("Error resetting student password");
+    } finally {
+      setIsResettingPwd(false);
+    }
+  };
 
   // Manual Subscription activation state
   const [selectedPlanType, setSelectedPlanType] = useState<"MONTHLY" | "QUARTERLY" | "HALF_YEARLY">("MONTHLY");
@@ -470,14 +509,28 @@ export default function AdminStudentsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <Button 
-                              onClick={() => handleViewDetails(s)} 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-7 text-[10px] font-bold"
-                            >
-                              <Eye className="w-3.5 h-3.5 mr-1" /> View Details
-                            </Button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button 
+                                onClick={() => {
+                                  setResetTargetStudent(s);
+                                  setNewPasswordVal("");
+                                  setResetPasswordModalOpen(true);
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-[10px] font-bold text-amber-700 border-amber-200 hover:bg-amber-50 rounded-lg"
+                              >
+                                <KeyRound className="w-3.5 h-3.5 mr-1" /> Reset Pwd
+                              </Button>
+                              <Button 
+                                onClick={() => handleViewDetails(s)} 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-[10px] font-bold rounded-lg"
+                              >
+                                <Eye className="w-3.5 h-3.5 mr-1" /> View Details
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -788,6 +841,56 @@ export default function AdminStudentsPage() {
                     </div>
                   </div>
 
+                  {/* Security & Password Reset Card */}
+                  <div className="bg-amber-50/40 border border-amber-200/80 rounded-3xl p-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                          <KeyRound className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Reset Portal Password</h4>
+                          <p className="text-[10px] text-slate-500 font-medium">Overwrites student's existing login credentials</p>
+                        </div>
+                      </div>
+                      <Button 
+                        type="button" 
+                        onClick={handleGeneratePassword} 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 text-[10px] font-bold border-amber-300 text-amber-800 hover:bg-amber-100 rounded-xl"
+                      >
+                        <Lock className="w-3 h-3 mr-1" /> Auto-Generate Password
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Input 
+                          type={showPasswordText ? "text" : "password"}
+                          value={newPasswordVal}
+                          onChange={(e) => setNewPasswordVal(e.target.value)}
+                          placeholder="Enter new password (min 6 characters)..."
+                          className="h-10 text-xs font-mono pr-10 bg-white border-amber-200 rounded-xl"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => setShowPasswordText(!showPasswordText)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                        >
+                          {showPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <Button 
+                        onClick={() => handleResetPasswordSubmit(selectedStudent.userId)}
+                        disabled={isResettingPwd || !newPasswordVal}
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-10 text-xs rounded-xl px-5"
+                      >
+                        {isResettingPwd ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "Save New Password"}
+                      </Button>
+                    </div>
+                  </div>
+
                   {/* Danger Zone: Permanent Profile Purge */}
                   <div className="border border-rose-100 rounded-3xl p-5 bg-rose-50/50 space-y-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -814,6 +917,73 @@ export default function AdminStudentsPage() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── QUICK RESET PASSWORD MODAL ── */}
+      <Dialog open={resetPasswordModalOpen} onOpenChange={setResetPasswordModalOpen}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-black text-slate-900">Reset Student Password</DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  Update login password for <span className="font-bold text-slate-800">{resetTargetStudent?.name}</span>
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 flex justify-between items-center">
+                <span>New Password</span>
+                <button 
+                  type="button"
+                  onClick={handleGeneratePassword}
+                  className="text-[10px] text-amber-600 hover:underline font-bold flex items-center gap-1"
+                >
+                  <Lock className="w-3 h-3" /> Auto-Generate
+                </button>
+              </label>
+              <div className="relative">
+                <Input 
+                  type={showPasswordText ? "text" : "password"}
+                  value={newPasswordVal}
+                  onChange={(e) => setNewPasswordVal(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)..."
+                  className="h-10 text-xs font-mono pr-10 bg-slate-50 border-slate-200 rounded-xl"
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPasswordText(!showPasswordText)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                >
+                  {showPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              onClick={() => setResetPasswordModalOpen(false)} 
+              variant="outline" 
+              className="h-9 text-xs font-semibold rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => resetTargetStudent && handleResetPasswordSubmit(resetTargetStudent.userId)}
+              disabled={isResettingPwd || !newPasswordVal}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-9 text-xs rounded-xl px-5"
+            >
+              {isResettingPwd ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "Confirm Reset"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

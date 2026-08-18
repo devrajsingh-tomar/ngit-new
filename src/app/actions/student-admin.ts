@@ -10,6 +10,9 @@ import MockTestResult from "@/models/MockTestResult";
 import Course from "@/models/Course";
 import TypingSubscription from "@/models/TypingSubscription";
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // Auto-heal helper to ensure all student accounts have a StudentProfile and a unique Student ID (idNo)
 export async function autoHealStudentProfiles() {
@@ -326,3 +329,41 @@ export async function getStudentAffairsKPIs() {
     return { success: false, error: err.message };
   }
 }
+
+// Reset student password admin action
+export async function resetStudentPasswordAdmin(userId: string, newPassword: string) {
+  try {
+    await connectDB();
+
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== UserRole.ADMIN) {
+      return { success: false, error: "Unauthorized access: Admin authorization required" };
+    }
+
+    if (!userId) {
+      return { success: false, error: "Student User ID is required" };
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: "Password must be at least 6 characters long" };
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return { success: false, error: "Student user account not found" };
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashedPassword;
+    await user.save();
+
+    revalidatePath("/admin/students");
+    return { 
+      success: true, 
+      message: `Password for ${user.name || "student"} reset successfully!` 
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to reset password" };
+  }
+}
+
