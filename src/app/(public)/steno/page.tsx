@@ -1,17 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, Headphones, PlayCircle, Trophy, BarChart3, Award, ArrowRight, Layers, FileText, CheckCircle2 } from "lucide-react";
+import {
+  Mic,
+  Headphones,
+  PlayCircle,
+  Trophy,
+  BarChart3,
+  Award,
+  ArrowRight,
+  Layers,
+  FileText,
+  CheckCircle2,
+  Lock,
+  GraduationCap,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 
-export default function StenoMainHubPage() {
+export default function StenoMainLandingPage() {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated";
+
   return (
     <div className="bg-slate-50 min-h-screen py-10 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-10">
-        {/* Hero Section */}
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Single Informational Hero Section */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[2.5rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-4 max-w-2xl z-10">
+          <div className="space-y-5 max-w-2xl z-10">
             <span className="bg-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-indigo-400/30">
               India's Premier Stenography & Shorthand Portal
             </span>
@@ -19,23 +38,41 @@ export default function StenoMainHubPage() {
               Master Shorthand Dictations & Real-Time Transcriptions
             </h1>
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              Prepare for High Court, SSC Grade C & D, UPSSSC, and Railways Stenographer exams with audio dictations, Kruti Dev / Mangal font support, and automated evaluation.
+              Prepare for High Court, SSC Grade C & D, UPSSSC, and Railway Stenographer examinations with professional audio dictations, Kruti Dev & Mangal font engine, and automated error calculation.
             </p>
 
-            <div className="flex flex-wrap gap-3 pt-4">
-              <Link href="/steno/dictation">
-                <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
-                  <Headphones className="w-5 h-5" /> Start Dictation Practice
-                </Button>
-              </Link>
-              <Link href="/steno/dashboard">
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-12 px-6 rounded-2xl gap-2">
-                  <BarChart3 className="w-5 h-5 text-indigo-400" /> Student Dashboard
-                </Button>
-              </Link>
+            <div className="flex flex-wrap gap-4 pt-2">
+              {isLoggedIn ? (
+                <>
+                  <Link href="/steno/dashboard">
+                    <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
+                      <BarChart3 className="w-5 h-5" /> Open Student Steno Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/student">
+                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-12 px-6 rounded-2xl gap-2">
+                      <GraduationCap className="w-5 h-5 text-indigo-400" /> Student Portal
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login?callbackUrl=/steno/dashboard">
+                    <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
+                      <Lock className="w-5 h-5" /> Student Login for Access
+                    </Button>
+                  </Link>
+                  <Link href="/login?callbackUrl=/steno/dictation">
+                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-12 px-6 rounded-2xl gap-2">
+                      <Headphones className="w-5 h-5 text-indigo-400" /> Access Dictation Software
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
+          {/* Engine Highlights Badge Box */}
           <div className="w-full md:w-80 bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl space-y-4 z-10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center font-black">
@@ -43,57 +80,95 @@ export default function StenoMainHubPage() {
               </div>
               <div>
                 <h4 className="font-black text-sm text-white">Steno Audio Engine</h4>
-                <p className="text-[10px] text-slate-300">0.5x - 2.0x Dictation Speed</p>
+                <p className="text-[10px] text-slate-300">0.5x - 2.0x Dictation Playback</p>
               </div>
             </div>
             <div className="border-t border-white/10 pt-3 space-y-2 text-xs text-slate-300">
               <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Remington & Inscript Layouts</p>
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Half & Full Mistake Breakdown</p>
+              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Half & Full Error Breakdown</p>
               <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> SSC & High Court Exam Rules</p>
             </div>
           </div>
         </div>
 
-        {/* Feature Cards Grid */}
+        {/* Feature Highlights Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 rounded-3xl border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
+          <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
               <Headphones className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-slate-900">Audio Dictations</h3>
+            <h3 className="text-lg font-black text-slate-900">Audio Dictation Player</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Curated legal, editorial, and official audio dictations recorded at 80 WPM, 100 WPM, and 120 WPM.
+              Native HTML5 audio player supporting 40 WPM to 120 WPM playback speed adjustments with speed fluctuation simulation.
             </p>
-            <Link href="/steno/dictation" className="inline-flex items-center text-xs font-bold text-indigo-600 hover:gap-2 transition-all">
-              Explore Dictations <ArrowRight className="w-4 h-4 ml-1" />
+            <Link
+              href={isLoggedIn ? "/steno/dictation" : "/login?callbackUrl=/steno/dictation"}
+              className="inline-flex items-center text-xs font-bold text-indigo-600 hover:gap-2 transition-all"
+            >
+              {isLoggedIn ? "Open Dictation Player" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Card>
 
-          <Card className="p-6 rounded-3xl border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
+          <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
               <Layers className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-slate-900">Dictation Series</h3>
+            <h3 className="text-lg font-black text-slate-900">Series & Passages CMS</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Step-by-step series packages designed for progressive speed building and exam preparation.
+              Curated Legal, Editorial, PYQ, and Essay passage collections categorized for targeted speed enhancement.
             </p>
-            <Link href="/steno/series" className="inline-flex items-center text-xs font-bold text-emerald-600 hover:gap-2 transition-all">
-              View All Series <ArrowRight className="w-4 h-4 ml-1" />
+            <Link
+              href={isLoggedIn ? "/steno/series" : "/login?callbackUrl=/steno/series"}
+              className="inline-flex items-center text-xs font-bold text-emerald-600 hover:gap-2 transition-all"
+            >
+              {isLoggedIn ? "Browse Series Collections" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Card>
 
-          <Card className="p-6 rounded-3xl border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
+          <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
               <Award className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-slate-900">Steno Mock Exams</h3>
+            <h3 className="text-lg font-black text-slate-900">Official Exam Presets</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Timed exam simulations adhering to official SSC, High Court, and UPSSSC evaluation rules.
+              SSC Steno Grade C & D, Allahabad High Court, UPSSSC, and HSSC pattern mock exams with strict marking rules.
             </p>
-            <Link href="/steno/mock-tests" className="inline-flex items-center text-xs font-bold text-amber-600 hover:gap-2 transition-all">
-              Attempt Mock Tests <ArrowRight className="w-4 h-4 ml-1" />
+            <Link
+              href={isLoggedIn ? "/steno/mock-tests" : "/login?callbackUrl=/steno/mock-tests"}
+              className="inline-flex items-center text-xs font-bold text-amber-600 hover:gap-2 transition-all"
+            >
+              {isLoggedIn ? "Attempt Mock Tests" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Card>
+        </div>
+
+        {/* Informational Exam Standards & Font Support Banner */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <h2 className="text-xl font-black text-slate-900">Supported Stenography Exam Patterns</h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Evaluated strictly according to official government board parameters and guidelines.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-xs font-black text-indigo-600">SSC Grade C & D</span>
+              <p className="text-[11px] text-slate-500">80 WPM & 100 WPM • Full & Half mistake rules</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-xs font-black text-indigo-600">Allahabad High Court</span>
+              <p className="text-[11px] text-slate-500">Legal Dictations • Kruti Dev / Mangal support</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-xs font-black text-indigo-600">UPSSSC Steno</span>
+              <p className="text-[11px] text-slate-500">Remington GAIL & Inscript layout support</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-xs font-black text-indigo-600">Custom Practice</span>
+              <p className="text-[11px] text-slate-500">Student custom speed drills & tests</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

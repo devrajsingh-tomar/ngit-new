@@ -1,5 +1,6 @@
 import React from "react";
 import StenoNavHeader from "@/components/steno/StenoNavHeader";
+import StenoAuthGuard from "@/components/steno/StenoAuthGuard";
 
 export default function StenoModuleLayout({
   children,
@@ -9,7 +10,9 @@ export default function StenoModuleLayout({
   return (
     <div className="min-h-screen bg-slate-50">
       <StenoNavHeader />
-      <main>{children}</main>
+      <StenoAuthGuard>
+        <main>{children}</main>
+      </StenoAuthGuard>
     </div>
   );
 }

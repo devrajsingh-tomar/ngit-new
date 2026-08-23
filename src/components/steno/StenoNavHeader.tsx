@@ -15,10 +15,9 @@ import {
 } from "lucide-react";
 
 const stenoNavTabs = [
-  { label: "Overview", href: "/steno", icon: Mic },
   { label: "Steno Dashboard", href: "/steno/dashboard", icon: LayoutDashboard },
   { label: "Practice", href: "/steno/practice", icon: Zap },
-  { label: "Dictation", href: "/steno/dictation", icon: Headphones },
+  { label: "Dictation Player", href: "/steno/dictation", icon: Headphones },
   { label: "Mock Tests", href: "/steno/mock-tests", icon: Award },
   { label: "Steno Series", href: "/steno/series", icon: Layers },
   { label: "My Tests", href: "/steno/my-tests", icon: Clock },
@@ -27,6 +26,11 @@ const stenoNavTabs = [
 
 export default function StenoNavHeader() {
   const pathname = usePathname();
+
+  // Hide the internal tabs bar on the main public landing page (/steno)
+  if (pathname === "/steno" || pathname === "/steno/") {
+    return null;
+  }
 
   return (
     <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-xs">
