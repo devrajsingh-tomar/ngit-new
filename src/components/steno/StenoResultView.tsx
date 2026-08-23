@@ -89,7 +89,7 @@ export const StenoResultView: React.FC<StenoResultViewProps> = ({ result }) => {
             </Button>
           </Link>
           <Link href="/student/steno/practice">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-11 px-5 text-xs rounded-xl gap-1.5">
+            <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-11 px-5 text-xs rounded-xl border border-white/20 shadow-xs gap-1.5 transition-all">
               <ArrowLeft className="w-4 h-4" /> Back to Practice
             </Button>
           </Link>

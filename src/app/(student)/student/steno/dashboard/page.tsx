@@ -87,8 +87,8 @@ export default function StudentStenoDashboardPage() {
             </Button>
           </Link>
           <Link href="/student/steno/mock-tests">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-10 px-5 text-xs rounded-xl gap-1.5">
-              <Award className="w-4 h-4 text-indigo-400" /> Attempt Mock Test
+            <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-10 px-5 text-xs rounded-xl border border-white/20 shadow-xs gap-1.5 transition-all">
+              <Award className="w-4 h-4 text-amber-400" /> Attempt Mock Test
             </Button>
           </Link>
         </div>

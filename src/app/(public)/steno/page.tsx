@@ -50,8 +50,8 @@ export default function StenoMainLandingPage() {
                     </Button>
                   </Link>
                   <Link href="/student">
-                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-12 px-6 rounded-2xl gap-2">
-                      <GraduationCap className="w-5 h-5 text-indigo-400" /> Student Portal
+                    <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
+                      <GraduationCap className="w-5 h-5 text-indigo-300" /> Student Portal
                     </Button>
                   </Link>
                 </>
@@ -63,8 +63,8 @@ export default function StenoMainLandingPage() {
                     </Button>
                   </Link>
                   <Link href="/login?callbackUrl=/steno/dictation">
-                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-12 px-6 rounded-2xl gap-2">
-                      <Headphones className="w-5 h-5 text-indigo-400" /> Access Dictation Software
+                    <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
+                      <Headphones className="w-5 h-5 text-indigo-300" /> Access Dictation Software
                     </Button>
                   </Link>
                 </>
