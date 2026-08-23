@@ -24,6 +24,10 @@ import {
   Plus,
   Edit3,
   UserCheck,
+  Maximize2,
+  Minimize2,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -57,6 +61,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   initialFont,
   onComplete,
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null);
   const { data: session } = useSession();
   const {
@@ -74,7 +79,10 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Editor Appearance Controls (Matching Final Exam Workspace Image)
+  // Full Screen Exam Mode State
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Editor Appearance Controls
   const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Kruti Dev 010");
   const [fontSize, setFontSize] = useState(16); // 14px to 24px
   const [eyeCareBg, setEyeCareBg] = useState("#ffffff"); // Swatches: White, Mint, Blue, Peach, Sepia
@@ -93,6 +101,31 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   useEffect(() => {
     if (initialFont) setFontFamily(initialFont);
   }, [initialFont]);
+
+  // Handle Fullscreen toggle
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+      } else {
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   // Countdown timer effect
   useEffect(() => {
@@ -154,10 +187,14 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     const res = evaluateStenoTranscriptionDetailed(userTranscription, passage.transcriptText, timeMin, presetRules);
     setEvaluation(res);
 
+    if (isFullscreen && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+
     if (onComplete) {
       onComplete(res);
     }
-    toast.success("Steno Exam Evaluated Successfully!");
+    toast.success("Steno Examination Submitted & Evaluated Successfully!");
   };
 
   const formatCountdown = (secs: number) => {
@@ -167,40 +204,63 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-2 sm:p-4 space-y-6">
-      {/* Top Header Bar (Matching Final Exam Image) */}
-      <div className="bg-white border border-slate-200 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Left: Badge + Exam Title */}
+    <div
+      ref={containerRef}
+      onContextMenu={(e) => isFullscreen && e.preventDefault()}
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-[9999] bg-[#0b132b] text-slate-100 p-4 sm:p-6 overflow-y-auto space-y-4"
+          : "max-w-7xl mx-auto p-2 sm:p-4 space-y-6"
+      }
+    >
+      {/* Official Government Examination Top Header Bar */}
+      <div className="bg-slate-900 text-white border border-slate-800 p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Left: Exam Badge & Title */}
         <div className="flex items-center gap-3">
-          <span className="bg-indigo-600 text-white font-black text-xs uppercase px-3 py-1 rounded-xl shadow-xs">
-            EXAM
+          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-xs uppercase px-3.5 py-1 rounded-xl shadow-md flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" /> STENO EXAM MODE
           </span>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 truncate max-w-xs sm:max-w-md">
-            {passage.title}
-          </h2>
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-white truncate max-w-xs sm:max-w-md leading-tight">
+              {passage.title}
+            </h2>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+              OFFICIAL SPEED: {passage.targetWpm || 80} WPM • {passage.language || "Hindi"} SHORTHAND
+            </p>
+          </div>
         </div>
 
-        {/* Middle: Live Timer + Pause Button */}
+        {/* Center: Live Timer Countdown Badge & Controls */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 px-4 py-1.5 rounded-2xl">
-            <Clock className="w-4 h-4 text-rose-600 animate-pulse" />
-            <span className="text-base font-black text-rose-600 font-mono">
+          <div className="flex items-center gap-2.5 bg-rose-950/80 border border-rose-500/40 px-4 py-2 rounded-2xl shadow-inner">
+            <Clock className="w-4 h-4 text-rose-400 animate-pulse" />
+            <span className="text-base font-black text-rose-300 font-mono tracking-widest">
               {formatCountdown(remainingTimeSeconds)}
             </span>
           </div>
 
           <Button
             onClick={() => setIsPaused(!isPaused)}
-            className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-9 px-4 text-xs rounded-xl shadow-xs gap-1.5"
+            className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-9 px-4 text-xs rounded-xl shadow-sm gap-1.5"
           >
             {isPaused ? <Play className="w-3.5 h-3.5 fill-white" /> : <Pause className="w-3.5 h-3.5 fill-white" />}
             {isPaused ? "Resume" : "Pause"}
           </Button>
+
+          {/* Full Screen Mode Toggle Button */}
+          <Button
+            onClick={toggleFullscreen}
+            variant="outline"
+            className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 font-bold h-9 px-3.5 text-xs rounded-xl gap-1.5"
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4 text-indigo-400" />}
+            {isFullscreen ? "Exit Fullscreen" : "Fullscreen Exam Mode"}
+          </Button>
         </div>
 
-        {/* Right: Candidate Info */}
+        {/* Right: Candidate Profile Details */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs overflow-hidden">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-md border border-white/10 overflow-hidden">
             {session?.user?.image ? (
               <img src={session.user.image} alt="User" className="w-full h-full object-cover" />
             ) : (
@@ -208,20 +268,22 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
             )}
           </div>
           <div className="leading-tight">
-            <p className="text-xs font-black text-slate-900 uppercase">{session?.user?.name || "CANDIDATE"}</p>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">OFFICIAL CANDIDATE</p>
+            <p className="text-xs font-black text-white uppercase">{session?.user?.name || "CANDIDATE"}</p>
+            <span className="text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-400/30 uppercase tracking-wider">
+              AUTHENTICATED CANDIDATE
+            </span>
           </div>
         </div>
       </div>
 
-      {/* HTML5 Media Player Bar */}
-      <Card className="p-4 rounded-3xl border-slate-200 bg-white shadow-xs space-y-3">
+      {/* Dictation Player Bar */}
+      <Card className="p-4 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-sm space-y-3">
         <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-          <span className="text-xs font-black uppercase text-slate-400 flex items-center gap-1.5">
+          <span className="text-xs font-black uppercase text-slate-500 flex items-center gap-1.5">
             <Volume2 className="w-4 h-4 text-indigo-600" /> Dictation Media Engine
           </span>
           <span className="text-xs font-bold text-slate-500">
-            Target Speed: <strong className="text-indigo-600">{passage.targetWpm || 80} WPM</strong>
+            Target Dictation Speed: <strong className="text-indigo-600 font-black">{passage.targetWpm || 80} WPM</strong>
           </span>
         </div>
 
@@ -245,9 +307,9 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <Button
             onClick={togglePlayMedia}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl h-10 w-10 flex items-center justify-center p-0 shrink-0 shadow-xs"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl h-10 w-10 flex items-center justify-center p-0 shrink-0 shadow-md"
           >
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+            {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white ml-0.5" />}
           </Button>
 
           <div className="flex-1 w-full space-y-1">
@@ -259,7 +321,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               onChange={handleSeek}
               className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
             />
-            <div className="flex justify-between text-[10px] font-bold text-slate-400">
+            <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
               <span>Time: {formatCountdown(currentTime)}</span>
               <span>Total: {formatCountdown(duration)}</span>
             </div>
@@ -270,7 +332,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               <button
                 key={wpm}
                 onClick={() => handleSpeedChange(wpm)}
-                className="text-[9px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all"
+                className="text-[9px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all"
               >
                 {wpm} WPM
               </button>
@@ -279,17 +341,17 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
         </div>
       </Card>
 
-      {/* Main Workspace Split Grid (Matching Final Exam Image) */}
+      {/* Main Split Grid Exam Canvas */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Main Transcription Editor Workspace */}
-        <Card className="lg:col-span-3 p-6 rounded-3xl border-slate-200 bg-white shadow-sm space-y-4 flex flex-col justify-between">
+        {/* Left Column: Official Answer Sheet Textarea Canvas */}
+        <Card className="lg:col-span-3 p-6 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-md space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-indigo-600" /> Type your transcription below:
               </span>
-              <span className="text-xs font-bold text-slate-400">
-                Words: {userTranscription.trim().split(/\s+/).filter(Boolean).length}
+              <span className="text-xs font-bold text-slate-500">
+                Typed Words: <strong className="text-indigo-600 font-black">{userTranscription.trim().split(/\s+/).filter(Boolean).length}</strong>
               </span>
             </div>
 
@@ -298,39 +360,39 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               value={userTranscription}
               onChange={(e) => setUserTranscription(e.target.value)}
               placeholder="Start typing your transcribed shorthand matter here..."
-              rows={14}
+              rows={isFullscreen ? 18 : 14}
               style={{
                 fontFamily,
                 fontSize: `${fontSize}px`,
                 backgroundColor: eyeCareBg,
               }}
-              className="w-full p-5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-900 leading-relaxed resize-y transition-all"
+              className="w-full p-5 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium text-slate-900 leading-relaxed resize-y transition-all shadow-inner"
             />
           </div>
 
-          {/* Bottom Toolbar inside Left Editor Box */}
+          {/* Bottom Status & Submit Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
-            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-slate-200">
+            <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-slate-200">
               FONT: {fontFamily.toUpperCase()} | BACKSPACE: ENABLED
             </span>
 
             <Button
               onClick={handleSubmitTranscription}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black h-11 px-8 text-xs rounded-2xl shadow-md gap-2 w-full sm:w-auto"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black h-11 px-8 text-xs rounded-2xl shadow-lg gap-2 w-full sm:w-auto"
             >
               <CheckCircle2 className="w-4 h-4" /> SUBMIT EXAM
             </Button>
           </div>
         </Card>
 
-        {/* Right Column: Exam Settings & Control Panel (Matching Final Exam Image) */}
+        {/* Right Column: Exam Settings & Action Panel */}
         <div className="space-y-4">
-          <Card className="p-5 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4">
+          <Card className="p-5 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-xs space-y-4">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 border-b pb-2">
               EXAM SETTINGS
             </h3>
 
-            {/* Gray Settings Details Box */}
+            {/* Settings Box */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs font-bold text-slate-700">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Layout preset:</span>
@@ -339,7 +401,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Backspace keys:</span>
-                <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-black">
+                <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-black border border-emerald-200">
                   ENABLED
                 </span>
               </div>
@@ -349,7 +411,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                 <select
                   value={fontFamily}
                   onChange={(e) => setFontFamily(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-black text-slate-900"
+                  className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-black text-slate-900 focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="Mangal">MANGAL</option>
                   <option value="Kruti Dev 010">KRUTI DEV 010</option>
@@ -359,27 +421,27 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                 </select>
               </div>
 
-              {/* Font Size Controls A- 16px A+ */}
+              {/* Font Size Scaling Controls (A- 16px A+) */}
               <div className="space-y-1 pt-2 border-t border-slate-200">
                 <span className="text-[10px] text-slate-400 font-black uppercase">Font Size:</span>
                 <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
                   <button
                     onClick={() => setFontSize((prev) => Math.max(12, prev - 2))}
-                    className="flex-1 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-black flex items-center justify-center"
+                    className="flex-1 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-black flex items-center justify-center transition-colors"
                   >
                     A-
                   </button>
-                  <span className="px-3 text-xs font-black text-indigo-600">{fontSize}px</span>
+                  <span className="px-3 text-xs font-black text-indigo-600 font-mono">{fontSize}px</span>
                   <button
                     onClick={() => setFontSize((prev) => Math.min(26, prev + 2))}
-                    className="flex-1 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-black flex items-center justify-center"
+                    className="flex-1 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-black flex items-center justify-center transition-colors"
                   >
                     A+
                   </button>
                 </div>
               </div>
 
-              {/* Eye-care Filter Color Swatches */}
+              {/* Eye-Care Color Swatches */}
               <div className="space-y-1 pt-2 border-t border-slate-200">
                 <span className="text-[10px] text-slate-400 font-black uppercase">Eye-care Filter:</span>
                 <div className="flex items-center gap-2 pt-1">
@@ -413,11 +475,11 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
             </div>
           </Card>
 
-          {/* Sidebar Action Control Buttons */}
+          {/* Action Control Buttons */}
           <div className="space-y-2.5">
             <Button
               onClick={handleSubmitTranscription}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black h-12 text-xs rounded-2xl shadow-md gap-2"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black h-12 text-xs rounded-2xl shadow-lg gap-2"
             >
               <CheckCircle2 className="w-4 h-4" /> SUBMIT EXAM
             </Button>
