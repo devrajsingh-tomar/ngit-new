@@ -45,6 +45,10 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
 
                 if (session?.user?.role === 'ADMIN') {
                     router.push("/admin");
+                } else if (session?.user?.role === 'STENO_ADMIN') {
+                    router.push("/admin/steno");
+                } else if (session?.user?.role === 'TYPING_ADMIN') {
+                    router.push("/admin/typing");
                 } else if (session?.user?.role === 'STUDENT') {
                     router.push("/student");
                 } else {

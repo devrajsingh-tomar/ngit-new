@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { useSession } from "next-auth/react";
+
 const menuGroups = [
     {
         groupLabel: "Overview",
@@ -103,6 +105,23 @@ interface SidebarProps {
 
 export default function Sidebar({ className, onClose }: SidebarProps) {
     const pathname = usePathname();
+    const { data: session } = useSession();
+    const userRole = (session?.user as any)?.role;
+
+    const filteredMenuGroups = menuGroups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => {
+                if (userRole === "STENO_ADMIN") {
+                    return item.href.startsWith("/admin/steno");
+                }
+                if (userRole === "TYPING_ADMIN") {
+                    return item.href.startsWith("/admin/typing");
+                }
+                return true;
+            }),
+        }))
+        .filter((group) => group.items.length > 0);
 
     return (
         <aside className={cn("w-64 bg-white border-r flex flex-col h-full shadow-[shadow-sm]", className)} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -122,7 +141,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
             </div>
             
             <nav className="flex-1 p-4 overflow-y-auto scrollbar-hide space-y-6">
-                {menuGroups.map((group) => (
+                {filteredMenuGroups.map((group) => (
                     <div key={group.groupLabel} className="space-y-1">
                         <h4 className="px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2">
                             {group.groupLabel}

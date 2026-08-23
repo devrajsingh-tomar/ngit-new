@@ -8,6 +8,8 @@ import StenoResult from "@/models/StenoResult";
 import StenoFont from "@/models/StenoFont";
 import StenoErrorRule from "@/models/StenoErrorRule";
 import StenoCustomTest from "@/models/StenoCustomTest";
+import User, { UserRole } from "@/models/User";
+import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -178,7 +180,8 @@ export async function createStenoPassageAction(data: {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -205,7 +208,8 @@ export async function updateStenoPassageAction(id: string, data: any) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -223,7 +227,8 @@ export async function deleteStenoPassageAction(id: string) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -254,7 +259,8 @@ export async function createStenoSeriesAction(data: {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -277,7 +283,8 @@ export async function updateStenoSeriesAction(id: string, data: any) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -295,7 +302,8 @@ export async function deleteStenoSeriesAction(id: string) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -348,8 +356,30 @@ export async function seedDefaultSeriesAndPassagesAction() {
       };
       await StenoPassage.create(samplePassage);
     }
+
+    await seedStenoInstituteAccountAction();
   } catch (err) {
     console.error("seedDefaultSeriesAndPassagesAction error:", err);
+  }
+}
+
+export async function seedStenoInstituteAccountAction() {
+  try {
+    await connectDB();
+    const existing = await User.findOne({ email: "stenoinstitute@ngitedu.com" });
+    if (!existing) {
+      const hashedPassword = await bcrypt.hash("StenoInst@2026", 10);
+      await User.create({
+        name: "NGIT Steno Institute Admin",
+        email: "stenoinstitute@ngitedu.com",
+        password: hashedPassword,
+        role: UserRole.STENO_ADMIN,
+        isActive: true,
+      });
+      console.log("Seeded stenoinstitute@ngitedu.com account successfully");
+    }
+  } catch (err) {
+    console.error("seedStenoInstituteAccountAction error:", err);
   }
 }
 
@@ -593,7 +623,8 @@ export async function createStenoExamAction(data: any) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -610,7 +641,8 @@ export async function updateStenoExamAction(id: string, data: any) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -626,7 +658,8 @@ export async function deleteStenoExamAction(id: string) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -642,7 +675,8 @@ export async function getAdminStenoOverviewAction() {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
       return { success: false, error: "Admin authorization required" };
     }
 
