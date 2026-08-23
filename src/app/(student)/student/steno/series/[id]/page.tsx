@@ -28,7 +28,6 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     if (sRes.success && sRes.series) {
       setSeries(sRes.series);
     } else {
-      // Fallback series info for pre-configured batches
       const titles: Record<string, string> = {
         "upsssc-steno": "UPSSSC STENO",
         "ssc-steno-2026": "SSC STENO 2026",
@@ -39,7 +38,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
       };
       setSeries({
         _id: resolvedParams.id,
-        title: titles[resolvedParams.id] || "ALLAHABAD HIGHCOURT STENO",
+        title: titles[resolvedParams.id] || "Steno Course Series",
       });
     }
 
@@ -49,7 +48,6 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     setLoading(false);
   };
 
-  // Categories matching Image 2 design
   const defaultCategories = [
     {
       _id: "sansadiya-5min",
@@ -71,20 +69,26 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     },
   ];
 
+  // Prevent hardcoded headers during buffering
   if (loading) {
     return (
-      <div className="py-20 text-center text-slate-400">
-        <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Series Categories...
+      <div className="py-24 text-center text-slate-400 space-y-3">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+        <p className="text-xs font-black uppercase tracking-wider text-slate-500">
+          Loading Series Categories...
+        </p>
       </div>
     );
   }
 
+  const seriesTitle = series?.title || "Steno Course Series";
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-1 sm:p-2">
-      {/* Header Bar (Matching Image 2) */}
+      {/* Header Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          {series?.title || "ALLAHABAD HIGHCOURT STENO"} Series
+          {seriesTitle} Series
         </h1>
 
         <Link href="/student/steno/series">
@@ -94,7 +98,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
         </Link>
       </div>
 
-      {/* Official Telegram Group Link Note (Matching Image 2) */}
+      {/* Official Telegram Group Note */}
       <Card className="p-4 max-w-xs rounded-2xl border-slate-200 bg-white shadow-xs flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center font-black shrink-0">
           <MessageCircle className="w-5 h-5" />
@@ -107,18 +111,16 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
         </div>
       </Card>
 
-      {/* Categories Grid (Matching Image 2) */}
+      {/* Categories Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
         {defaultCategories.map((cat) => (
           <Card key={cat._id} className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all space-y-4 flex flex-col justify-between group">
-            {/* Banner Image / Graphic */}
             <div className={`h-36 bg-gradient-to-br ${cat.bgGradient} text-white p-4 flex items-center justify-center text-center relative`}>
               <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg">
                 <Feather className="w-8 h-8 text-amber-300" />
               </div>
             </div>
 
-            {/* Category Details */}
             <div className="p-5 pt-0 space-y-4">
               <h3 className="text-lg font-black text-slate-900 leading-snug">{cat.title}</h3>
 
