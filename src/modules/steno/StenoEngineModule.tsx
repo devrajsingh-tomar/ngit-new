@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useStenoStore } from "@/store/useStenoStore";
 import { evaluateStenoTranscriptionDetailed, DetailedStenoEvaluationResult } from "./utils/stenoCalculations";
+import { handleHindiTextareaKeyDown } from "./utils/hindiKeystrokeMap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -359,6 +360,9 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
             <textarea
               value={userTranscription}
               onChange={(e) => setUserTranscription(e.target.value)}
+              onKeyDown={(e) => {
+                handleHindiTextareaKeyDown(e, fontFamily, userTranscription, setUserTranscription);
+              }}
               placeholder="Start typing your transcribed shorthand matter here..."
               rows={isFullscreen ? 18 : 14}
               style={{
