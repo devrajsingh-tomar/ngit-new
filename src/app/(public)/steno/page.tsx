@@ -44,7 +44,7 @@ export default function StenoMainLandingPage() {
             <div className="flex flex-wrap gap-4 pt-2">
               {isLoggedIn ? (
                 <>
-                  <Link href="/steno/dashboard">
+                  <Link href="/student/steno/dashboard">
                     <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
                       <BarChart3 className="w-5 h-5" /> Open Student Steno Dashboard
                     </Button>
@@ -57,12 +57,12 @@ export default function StenoMainLandingPage() {
                 </>
               ) : (
                 <>
-                  <Link href="/login?callbackUrl=/steno/dashboard">
+                  <Link href="/login?callbackUrl=/student/steno/dashboard">
                     <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
                       <Lock className="w-5 h-5" /> Student Login for Access
                     </Button>
                   </Link>
-                  <Link href="/login?callbackUrl=/steno/dictation">
+                  <Link href="/login?callbackUrl=/student/steno/dictation">
                     <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
                       <Headphones className="w-5 h-5 text-indigo-300" /> Access Dictation Software
                     </Button>
@@ -102,7 +102,7 @@ export default function StenoMainLandingPage() {
               Native HTML5 audio player supporting 40 WPM to 120 WPM playback speed adjustments with speed fluctuation simulation.
             </p>
             <Link
-              href={isLoggedIn ? "/steno/dictation" : "/login?callbackUrl=/steno/dictation"}
+              href={isLoggedIn ? "/student/steno/dictation" : "/login?callbackUrl=/student/steno/dictation"}
               className="inline-flex items-center text-xs font-bold text-indigo-600 hover:gap-2 transition-all"
             >
               {isLoggedIn ? "Open Dictation Player" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
@@ -118,7 +118,7 @@ export default function StenoMainLandingPage() {
               Curated Legal, Editorial, PYQ, and Essay passage collections categorized for targeted speed enhancement.
             </p>
             <Link
-              href={isLoggedIn ? "/steno/series" : "/login?callbackUrl=/steno/series"}
+              href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
               className="inline-flex items-center text-xs font-bold text-emerald-600 hover:gap-2 transition-all"
             >
               {isLoggedIn ? "Browse Series Collections" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
@@ -134,7 +134,7 @@ export default function StenoMainLandingPage() {
               SSC Steno Grade C & D, Allahabad High Court, UPSSSC, and HSSC pattern mock exams with strict marking rules.
             </p>
             <Link
-              href={isLoggedIn ? "/steno/mock-tests" : "/login?callbackUrl=/steno/mock-tests"}
+              href={isLoggedIn ? "/student/steno/mock-tests" : "/login?callbackUrl=/student/steno/mock-tests"}
               className="inline-flex items-center text-xs font-bold text-amber-600 hover:gap-2 transition-all"
             >
               {isLoggedIn ? "Attempt Mock Tests" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
