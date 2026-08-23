@@ -181,7 +181,7 @@ export async function createStenoPassageAction(data: {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -209,7 +209,7 @@ export async function updateStenoPassageAction(id: string, data: any) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -228,7 +228,7 @@ export async function deleteStenoPassageAction(id: string) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -260,7 +260,7 @@ export async function createStenoSeriesAction(data: {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -284,7 +284,7 @@ export async function updateStenoSeriesAction(id: string, data: any) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -303,7 +303,7 @@ export async function deleteStenoSeriesAction(id: string) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -367,47 +367,69 @@ export async function seedStenoInstituteAccountAction() {
   try {
     await connectDB();
     
-    // 1. Steno Institute Admin Account
-    const existingInst = await User.findOne({ email: "stenoinstitute@ngitedu.com" });
-    if (!existingInst) {
-      const hashedPassword = await bcrypt.hash("StenoInst@2026", 10);
-      await User.create({
-        name: "NGIT Steno Institute Admin",
-        email: "stenoinstitute@ngitedu.com",
-        password: hashedPassword,
-        role: UserRole.STENO_ADMIN,
-        isActive: true,
-      });
-      console.log("Seeded stenoinstitute@ngitedu.com account successfully");
-    }
+    // 1. NGIT Combined Content Manager Account (Typing + Steno)
+    const mgrPassHash = await bcrypt.hash("Manager@2026", 10);
+    await User.findOneAndUpdate(
+      { email: "manager@ngitedu.com" },
+      {
+        $set: {
+          name: "NGIT Content Manager (Typing & Steno)",
+          email: "manager@ngitedu.com",
+          password: mgrPassHash,
+          role: UserRole.CONTENT_MANAGER,
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
 
-    // 2. NGIT Steno Module Manager Account
-    const existingStenoMgr = await User.findOne({ email: "stenomanager@ngitedu.com" });
-    if (!existingStenoMgr) {
-      const hashedPassword = await bcrypt.hash("StenoManager@2026", 10);
-      await User.create({
-        name: "NGIT Steno Module Manager",
-        email: "stenomanager@ngitedu.com",
-        password: hashedPassword,
-        role: UserRole.STENO_ADMIN,
-        isActive: true,
-      });
-      console.log("Seeded stenomanager@ngitedu.com account successfully");
-    }
+    // 2. Steno Institute Admin Account
+    const instPassHash = await bcrypt.hash("StenoInst@2026", 10);
+    await User.findOneAndUpdate(
+      { email: "stenoinstitute@ngitedu.com" },
+      {
+        $set: {
+          name: "NGIT Steno Institute Admin",
+          email: "stenoinstitute@ngitedu.com",
+          password: instPassHash,
+          role: UserRole.STENO_ADMIN,
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
 
-    // 3. NGIT Typing Module Manager Account
-    const existingTypingMgr = await User.findOne({ email: "typingmanager@ngitedu.com" });
-    if (!existingTypingMgr) {
-      const hashedPassword = await bcrypt.hash("TypingManager@2026", 10);
-      await User.create({
-        name: "NGIT Typing Module Manager",
-        email: "typingmanager@ngitedu.com",
-        password: hashedPassword,
-        role: UserRole.TYPING_ADMIN,
-        isActive: true,
-      });
-      console.log("Seeded typingmanager@ngitedu.com account successfully");
-    }
+    // 3. Dedicated Steno Module Manager Account
+    const stenoMgrPassHash = await bcrypt.hash("StenoManager@2026", 10);
+    await User.findOneAndUpdate(
+      { email: "stenomanager@ngitedu.com" },
+      {
+        $set: {
+          name: "NGIT Steno Module Manager",
+          email: "stenomanager@ngitedu.com",
+          password: stenoMgrPassHash,
+          role: UserRole.STENO_ADMIN,
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    // 4. Dedicated Typing Module Manager Account
+    const typingMgrPassHash = await bcrypt.hash("TypingManager@2026", 10);
+    await User.findOneAndUpdate(
+      { email: "typingmanager@ngitedu.com" },
+      {
+        $set: {
+          name: "NGIT Typing Module Manager",
+          email: "typingmanager@ngitedu.com",
+          password: typingMgrPassHash,
+          role: UserRole.TYPING_ADMIN,
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
   } catch (err) {
     console.error("seedStenoInstituteAccountAction error:", err);
   }
@@ -654,7 +676,7 @@ export async function createStenoExamAction(data: any) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -672,7 +694,7 @@ export async function updateStenoExamAction(id: string, data: any) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -689,7 +711,7 @@ export async function deleteStenoExamAction(id: string) {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 
@@ -706,7 +728,7 @@ export async function getAdminStenoOverviewAction() {
     await connectDB();
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
-    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN")) {
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
       return { success: false, error: "Admin authorization required" };
     }
 

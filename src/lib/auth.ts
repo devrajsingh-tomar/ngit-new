@@ -18,8 +18,13 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 await connectDB();
-                // Fetch only the fields needed for authentication
-                const user = await User.findOne({ email: credentials.email })
+                try {
+                  const { seedStenoInstituteAccountAction } = await import("@/app/actions/steno");
+                  await seedStenoInstituteAccountAction();
+                } catch (e) {}
+
+                const normalizedEmail = credentials.email.trim().toLowerCase();
+                const user = await User.findOne({ email: normalizedEmail })
                     .select("name email password role isActive image");
 
                 if (!user || !user.password) {

@@ -112,6 +112,9 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
         .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
+                if (userRole === "CONTENT_MANAGER") {
+                    return item.href.startsWith("/admin/steno") || item.href.startsWith("/admin/typing") || item.href === "/admin";
+                }
                 if (userRole === "STENO_ADMIN") {
                     return item.href.startsWith("/admin/steno");
                 }

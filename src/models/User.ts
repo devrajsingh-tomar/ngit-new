@@ -5,6 +5,7 @@ export enum UserRole {
     STUDENT = "STUDENT",
     STENO_ADMIN = "STENO_ADMIN",
     TYPING_ADMIN = "TYPING_ADMIN",
+    CONTENT_MANAGER = "CONTENT_MANAGER",
 }
 
 export interface IUser extends Document {
