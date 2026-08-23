@@ -83,12 +83,12 @@ export const StenoResultView: React.FC<StenoResultViewProps> = ({ result }) => {
 
         {/* Top Action CTAs */}
         <div className="flex flex-wrap gap-2.5 shrink-0">
-          <Link href={result.passageId?._id ? `/steno/passage/${result.passageId._id}` : "/steno/dictation"}>
+          <Link href={result.passageId?._id ? `/student/steno/passage/${result.passageId._id}` : "/student/steno/dictation"}>
             <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 px-5 text-xs rounded-xl shadow-md gap-1.5">
               <RotateCcw className="w-4 h-4" /> Retry Test
             </Button>
           </Link>
-          <Link href="/steno/practice">
+          <Link href="/student/steno/practice">
             <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-bold h-11 px-5 text-xs rounded-xl gap-1.5">
               <ArrowLeft className="w-4 h-4" /> Back to Practice
             </Button>
