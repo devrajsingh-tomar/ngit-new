@@ -20,7 +20,8 @@ import {
     Bell,
     Video,
     Keyboard,
-    MonitorPlay
+    MonitorPlay,
+    Mic
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,23 @@ const menuGroups = [
                 subItems: [
                     { label: "Dashboard", href: "/admin/typing" },
                     { label: "Student Results", href: "/admin/typing/results" }
+                ]
+            },
+            {
+                label: "Steno Management",
+                href: "/admin/steno",
+                icon: Mic,
+                subItems: [
+                    { label: "Overview", href: "/admin/steno" },
+                    { label: "Exams", href: "/admin/steno/exams" },
+                    { label: "Series", href: "/admin/steno/series" },
+                    { label: "Dictation Passages", href: "/admin/steno/passages" },
+                    { label: "Mock Tests", href: "/admin/steno/mock-tests" },
+                    { label: "Custom Tests", href: "/admin/steno/custom-tests" },
+                    { label: "Fonts", href: "/admin/steno/fonts" },
+                    { label: "Error Rules", href: "/admin/steno/error-rules" },
+                    { label: "Attempts / Results", href: "/admin/steno/results" },
+                    { label: "Leaderboard", href: "/admin/steno/leaderboard" }
                 ]
             },
             { label: "Certificates", href: "/admin/certificates", icon: GraduationCap },

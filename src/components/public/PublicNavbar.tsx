@@ -62,6 +62,8 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
 
     const fallbackLinks: NavLink[] = [
         { label: "Home", href: "/" },
+        { label: "Typing Test", href: "/typing" },
+        { label: "Steno / Short Hand", href: "/steno" },
         { label: "Mock Tests", href: "/exams" },
         { label: "Results", href: "/results" },
         { label: "Gallery", href: "/gallery" },
