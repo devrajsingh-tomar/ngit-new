@@ -366,8 +366,10 @@ export async function seedDefaultSeriesAndPassagesAction() {
 export async function seedStenoInstituteAccountAction() {
   try {
     await connectDB();
-    const existing = await User.findOne({ email: "stenoinstitute@ngitedu.com" });
-    if (!existing) {
+    
+    // 1. Steno Institute Admin Account
+    const existingInst = await User.findOne({ email: "stenoinstitute@ngitedu.com" });
+    if (!existingInst) {
       const hashedPassword = await bcrypt.hash("StenoInst@2026", 10);
       await User.create({
         name: "NGIT Steno Institute Admin",
@@ -377,6 +379,34 @@ export async function seedStenoInstituteAccountAction() {
         isActive: true,
       });
       console.log("Seeded stenoinstitute@ngitedu.com account successfully");
+    }
+
+    // 2. NGIT Steno Module Manager Account
+    const existingStenoMgr = await User.findOne({ email: "stenomanager@ngitedu.com" });
+    if (!existingStenoMgr) {
+      const hashedPassword = await bcrypt.hash("StenoManager@2026", 10);
+      await User.create({
+        name: "NGIT Steno Module Manager",
+        email: "stenomanager@ngitedu.com",
+        password: hashedPassword,
+        role: UserRole.STENO_ADMIN,
+        isActive: true,
+      });
+      console.log("Seeded stenomanager@ngitedu.com account successfully");
+    }
+
+    // 3. NGIT Typing Module Manager Account
+    const existingTypingMgr = await User.findOne({ email: "typingmanager@ngitedu.com" });
+    if (!existingTypingMgr) {
+      const hashedPassword = await bcrypt.hash("TypingManager@2026", 10);
+      await User.create({
+        name: "NGIT Typing Module Manager",
+        email: "typingmanager@ngitedu.com",
+        password: hashedPassword,
+        role: UserRole.TYPING_ADMIN,
+        isActive: true,
+      });
+      console.log("Seeded typingmanager@ngitedu.com account successfully");
     }
   } catch (err) {
     console.error("seedStenoInstituteAccountAction error:", err);
