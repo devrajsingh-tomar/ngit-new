@@ -23,7 +23,18 @@ import { cn } from "@/lib/utils";
 export default async function AdminDashboard() {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session) {
+        redirect("/admin/login");
+    }
+
+    const role = session.user.role;
+    if (role === "STENO_ADMIN") {
+        redirect("/admin/steno");
+    } else if (role === "TYPING_ADMIN") {
+        redirect("/admin/typing");
+    } else if (role === "CONTENT_MANAGER") {
+        redirect("/admin/steno");
+    } else if (role !== "ADMIN") {
         redirect("/admin/login");
     }
 
