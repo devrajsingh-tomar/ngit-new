@@ -8,11 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Sliders, Check } from "lucide-react";
+import { ClipboardList, Sliders } from "lucide-react";
 
 export interface StenoSessionConfig {
   mode: "exam" | "manual";
   examPresetName?: string;
+  selectedFont: string;
   backspaceStatus: "Enabled" | "Disabled";
   spellingMistake: "Full" | "Half" | "Ignore";
   capitalizationMistake: "Full" | "Half" | "Ignore";
@@ -33,21 +34,32 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   isOpen,
   onClose,
   onSave,
-  totalWords = 1,
+  totalWords = 391,
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
-  const [selectedExam, setSelectedExam] = useState("SSC Grade D Steno");
+  const [selectedExam, setSelectedExam] = useState("Allahabad High Court Steno");
+  const [selectedFont, setSelectedFont] = useState("Mangal (Inscript)");
 
   // Manual configuration state
   const [backspaceStatus, setBackspaceStatus] = useState<"Enabled" | "Disabled">("Enabled");
-  const [spellingMistake, setSpellingMistake] = useState<"Full" | "Half" | "Ignore">("Full");
-  const [capitalizationMistake, setCapitalizationMistake] = useState<"Full" | "Half" | "Ignore">("Full");
-  const [punctuationMistake, setPunctuationMistake] = useState<"Full" | "Half" | "Ignore">("Full");
+  const [spellingMistake, setSpellingMistake] = useState<"Full" | "Half" | "Ignore">("Half");
+  const [capitalizationMistake, setCapitalizationMistake] = useState<"Full" | "Half" | "Ignore">("Half");
+  const [punctuationMistake, setPunctuationMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [addedWordMistake, setAddedWordMistake] = useState<"Full" | "Half" | "Ignore">("Full");
   const [skippedWordMistake, setSkippedWordMistake] = useState<"Full" | "Half" | "Ignore">("Full");
-  const [durationMinutes, setDurationMinutes] = useState(15);
+  const [durationMinutes, setDurationMinutes] = useState(35);
 
   const examPresetsRules: Record<string, any> = {
+    "Allahabad High Court Steno": {
+      backspace: "Enabled",
+      transcriptionDuration: 35,
+      dictationDuration: 5,
+      spelling: "Half",
+      capitalization: "Half",
+      punctuation: "Half",
+      added: "Full",
+      skipped: "Full",
+    },
     "SSC Grade D Steno": {
       backspace: "Enabled",
       transcriptionDuration: 50,
@@ -68,16 +80,6 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
       added: "Full",
       skipped: "Full",
     },
-    "Allahabad High Court Steno": {
-      backspace: "Enabled",
-      transcriptionDuration: 30,
-      dictationDuration: 5,
-      spelling: "Full",
-      capitalization: "Half",
-      punctuation: "Half",
-      added: "Full",
-      skipped: "Full",
-    },
     "UPSSSC Steno": {
       backspace: "Enabled",
       transcriptionDuration: 45,
@@ -92,10 +94,11 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
   const handleSaveAndContinue = () => {
     if (activeTab === "exam") {
-      const preset = examPresetsRules[selectedExam] || examPresetsRules["SSC Grade D Steno"];
+      const preset = examPresetsRules[selectedExam] || examPresetsRules["Allahabad High Court Steno"];
       onSave({
         mode: "exam",
         examPresetName: selectedExam,
+        selectedFont,
         backspaceStatus: preset.backspace,
         spellingMistake: preset.spelling,
         capitalizationMistake: preset.capitalization,
@@ -107,6 +110,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
     } else {
       onSave({
         mode: "manual",
+        selectedFont,
         backspaceStatus,
         spellingMistake,
         capitalizationMistake,
@@ -154,27 +158,46 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
           </button>
         </div>
 
-        {/* Tab 1: By Exam */}
+        {/* Tab 1: By Exam (Matching Image 5) */}
         {activeTab === "exam" && (
           <div className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                SELECT EXAM PRESET
-              </label>
-              <select
-                value={selectedExam}
-                onChange={(e) => setSelectedExam(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="SSC Grade D Steno">SSC Grade D Steno</option>
-                <option value="SSC Grade C Steno">SSC Grade C Steno</option>
-                <option value="Allahabad High Court Steno">Allahabad High Court Steno</option>
-                <option value="UPSSSC Steno">UPSSSC Steno</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  SELECT EXAM PRESET
+                </label>
+                <select
+                  value={selectedExam}
+                  onChange={(e) => setSelectedExam(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="Allahabad High Court Steno">Allahabad High Court Steno</option>
+                  <option value="SSC Grade D Steno">SSC Grade D Steno</option>
+                  <option value="SSC Grade C Steno">SSC Grade C Steno</option>
+                  <option value="UPSSSC Steno">UPSSSC Steno</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  CHOOSE FONT
+                </label>
+                <select
+                  value={selectedFont}
+                  onChange={(e) => setSelectedFont(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="Mangal (Inscript)">Mangal (Inscript)</option>
+                  <option value="Kruti Dev 010">Kruti Dev 010</option>
+                  <option value="Mangal Remington GAIL">Mangal Remington GAIL</option>
+                  <option value="Mangal">Mangal Unicode</option>
+                  <option value="Arial">Arial (English)</option>
+                </select>
+              </div>
             </div>
 
-            {/* Exam Rules Summary Box */}
-            <div className="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+            {/* Exam Rules Summary Box (Matching Image 5) */}
+            <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
               <h4 className="text-xs font-black text-indigo-900 flex items-center gap-1.5 border-b border-indigo-100 pb-2">
                 📋 {selectedExam} — Exam Rules
               </h4>
@@ -185,7 +208,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
                 <p>• Total Words: <strong className="text-indigo-900 font-bold">{totalWords}</strong></p>
                 <p>• Dictation Duration: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.dictationDuration} Mins</strong></p>
                 <p>• Spelling Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.spelling}</strong></p>
-                <p>• Capitalization Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.capitalization}</strong></p>
+                <p>• Maatra Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.capitalization}</strong></p>
                 <p>• Punctuation: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.punctuation}</strong></p>
                 <p>• Added Words: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.added}</strong></p>
                 <p>• Skipped Words: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.skipped}</strong></p>
@@ -196,113 +219,132 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
         {/* Tab 2: Manual */}
         {activeTab === "manual" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-            <div className="space-y-1">
+          <div className="space-y-4 pt-4">
+            <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                BACKSPACE STATUS
+                CHOOSE FONT
               </label>
               <select
-                value={backspaceStatus}
-                onChange={(e) => setBackspaceStatus(e.target.value as any)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                value={selectedFont}
+                onChange={(e) => setSelectedFont(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800"
               >
-                <option value="Enabled">Enabled</option>
-                <option value="Disabled">Disabled</option>
+                <option value="Mangal (Inscript)">Mangal (Inscript)</option>
+                <option value="Kruti Dev 010">Kruti Dev 010</option>
+                <option value="Mangal Remington GAIL">Mangal Remington GAIL</option>
+                <option value="Mangal">Mangal Unicode</option>
+                <option value="Arial">Arial (English)</option>
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                COUNT SPELLING MISTAKE AS
-              </label>
-              <select
-                value={spellingMistake}
-                onChange={(e) => setSpellingMistake(e.target.value as any)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
-              >
-                <option value="Full">Full</option>
-                <option value="Half">Half</option>
-                <option value="Ignore">Ignore</option>
-              </select>
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  BACKSPACE STATUS
+                </label>
+                <select
+                  value={backspaceStatus}
+                  onChange={(e) => setBackspaceStatus(e.target.value as any)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value="Enabled">Enabled</option>
+                  <option value="Disabled">Disabled</option>
+                </select>
+              </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                COUNT CAPITALIZATION MISTAKE AS
-              </label>
-              <select
-                value={capitalizationMistake}
-                onChange={(e) => setCapitalizationMistake(e.target.value as any)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
-              >
-                <option value="Full">Full</option>
-                <option value="Half">Half</option>
-                <option value="Ignore">Ignore</option>
-              </select>
-            </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  COUNT SPELLING MISTAKE AS
+                </label>
+                <select
+                  value={spellingMistake}
+                  onChange={(e) => setSpellingMistake(e.target.value as any)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value="Full">Full</option>
+                  <option value="Half">Half</option>
+                  <option value="Ignore">Ignore</option>
+                </select>
+              </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                COUNT PUNCTUATION MISTAKE AS
-              </label>
-              <select
-                value={punctuationMistake}
-                onChange={(e) => setPunctuationMistake(e.target.value as any)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
-              >
-                <option value="Full">Full</option>
-                <option value="Half">Half</option>
-                <option value="Ignore">Ignore</option>
-              </select>
-            </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  COUNT MAATRA MISTAKE AS
+                </label>
+                <select
+                  value={capitalizationMistake}
+                  onChange={(e) => setCapitalizationMistake(e.target.value as any)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value="Full">Full</option>
+                  <option value="Half">Half</option>
+                  <option value="Ignore">Ignore</option>
+                </select>
+              </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                COUNT ADDED WORD MISTAKE AS
-              </label>
-              <select
-                value={addedWordMistake}
-                onChange={(e) => setAddedWordMistake(e.target.value as any)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
-              >
-                <option value="Full">Full</option>
-                <option value="Half">Half</option>
-                <option value="Ignore">Ignore</option>
-              </select>
-            </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  COUNT PUNCTUATION MISTAKE AS
+                </label>
+                <select
+                  value={punctuationMistake}
+                  onChange={(e) => setPunctuationMistake(e.target.value as any)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value="Full">Full</option>
+                  <option value="Half">Half</option>
+                  <option value="Ignore">Ignore</option>
+                </select>
+              </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                COUNT SKIPPED WORD MISTAKE AS
-              </label>
-              <select
-                value={skippedWordMistake}
-                onChange={(e) => setSkippedWordMistake(e.target.value as any)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
-              >
-                <option value="Full">Full</option>
-                <option value="Half">Half</option>
-                <option value="Ignore">Ignore</option>
-              </select>
-            </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  COUNT ADDED WORD MISTAKE AS
+                </label>
+                <select
+                  value={addedWordMistake}
+                  onChange={(e) => setAddedWordMistake(e.target.value as any)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value="Full">Full</option>
+                  <option value="Half">Half</option>
+                  <option value="Ignore">Ignore</option>
+                </select>
+              </div>
 
-            <div className="space-y-1 sm:col-span-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                DURATION (MINUTES)
-              </label>
-              <select
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
-              >
-                <option value={5}>5 Minutes</option>
-                <option value={10}>10 Minutes</option>
-                <option value={15}>15 Minutes</option>
-                <option value={20}>20 Minutes</option>
-                <option value={30}>30 Minutes</option>
-                <option value={45}>45 Minutes</option>
-                <option value={60}>60 Minutes</option>
-              </select>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  COUNT SKIPPED WORD MISTAKE AS
+                </label>
+                <select
+                  value={skippedWordMistake}
+                  onChange={(e) => setSkippedWordMistake(e.target.value as any)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value="Full">Full</option>
+                  <option value="Half">Half</option>
+                  <option value="Ignore">Ignore</option>
+                </select>
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  DURATION (MINUTES)
+                </label>
+                <select
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800"
+                >
+                  <option value={5}>5 Minutes</option>
+                  <option value={10}>10 Minutes</option>
+                  <option value={15}>15 Minutes</option>
+                  <option value={20}>20 Minutes</option>
+                  <option value={35}>35 Minutes</option>
+                  <option value={45}>45 Minutes</option>
+                  <option value={60}>60 Minutes</option>
+                </select>
+              </div>
             </div>
           </div>
         )}

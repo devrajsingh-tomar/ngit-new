@@ -34,9 +34,8 @@ const menuItems = [
     icon: Mic,
     subItems: [
       { label: "Steno Dashboard", href: "/student/steno/dashboard" },
+      { label: "Steno Series & Batches", href: "/student/steno/series" },
       { label: "Practice Passages", href: "/student/steno/practice" },
-      { label: "Dictation Player", href: "/student/steno/dictation" },
-      { label: "Series Collections", href: "/student/steno/series" },
       { label: "Mock Tests", href: "/student/steno/mock-tests" },
       { label: "My Steno Tests", href: "/student/steno/my-tests" },
       { label: "Steno Leaderboard", href: "/student/steno/leaderboard" },
