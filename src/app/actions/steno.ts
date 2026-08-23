@@ -131,6 +131,17 @@ export async function getUserStenoCustomTestsAction() {
   }
 }
 
+export async function getStenoCustomTestByIdAction(id: string) {
+  try {
+    await connectDB();
+    const customTest = await StenoCustomTest.findById(id).populate("passageId").lean();
+    if (!customTest) return { success: false, error: "Custom test not found" };
+    return { success: true, customTest: JSON.parse(JSON.stringify(customTest)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 export async function deleteStenoCustomTestAction(id: string) {
   try {
     await connectDB();

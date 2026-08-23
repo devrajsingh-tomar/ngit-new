@@ -19,7 +19,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Clock, Eye, RefreshCw, Award, Plus, Trash2, Play } from "lucide-react";
+import {
+  Clock,
+  Eye,
+  RefreshCw,
+  Award,
+  Plus,
+  Trash2,
+  Play,
+  Edit3,
+  Search,
+  Keyboard,
+  FileText,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export default function StudentStenoMyTestsPage() {
@@ -28,6 +41,10 @@ export default function StudentStenoMyTestsPage() {
   const [passages, setPassages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter & Search State
+  const [filterTab, setFilterTab] = useState<"all" | "hindi" | "english">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Modal State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,7 +52,7 @@ export default function StudentStenoMyTestsPage() {
     language: "Hindi",
     hindiFont: "Kruti Dev 010",
     category: "Custom Practice",
-    durationMinutes: 10,
+    durationMinutes: 15,
     targetWpm: 80,
     passageId: "",
   });
@@ -100,94 +117,154 @@ export default function StudentStenoMyTestsPage() {
     }
   };
 
+  // Filtered Custom Tests list
+  const filteredCustomTests = customTests.filter((t) => {
+    const matchesLang =
+      filterTab === "all"
+        ? true
+        : filterTab === "hindi"
+        ? t.language === "Hindi"
+        : t.language === "English";
+    const matchesSearch = t.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesLang && matchesSearch;
+  });
+
   return (
     <div className="space-y-8 p-1 sm:p-2">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Clock className="w-6 h-6 text-purple-600" /> My Custom Tests & History
+      {/* Top Banner (Image 1) */}
+      <div className="bg-gradient-to-r from-[#0a1128] via-[#1c2541] to-[#0a1128] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#f59e0b] text-slate-900 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-md">
+              SELF PRACTICE MODE
+            </span>
+            <span className="text-xs font-bold text-slate-300">Hindi & English Steno</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2.5">
+            <Edit3 className="w-7 h-7 text-[#f59e0b]" /> My Steno Tests
           </h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Create custom practice tests or review official evaluation attempt history.
+          <p className="text-xs text-slate-300 max-w-xl">
+            Create your own custom dictation passages in Hindi or English, type your transcript, and evaluate your speed & accuracy instantly!
           </p>
         </div>
 
         <Button
           onClick={() => setIsDialogOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold h-10 px-4 text-xs rounded-xl gap-1.5 shadow-md"
+          className="bg-[#f59e0b] hover:bg-[#d97706] text-slate-950 font-black h-11 px-5 text-xs rounded-2xl shadow-lg gap-2 shrink-0"
         >
-          <Plus className="w-4 h-4" /> Create Custom Steno Test
+          <Plus className="w-4 h-4" /> Create Custom Test
         </Button>
       </div>
 
-      {/* Section 1: Custom Tests */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-black uppercase tracking-wider text-slate-400">
-          My Custom Practice Tests ({customTests.length})
-        </h2>
+      {/* Filter Tabs & Search Bar (Image 1) */}
+      <Card className="p-4 rounded-3xl border-slate-200 bg-white shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shrink-0">
+          <button
+            onClick={() => setFilterTab("all")}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+              filterTab === "all"
+                ? "bg-[#0a1128] text-white shadow-sm font-black"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            All Tests ({customTests.length})
+          </button>
+          <button
+            onClick={() => setFilterTab("hindi")}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+              filterTab === "hindi"
+                ? "bg-[#0a1128] text-white shadow-sm font-black"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Hindi Steno
+          </button>
+          <button
+            onClick={() => setFilterTab("english")}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+              filterTab === "english"
+                ? "bg-[#0a1128] text-white shadow-sm font-black"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            English Steno
+          </button>
+        </div>
 
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search my tests..."
+            className="pl-10 rounded-2xl bg-slate-50 border-slate-200 text-xs font-semibold h-10"
+          />
+        </div>
+      </Card>
+
+      {/* Section 1: Custom Tests Cards Grid (Image 1) */}
+      <div className="space-y-4">
         {loading ? (
           <div className="py-12 text-center text-slate-400">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-600" /> Loading custom tests...
+            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading custom tests...
           </div>
-        ) : customTests.length === 0 ? (
+        ) : filteredCustomTests.length === 0 ? (
           <Card className="p-8 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-            No custom practice tests created yet. Click "Create Custom Steno Test" above to build one!
+            No custom practice tests found. Click "+ Create Custom Test" above to build one!
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {customTests.map((t) => (
-              <Card key={t._id} className="p-5 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4">
+            {filteredCustomTests.map((t) => (
+              <Card key={t._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-slate-300 transition-all">
+                {/* Badge & Actions Header */}
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase bg-purple-50 text-purple-700 px-2.5 py-1 rounded-md border border-purple-100">
-                    {t.language} • {t.targetWpm} WPM
+                  <span className="text-[10px] font-black uppercase bg-[#fef3c7] text-[#92400e] px-3 py-1 rounded-md border border-[#fde68a]">
+                    {t.language === "Hindi" ? `HINDI (${t.hindiFont?.toUpperCase() || "MANGAL"})` : "ENGLISH"}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400">{t.durationMinutes} Mins</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleDeleteCustomTest(t._id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                      title="Delete Test"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
+                {/* Title */}
                 <div>
-                  <h3 className="text-base font-black text-slate-900 leading-snug">{t.title}</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Font: <strong className="text-indigo-600 font-bold">{t.hindiFont}</strong> | Category: {t.category}
-                  </p>
+                  <h3 className="text-lg font-black text-slate-900 leading-snug">{t.title}</h3>
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <Link href={`/student/steno/passage/${t.passageId?._id || t.passageId}`} className="flex-1">
-                    <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold h-8 text-xs rounded-xl gap-1">
-                      <Play className="w-3.5 h-3.5" /> Start
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={() => handleDeleteCustomTest(t._id)}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs font-bold rounded-xl text-rose-600 border-rose-200 hover:bg-rose-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                {/* Details Bar */}
+                <div className="flex items-center gap-3 text-xs font-bold text-slate-500 pt-1 border-t border-slate-100">
+                  <span className="flex items-center gap-1">📄 {t.passageId?.wordCount || 1} Words</span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1 text-indigo-600">⏰ {t.durationMinutes} Mins</span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1 text-emerald-600">⚡ {t.targetWpm} WPM</span>
                 </div>
+
+                {/* Primary Button (Image 1) */}
+                <Link href={`/student/steno/custom-practice/${t._id}`} className="block pt-2">
+                  <Button className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-bold h-11 text-xs rounded-xl shadow-md gap-2">
+                    <Keyboard className="w-4 h-4" /> Start Practice Test
+                  </Button>
+                </Link>
               </Card>
             ))}
           </div>
         )}
       </div>
 
-      {/* Section 2: Attempt History */}
-      <div className="space-y-4">
+      {/* Section 2: Completed Attempt History */}
+      <div className="space-y-4 pt-4 border-t border-slate-200">
         <h2 className="text-sm font-black uppercase tracking-wider text-slate-400">
-          Official Attempt History ({results.length})
+          Official Evaluation History ({results.length})
         </h2>
 
-        {loading ? (
-          <div className="py-12 text-center text-slate-400">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-600" /> Loading attempt history...
-          </div>
-        ) : results.length === 0 ? (
-          <Card className="p-8 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-            No completed attempts yet.
-          </Card>
-        ) : (
+        {results.length > 0 && (
           <div className="space-y-3">
             {results.map((r) => (
               <Card key={r._id} className="p-5 rounded-2xl border-slate-200 bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-purple-300 transition-all">
@@ -216,9 +293,9 @@ export default function StudentStenoMyTestsPage() {
         )}
       </div>
 
-      {/* Modal Dialog */}
+      {/* Modal Dialog: Create Custom Test */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl rounded-3xl p-6">
+        <DialogContent className="max-w-xl rounded-3xl p-6 bg-white border border-slate-200">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-slate-900">
               Create Custom Practice Steno Test
@@ -231,7 +308,7 @@ export default function StudentStenoMyTestsPage() {
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g. My 80 WPM Remington Speed Test"
+                placeholder="e.g. sdfasd"
                 className="rounded-xl text-xs font-semibold"
                 required
               />
@@ -257,21 +334,21 @@ export default function StudentStenoMyTestsPage() {
                   onChange={(e) => setFormData({ ...formData, hindiFont: e.target.value })}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                 >
+                  <option value="Mangal">Mangal</option>
                   <option value="Kruti Dev 010">Kruti Dev 010 (Remington)</option>
                   <option value="Mangal Remington GAIL">Mangal Remington GAIL</option>
                   <option value="Mangal Inscript">Mangal Inscript</option>
-                  <option value="Mangal">Mangal Unicode</option>
                 </select>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Category / Exam</label>
+                <label className="text-xs font-bold text-slate-700">Target Speed (WPM)</label>
                 <Input
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g. Custom Practice"
+                  type="number"
+                  value={formData.targetWpm}
+                  onChange={(e) => setFormData({ ...formData, targetWpm: Number(e.target.value) })}
                   className="rounded-xl text-xs font-semibold"
                 />
               </div>
@@ -307,7 +384,7 @@ export default function StudentStenoMyTestsPage() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl text-xs">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold">
+              <Button type="submit" className="bg-[#0f172a] hover:bg-[#1e293b] text-white rounded-xl text-xs font-bold">
                 Create Test
               </Button>
             </DialogFooter>
