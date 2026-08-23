@@ -43,19 +43,19 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
                 const response = await fetch('/api/auth/session');
                 const session = await response.json();
 
-                if (session?.user?.role === 'ADMIN') {
-                    router.push("/admin");
-                } else if (session?.user?.role === 'CONTENT_MANAGER') {
-                    router.push("/admin/steno");
-                } else if (session?.user?.role === 'STENO_ADMIN') {
-                    router.push("/admin/steno");
-                } else if (session?.user?.role === 'TYPING_ADMIN') {
-                    router.push("/admin/typing");
-                } else if (session?.user?.role === 'STUDENT') {
-                    router.push("/student");
-                } else {
-                    router.push("/");
+                let targetUrl = "/";
+                const role = session?.user?.role;
+                if (role === 'ADMIN') {
+                    targetUrl = "/admin";
+                } else if (role === 'CONTENT_MANAGER' || role === 'STENO_ADMIN') {
+                    targetUrl = "/admin/steno";
+                } else if (role === 'TYPING_ADMIN') {
+                    targetUrl = "/admin/typing";
+                } else if (role === 'STUDENT') {
+                    targetUrl = "/student";
                 }
+
+                window.location.href = targetUrl;
             }
         } catch (error) {
             toast.error("System connection failure. Please retry.");

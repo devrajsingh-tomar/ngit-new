@@ -275,7 +275,15 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                                 <p className="text-xs text-slate-500">{session.user.role}</p>
                                             </div>
                                         </div>
-                                        <Link href={session.user.role === 'STUDENT' ? '/student' : '/admin'} onClick={() => setIsOpen(false)}>
+                                        <Link href={
+                                            session.user.role === 'STUDENT' 
+                                                ? '/student' 
+                                                : (session.user.role === 'STENO_ADMIN' || session.user.role === 'CONTENT_MANAGER'
+                                                    ? '/admin/steno'
+                                                    : session.user.role === 'TYPING_ADMIN'
+                                                    ? '/admin/typing'
+                                                    : '/admin')
+                                        } onClick={() => setIsOpen(false)}>
                                             <Button className="w-full gap-2 rounded-xl h-12 font-bold">
                                                 Go to Dashboard
                                             </Button>
