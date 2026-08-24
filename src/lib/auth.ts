@@ -77,6 +77,9 @@ export const authOptions: NextAuthOptions = {
                 (user as any).id = newUser._id.toString();
                 (user as any).role = newUser.role;
               } else {
+                if (!existingUser.isActive) {
+                  return false;
+                }
                 (user as any).id = existingUser._id.toString();
                 (user as any).role = existingUser.role;
                 (user as any).image = existingUser.image || user.image;
