@@ -64,6 +64,34 @@ export async function proxy(request: NextRequest) {
         return response;
     }
 
+    // ─── Dedicated Manager Workspace Protection (/manager/*) ──────────────────
+    if (pathname.startsWith("/manager")) {
+        if (!token) {
+            const url = new URL("/admin/login", request.url);
+            url.searchParams.set("callbackUrl", pathname);
+            return NextResponse.redirect(url);
+        }
+        const role = token.role as string;
+        if (role === "ADMIN" || role === "CONTENT_MANAGER" || role === "TYPING_ADMIN" || role === "MANAGER") {
+            return response;
+        }
+        return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
+    }
+
+    // ─── Dedicated Steno Admin Workspace Protection (/steno/admin/*) ──────────
+    if (pathname.startsWith("/steno/admin")) {
+        if (!token) {
+            const url = new URL("/admin/login", request.url);
+            url.searchParams.set("callbackUrl", pathname);
+            return NextResponse.redirect(url);
+        }
+        const role = token.role as string;
+        if (role === "ADMIN" || role === "STENO_ADMIN" || role === "CONTENT_MANAGER") {
+            return response;
+        }
+        return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
+    }
+
     // ─── Admin Route Protection & Role Authorization ──────────────────────────
     if (pathname.startsWith("/admin")) {
         if (pathname === "/admin/login") {
@@ -89,47 +117,13 @@ export async function proxy(request: NextRequest) {
             return NextResponse.redirect(new URL("/student", request.url));
         }
 
-        // Root /admin route: Only ADMIN allowed directly; other management roles go to their specific dashboard
-        if (pathname === "/admin" || pathname === "/admin/") {
-            if (role !== UserRole.ADMIN && role !== "ADMIN") {
-                return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
-            }
+        // Full ADMIN keeps full access to all /admin/* routes
+        if (role === UserRole.ADMIN || role === "ADMIN") {
             return response;
         }
 
-        // /admin/steno routes: Allowed for ADMIN, STENO_ADMIN, CONTENT_MANAGER
-        if (pathname.startsWith("/admin/steno")) {
-            if (role === UserRole.ADMIN || role === UserRole.STENO_ADMIN || role === UserRole.CONTENT_MANAGER || role === "ADMIN" || role === "STENO_ADMIN" || role === "CONTENT_MANAGER") {
-                return response;
-            }
-            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
-        }
-
-        // /admin/typing routes: Allowed for ADMIN, TYPING_ADMIN, CONTENT_MANAGER
-        if (pathname.startsWith("/admin/typing")) {
-            if (role === UserRole.ADMIN || role === UserRole.TYPING_ADMIN || role === UserRole.CONTENT_MANAGER || role === "ADMIN" || role === "TYPING_ADMIN" || role === "CONTENT_MANAGER") {
-                return response;
-            }
-            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
-        }
-
-        // /admin/settings routes: Allowed for all admin management roles
-        if (pathname.startsWith("/admin/settings")) {
-            return response;
-        }
-
-        // Content Manager extra allowed routes (/admin/content, /admin/blogs)
-        if (role === UserRole.CONTENT_MANAGER || role === "CONTENT_MANAGER") {
-            if (pathname.startsWith("/admin/content") || pathname.startsWith("/admin/blogs")) {
-                return response;
-            }
-            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
-        }
-
-        // Other /admin/* routes: Require ADMIN role
-        if (role !== UserRole.ADMIN && role !== "ADMIN") {
-            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
-        }
+        // If non-super-admin tries to access /admin routes, redirect to their dedicated workspace
+        return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
     }
 
     // ─── Student Route Protection ────────────────────────────────────────────
