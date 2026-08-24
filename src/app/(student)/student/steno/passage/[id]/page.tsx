@@ -10,20 +10,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play, Pause, Keyboard, Info, Volume2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
+import StenoDictationPlayer from "@/components/steno/StenoDictationPlayer";
+
 export default function StudentStenoPassagePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const mediaRef = useRef<HTMLAudioElement | null>(null);
 
   const [passage, setPassage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Player state
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [targetWpm, setTargetWpm] = useState("Original");
-  const [fluctuationLevel, setFluctuationLevel] = useState("Off");
 
   // Modal & Workspace state
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -54,44 +48,10 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
     setLoading(false);
   };
 
-  const togglePlay = () => {
-    if (!mediaRef.current) return;
-    if (isPlaying) {
-      mediaRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      mediaRef.current.play();
-      setIsPlaying(true);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (mediaRef.current) {
-      setCurrentTime(mediaRef.current.currentTime);
-      setDuration(mediaRef.current.duration || 404);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    setCurrentTime(time);
-    if (mediaRef.current) {
-      mediaRef.current.currentTime = time;
-    }
-  };
-
-  const formatSeconds = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
-
   const handleSaveConfig = (config: StenoSessionConfig) => {
     setSessionConfig(config);
     setIsConfigModalOpen(false);
     setStartEngine(true);
-    if (mediaRef.current) mediaRef.current.pause();
-    setIsPlaying(false);
     toast.success("Transcription session configured!");
   };
 
@@ -166,10 +126,10 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
     );
   }
 
-  // Dictation Player & Instructions View (Matching Image 4)
+  // Dictation Player & Instructions View
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-1 sm:p-2">
-      {/* Header Bar (Matching Image 4) */}
+      {/* Header Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
         <h1 className="text-xl font-black text-slate-900">{passage.title || "Test - 1"}</h1>
         <Button
@@ -180,93 +140,13 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
         </Button>
       </div>
 
-      {/* Main Dictation Player Card (Matching Image 4) */}
-      <Card className="p-6 sm:p-8 rounded-3xl border-slate-200 bg-white shadow-md space-y-6">
-        <audio
-          ref={mediaRef}
-          src={passage.audioUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={() => setIsPlaying(false)}
-        />
+      {/* Main Dictation Player Component */}
+      <StenoDictationPlayer
+        passage={passage}
+        onStartTranscription={() => setIsConfigModalOpen(true)}
+      />
 
-        {/* Video / Thumbnail Player Box */}
-        <div className="w-full h-56 sm:h-72 rounded-2xl bg-gradient-to-br from-[#0b132b] via-[#1c2541] to-[#0b132b] text-white flex flex-col items-center justify-center relative overflow-hidden shadow-lg p-6">
-          <div className="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center shadow-xl animate-pulse">
-            <Volume2 className="w-10 h-10 text-amber-400" />
-          </div>
-          <p className="text-sm font-black mt-3 tracking-wider text-amber-300 uppercase">
-            STENO DICTATION AUDIO PLAYER
-          </p>
-          <p className="text-xs text-slate-300 mt-1">Vishal Sir Dictation • {passage.wordCount || 391} Words</p>
-        </div>
-
-        {/* Player Progress Bar */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-          <input
-            type="range"
-            min="0"
-            max={duration || 404}
-            value={currentTime}
-            onChange={handleSeek}
-            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-          />
-          <div className="flex justify-between text-xs font-mono font-extrabold text-indigo-600">
-            <span>🔄 {formatSeconds(currentTime)}</span>
-            <span>{formatSeconds(duration || 404)} 🔄</span>
-          </div>
-        </div>
-
-        {/* Controls Row (Matching Image 4) */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Button
-            onClick={togglePlay}
-            className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-black h-11 px-6 rounded-xl shadow-md gap-2 shrink-0"
-          >
-            {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white" />}
-            {isPlaying ? "Pause Dictation" : "Play Dictation"}
-          </Button>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase text-slate-400">TARGET WPM:</span>
-            <select
-              value={targetWpm}
-              onChange={(e) => setTargetWpm(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800"
-            >
-              <option value="Original">Original</option>
-              <option value="80 WPM">80 WPM</option>
-              <option value="100 WPM">100 WPM</option>
-              <option value="120 WPM">120 WPM</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-              FLUCTUATION LEVEL <Info className="w-3 h-3 text-slate-400" />:
-            </span>
-            <select
-              value={fluctuationLevel}
-              onChange={(e) => setFluctuationLevel(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800"
-            >
-              <option value="Off">Off</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Main Action Button (Matching Image 4) */}
-        <Button
-          onClick={() => setIsConfigModalOpen(true)}
-          className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white font-black h-14 text-base rounded-2xl shadow-lg tracking-wider gap-2"
-        >
-          <Keyboard className="w-5 h-5" /> START TRANSCRIPTION
-        </Button>
-      </Card>
-
-      {/* Instructions Box (Matching Image 4 Hindi Text) */}
+      {/* Instructions Box */}
       <div className="p-6 rounded-3xl bg-indigo-50/60 border border-indigo-100 space-y-3">
         <h4 className="text-sm font-black text-indigo-950 flex items-center gap-2">
           <Info className="w-4 h-4 text-indigo-600" /> Instructions
@@ -281,7 +161,7 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Session Configuration Modal (Matching Image 5) */}
+      {/* Session Configuration Modal */}
       <StenoSessionConfigModal
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
