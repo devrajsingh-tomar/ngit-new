@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { getDashboardRoute, UserRole } from "@/lib/role-routing";
 
 // Security Headers
 const securityHeaders = {
@@ -54,12 +55,22 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin/payments", request.url));
     }
 
-    // ─── Admin Route Protection ──────────────────────────────────────────────
+    // ─── Dedicated Steno Login Page Protection ────────────────────────────────
+    if (pathname === "/steno/login") {
+        if (token) {
+            const dest = getDashboardRoute(token.role as string);
+            return NextResponse.redirect(new URL(dest, request.url));
+        }
+        return response;
+    }
+
+    // ─── Admin Route Protection & Role Authorization ──────────────────────────
     if (pathname.startsWith("/admin")) {
         if (pathname === "/admin/login") {
-            // Already-logged-in admins go straight to dashboard
-            if (token?.role === "ADMIN") {
-                return NextResponse.redirect(new URL("/admin", request.url));
+            // Already-logged-in admins go straight to their dashboard
+            if (token) {
+                const dest = getDashboardRoute(token.role as string);
+                return NextResponse.redirect(new URL(dest, request.url));
             }
             return response;
         }
@@ -71,9 +82,53 @@ export async function proxy(request: NextRequest) {
             return NextResponse.redirect(url);
         }
 
-        // Wrong role → back to home
-        if (token.role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/", request.url));
+        const role = token.role as string;
+
+        // Student accessing admin routes → redirect to student portal
+        if (role === UserRole.STUDENT || role === "STUDENT") {
+            return NextResponse.redirect(new URL("/student", request.url));
+        }
+
+        // Root /admin route: Only ADMIN allowed directly; other management roles go to their specific dashboard
+        if (pathname === "/admin" || pathname === "/admin/") {
+            if (role !== UserRole.ADMIN && role !== "ADMIN") {
+                return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
+            }
+            return response;
+        }
+
+        // /admin/steno routes: Allowed for ADMIN, STENO_ADMIN, CONTENT_MANAGER
+        if (pathname.startsWith("/admin/steno")) {
+            if (role === UserRole.ADMIN || role === UserRole.STENO_ADMIN || role === UserRole.CONTENT_MANAGER || role === "ADMIN" || role === "STENO_ADMIN" || role === "CONTENT_MANAGER") {
+                return response;
+            }
+            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
+        }
+
+        // /admin/typing routes: Allowed for ADMIN, TYPING_ADMIN, CONTENT_MANAGER
+        if (pathname.startsWith("/admin/typing")) {
+            if (role === UserRole.ADMIN || role === UserRole.TYPING_ADMIN || role === UserRole.CONTENT_MANAGER || role === "ADMIN" || role === "TYPING_ADMIN" || role === "CONTENT_MANAGER") {
+                return response;
+            }
+            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
+        }
+
+        // /admin/settings routes: Allowed for all admin management roles
+        if (pathname.startsWith("/admin/settings")) {
+            return response;
+        }
+
+        // Content Manager extra allowed routes (/admin/content, /admin/blogs)
+        if (role === UserRole.CONTENT_MANAGER || role === "CONTENT_MANAGER") {
+            if (pathname.startsWith("/admin/content") || pathname.startsWith("/admin/blogs")) {
+                return response;
+            }
+            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
+        }
+
+        // Other /admin/* routes: Require ADMIN role
+        if (role !== UserRole.ADMIN && role !== "ADMIN") {
+            return NextResponse.redirect(new URL(getDashboardRoute(role), request.url));
         }
     }
 
@@ -82,7 +137,7 @@ export async function proxy(request: NextRequest) {
         if (pathname === "/student/login") {
             // Already logged in → go to correct dashboard
             if (token) {
-                const dest = token.role === "ADMIN" ? "/admin" : "/student";
+                const dest = getDashboardRoute(token.role as string);
                 return NextResponse.redirect(new URL(dest, request.url));
             }
             return response;
@@ -99,7 +154,7 @@ export async function proxy(request: NextRequest) {
     // ─── Legacy /login → redirect to student login ───────────────────────────
     if (pathname === "/login") {
         if (token) {
-            const dest = token.role === "ADMIN" ? "/admin" : "/student";
+            const dest = getDashboardRoute(token.role as string);
             return NextResponse.redirect(new URL(dest, request.url));
         }
         return NextResponse.redirect(new URL("/student/login", request.url));

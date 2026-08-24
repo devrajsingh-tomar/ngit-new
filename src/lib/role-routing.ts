@@ -1,7 +1,13 @@
-import { UserRole } from "@/models/User";
+export enum UserRole {
+    ADMIN = "ADMIN",
+    STUDENT = "STUDENT",
+    STENO_ADMIN = "STENO_ADMIN",
+    TYPING_ADMIN = "TYPING_ADMIN",
+    CONTENT_MANAGER = "CONTENT_MANAGER",
+}
 
 /**
- * Centralized Role-to-Dashboard Route Mapping
+ * Centralized Role-to-Dashboard Route Mapping (Browser & Server Safe)
  * 
  * Role Mapping Rules:
  * - STENO_ADMIN     -> /admin/steno

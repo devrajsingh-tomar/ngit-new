@@ -1,12 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { UserRole } from "@/lib/role-routing";
 
-export enum UserRole {
-    ADMIN = "ADMIN",
-    STUDENT = "STUDENT",
-    STENO_ADMIN = "STENO_ADMIN",
-    TYPING_ADMIN = "TYPING_ADMIN",
-    CONTENT_MANAGER = "CONTENT_MANAGER",
-}
+export { UserRole };
 
 export interface IUser extends Document {
     name: string;
@@ -39,6 +34,6 @@ const UserSchema = new Schema<IUser>(
     { timestamps: true }
 );
 
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+const User: Model<IUser> = (mongoose.models && mongoose.models.User) || mongoose.model<IUser>("User", UserSchema);
 
 export default User;
