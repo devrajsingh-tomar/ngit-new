@@ -146,9 +146,20 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                                 ? "/admin/typing"
                                                 : "/admin"
                                         }>
-                                            <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 rounded-xl transition-all duration-300 shadow-sm shadow-primary/5">
+                                            <Button 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const role = session.user.role;
+                                                    const dest = (role === "STENO_ADMIN" || role === "CONTENT_MANAGER")
+                                                        ? "/admin/steno"
+                                                        : (role === "TYPING_ADMIN" ? "/admin/typing" : "/admin");
+                                                    window.location.href = dest;
+                                                }}
+                                                variant="outline" 
+                                                className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 rounded-xl transition-all duration-300 shadow-sm shadow-primary/5 cursor-pointer"
+                                            >
                                                 <LayoutDashboard className="w-4 h-4" />
-                                                Admin Panel
+                                                Dashboard
                                             </Button>
                                         </Link>
                                     )}
