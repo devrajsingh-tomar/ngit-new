@@ -5,26 +5,25 @@ import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     FileText,
-    Shapes,
-    Library,
     Users,
     CreditCard,
     Settings,
-    Image as ImageIcon,
-    Calendar,
     GraduationCap,
     ClipboardList,
     Layout,
     ChevronDown,
-    BrainCircuit,
-    Bell,
-    Video,
     Keyboard,
-    MonitorPlay,
-    Mic
+    Mic,
+    Headphones,
+    Layers,
+    Award,
+    Type,
+    Sliders,
+    Trophy,
+    BarChart3,
+    Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 import { useSession } from "next-auth/react";
 
 const menuGroups = [
@@ -35,35 +34,25 @@ const menuGroups = [
         ]
     },
     {
-        groupLabel: "Assessments",
+        groupLabel: "Steno Management",
         items: [
-            {
-                label: "Typing Simulator",
-                href: "/admin/typing",
-                icon: Keyboard,
-                subItems: [
-                    { label: "Dashboard", href: "/admin/typing" },
-                    { label: "Student Results", href: "/admin/typing/results" }
-                ]
-            },
-            {
-                label: "Steno Management",
-                href: "/admin/steno",
-                icon: Mic,
-                subItems: [
-                    { label: "Overview", href: "/admin/steno" },
-                    { label: "Exams", href: "/admin/steno/exams" },
-                    { label: "Series", href: "/admin/steno/series" },
-                    { label: "Dictation Passages", href: "/admin/steno/passages" },
-                    { label: "Mock Tests", href: "/admin/steno/mock-tests" },
-                    { label: "Custom Tests", href: "/admin/steno/custom-tests" },
-                    { label: "Fonts", href: "/admin/steno/fonts" },
-                    { label: "Error Rules", href: "/admin/steno/error-rules" },
-                    { label: "Attempts / Results", href: "/admin/steno/results" },
-                    { label: "Leaderboard", href: "/admin/steno/leaderboard" }
-                ]
-            },
-            { label: "Certificates", href: "/admin/certificates", icon: GraduationCap },
+            { label: "Steno Control Center", href: "/admin/steno", icon: Mic },
+            { label: "Dictation Passages CMS", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Steno Series Collections", href: "/admin/steno/series", icon: Layers },
+            { label: "Exam Presets (SSC/HC/UP)", href: "/admin/steno/exams", icon: Award },
+            { label: "Official Mock Tests", href: "/admin/steno/mock-tests", icon: FileText },
+            { label: "Custom Tests Overview", href: "/admin/steno/custom-tests", icon: Clock },
+            { label: "Fonts Manager (Kruti/Mangal)", href: "/admin/steno/fonts", icon: Type },
+            { label: "Mistake Penalty Rules", href: "/admin/steno/error-rules", icon: Sliders },
+            { label: "Attempts & Results", href: "/admin/steno/results", icon: BarChart3 },
+            { label: "Global Leaderboard", href: "/admin/steno/leaderboard", icon: Trophy },
+        ]
+    },
+    {
+        groupLabel: "Typing Simulator",
+        items: [
+            { label: "Typing Dashboard", href: "/admin/typing", icon: Keyboard },
+            { label: "Student Typing Results", href: "/admin/typing/results", icon: BarChart3 },
         ]
     },
     {
@@ -81,6 +70,7 @@ const menuGroups = [
             },
             { label: "Attendance", href: "/admin/attendance", icon: ClipboardList },
             { label: "Payments & Invoices", href: "/admin/payments", icon: CreditCard },
+            { label: "Certificates", href: "/admin/certificates", icon: GraduationCap },
         ]
     },
     {
@@ -112,14 +102,14 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
         .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
-                if (userRole === "CONTENT_MANAGER") {
-                    return item.href.startsWith("/admin/steno") || item.href.startsWith("/admin/typing") || item.href === "/admin";
-                }
                 if (userRole === "STENO_ADMIN") {
                     return item.href.startsWith("/admin/steno");
                 }
                 if (userRole === "TYPING_ADMIN") {
                     return item.href.startsWith("/admin/typing");
+                }
+                if (userRole === "CONTENT_MANAGER") {
+                    return item.href.startsWith("/admin/steno") || item.href.startsWith("/admin/typing");
                 }
                 return true;
             }),
@@ -127,10 +117,12 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
         .filter((group) => group.items.length > 0);
 
     return (
-        <aside className={cn("w-64 bg-white border-r flex flex-col h-full shadow-[shadow-sm]", className)} style={{ display: 'flex', flexDirection: 'column' }}>
+        <aside className={cn("w-64 bg-white border-r flex flex-col h-full shadow-sm", className)} style={{ display: 'flex', flexDirection: 'column' }}>
             <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">N</div>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center font-black text-white shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
+                        N
+                    </div>
                     <div className="leading-tight">
                         <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">NGIT</h1>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Workspace</p>
@@ -154,12 +146,12 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                                 {item.subItems ? (
                                     <details className="group" open={pathname.startsWith(item.href)}>
                                         <summary className={cn(
-                                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer list-none",
+                                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer list-none",
                                             (pathname.startsWith(item.href) && pathname !== "/admin")
-                                                ? "bg-slate-100 text-primary shadow-sm"
+                                                ? "bg-slate-100 text-indigo-600 shadow-sm"
                                                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                         )}>
-                                            <item.icon className={cn("w-4 h-4 transition-colors", (pathname.startsWith(item.href) && pathname !== "/admin") ? "text-primary" : "text-slate-400")} />
+                                            <item.icon className={cn("w-4 h-4 transition-colors", (pathname.startsWith(item.href) && pathname !== "/admin") ? "text-indigo-600" : "text-slate-400")} />
                                             <span className="flex-1">{item.label}</span>
                                             <ChevronDown className="w-4 h-4 opacity-50 group-open:rotate-180 transition-transform" />
                                         </summary>
@@ -172,7 +164,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                                                     className={cn(
                                                         "block px-3 py-2 rounded-lg text-[11px] font-bold transition-all uppercase tracking-wider",
                                                         pathname === subItem.href
-                                                            ? "text-primary bg-primary/5 shadow-sm"
+                                                            ? "text-indigo-600 bg-indigo-50 shadow-sm"
                                                             : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
                                                     )}
                                                 >
@@ -186,10 +178,10 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                                         href={item.href}
                                         onClick={onClose}
                                         className={cn(
-                                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all group",
+                                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all group",
                                             pathname === item.href
-                                                ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/20"
-                                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20"
+                                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                         )}>
                                         <item.icon className={cn("w-4 h-4", pathname === item.href ? "text-white" : "text-slate-400 group-hover:text-slate-600")} />
                                         {item.label}
@@ -200,18 +192,6 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                     </div>
                 ))}
             </nav>
-
-            <div className="p-4 border-t bg-slate-50/50">
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-colors">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">System Status</p>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-xs font-bold text-slate-700">All Systems Operational</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </aside>
     );
 }
