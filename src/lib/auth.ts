@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import connectDB from "@/lib/db";
 import User, { UserRole } from "@/models/User";
 import bcrypt from "bcryptjs";
@@ -50,12 +51,47 @@ export const authOptions: NextAuthOptions = {
                 };
             },
         }),
+        ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+          ? [
+              GoogleProvider({
+                clientId: process.env.GOOGLE_CLIENT_ID,
+                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+              }),
+            ]
+          : []),
     ],
     callbacks: {
+        async signIn({ user, account }) {
+          if (account?.provider === "google") {
+            try {
+              await connectDB();
+              const existingUser = await User.findOne({ email: user.email?.toLowerCase() });
+              if (!existingUser) {
+                const newUser = await User.create({
+                  name: user.name || "Google User",
+                  email: user.email?.toLowerCase(),
+                  image: user.image,
+                  role: UserRole.STUDENT,
+                  isActive: true,
+                });
+                (user as any).id = newUser._id.toString();
+                (user as any).role = newUser.role;
+              } else {
+                (user as any).id = existingUser._id.toString();
+                (user as any).role = existingUser.role;
+                (user as any).image = existingUser.image || user.image;
+              }
+            } catch (err) {
+              console.error("Google Sign-In DB Sync Error:", err);
+              return false;
+            }
+          }
+          return true;
+        },
         async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.id = user.id;
-                token.role = (user as any).role;
+                token.role = (user as any).role || "STUDENT";
                 token.name = user.name;
                 token.image = (user as any).image;
             }
@@ -68,7 +104,7 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             if (token) {
                 session.user.id = token.id as string;
-                session.user.role = token.role as UserRole;
+                session.user.role = (token.role as UserRole) || UserRole.STUDENT;
                 session.user.name = token.name as string;
                 session.user.image = token.image as string;
             }
@@ -85,7 +121,6 @@ export const authOptions: NextAuthOptions = {
     logger: {
         error(code, metadata) {
             if (code === "JWT_SESSION_ERROR") {
-                // Silently ignore: Usually a stale cookie from changing NEXTAUTH_SECRET in development
                 return;
             }
             console.error(code, metadata);
