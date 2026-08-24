@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { GraduationCap, ArrowRight, ShieldCheck, User, Loader2, Zap, Fingerprint } from "lucide-react";
+import { getDashboardRoute } from "@/lib/role-routing";
 
 interface LoginFormProps {
     title: string;
@@ -42,18 +43,7 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
                 router.refresh();
                 const response = await fetch('/api/auth/session');
                 const session = await response.json();
-
-                let targetUrl = "/";
-                const role = session?.user?.role;
-                if (role === 'ADMIN') {
-                    targetUrl = "/admin";
-                } else if (role === 'CONTENT_MANAGER' || role === 'STENO_ADMIN') {
-                    targetUrl = "/admin/steno";
-                } else if (role === 'TYPING_ADMIN') {
-                    targetUrl = "/admin/typing";
-                } else if (role === 'STUDENT') {
-                    targetUrl = "/student";
-                }
+                const targetUrl = getDashboardRoute(session?.user?.role);
 
                 window.location.href = targetUrl;
             }

@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getDashboardRoute } from "@/lib/role-routing";
 import { getDashboardStats } from "@/app/actions/dashboard";
 import {
     Users,
@@ -28,14 +29,8 @@ export default async function AdminDashboard() {
     }
 
     const role = session.user.role;
-    if (role === "STENO_ADMIN") {
-        redirect("/admin/steno");
-    } else if (role === "TYPING_ADMIN") {
-        redirect("/admin/typing");
-    } else if (role === "CONTENT_MANAGER") {
-        redirect("/admin/steno");
-    } else if (role !== "ADMIN") {
-        redirect("/admin/login");
+    if (role !== "ADMIN") {
+        redirect(getDashboardRoute(role));
     }
 
     const res = await getDashboardStats();

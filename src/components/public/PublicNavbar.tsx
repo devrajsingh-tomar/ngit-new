@@ -17,6 +17,7 @@ import {
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { getDashboardRoute } from "@/lib/role-routing";
 
 type NavLink = {
     label: string;
@@ -139,27 +140,16 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                             </Button>
                                         </Link>
                                     ) : (
-                                        <Link href={
-                                            session.user.role === "STENO_ADMIN" || session.user.role === "CONTENT_MANAGER"
-                                                ? "/admin/steno"
-                                                : session.user.role === "TYPING_ADMIN"
-                                                ? "/admin/typing"
-                                                : "/admin"
-                                        }>
+                                        <Link href={getDashboardRoute(session.user.role)}>
                                             <Button 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    const role = session.user.role;
-                                                    const dest = (role === "STENO_ADMIN" || role === "CONTENT_MANAGER")
-                                                        ? "/admin/steno"
-                                                        : (role === "TYPING_ADMIN" ? "/admin/typing" : "/admin");
-                                                    window.location.href = dest;
+                                                onClick={() => {
+                                                    window.location.href = getDashboardRoute(session.user.role);
                                                 }}
                                                 variant="outline" 
                                                 className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 rounded-xl transition-all duration-300 shadow-sm shadow-primary/5 cursor-pointer"
                                             >
                                                 <LayoutDashboard className="w-4 h-4" />
-                                                Dashboard
+                                                Admin Panel
                                             </Button>
                                         </Link>
                                     )}
@@ -286,16 +276,13 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                                 <p className="text-xs text-slate-500">{session.user.role}</p>
                                             </div>
                                         </div>
-                                        <Link href={
-                                            session.user.role === 'STUDENT' 
-                                                ? '/student' 
-                                                : (session.user.role === 'STENO_ADMIN' || session.user.role === 'CONTENT_MANAGER'
-                                                    ? '/admin/steno'
-                                                    : session.user.role === 'TYPING_ADMIN'
-                                                    ? '/admin/typing'
-                                                    : '/admin')
-                                        } onClick={() => setIsOpen(false)}>
-                                            <Button className="w-full gap-2 rounded-xl h-12 font-bold">
+                                        <Link href={getDashboardRoute(session.user.role)} onClick={() => setIsOpen(false)}>
+                                            <Button 
+                                                onClick={() => {
+                                                    window.location.href = getDashboardRoute(session.user.role);
+                                                }}
+                                                className="w-full gap-2 rounded-xl h-12 font-bold"
+                                            >
                                                 Go to Dashboard
                                             </Button>
                                         </Link>
