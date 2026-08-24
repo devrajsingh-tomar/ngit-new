@@ -19,36 +19,52 @@ export async function GET(req: NextRequest) {
       const resultDoc = await StenoResult.findById(id)
         .populate("passageId")
         .populate("examId")
-        .populate("userId", "name image")
+        .populate("userId", "name image email role")
         .lean();
 
       if (!resultDoc) return NextResponse.json({ success: false, error: "Result not found" }, { status: 404 });
+
+      const userRole = (session.user as any).role;
+      const isOwner = (resultDoc.userId as any)?._id?.toString() === session.user.id;
+      const isStaff = ["ADMIN", "STENO_ADMIN", "CONTENT_MANAGER", "TYPING_ADMIN"].includes(userRole);
+
+      if (!isOwner && !isStaff) {
+        return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
+      }
+
       return NextResponse.json({ success: true, data: JSON.parse(JSON.stringify(resultDoc)) });
     }
 
-    // Admin List all results (paginated)
-    if ((session.user as any)?.role !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Admin access required" }, { status: 403 });
-    }
+    const userRole = (session.user as any)?.role;
+    const isStaff = ["ADMIN", "STENO_ADMIN", "CONTENT_MANAGER", "TYPING_ADMIN"].includes(userRole);
 
     const page = Number(searchParams.get("page")) || 1;
     const limit = Math.min(50, Number(searchParams.get("limit")) || 20);
     const skip = (page - 1) * limit;
 
+    const filter: any = {};
+    if (!isStaff) {
+      // Students can only see their own test results
+      filter.userId = session.user.id;
+    }
+
     const [results, total] = await Promise.all([
-      StenoResult.find({})
+      StenoResult.find(filter)
         .populate("userId", "name email image")
         .populate("passageId", "title")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      StenoResult.countDocuments(),
+      StenoResult.countDocuments(filter),
     ]);
+
+    const parsedResults = JSON.parse(JSON.stringify(results));
 
     return NextResponse.json({
       success: true,
-      data: JSON.parse(JSON.stringify(results)),
+      data: parsedResults,
+      results: parsedResults,
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (err: any) {

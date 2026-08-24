@@ -1,55 +1,26 @@
-"use client";
-
-import { useEffect, useState, use } from "react";
-import Link from "next/link";
 import { getStenoResultByIdAction } from "@/app/actions/steno";
-import { StenoResultView } from "@/components/steno/StenoResultView";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import StenoResultView from "@/components/steno/StenoResultView";
 
-export default function StudentStenoResultPage({ params }: { params: Promise<{ attemptId: string }> }) {
-  const resolvedParams = use(params);
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export const metadata = {
+  title: "Steno Result | Student Portal",
+};
 
-  useEffect(() => {
-    loadResult();
-  }, [resolvedParams.attemptId]);
+export default async function StudentStenoResultPage({
+  params,
+}: {
+  params: Promise<{ attemptId: string }>;
+}) {
+  const { attemptId } = await params;
+  const res = await getStenoResultByIdAction(attemptId);
 
-  const loadResult = async () => {
-    setLoading(true);
-    const res = await getStenoResultByIdAction(resolvedParams.attemptId);
-    if (res.success && res.result) {
-      setResult(res.result);
-    } else {
-      toast.error(res.error || "Failed to load evaluation report");
-    }
-    setLoading(false);
-  };
-
-  if (loading) {
+  if (!res.success || !res.result) {
     return (
-      <div className="py-20 text-center text-slate-400">
-        <RefreshCw className="w-6 h-6 animate-spin text-indigo-600 mx-auto mb-2" /> Loading Detailed Evaluation Report...
+      <div className="p-12 text-center max-w-lg mx-auto my-20 bg-white rounded-3xl border shadow-xl space-y-4">
+        <h2 className="text-2xl font-black text-rose-600">Result Access Denied</h2>
+        <p className="text-sm text-slate-500 font-bold">{res.error || "Result record unavailable."}</p>
       </div>
     );
   }
 
-  if (!result) {
-    return (
-      <div className="p-8 text-center bg-white rounded-3xl border border-slate-200 space-y-4">
-        <p className="text-slate-500 font-bold">Result record not found.</p>
-        <Link href="/student/steno/my-tests">
-          <Button variant="outline" className="rounded-xl">Back to My Tests</Button>
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 p-1 sm:p-2">
-      <StenoResultView result={result} />
-    </div>
-  );
+  return <StenoResultView result={res.result} />;
 }

@@ -13,6 +13,7 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
 
 // ── PUBLIC & STUDENT STENO DATA ──
 
@@ -527,14 +528,13 @@ export async function submitStenoResultAction(data: {
   passageId?: string;
   examId?: string;
   typedTranscription: string;
-  speedWpm: number;
-  accuracy: number;
-  fullErrors: number;
-  halfErrors: number;
-  totalErrors: number;
-  score: number;
-  status: "Passed" | "Failed" | "Evaluated";
   timeSpentSeconds: number;
+  fontUsed?: string;
+  speedWpm?: number;
+  accuracy?: number;
+  totalErrors?: number;
+  score?: number;
+  status?: "Passed" | "Failed" | "Evaluated";
 }) {
   try {
     await connectDB();
@@ -543,19 +543,65 @@ export async function submitStenoResultAction(data: {
       return { success: false, error: "Unauthorized: Student login required" };
     }
 
+    let passageDoc: any = null;
+    if (data.passageId) {
+      passageDoc = await StenoPassage.findById(data.passageId).lean();
+    }
+
+    let examDoc: any = null;
+    let examRules: Partial<ExamRules> = {};
+    if (data.examId) {
+      examDoc = await StenoExam.findById(data.examId).lean();
+      if (examDoc) {
+        examRules = {
+          spellingWeight: examDoc.spellingPenalty || "full",
+          matraWeight: examDoc.matraPenalty || "half",
+          punctuationWeight: examDoc.punctuationPenalty || "half",
+          addedWordWeight: examDoc.addedWordPenalty || "full",
+          missingWordWeight: examDoc.missingWordPenalty || "full",
+        };
+      }
+    }
+
+    const originalText = passageDoc?.text || "";
+    const targetWpm = passageDoc?.targetWpm || examDoc?.targetWpm || 80;
+
+    // Authoritative Server-Side Result Evaluation
+    const evaluation = evaluateStenoTranscription(
+      originalText,
+      data.typedTranscription || "",
+      data.timeSpentSeconds || 1,
+      targetWpm,
+      examRules
+    );
+
     const resultDoc = await StenoResult.create({
       userId: session.user.id,
       passageId: data.passageId || null,
       examId: data.examId || null,
-      typedTranscription: data.typedTranscription,
-      speedWpm: data.speedWpm,
-      accuracy: data.accuracy,
-      fullErrors: data.fullErrors,
-      halfErrors: data.halfErrors,
-      totalErrors: data.totalErrors,
-      score: data.score,
-      status: data.status,
-      timeSpentSeconds: data.timeSpentSeconds,
+      passageTitle: passageDoc?.title || "Steno Practice Passage",
+      examTitle: examDoc?.title || "Standard Practice",
+      language: passageDoc?.language || "Hindi",
+      originalText,
+      typedTranscription: data.typedTranscription || "",
+      originalWordCount: evaluation.originalWordCount,
+      typedWordCount: evaluation.typedWordCount,
+      grossWpm: evaluation.grossWpm,
+      netWpm: evaluation.netWpm,
+      speedWpm: evaluation.netWpm,
+      accuracy: evaluation.accuracy,
+      score: evaluation.score,
+      targetWpm,
+      totalMistakes: evaluation.totalMistakes,
+      totalErrors: evaluation.totalMistakes,
+      totalPenalty: evaluation.totalPenalty,
+      status: evaluation.isPassed ? "Passed" : "Failed",
+      timeSpentSeconds: data.timeSpentSeconds || 1,
+      fontUsed: data.fontUsed || "Mangal",
+      mistakeBreakdown: evaluation.mistakeBreakdown,
+      frozenWeights: evaluation.frozenWeights,
+      wordBreakdown: evaluation.wordBreakdown,
+      errorLog: evaluation.errorLog,
     });
 
     revalidatePath("/steno/my-tests");
@@ -570,13 +616,27 @@ export async function submitStenoResultAction(data: {
 export async function getStenoResultByIdAction(attemptId: string) {
   try {
     await connectDB();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { success: false, error: "Authentication required to view results" };
+    }
+
     const resultDoc = await StenoResult.findById(attemptId)
       .populate("passageId")
       .populate("examId")
-      .populate("userId", "name email image")
+      .populate("userId", "name email image role")
       .lean();
 
     if (!resultDoc) return { success: false, error: "Result record not found" };
+
+    const userRole = (session.user as any).role;
+    const isOwner = resultDoc.userId?._id?.toString() === session.user.id;
+    const isStaff = ["ADMIN", "STENO_ADMIN", "CONTENT_MANAGER", "TYPING_ADMIN"].includes(userRole);
+
+    if (!isOwner && !isStaff) {
+      return { success: false, error: "Access Denied: You can only view your own test results." };
+    }
+
     return { success: true, result: JSON.parse(JSON.stringify(resultDoc)) };
   } catch (err: any) {
     return { success: false, error: err.message };
