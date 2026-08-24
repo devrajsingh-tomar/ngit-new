@@ -113,7 +113,7 @@ export default function StenoDictationPlayer({ passage, onStartTranscription }: 
           <p className="text-sm font-black mt-3 tracking-wider text-amber-300 uppercase">
             STENO DICTATION AUDIO PLAYER
           </p>
-          <p className="text-xs text-slate-300 mt-1">Vishal Sir Dictation • {passage?.wordCount || 400} Words</p>
+          <p className="text-xs text-slate-300 mt-1">NGIT Official Dictation • {passage?.wordCount || 400} Words</p>
         </div>
       )}
 
