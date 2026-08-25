@@ -38,7 +38,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
   const [selectedExam, setSelectedExam] = useState("Allahabad High Court Steno");
-  const [selectedFont, setSelectedFont] = useState("Mangal (Inscript)");
+  const [selectedFont, setSelectedFont] = useState("Mangal");
 
   // Manual configuration state
   const [backspaceStatus, setBackspaceStatus] = useState<"Enabled" | "Disabled">("Enabled");
@@ -187,11 +187,9 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
                   onChange={(e) => setSelectedFont(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="Mangal (Inscript)">Mangal (Inscript)</option>
-                  <option value="Kruti Dev 010">Kruti Dev 010</option>
-                  <option value="Mangal Remington GAIL">Mangal Remington GAIL</option>
-                  <option value="Mangal">Mangal Unicode</option>
-                  <option value="Arial">Arial (English)</option>
+                  <option value="Mangal">Mangal</option>
+                  <option value="Kruti Dev 010">Krutidev</option>
+                  <option value="English">English</option>
                 </select>
               </div>
             </div>
@@ -229,11 +227,9 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
                 onChange={(e) => setSelectedFont(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800"
               >
-                <option value="Mangal (Inscript)">Mangal (Inscript)</option>
-                <option value="Kruti Dev 010">Kruti Dev 010</option>
-                <option value="Mangal Remington GAIL">Mangal Remington GAIL</option>
-                <option value="Mangal">Mangal Unicode</option>
-                <option value="Arial">Arial (English)</option>
+                <option value="Mangal">Mangal</option>
+                <option value="Kruti Dev 010">Krutidev</option>
+                <option value="English">English</option>
               </select>
             </div>
 

@@ -418,10 +418,8 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                   className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-black text-slate-900 focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="Mangal">MANGAL</option>
-                  <option value="Kruti Dev 010">KRUTI DEV 010</option>
-                  <option value="Mangal Remington GAIL">REMINGTON GAIL</option>
-                  <option value="Mangal Inscript">INSCRIPT</option>
-                  <option value="Arial">ARIAL</option>
+                  <option value="Kruti Dev 010">KRUTIDEV</option>
+                  <option value="English">ENGLISH</option>
                 </select>
               </div>
 

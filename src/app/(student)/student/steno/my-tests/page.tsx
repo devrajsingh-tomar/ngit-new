@@ -380,11 +380,9 @@ export default function StudentStenoMyTestsPage() {
                   onChange={(e) => setFormData({ ...formData, hindiFont: e.target.value })}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                 >
-                  <option value="Kruti Dev 010">Kruti Dev 010 (Remington)</option>
-                  <option value="Mangal Remington GAIL">Mangal Remington GAIL</option>
-                  <option value="Mangal Inscript">Mangal Inscript</option>
-                  <option value="Mangal">Mangal Unicode</option>
-                  <option value="Arial">Arial (English)</option>
+                  <option value="Mangal">Mangal</option>
+                  <option value="Kruti Dev 010">Krutidev</option>
+                  <option value="English">English</option>
                 </select>
               </div>
             </div>
