@@ -154,7 +154,7 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
         <ol className="text-xs text-slate-700 font-medium space-y-2 pl-2">
           <li>1. पहले <strong className="text-indigo-900 font-bold">Play Dictation</strong> पर क्लिक करें और 3 सेकंड तक प्रतीक्षा करें। इसके बाद Dictation Play हो जाएगा।</li>
           <li>2. यदि <strong className="text-indigo-900 font-bold">Dictation Play</strong> नहीं हो रहा है, तो आपके इंटरनेट कनेक्शन में समस्या हो सकती है। पहले अपना इंटरनेट कनेक्शन जाँचें।</li>
-          <li>3. यदि फिर भी समस्या बनी रहती है, तो इस नंबर पर संपर्क करें: <strong className="text-indigo-900 font-bold">88811 36944</strong></li>
+          <li>3. यदि फिर भी समस्या बनी रहती है, तो इस नंबर पर संपर्क करें: <strong className="text-indigo-900 font-bold">+91 80049 58441</strong></li>
         </ol>
         <div className="pt-2 border-t border-indigo-100 text-[11px] font-bold text-slate-500">
           सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v1.1.3 (जुलाई 18, 2026) — यदि यह न दिखे, तो <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।

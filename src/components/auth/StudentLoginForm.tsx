@@ -269,7 +269,7 @@ export default function StudentLoginForm() {
                             <p className="text-xs font-black text-slate-900 uppercase tracking-wider">Option 2: Password Reset Request</p>
                             {recoverySubmitted ? (
                                 <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-200 text-center">
-                                    ✓ Password recovery request received! Please check your registered email or contact admin at 88811 36944.
+                                    ✓ Password recovery request received! Please check your registered email or contact admin at +91 80049 58441.
                                 </div>
                             ) : (
                                 <form

@@ -203,7 +203,7 @@ export default function StudentCustomPracticePreStartPage({
         <ol className="text-xs text-slate-700 font-medium space-y-2 pl-2">
           <li>1. Click <strong className="text-indigo-900 font-bold">Play Dictation</strong> and wait 3 seconds. Dictation will start playing automatically.</li>
           <li>2. If dictation is not playing, there may be an issue with your internet connection. Please check your connection first.</li>
-          <li>3. If the problem still persists, contact us at: <strong className="text-indigo-900 font-bold">88811 36944</strong></li>
+          <li>3. If the problem still persists, contact us at: <strong className="text-indigo-900 font-bold">+91 80049 58441</strong></li>
         </ol>
         <div className="pt-2 border-t border-indigo-100 text-[11px] font-bold text-slate-500">
           Software Version (Latest): v1.1.3 (July 18, 2026) — If not visible, press <strong className="text-indigo-900">Ctrl + F5</strong> to refresh the page.
