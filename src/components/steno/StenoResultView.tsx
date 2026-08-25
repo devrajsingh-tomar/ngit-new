@@ -21,6 +21,8 @@ import {
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { toast } from "sonner";
+
 interface StenoResultViewProps {
   result: any;
 }
@@ -49,15 +51,41 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
   const totalLogPages = Math.max(1, Math.ceil(errorLog.length / pageSize));
   const paginatedErrorLog = errorLog.slice((logPage - 1) * pageSize, logPage * pageSize);
 
-  const handleDownloadPdf = () => {
-    setDownloading(true);
-    const link = document.createElement("a");
-    link.href = `/api/steno/result/${result._id}/pdf`;
-    link.download = `NGIT_Steno_Result_${(result.passageTitle || "Test").replace(/\s+/g, "_")}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => setDownloading(false), 2000);
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true);
+      toast.loading("Generating Steno Result PDF...", { id: "pdf-download" });
+
+      const response = await fetch(`/api/steno/result/${result._id}/pdf`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to generate result PDF. Please try again.");
+      }
+
+      const blob = await response.blob();
+      if (blob.type !== "application/pdf" && !blob.type.includes("pdf")) {
+        throw new Error("Server did not return a valid PDF report.");
+      }
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `NGIT_Steno_Result_${(result.passageTitle || "Test").replace(/\s+/g, "_")}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast.success("Result PDF downloaded successfully!", { id: "pdf-download" });
+    } catch (err: any) {
+      console.error("PDF Download Error:", err);
+      toast.error(err.message || "Failed to download result PDF.", { id: "pdf-download" });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (

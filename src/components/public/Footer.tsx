@@ -214,8 +214,16 @@ export default async function Footer() {
                         <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
                             © {currentYear} All rights reserved to {footerData.logoText || "NGIT"}.
                         </p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                            ISO 9001:2015 Certified Institute • Skill India Partner
+                        <p className="text-[10px] font-bold text-slate-500 tracking-wider">
+                            Designed & Developed by{" "}
+                            <a 
+                                href="https://devrajsinghtomar.com/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="font-extrabold text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors"
+                            >
+                                Devraj Singh Tomar
+                            </a>
                         </p>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-black uppercase tracking-wider text-slate-400 pt-2 justify-center sm:justify-start">
                             <Link href="/terms-and-conditions" className="hover:text-indigo-600 transition-colors">Terms & Conditions</Link>

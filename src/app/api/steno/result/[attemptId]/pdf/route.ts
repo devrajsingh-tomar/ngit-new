@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
+import mongoose from "mongoose";
 import StenoResult from "@/models/StenoResult";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -20,11 +21,14 @@ export async function GET(
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const resultDoc = await StenoResult.findById(attemptId)
-      .populate("passageId")
-      .populate("examId")
-      .populate("userId", "name email image role")
-      .lean();
+    let resultDoc: any = null;
+    if (mongoose.Types.ObjectId.isValid(attemptId)) {
+      resultDoc = await StenoResult.findById(attemptId)
+        .populate("passageId")
+        .populate("examId")
+        .populate("userId", "name email image role")
+        .lean();
+    }
 
     if (!resultDoc) {
       return NextResponse.json({ error: "Result record not found" }, { status: 404 });
