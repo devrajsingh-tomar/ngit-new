@@ -1,18 +1,26 @@
 import { listBlogPosts } from "@/app/actions/blog";
 import BlogSection from "@/components/public/BlogSection";
-import { Metadata } from "next";
+import { constructMetadata, getBreadcrumbSchema } from "@/lib/seo";
+import JsonLd from "@/components/seo/JsonLd";
 
-export const metadata: Metadata = {
-    title: "Insight Hub & Official Blog | NGIT",
-    description: "Stay updated with the latest trends in IT, academic excellence, and career guidance from the experts at National Genius Institute of Technology.",
-};
+export const metadata = constructMetadata({
+  title: "Latest IT, Typing & Government Exam Blogs | NGIT Prayagraj",
+  description: "Read expert articles on Hindi & English typing speed improvement, Steno dictation tips, UPSSSC/SSC exam preparation, and computer courses from NGIT Prayagraj.",
+  path: "/blog",
+});
 
 export default async function PublicBlogListPage() {
     const res = await listBlogPosts({ status: "PUBLISHED", limit: 12, page: 1 });
-    const posts = res.success ? res.data.posts : [];
+    const posts = res.success && res.data ? (res.data.posts || []) : [];
+
+    const breadcrumbSchema = getBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Blog", url: "/blog" },
+    ]);
 
     return (
         <div className="min-h-screen bg-slate-50 pt-24 pb-20">
+            <JsonLd data={breadcrumbSchema} />
             {/* Header Section */}
             <section className="relative overflow-hidden mb-16 px-4">
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-[3rem] mx-4 lg:mx-10" />
@@ -32,19 +40,8 @@ export default async function PublicBlogListPage() {
                 </div>
             </section>
 
-            {/* Reuse BlogSection component but with full list capability or just mapped here */}
-            {/* Since BlogSection is already designed for home, we can use it or create a specific grid */}
-            
-            <div className="container px-6 mx-auto">
-                {posts.length > 0 ? (
-                    <BlogSection blogs={posts} data={{ section_name: "All Published Insights", subtitle: "Complete Archive" }} />
-                ) : (
-                    <div className="py-20 text-center bg-white rounded-[3rem] border border-slate-100 shadow-xl">
-                        <h3 className="text-2xl font-black text-slate-900 mb-4">No insights discovered yet.</h3>
-                        <p className="text-slate-500 font-medium tracking-tight">Check back soon for latest technological synthesis.</p>
-                    </div>
-                )}
-            </div>
+            {/* Articles List */}
+            <BlogSection blogs={posts} />
         </div>
     );
 }

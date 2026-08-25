@@ -3,6 +3,13 @@ import { getFaculty } from "@/app/actions/faculty";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 import { CheckCircle, Target, Eye, BookOpen, Award, Rocket, MonitorPlay } from "lucide-react";
 import Image from "next/image";
+import { constructMetadata } from "@/lib/seo";
+
+export const metadata = constructMetadata({
+  title: "About NGIT | Computer Training & Skill Institute in Prayagraj",
+  description: "Learn about NGIT (National Genius Institute of Technology) in Prayagraj. Discover our mission, faculty, computer courses, typing software, and government exam coaching.",
+  path: "/about",
+});
 
 const IconMap: any = {
     Target, Eye, BookOpen, Award, Rocket, MonitorPlay

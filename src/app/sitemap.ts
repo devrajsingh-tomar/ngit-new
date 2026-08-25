@@ -1,33 +1,42 @@
-
 import { MetadataRoute } from 'next'
 import { getPublicCourses } from '@/app/actions/courses'
 import { getEvents } from '@/app/actions/events'
+import { listBlogPosts } from '@/app/actions/blog'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ngitedu.com'
 
-  // Static routes
+  // Public static routes
   const staticPaths = [
-    '',
-    '/about',
-    '/blog',
-    '/contact',
-    '/courses',
-    '/events',
-    '/exams',
-    '/faculty',
-    '/gallery',
-    '/notices',
-    '/results',
-    '/typing',
-    '/verify',
+    { route: '', priority: 1.0, changeFrequency: 'daily' as const },
+    { route: '/about', priority: 0.8, changeFrequency: 'monthly' as const },
+    { route: '/contact', priority: 0.8, changeFrequency: 'monthly' as const },
+    { route: '/courses', priority: 0.9, changeFrequency: 'weekly' as const },
+    { route: '/typing', priority: 0.9, changeFrequency: 'daily' as const },
+    { route: '/typing/official', priority: 0.9, changeFrequency: 'weekly' as const },
+    { route: '/typing/books', priority: 0.8, changeFrequency: 'weekly' as const },
+    { route: '/steno', priority: 0.9, changeFrequency: 'daily' as const },
+    { route: '/steno/series', priority: 0.8, changeFrequency: 'weekly' as const },
+    { route: '/steno/mock-tests', priority: 0.8, changeFrequency: 'weekly' as const },
+    { route: '/shorthand', priority: 0.9, changeFrequency: 'weekly' as const },
+    { route: '/university-courses', priority: 0.8, changeFrequency: 'monthly' as const },
+    { route: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
+    { route: '/events', priority: 0.7, changeFrequency: 'weekly' as const },
+    { route: '/exams', priority: 0.7, changeFrequency: 'weekly' as const },
+    { route: '/faculty', priority: 0.6, changeFrequency: 'monthly' as const },
+    { route: '/gallery', priority: 0.6, changeFrequency: 'monthly' as const },
+    { route: '/notices', priority: 0.6, changeFrequency: 'weekly' as const },
+    { route: '/privacy-policy', priority: 0.3, changeFrequency: 'yearly' as const },
+    { route: '/terms-and-conditions', priority: 0.3, changeFrequency: 'yearly' as const },
+    { route: '/refund-policy', priority: 0.3, changeFrequency: 'yearly' as const },
+    { route: '/verify', priority: 0.5, changeFrequency: 'monthly' as const },
   ]
 
-  const staticRoutes = staticPaths.map((route) => ({
+  const staticRoutes = staticPaths.map(({ route, priority, changeFrequency }) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: route === '' ? 1 : 0.8,
+    changeFrequency,
+    priority,
   }))
 
   // Dynamic Courses
@@ -39,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${baseUrl}/courses/${course.slug || course._id}`,
         lastModified: new Date(course.updatedAt || new Date()),
         changeFrequency: 'weekly' as const,
-        priority: 0.6,
+        priority: 0.7,
       }))
     }
   } catch (e) {
@@ -62,5 +71,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Sitemap event fetch error:', e)
   }
 
-  return [...staticRoutes, ...courseRoutes, ...eventRoutes]
+  // Dynamic Blog Posts
+  let blogRoutes: MetadataRoute.Sitemap = []
+  try {
+    const blogRes = await listBlogPosts({ status: 'PUBLISHED', limit: 100, page: 1 })
+    if (blogRes.success && blogRes.data && Array.isArray(blogRes.data.posts)) {
+      blogRoutes = blogRes.data.posts.map((post: any) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.updatedAt || post.publishedAt || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }))
+    }
+  } catch (e) {
+    console.error('Sitemap blog fetch error:', e)
+  }
+
+  return [...staticRoutes, ...courseRoutes, ...eventRoutes, ...blogRoutes]
 }

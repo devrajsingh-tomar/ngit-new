@@ -10,6 +10,13 @@ import BlogSection from "@/components/public/BlogSection";
 import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
 import { getNotices } from "@/app/actions/notice";
 import { listBlogPosts } from "@/app/actions/blog";
+import { constructMetadata } from "@/lib/seo";
+
+export const metadata = constructMetadata({
+  title: "NGIT | Computer Courses, Typing & Government Exam Preparation in Prayagraj",
+  description: "Join NGIT Prayagraj for online Hindi & English typing tests, Steno shorthand dictations, UPSSSC & SSC exam preparation, CCC, O Level & IT computer courses.",
+  path: "/",
+});
 
 export default async function PublicHomePage() {
     const [slidesRes, dynamicRes, noticesRes, blogRes] = await Promise.all([
@@ -56,5 +63,3 @@ export default async function PublicHomePage() {
         </div>
     );
 }
-
-

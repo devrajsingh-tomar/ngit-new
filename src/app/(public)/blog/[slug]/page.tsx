@@ -3,26 +3,26 @@ import { notFound } from "next/navigation";
 import { Calendar, User, Clock, Share2, Facebook, Twitter, Linkedin, ArrowLeft, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { Metadata } from "next";
+import { constructMetadata, getArticleSchema, getBreadcrumbSchema } from "@/lib/seo";
+import JsonLd from "@/components/seo/JsonLd";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const res = await getBlogPost({ slug });
-    if (!res.success) return { title: "Post Not Found | NGIT" };
+    if (!res.success) return constructMetadata({ title: "Post Not Found", description: "The requested blog post was not found on NGIT.", path: `/blog/${slug}`, noindex: true });
     const post = res.data;
     
-    return {
-        title: `${post.metaTitle || post.title} | NGIT Official Blog`,
+    return constructMetadata({
+        title: post.metaTitle || `${post.title} | NGIT Official Blog`,
         description: post.metaDescription || post.excerpt || `Read ${post.title} on NGIT Official Blog`,
-        keywords: post.focusKeyword || post.tags?.join(", "),
-        openGraph: {
-            title: post.title,
-            description: post.excerpt,
-            images: [post.thumbnail || "/og-image.jpg"],
-            type: "article",
-            publishedTime: post.createdAt,
-            authors: [post.author?.name || "NGIT admin"],
-        }
-    };
+        path: `/blog/${post.slug}`,
+        ogType: "article",
+        ogImage: post.thumbnail || "/logo.png",
+        publishedTime: post.publishedAt || post.createdAt,
+        modifiedTime: post.updatedAt,
+        authors: [post.author?.name || "NGIT Team"],
+        tags: post.tags || [],
+    });
 }
 
 export default async function PublicBlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -35,8 +35,26 @@ export default async function PublicBlogPostPage({ params }: { params: Promise<{
 
     const post = res.data;
 
+    const articleSchema = getArticleSchema({
+      title: post.title,
+      description: post.excerpt || post.metaDescription || post.title,
+      url: `/blog/${post.slug}`,
+      image: post.thumbnail,
+      publishedAt: post.publishedAt || post.createdAt,
+      updatedAt: post.updatedAt,
+      authorName: post.author?.name || "NGIT Team",
+    });
+
+    const breadcrumbSchema = getBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Blog", url: "/blog" },
+      { name: post.title, url: `/blog/${post.slug}` },
+    ]);
+
     return (
         <article className="min-h-screen bg-white">
+            <JsonLd data={[articleSchema, breadcrumbSchema]} />
+
             {/* Header Content Section */}
             <header className="relative pt-32 pb-20 overflow-hidden bg-slate-50">
                 <div className="container px-6 mx-auto relative z-10">

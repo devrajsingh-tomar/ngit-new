@@ -2,6 +2,13 @@ import { getDynamicPageData } from "@/app/actions/cms";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 import { MessageSquare, MapPin, Phone, Mail } from "lucide-react";
 import ContactForm from "@/components/public/ContactForm";
+import { constructMetadata } from "@/lib/seo";
+
+export const metadata = constructMetadata({
+  title: "Contact NGIT | Computer Training Institute in Prayagraj",
+  description: "Contact NGIT (National Genius Institute of Technology) in Prayagraj. Reach out for course inquiries, typing & steno admissions, or call +91 80049 58441.",
+  path: "/contact",
+});
 
 const staticFallbackContent = (
     <div className="min-h-screen bg-slate-50 pt-32 pb-24">

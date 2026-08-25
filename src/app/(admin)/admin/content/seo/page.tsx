@@ -1,36 +1,91 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search, ChevronLeft, CheckCircle2, AlertCircle, AlertTriangle, Save } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, CheckCircle2, AlertCircle, AlertTriangle, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getSeoMetaDataAction, updateSeoMetaDataAction } from "@/app/actions/seo";
 
 const pages = [
-  { slug: "/", title: "Home", metaTitle: "NGIT – National Genius Institute of Technology", metaDesc: "Learn typing, crack government exams. Join NGIT today.", score: 92 },
-  { slug: "/about", title: "About Us", metaTitle: "About NGIT – Our Mission & Vision", metaDesc: "Discover our story, faculty, and achievements.", score: 78 },
-  { slug: "/courses", title: "Courses", metaTitle: "", metaDesc: "Explore all government exam preparation courses.", score: 45 },
-  { slug: "/contact", title: "Contact", metaTitle: "Contact NGIT – Get In Touch", metaDesc: "", score: 60 },
-  { slug: "/privacy", title: "Privacy Policy", metaTitle: "Privacy Policy – NGIT", metaDesc: "Read our privacy policy.", score: 88 },
+  { slug: "/", title: "Home Page", defaultTitle: "NGIT | Computer Courses, Typing & Government Exam Preparation in Prayagraj", defaultDesc: "Join NGIT Prayagraj for online Hindi & English typing tests, Steno shorthand dictations, UPSSSC & SSC exam preparation, CCC, O Level & IT computer courses." },
+  { slug: "/about", title: "About Us", defaultTitle: "About NGIT | Computer Training & Skill Institute in Prayagraj", defaultDesc: "Learn about NGIT (National Genius Institute of Technology) in Prayagraj. Discover our mission, faculty, computer courses, typing software, and government exam coaching." },
+  { slug: "/contact", title: "Contact Us", defaultTitle: "Contact NGIT | Computer Training Institute in Prayagraj", defaultDesc: "Contact NGIT (National Genius Institute of Technology) in Prayagraj. Reach out for course inquiries, typing & steno admissions, or call +91 80049 58441." },
+  { slug: "/typing", title: "Typing Tests", defaultTitle: "Hindi & English Typing Test Online | Mangal & Krutidev Practice", defaultDesc: "Practice Hindi and English typing online with NGIT's exam-oriented typing software. Supports Mangal Unicode, Krutidev, speed tracking, backspace control, and government exam practice." },
+  { slug: "/steno", title: "Steno Shorthand", defaultTitle: "Steno Shorthand Practice & Dictation Tests Online | UPSSSC & SSC Steno", defaultDesc: "Practice Stenography shorthand online with audio/video dictations, speed fluctuation, automatic transcription evaluation, and UPSSSC/SSC Steno exam prep at NGIT." },
+  { slug: "/university-courses", title: "University Courses", defaultTitle: "University Degree & Computer Diploma Courses | PGDCA, DCA, BCA | NGIT Prayagraj", defaultDesc: "Explore university degree and diploma courses at NGIT Prayagraj: PGDCA, DCA, BCA, CCC, O Level, and professional IT certification programs." },
+  { slug: "/blog", title: "Blog Hub", defaultTitle: "Latest IT, Typing & Government Exam Blogs | NGIT Prayagraj", defaultDesc: "Read expert articles on Hindi & English typing speed improvement, Steno dictation tips, UPSSSC/SSC exam preparation, and computer courses from NGIT Prayagraj." },
 ];
-
-function SEOScore({ score }: { score: number }) {
-  const color = score >= 80 ? "text-emerald-600 bg-emerald-50" : score >= 60 ? "text-amber-600 bg-amber-50" : "text-rose-600 bg-rose-50";
-  const label = score >= 80 ? "Good" : score >= 60 ? "Needs Work" : "Poor";
-  return (
-    <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-black uppercase", color)}>
-      {score} · {label}
-    </span>
-  );
-}
 
 export default function SEOSettingsPage() {
   const [selected, setSelected] = useState(pages[0]);
-  const [form, setForm] = useState({ metaTitle: selected.metaTitle, metaDesc: selected.metaDesc });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    metaTitle: selected.defaultTitle,
+    metaDescription: selected.defaultDesc,
+    focusKeyword: "",
+    canonicalUrl: `https://ngitedu.com${selected.slug}`,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSeo() {
+      setLoading(true);
+      try {
+        const res = await getSeoMetaDataAction({ routeSlug: selected.slug });
+        if (isMounted) {
+          if (res?.success && res?.data) {
+            setForm({
+              metaTitle: res.data.metaTitle || selected.defaultTitle,
+              metaDescription: res.data.metaDescription || selected.defaultDesc,
+              focusKeyword: res.data.focusKeyword || "",
+              canonicalUrl: res.data.canonicalUrl || `https://ngitedu.com${selected.slug}`,
+            });
+          } else {
+            setForm({
+              metaTitle: selected.defaultTitle,
+              metaDescription: selected.defaultDesc,
+              focusKeyword: "",
+              canonicalUrl: `https://ngitedu.com${selected.slug}`,
+            });
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadSeo();
+    return () => { isMounted = false; };
+  }, [selected]);
 
   const handleSelect = (page: typeof pages[0]) => {
     setSelected(page);
-    setForm({ metaTitle: page.metaTitle, metaDesc: page.metaDesc });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await updateSeoMetaDataAction({
+        routeSlug: selected.slug,
+        metaTitle: form.metaTitle,
+        metaDescription: form.metaDescription,
+        focusKeyword: form.focusKeyword,
+        canonicalUrl: form.canonicalUrl,
+      });
+
+      if (res?.success) {
+        toast.success(`SEO Settings saved for ${selected.title}!`);
+      } else {
+        toast.error(res?.error || "Failed to save SEO settings.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "An error occurred");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -40,117 +95,147 @@ export default function SEOSettingsPage() {
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-base font-black text-slate-900">SEO Settings</h1>
-          <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">Edit meta titles, descriptions & rankings per page</p>
+          <h1 className="text-base font-black text-slate-900">SEO Settings & Metadata Engine</h1>
+          <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">
+            Configure live Meta Titles, Meta Descriptions, and Canonical URLs across public routes
+          </p>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Page list */}
-        <div className="w-64 bg-white border-r border-slate-100 p-4 overflow-y-auto shrink-0">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Pages</p>
-          <div className="space-y-1">
+        {/* Page List */}
+        <div className="w-72 bg-white border-r border-slate-200 p-4 overflow-y-auto shrink-0">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Public Indexable Pages</p>
+          <div className="space-y-1.5">
             {pages.map((page) => (
               <button
                 key={page.slug}
                 onClick={() => handleSelect(page)}
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all",
-                  selected.slug === page.slug ? "bg-violet-50 border border-violet-200" : "hover:bg-slate-50"
+                  "w-full text-left px-3.5 py-3 rounded-xl transition-all border",
+                  selected.slug === page.slug
+                    ? "bg-indigo-50/80 border-indigo-200 shadow-xs"
+                    : "bg-white border-slate-100 hover:bg-slate-50"
                 )}
               >
                 <p className="text-xs font-bold text-slate-900">{page.title}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-[10px] font-mono text-slate-400">{page.slug}</p>
-                  <SEOScore score={page.score} />
-                </div>
+                <p className="text-[10px] font-mono text-slate-400 mt-0.5">{page.slug}</p>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Editor */}
+        {/* Editor Area */}
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-2xl space-y-5">
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h2 className="text-sm font-black text-slate-900 mb-4">Editing: {selected.title}</h2>
+          <div className="max-w-3xl space-y-6">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs relative">
+              {loading && (
+                <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20 rounded-2xl">
+                  <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                </div>
+              )}
 
-              <div className="space-y-4">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                 <div>
-                  <label className="text-xs font-black text-slate-600 uppercase tracking-widest block mb-2">
-                    Meta Title
-                    <span className="ml-2 text-slate-300 font-normal normal-case tracking-normal">{form.metaTitle.length}/60 chars</span>
-                  </label>
+                  <h2 className="text-sm font-black text-slate-900">Editing Metadata: {selected.title}</h2>
+                  <p className="text-xs font-mono text-indigo-600 font-bold mt-0.5">https://ngitedu.com{selected.slug}</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                      Meta Title
+                    </label>
+                    <span className="text-[11px] font-mono font-bold text-slate-400">{form.metaTitle.length}/60 chars</span>
+                  </div>
                   <input
                     value={form.metaTitle}
                     onChange={(e) => setForm((f) => ({ ...f, metaTitle: e.target.value }))}
-                    placeholder="e.g. NGIT – Best Typing Institute in MP"
-                    className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 font-medium"
+                    placeholder="Meta title for search engines"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-slate-900"
                   />
                   {form.metaTitle.length > 60 && (
-                    <p className="text-[10px] text-rose-600 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Too long — search engines may cut this off</p>
+                    <p className="text-[10px] text-rose-600 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Recommended under 60 characters
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="text-xs font-black text-slate-600 uppercase tracking-widest block mb-2">
-                    Meta Description
-                    <span className="ml-2 text-slate-300 font-normal normal-case tracking-normal">{form.metaDesc.length}/160 chars</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                      Meta Description
+                    </label>
+                    <span className="text-[11px] font-mono font-bold text-slate-400">{form.metaDescription.length}/160 chars</span>
+                  </div>
                   <textarea
-                    value={form.metaDesc}
-                    onChange={(e) => setForm((f) => ({ ...f, metaDesc: e.target.value }))}
-                    placeholder="Describe this page in 1–2 sentences for search engines..."
+                    value={form.metaDescription}
+                    onChange={(e) => setForm((f) => ({ ...f, metaDescription: e.target.value }))}
+                    placeholder="Meta description for search engine snippets"
                     rows={3}
-                    className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 font-medium resize-none"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-medium text-slate-900 resize-none"
                   />
-                  {form.metaDesc.length > 160 && (
-                    <p className="text-[10px] text-rose-600 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Too long — keep under 160 characters</p>
+                  {form.metaDescription.length > 160 && (
+                    <p className="text-[10px] text-rose-600 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Recommended under 160 characters
+                    </p>
                   )}
                 </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider block mb-2">
+                      Focus Keyword
+                    </label>
+                    <input
+                      value={form.focusKeyword}
+                      onChange={(e) => setForm((f) => ({ ...f, focusKeyword: e.target.value }))}
+                      placeholder="e.g. Hindi Typing Test Prayagraj"
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-medium text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider block mb-2">
+                      Canonical URL
+                    </label>
+                    <input
+                      value={form.canonicalUrl}
+                      onChange={(e) => setForm((f) => ({ ...f, canonicalUrl: e.target.value }))}
+                      placeholder="https://ngitedu.com/..."
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-slate-900"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Google Preview */}
-              <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Google Search Preview</p>
+              {/* Google Search Result Live Snippet Preview */}
+              <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Google SERP Snippet Preview</p>
                 <div className="space-y-1">
-                  <p className="text-xs text-slate-400 font-mono">ngit.ac.in{selected.slug}</p>
-                  <p className="text-blue-700 text-sm font-semibold hover:underline cursor-pointer">
-                    {form.metaTitle || `${selected.title} | NGIT`}
+                  <p className="text-xs text-emerald-700 font-mono font-bold">
+                    {form.canonicalUrl || `https://ngitedu.com${selected.slug}`}
                   </p>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {form.metaDesc || "No description provided. Add a meta description to improve click-through rates."}
+                  <p className="text-sm font-semibold text-indigo-700 hover:underline cursor-pointer">
+                    {form.metaTitle || selected.defaultTitle}
+                  </p>
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    {form.metaDescription || selected.defaultDesc}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-6 flex justify-end">
                 <button
-                  onClick={() => toast.success("SEO settings saved!")}
-                  className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-lg transition-all"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
-                  <Save className="w-3.5 h-3.5" /> Save SEO Settings
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {saving ? "Saving Changes..." : "Save SEO Metadata"}
                 </button>
-              </div>
-            </div>
-
-            {/* SEO Tips */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-black text-slate-900 mb-3">SEO Tips</h3>
-              <div className="space-y-2">
-                {[
-                  { ok: form.metaTitle.length > 20 && form.metaTitle.length <= 60, msg: "Meta title is between 20–60 characters" },
-                  { ok: form.metaDesc.length > 50 && form.metaDesc.length <= 160, msg: "Meta description is between 50–160 characters" },
-                  { ok: form.metaTitle.toLowerCase().includes("ngit") || form.metaTitle.toLowerCase().includes("typing"), msg: "Title contains your brand keyword" },
-                ].map((tip, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs font-semibold">
-                    {tip.ok
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      : <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    }
-                    <span className={tip.ok ? "text-slate-600" : "text-amber-600"}>{tip.msg}</span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
