@@ -34,13 +34,21 @@ export interface DetailedStenoEvaluationResult {
   }>;
 }
 
-export const normalizeStenoText = (text: string): string => {
+export const normalizeStenoText = (text: string, isOriginal: boolean = false): string => {
   if (!text) return "";
-  return text
+  let cleaned = text
     .replace(/[\u2018\u2019\u201B\u2032\u2035]/g, "'")
     .replace(/[\u201C\u201D\u201F\u2033\u2036]/g, '"')
-    .replace(/[\u00A0]/g, " ")
-    .trim();
+    .replace(/[\u00A0]/g, " ");
+
+  if (isOriginal) {
+    // Remove standalone dictation speed/word count numbers like 350, 375, 400, 425, 450, 475, (350), [350]
+    cleaned = cleaned
+      .replace(/\s+\d{2,4}\b/g, " ")
+      .replace(/[\(\[\{]\s*\d+\s*[\)\]\}]/g, " ");
+  }
+
+  return cleaned.trim();
 };
 
 export const evaluateStenoTranscriptionDetailed = (
@@ -60,8 +68,8 @@ export const evaluateStenoTranscriptionDetailed = (
 
   if (timeMinutes <= 0) timeMinutes = 0.01;
 
-  const originalWords = normalizeStenoText(originalText).split(/\s+/).filter(Boolean);
-  const typedWords = normalizeStenoText(typedText).split(/\s+/).filter(Boolean);
+  const originalWords = normalizeStenoText(originalText, true).split(/\s+/).filter(Boolean);
+  const typedWords = normalizeStenoText(typedText, false).split(/\s+/).filter(Boolean);
 
   let correctWords = 0;
   let wrongWords = 0;

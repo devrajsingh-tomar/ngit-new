@@ -93,6 +93,17 @@ function getWeightMultiplier(weightStr: string): number {
   return 0;
 }
 
+export function cleanOriginalPassageText(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/[\u2018\u2019\u201B\u2032\u2035]/g, "'")
+    .replace(/[\u201C\u201D\u201F\u2033\u2036]/g, '"')
+    .replace(/[\u00A0]/g, " ")
+    .replace(/\s+\d{2,4}\b/g, " ")
+    .replace(/[\(\[\{]\s*\d+\s*[\)\]\}]/g, " ")
+    .trim();
+}
+
 export function evaluateStenoTranscription(
   originalText: string,
   typedText: string,
@@ -102,7 +113,8 @@ export function evaluateStenoTranscription(
 ): EvaluationResult {
   const activeRules: ExamRules = { ...DEFAULT_EXAM_RULES, ...rules };
 
-  const origWords = (originalText || "").trim().split(/\s+/).filter(Boolean);
+  const cleanedOrig = cleanOriginalPassageText(originalText);
+  const origWords = cleanedOrig.split(/\s+/).filter(Boolean);
   const typedWords = (typedText || "").trim().split(/\s+/).filter(Boolean);
 
   const originalWordCount = origWords.length;

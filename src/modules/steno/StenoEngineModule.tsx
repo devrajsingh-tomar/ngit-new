@@ -173,6 +173,8 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     }
   };
 
+  const sessionStartTimeRef = useRef<number>(Date.now());
+
   const handleSubmitTranscription = () => {
     if (!userTranscription.trim()) {
       toast.error("Please type your transcription before submitting!");
@@ -184,9 +186,15 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     setIsPlaying(false);
     finishStenoSession();
 
-    const timeMin = Math.max(0.1, (currentTime || duration || 300) / 60);
-    const res = evaluateStenoTranscriptionDetailed(userTranscription, passage.transcriptText, timeMin, presetRules);
-    setEvaluation(res);
+    const elapsedSeconds = Math.max(1, Math.round((Date.now() - sessionStartTimeRef.current) / 1000));
+    const timeMin = Math.max(0.1, elapsedSeconds / 60);
+    const evalData = evaluateStenoTranscriptionDetailed(userTranscription, passage.transcriptText, timeMin, presetRules);
+    const res = {
+      ...evalData,
+      timeSpentSeconds: elapsedSeconds,
+      userTranscription,
+    };
+    setEvaluation(evalData);
 
     if (isFullscreen && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});

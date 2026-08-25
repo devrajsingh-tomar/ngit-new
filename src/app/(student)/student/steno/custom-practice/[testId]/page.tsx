@@ -52,7 +52,7 @@ export default function StudentCustomPracticePreStartPage({
     toast.loading("Submitting evaluation attempt...");
     const submitRes = await submitStenoResultAction({
       passageId: customTest?.passageId?._id || customTest?.passageId,
-      typedTranscription: evaluationResult.wordBreakdown.map((w: any) => w.typed).join(" "),
+      typedTranscription: evaluationResult.userTranscription || "",
       speedWpm: evaluationResult.netWpm,
       accuracy: evaluationResult.accuracy,
       fullErrors: evaluationResult.spellingErrors + evaluationResult.addedWords + evaluationResult.skippedWords,
@@ -60,7 +60,7 @@ export default function StudentCustomPracticePreStartPage({
       totalErrors: evaluationResult.totalErrors,
       score: evaluationResult.finalScore,
       status: evaluationResult.status,
-      timeSpentSeconds: (sessionConfig?.durationMinutes || 15) * 60,
+      timeSpentSeconds: evaluationResult.timeSpentSeconds || 60,
     });
 
     if (submitRes.success && submitRes.resultId) {
