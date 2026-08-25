@@ -15,6 +15,17 @@ export function getYouTubeEmbedUrl(url?: string): string | null {
   return null;
 }
 
+export function getGoogleDriveStreamUrl(url?: string): string | null {
+  if (!url) return null;
+  if (url.includes("drive.google.com") || url.includes("docs.google.com")) {
+    const match = url.match(/(?:file\/d\/|id=)([\w-]+)/);
+    if (match && match[1]) {
+      return `https://docs.google.com/uc?export=open&id=${match[1]}`;
+    }
+  }
+  return null;
+}
+
 interface StenoDictationPlayerProps {
   passage: any;
   onStartTranscription: () => void;
@@ -34,7 +45,10 @@ export default function StenoDictationPlayer({ passage, onStartTranscription }: 
   const audioUrlCandidate = passage?.audioUrl || "";
 
   const youtubeEmbedUrl = getYouTubeEmbedUrl(passage?.videoUrl) || getYouTubeEmbedUrl(passage?.audioUrl);
+  const googleDriveAudioUrl = getGoogleDriveStreamUrl(passage?.audioUrl) || getGoogleDriveStreamUrl(passage?.videoUrl);
   const isDirectVideo = !youtubeEmbedUrl && (videoUrlCandidate.endsWith(".mp4") || videoUrlCandidate.endsWith(".webm"));
+
+  const finalAudioSource = googleDriveAudioUrl || audioUrlCandidate || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
   const togglePlay = () => {
     if (!mediaRef.current) return;
@@ -70,11 +84,11 @@ export default function StenoDictationPlayer({ passage, onStartTranscription }: 
 
   return (
     <Card className="p-6 sm:p-8 rounded-3xl border-slate-200 bg-white shadow-md space-y-6">
-      {/* Audio element for non-youtube media */}
+      {/* Audio element for non-youtube media (includes Google Drive streaming) */}
       {!youtubeEmbedUrl && !isDirectVideo && (
         <audio
           ref={mediaRef as any}
-          src={audioUrlCandidate || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"}
+          src={finalAudioSource}
           onTimeUpdate={handleTimeUpdate}
           onEnded={() => setIsPlaying(false)}
         />
