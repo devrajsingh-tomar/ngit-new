@@ -224,7 +224,14 @@ export default function StenoDictationPlayer({ passage, onStartTranscription }: 
       {/* 1. MEDIA DISPLAY PLAYER BOX (Priority #1: YouTube Video) */}
       {youtubeVideoId ? (
         <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative">
-          <div id={containerIdRef.current} className="w-full h-full" />
+          <iframe
+            id={containerIdRef.current}
+            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&rel=0&modestbranding=1`}
+            title={passage?.title || "Steno Dictation YouTube Video"}
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
         </div>
       ) : isDirectVideo ? (
         <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative">

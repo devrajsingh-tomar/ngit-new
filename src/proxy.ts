@@ -7,13 +7,14 @@ import { getDashboardRoute, UserRole } from "@/lib/role-routing";
 const securityHeaders = {
     "Content-Security-Policy":
         `default-src 'self'; ` +
-        `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; ` +
+        `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.youtube.com https://s.ytimg.com; ` +
         `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
         `img-src 'self' data: blob: https://*; ` +
         `font-src 'self' https://fonts.gstatic.com; ` +
         `frame-src 'self' https://api.razorpay.com https://*.razorpay.com https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com; ` +
-        `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com;`,
-    "X-Frame-Options": "DENY",
+        `media-src 'self' blob: data: https://* https://*.googlevideo.com https://docs.google.com https://drive.google.com; ` +
+        `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://www.youtube.com https://*.googlevideo.com;`,
+    "X-Frame-Options": "SAMEORIGIN",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(self), microphone=(), geolocation=(self), interest-cohort=()",
