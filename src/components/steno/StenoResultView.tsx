@@ -351,7 +351,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Original Dictation Transcript</h3>
           </div>
           <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
-            {result.originalText || "Original passage text unavailable."}
+            {result.originalText || result.passageId?.transcriptText || result.passageId?.text || "Original passage text unavailable."}
           </div>
         </Card>
 

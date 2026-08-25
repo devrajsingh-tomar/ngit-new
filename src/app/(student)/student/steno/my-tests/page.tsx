@@ -129,6 +129,27 @@ export default function StudentStenoMyTestsPage() {
     return matchesLang && matchesSearch;
   });
 
+  const handleDownloadPdf = async (id: string, title: string) => {
+    try {
+      toast.loading("Generating Steno Result PDF...", { id: `pdf-${id}` });
+      const response = await fetch(`/api/steno/result/${id}/pdf`, { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to generate PDF");
+      const blob = await response.blob();
+      if (!blob.type.includes("pdf")) throw new Error("Invalid PDF response");
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `NGIT_Steno_Result_${(title || "Test").replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Result PDF downloaded!", { id: `pdf-${id}` });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to download PDF", { id: `pdf-${id}` });
+    }
+  };
+
   return (
     <div className="space-y-8 p-1 sm:p-2">
       {/* NGIT Custom Header Banner */}
@@ -321,18 +342,27 @@ export default function StudentStenoMyTestsPage() {
                       {new Date(r.createdAt).toLocaleDateString("en-IN")}
                     </span>
                   </div>
-                  <h4 className="text-base font-black text-slate-900">{r.passageId?.title || "Steno Dictation Attempt"}</h4>
+                  <h4 className="text-base font-black text-slate-900">{r.passageTitle || r.passageId?.title || "Steno Dictation Attempt"}</h4>
                   <p className="text-xs text-slate-500 font-medium">
-                    Speed: <strong className="text-indigo-600 font-bold">{r.speedWpm} WPM</strong> • Accuracy:{" "}
-                    <strong className="text-emerald-600 font-bold">{r.accuracy}%</strong> • Total Errors: {r.totalErrors}
+                    Speed: <strong className="text-indigo-600 font-bold">{r.speedWpm || r.netWpm || 0} WPM</strong> • Accuracy:{" "}
+                    <strong className="text-emerald-600 font-bold">{r.accuracy || 0}%</strong> • Total Errors: {r.totalErrors || r.totalMistakes || 0}
                   </p>
                 </div>
 
-                <Link href={`/student/steno/result/${r._id}`}>
-                  <Button size="sm" variant="outline" className="h-9 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-600" /> Evaluation Report
+                <div className="flex items-center gap-2">
+                  <Link href={`/student/steno/result/${r._id}`}>
+                    <Button size="sm" variant="outline" className="h-9 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-600" /> Evaluation Report
+                    </Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    onClick={() => handleDownloadPdf(r._id, r.passageTitle || r.passageId?.title)}
+                    className="h-9 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
+                  >
+                    PDF
                   </Button>
-                </Link>
+                </div>
               </Card>
             ))}
           </div>

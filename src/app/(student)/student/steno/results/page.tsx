@@ -32,6 +32,27 @@ export default function StudentStenoResultsHistoryPage() {
     }
   };
 
+  const handleDownloadPdf = async (id: string, title: string) => {
+    try {
+      toast.loading("Generating Steno Result PDF...", { id: `pdf-${id}` });
+      const response = await fetch(`/api/steno/result/${id}/pdf`, { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to generate PDF");
+      const blob = await response.blob();
+      if (!blob.type.includes("pdf")) throw new Error("Invalid PDF response");
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `NGIT_Steno_Result_${(title || "Test").replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Result PDF downloaded!", { id: `pdf-${id}` });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to download PDF", { id: `pdf-${id}` });
+    }
+  };
+
   return (
     <div className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -112,16 +133,18 @@ export default function StudentStenoResultsHistoryPage() {
                     </TableCell>
                     <TableCell className="py-6 text-right pr-8">
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/steno/result/${res._id}`}>
+                        <Link href={`/student/steno/result/${res._id}`}>
                           <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs">
-                            <Eye className="w-4 h-4" /> View Result
+                            <Eye className="w-4 h-4" /> View Detailed Result
                           </Button>
                         </Link>
-                        <a href={`/api/steno/result/${res._id}/pdf`} download>
-                          <Button size="sm" className="rounded-xl font-bold gap-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white">
-                            <Download className="w-4 h-4" /> PDF
-                          </Button>
-                        </a>
+                        <Button
+                          onClick={() => handleDownloadPdf(res._id, res.passageTitle || res.passageId?.title)}
+                          size="sm"
+                          className="rounded-xl font-bold gap-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <Download className="w-4 h-4" /> Download PDF
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

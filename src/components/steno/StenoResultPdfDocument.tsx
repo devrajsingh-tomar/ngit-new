@@ -328,7 +328,7 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
 
         <Text style={styles.sectionTitle}>Original Dictation Transcript</Text>
         <View style={styles.transcriptBox}>
-          <Text>{result.originalText || "Original text unavailable."}</Text>
+          <Text>{result.originalText || result.passageId?.transcriptText || result.passageId?.text || "Original text unavailable."}</Text>
         </View>
 
         <Text style={styles.sectionTitle}>Your Typed Student Transcript</Text>
