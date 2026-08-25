@@ -152,19 +152,25 @@ export default async function Footer() {
                         </div>
 
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-[0.2em]">Learning Hub</h4>
-                            <ul className="space-y-2.5 text-sm font-semibold">
+                            <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-[0.2em]">Learning Software</h4>
+                            <ul className="space-y-2 text-xs font-semibold">
                                 <li>
-                                    <Link href="/typing" className="hover:text-slate-900 transition-colors">Typing Software</Link>
+                                    <Link href="/typing-software" className="hover:text-slate-900 transition-colors">Typing Software</Link>
                                 </li>
                                 <li>
-                                    <Link href="/student/login" className="hover:text-slate-900 transition-colors">Student Portal</Link>
+                                    <Link href="/steno-software" className="hover:text-slate-900 transition-colors">Steno Software</Link>
                                 </li>
                                 <li>
-                                    <Link href="/courses" className="hover:text-slate-900 transition-colors">All Courses</Link>
+                                    <Link href="/typing-software-prayagraj" className="hover:text-slate-900 transition-colors">Typing Software Prayagraj</Link>
                                 </li>
                                 <li>
-                                    <Link href="/exams" className="hover:text-slate-900 transition-colors">Mock Tests</Link>
+                                    <Link href="/steno-software-prayagraj" className="hover:text-slate-900 transition-colors">Steno Software Prayagraj</Link>
+                                </li>
+                                <li>
+                                    <Link href="/typing" className="hover:text-slate-900 transition-colors">Online Typing Test</Link>
+                                </li>
+                                <li>
+                                    <Link href="/steno" className="hover:text-slate-900 transition-colors">Online Steno Practice</Link>
                                 </li>
                             </ul>
                         </div>
