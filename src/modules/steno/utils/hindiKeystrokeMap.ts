@@ -56,10 +56,10 @@ export function resolveStenoTypingMode(value?: string): StenoTypingModeConfig {
 
 export const KRUTI_DEV_010_MAP: Record<string, string> = {
   // Top Row (Q to \)
-  q: "कु",
+  q: "ु",
   Q: "फ",
-  w: "कू",
-  W: "कॅ",
+  w: "ू",
+  W: "ॅ",
   e: "म",
   E: "म्",
   r: "त",
@@ -84,10 +84,10 @@ export const KRUTI_DEV_010_MAP: Record<string, string> = {
   "|": "द्य",
 
   // Special Keys & Numbers
-  "`": "कृ",
-  "~": "क्",
+  "`": "ृ",
+  "~": "्",
   "=": "त्र",
-  "+": "क़",
+  "+": "ऋ",
   "-": ".",
   "_": "ऋ",
   "0": "0",
@@ -95,13 +95,13 @@ export const KRUTI_DEV_010_MAP: Record<string, string> = {
   "1": "1",
   "!": "!",
   "2": "2",
-  "@": "@",
+  "@": "/",
   "3": "3",
-  "#": "#",
+  "#": "रु",
   "4": "4",
-  "$": "$",
+  "$": "+",
   "5": "5",
-  "%": "%",
+  "%": ":",
   "6": "6",
   "^": "‘",
   "7": "7",
@@ -109,24 +109,24 @@ export const KRUTI_DEV_010_MAP: Record<string, string> = {
   "8": "8",
   "*": "₹",
   "9": "9",
-  "(": "(",
+  "(": ";",
 
   // Home Row (A to ')
-  a: "कं",
+  a: "ं",
   A: "।",
-  s: "के",
-  S: "कै",
+  s: "े",
+  S: "ै",
   d: "क",
   D: "क्",
-  f: "कि",
+  f: "ि",
   F: "थ्",
   g: "ह",
   G: "ळ",
-  h: "की",
+  h: "ी",
   H: "भ्",
   j: "र",
   J: "श्र",
-  k: "का",
+  k: "ा",
   K: "ज्ञ",
   l: "स",
   L: "स्",
@@ -136,7 +136,7 @@ export const KRUTI_DEV_010_MAP: Record<string, string> = {
   '"': "ष्",
 
   // Bottom Row (Z to /)
-  z: "क्र",
+  z: "्र",
   Z: "र्",
   x: "ग",
   X: "ग्",
@@ -269,23 +269,23 @@ export const INSCRIPT_MAP: Record<string, string> = {
 // 3. Physical Code Map for Kruti Dev 010 (Caps-Lock Immune)
 export const KRUTI_DEV_CODE_MAP: Record<string, { normal: string; shift: string }> = {
   // Row 1 (Numbers & Special keys)
-  Backquote: { normal: "कृ", shift: "क्" },
+  Backquote: { normal: "ृ", shift: "्" },
   Digit1: { normal: "1", shift: "!" },
-  Digit2: { normal: "2", shift: "@" },
-  Digit3: { normal: "3", shift: "#" },
-  Digit4: { normal: "4", shift: "$" },
-  Digit5: { normal: "5", shift: "%" },
+  Digit2: { normal: "2", shift: "/" },
+  Digit3: { normal: "3", shift: "रु" },
+  Digit4: { normal: "4", shift: "+" },
+  Digit5: { normal: "5", shift: ":" },
   Digit6: { normal: "6", shift: "‘" },
   Digit7: { normal: "7", shift: "’" },
   Digit8: { normal: "8", shift: "₹" },
-  Digit9: { normal: "9", shift: "(" },
+  Digit9: { normal: "9", shift: ";" },
   Digit0: { normal: "0", shift: "द्ध" },
   Minus: { normal: ".", shift: "ऋ" },
-  Equal: { normal: "त्र", shift: "क़" },
+  Equal: { normal: "त्र", shift: "ऋ" },
 
   // Row 2 (Top Row - Q to \)
-  KeyQ: { normal: "कु", shift: "फ" },
-  KeyW: { normal: "कू", shift: "कॅ" },
+  KeyQ: { normal: "ु", shift: "फ" },
+  KeyW: { normal: "ू", shift: "ॅ" },
   KeyE: { normal: "म", shift: "म्" },
   KeyR: { normal: "त", shift: "त्" },
   KeyT: { normal: "ज", shift: "ज्" },
@@ -299,20 +299,20 @@ export const KRUTI_DEV_CODE_MAP: Record<string, { normal: string; shift: string 
   Backslash: { normal: "?", shift: "द्य" },
 
   // Row 3 (Home Row - A to ')
-  KeyA: { normal: "कं", shift: "।" },
-  KeyS: { normal: "के", shift: "कै" },
+  KeyA: { normal: "ं", shift: "।" },
+  KeyS: { normal: "े", shift: "ै" },
   KeyD: { normal: "क", shift: "क्" },
-  KeyF: { normal: "कि", shift: "थ्" },
+  KeyF: { normal: "ि", shift: "थ्" },
   KeyG: { normal: "ह", shift: "ळ" },
-  KeyH: { normal: "की", shift: "भ्" },
+  KeyH: { normal: "ी", shift: "भ्" },
   KeyJ: { normal: "र", shift: "श्र" },
-  KeyK: { normal: "का", shift: "ज्ञ" },
+  KeyK: { normal: "ा", shift: "ज्ञ" },
   KeyL: { normal: "स", shift: "स्" },
   Semicolon: { normal: "य", shift: "रू" },
   Quote: { normal: "श्", shift: "ष्" },
 
   // Row 4 (Bottom Row - Z to /)
-  KeyZ: { normal: "क्र", shift: "र्" },
+  KeyZ: { normal: "्र", shift: "र्" },
   KeyX: { normal: "ग", shift: "ग्" },
   KeyC: { normal: "ब", shift: "ब्" },
   KeyV: { normal: "अ", shift: "ट" },
@@ -426,7 +426,6 @@ export function mapKeystrokeToHindi(keyChar: string, fontFamily: string): string
   return null;
 }
 
-
 /**
  * Smart Kruti Dev 010 Event Transformer
  * Uses e.code and e.shiftKey for reliable physical key mapping (Caps Lock immune).
@@ -444,71 +443,63 @@ export function mapEventToKrutiDev(
   if (entry) {
     if (!isShift) {
       // Normal Key Press (Shift NOT pressed)
+
+      // KeyK: 'k' -> 'ा' (or complete half-consonant, or 'अ' + 'k' -> 'आ')
       if (code === "KeyK") {
-        // Complete half-consonant (e.g. क् + k -> क)
         if (beforeCursor.endsWith("्") && beforeCursor.length >= 2) {
           const baseHalf = beforeCursor.slice(-2);
           const full = HALF_TO_FULL_CONSONANT[baseHalf];
           if (full) return { replacement: full, deleteCount: 2 };
         }
-        // Matra aa (ा) after consonant
-        if (isDevanagariConsonant(lastChar)) {
-          return { replacement: "ा", deleteCount: 0 };
+        if (lastChar === "अ") {
+          return { replacement: "आ", deleteCount: 1 };
         }
-        return { replacement: "का", deleteCount: 0 };
+        return { replacement: "ा", deleteCount: 0 };
       }
 
-      if (code === "KeyF") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ि", deleteCount: 0 };
-        return { replacement: "कि", deleteCount: 0 };
-      }
-
-      if (code === "KeyH") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ी", deleteCount: 0 };
-        return { replacement: "की", deleteCount: 0 };
-      }
-
-      if (code === "KeyQ") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ु", deleteCount: 0 };
-        return { replacement: "कु", deleteCount: 0 };
-      }
-
-      if (code === "KeyW") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ू", deleteCount: 0 };
-        return { replacement: "कू", deleteCount: 0 };
-      }
-
+      // KeyS: 's' -> 'े' (or 'आ'/'अ' + 's' -> 'ओ')
       if (code === "KeyS") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "े", deleteCount: 0 };
-        return { replacement: "के", deleteCount: 0 };
+        if (lastChar === "आ" || lastChar === "अ") {
+          return { replacement: "ओ", deleteCount: 1 };
+        }
+        return { replacement: "े", deleteCount: 0 };
       }
 
-      if (code === "KeyA") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ं", deleteCount: 0 };
-        return { replacement: "कं", deleteCount: 0 };
+      // KeyW: 'w' -> 'ू' (or 'उ' + 'w' -> 'ऊ')
+      if (code === "KeyW") {
+        if (lastChar === "उ") {
+          return { replacement: "ऊ", deleteCount: 1 };
+        }
+        return { replacement: "ू", deleteCount: 0 };
       }
 
-      if (code === "Backquote") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ृ", deleteCount: 0 };
-        return { replacement: "कृ", deleteCount: 0 };
+      // KeyH: 'h' -> 'ी' (or 'इ' + 'h' -> 'ई')
+      if (code === "KeyH") {
+        if (lastChar === "इ") {
+          return { replacement: "ई", deleteCount: 1 };
+        }
+        return { replacement: "ी", deleteCount: 0 };
       }
 
-      if (code === "KeyZ") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "्र", deleteCount: 0 };
-        return { replacement: "क्र", deleteCount: 0 };
+      // Prefix matra handling for 'ि' (f) or 'े' (s) when preceding a consonant:
+      if (lastChar === "ि" && entry.normal && isDevanagariConsonant(entry.normal)) {
+        return { replacement: entry.normal + "ि", deleteCount: 1 };
+      }
+      if (lastChar === "े" && entry.normal && isDevanagariConsonant(entry.normal)) {
+        return { replacement: entry.normal + "े", deleteCount: 1 };
       }
 
       return { replacement: entry.normal, deleteCount: 0 };
     } else {
       // Shift Key Press (Shift IS held down)
-      if (code === "KeyW") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ॅ", deleteCount: 0 };
-        return { replacement: "कॅ", deleteCount: 0 };
-      }
-
       if (code === "KeyS") {
-        if (isDevanagariConsonant(lastChar)) return { replacement: "ै", deleteCount: 0 };
-        return { replacement: "कै", deleteCount: 0 };
+        if (lastChar === "आ" || lastChar === "अ") {
+          return { replacement: "औ", deleteCount: 1 };
+        }
+        if (lastChar === "ए") {
+          return { replacement: "ऐ", deleteCount: 1 };
+        }
+        return { replacement: "ै", deleteCount: 0 };
       }
 
       if (code === "KeyK") {
