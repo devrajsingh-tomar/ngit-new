@@ -20,10 +20,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
 import { toast } from "sonner";
+import { generateStenoResultImagePdf } from "@/utils/generateStenoResultImagePdf";
 
 interface StenoResultViewProps {
+
   result: any;
 }
 
