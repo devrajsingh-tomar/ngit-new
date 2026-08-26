@@ -37,7 +37,12 @@ export async function GET(
     }
 
     const userRole = (session.user as any).role;
-    const isOwner = (resultDoc.userId as any)?._id?.toString() === session.user.id;
+    const sessionUserId = session.user.id || (session.user as any)?._id;
+    const resultUserId = resultDoc.userId?._id ? resultDoc.userId._id.toString() : resultDoc.userId?.toString();
+    const isOwner =
+      resultUserId === sessionUserId?.toString() ||
+      (resultDoc.userId as any)?.email === session.user.email ||
+      !resultUserId; // Fallback if no owner attached
     const isStaff = ["ADMIN", "STENO_ADMIN", "CONTENT_MANAGER", "TYPING_ADMIN"].includes(userRole);
 
     if (!isOwner && !isStaff) {
@@ -46,6 +51,7 @@ export async function GET(
         { status: 403 }
       );
     }
+
 
     const { renderToBuffer } = await import("@react-pdf/renderer");
     const docElement = React.createElement(StenoResultPdfDocument, { result: JSON.parse(JSON.stringify(resultDoc)) });

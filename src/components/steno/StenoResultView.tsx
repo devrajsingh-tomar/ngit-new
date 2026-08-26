@@ -61,8 +61,10 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to generate result PDF. Please try again.");
+        const errJson = await response.json().catch(() => null);
+        throw new Error(errJson?.error || "Unable to generate result PDF. Please try again.");
       }
+
 
       const blob = await response.blob();
       if (blob.type !== "application/pdf" && !blob.type.includes("pdf")) {
