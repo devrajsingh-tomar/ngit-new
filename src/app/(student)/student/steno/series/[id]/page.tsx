@@ -5,13 +5,15 @@ import Link from "next/link";
 import { getStenoSeriesByIdAction, getStenoPassagesAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Headphones, MessageCircle, ChevronRight, RefreshCw, Feather } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Headphones, Play, Search, Clock, FileText, Keyboard, RefreshCw, Trophy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StudentStenoSeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [series, setSeries] = useState<any>(null);
   const [passages, setPassages] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,18 +30,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     if (sRes.success && sRes.series) {
       setSeries(sRes.series);
     } else {
-      const titles: Record<string, string> = {
-        "upsssc-steno": "UPSSSC STENO",
-        "ssc-steno-2026": "SSC STENO 2026",
-        "allahabad-highcourt-steno": "ALLAHABAD HIGHCOURT STENO",
-        "hssc-steno-2026": "HSSC STENO 2026",
-        "asi-steno": "ASI STENO",
-        "ramdhari-singh-khand-1": "RAMDHARI SINGH KHAND-1",
-      };
-      setSeries({
-        _id: resolvedParams.id,
-        title: titles[resolvedParams.id] || "Steno Course Series",
-      });
+      setSeries(null);
     }
 
     if (pRes.success && pRes.passages) {
@@ -48,97 +39,181 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     setLoading(false);
   };
 
-  const defaultCategories = [
-    {
-      _id: "sansadiya-5min",
-      title: "संसदीय 5 Min Dictation",
-      count: passages.filter((p) => p.category === "Legal" || true).length || 5,
-      bgGradient: "from-amber-600 to-amber-800",
-    },
-    {
-      _id: "sampadkiya-5min",
-      title: "संपादकीय 5 Min Dictation",
-      count: 80,
-      bgGradient: "from-indigo-600 to-blue-800",
-    },
-    {
-      _id: "sansadiya-10min",
-      title: "संसदीय 10 Min Dictation",
-      count: 3,
-      bgGradient: "from-amber-700 to-red-900",
-    },
-  ];
-
-  // Prevent hardcoded headers during buffering
   if (loading) {
     return (
       <div className="py-24 text-center text-slate-400 space-y-3">
         <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
         <p className="text-xs font-black uppercase tracking-wider text-slate-500">
-          Loading Series Categories...
+          Loading Series Tests...
         </p>
       </div>
     );
   }
 
-  const seriesTitle = series?.title || "Steno Course Series";
+  if (!series) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 text-center space-y-4">
+        <Card className="p-12 rounded-3xl border-dashed bg-white space-y-3">
+          <h2 className="text-lg font-black text-slate-800">Series Not Found</h2>
+          <p className="text-xs text-slate-500">This Steno series might have been unpublished or removed.</p>
+          <Link href="/student/steno/series">
+            <Button className="rounded-xl text-xs font-bold gap-1.5 mt-2">
+              <ArrowLeft className="w-4 h-4" /> Back to All Batches
+            </Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  // Combine passages from series.passages and direct seriesId matches
+  const allPassages: any[] = [];
+  if (series.passages && Array.isArray(series.passages)) {
+    for (const p of series.passages) {
+      if (p && p._id) allPassages.push(p);
+    }
+  }
+  if (passages && Array.isArray(passages)) {
+    for (const p of passages) {
+      if (!allPassages.some((ap) => ap._id?.toString() === p._id?.toString())) {
+        allPassages.push(p);
+      }
+    }
+  }
+
+  const filteredTests = allPassages.filter((t) =>
+    (t.title || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-1 sm:p-2">
       {/* Header Bar */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          {seriesTitle} Series
-        </h1>
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
+              {series.category || "Official Batch"}
+            </span>
+            <span className="text-xs font-bold text-slate-400">• {series.language || "Hindi"} Steno</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            {series.title}
+          </h1>
+          {series.description && (
+            <p className="text-xs text-slate-500 font-medium max-w-xl">{series.description}</p>
+          )}
+        </div>
 
         <Link href="/student/steno/series">
-          <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
-            <ArrowLeft className="w-4 h-4" /> Back to Series
+          <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
+            <ArrowLeft className="w-4 h-4" /> Back to Batches
           </Button>
         </Link>
       </div>
 
-      {/* Official Telegram Group Note */}
-      <Card className="p-4 max-w-xs rounded-2xl border-slate-200 bg-white shadow-xs flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center font-black shrink-0">
-          <MessageCircle className="w-5 h-5" />
+      {/* Series Thumbnail Banner (if uploaded) */}
+      {series.thumbnailUrl && (
+        <div className="h-44 sm:h-52 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-slate-950 relative">
+          <img
+            src={series.thumbnailUrl}
+            alt={series.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
+            <span className="text-white font-black text-lg drop-shadow-md">
+              {series.title} • {allPassages.length} Dictations Available
+            </span>
+          </div>
         </div>
-        <div>
-          <h4 className="text-xs font-black text-slate-900">Official Telegram Group</h4>
-          <p className="text-[10px] font-extrabold text-sky-600 hover:underline cursor-pointer uppercase tracking-wider">
-            CLICK HERE TO JOIN GROUP TO DISCUSS DOUBTS
+      )}
+
+      {/* Search Bar (if tests exist) */}
+      {allPassages.length > 0 && (
+        <div className="relative max-w-xl mx-auto">
+          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search dictation tests in this series..."
+            className="pl-11 rounded-2xl bg-white border-slate-200 text-xs font-semibold h-11 shadow-xs"
+          />
+        </div>
+      )}
+
+      {/* Tests Grid */}
+      {filteredTests.length === 0 ? (
+        <Card className="p-16 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+          <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="text-base font-black text-slate-700">
+            {searchQuery ? "No Matching Tests Found" : "No Dictations Added to this Series Yet"}
+          </h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            {searchQuery
+              ? "Try searching with a different keyword."
+              : "New dictations are being uploaded for this series. Please check back shortly!"}
           </p>
-        </div>
-      </Card>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTests.map((test) => (
+            <Card
+              key={test._id}
+              className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between group"
+            >
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                    {test.targetWpm || 80} WPM • {test.language || "Hindi"}
+                  </span>
+                  <span className="text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
+                    {test.category || "General"}
+                  </span>
+                </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-        {defaultCategories.map((cat) => (
-          <Card key={cat._id} className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all space-y-4 flex flex-col justify-between group">
-            <div className={`h-36 bg-gradient-to-br ${cat.bgGradient} text-white p-4 flex items-center justify-center text-center relative`}>
-              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg">
-                <Feather className="w-8 h-8 text-amber-300" />
-              </div>
-            </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 line-clamp-2 group-hover:text-indigo-600 transition-colors leading-snug">
+                    {test.title}
+                  </h3>
+                </div>
 
-            <div className="p-5 pt-0 space-y-4">
-              <h3 className="text-lg font-black text-slate-900 leading-snug">{cat.title}</h3>
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">
+                  <p className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                      <FileText className="w-3.5 h-3.5" /> Total Words:
+                    </span>
+                    <strong className="font-bold text-slate-800">{test.wordCount || 400}</strong>
+                  </p>
+                  <p className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                      <Clock className="w-3.5 h-3.5" /> Duration:
+                    </span>
+                    <strong className="font-bold text-indigo-600">{Math.round((test.durationSeconds || 300) / 60)} Mins</strong>
+                  </p>
+                  <p className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                      <Keyboard className="w-3.5 h-3.5" /> Interface:
+                    </span>
+                    <strong className="font-bold text-slate-700">Exam Mode</strong>
+                  </p>
+                </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
-                  <Headphones className="w-3.5 h-3.5 text-indigo-600" /> {cat.count} DICTATIONS
-                </span>
-
-                <Link href={`/student/steno/series/${resolvedParams.id}/category/${cat._id}`}>
-                  <span className="text-xs font-black text-indigo-600 group-hover:gap-1 flex items-center gap-0.5 transition-all">
-                    OPEN <ChevronRight className="w-4 h-4" />
+                <Link href="/student/steno/leaderboard" className="block pt-0.5">
+                  <span className="text-[11px] font-extrabold text-amber-600 hover:underline flex items-center gap-1">
+                    <Trophy className="w-3.5 h-3.5" /> View Test Leaderboard & Ranks
                   </span>
                 </Link>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+
+              <Link href={`/student/steno/passage/${test._id}`} className="block pt-2">
+                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl shadow-md gap-2">
+                  <Play className="w-4 h-4 fill-white" /> Play Dictation / Start Test
+                </Button>
+              </Link>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
