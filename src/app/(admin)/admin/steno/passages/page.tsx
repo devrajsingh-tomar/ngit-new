@@ -42,7 +42,7 @@ export default function AdminStenoPassagesPage() {
     examType: "SSC Steno",
     transcriptText: "",
     wordCount: 400,
-    durationSeconds: 300,
+    durationMinutes: 35,
     audioUrl: "",
     videoUrl: "",
     thumbnailUrl: "",
@@ -86,7 +86,7 @@ export default function AdminStenoPassagesPage() {
       examType: "SSC Steno",
       transcriptText: "",
       wordCount: 400,
-      durationSeconds: 300,
+      durationMinutes: 35,
       audioUrl: "",
       videoUrl: "",
       thumbnailUrl: "",
@@ -109,7 +109,7 @@ export default function AdminStenoPassagesPage() {
       examType: p.examType || "SSC Steno",
       transcriptText: p.transcriptText || "",
       wordCount: p.wordCount || 400,
-      durationSeconds: p.durationSeconds || 300,
+      durationMinutes: p.durationMinutes || (p.durationSeconds ? Math.round(p.durationSeconds / 60) : 35),
       audioUrl: p.audioUrl || "",
       videoUrl: p.videoUrl || "",
       thumbnailUrl: p.thumbnailUrl || "",
@@ -123,7 +123,6 @@ export default function AdminStenoPassagesPage() {
     setIsDialogOpen(true);
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.audioUrl.trim() || !formData.transcriptText.trim()) {
@@ -131,6 +130,7 @@ export default function AdminStenoPassagesPage() {
       return;
     }
 
+    const durationMins = Number(formData.durationMinutes) || 35;
     const payload = {
       title: formData.title.trim(),
       language: formData.language as any,
@@ -140,7 +140,8 @@ export default function AdminStenoPassagesPage() {
       examType: formData.examType.trim(),
       transcriptText: formData.transcriptText.trim(),
       wordCount: Number(formData.wordCount),
-      durationSeconds: Number(formData.durationSeconds),
+      durationMinutes: durationMins,
+      durationSeconds: durationMins * 60,
       audioUrl: formData.audioUrl.trim(),
       videoUrl: formData.videoUrl.trim() || undefined,
       thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
@@ -152,6 +153,7 @@ export default function AdminStenoPassagesPage() {
       isPublished: Boolean(formData.isPublished),
       sortOrder: Number(formData.sortOrder),
     };
+
 
     if (editingPassage) {
       const res = await updateStenoPassageAction(editingPassage._id, payload);
@@ -322,7 +324,7 @@ export default function AdminStenoPassagesPage() {
 
                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1 text-xs text-slate-600 font-medium">
                     <p className="flex justify-between">
-                      <span>Words / Duration:</span> <strong className="font-bold text-slate-900">{p.wordCount} words ({Math.round(p.durationSeconds / 60)}m)</strong>
+                      <span>Words / Duration:</span> <strong className="font-bold text-slate-900">{p.wordCount} words ({p.durationMinutes || Math.round((p.durationSeconds || 2100) / 60)} Mins)</strong>
                     </p>
                     <p className="flex justify-between">
                       <span>Available Speeds:</span> <strong className="font-bold text-indigo-600">{Array.isArray(p.availableSpeeds) ? p.availableSpeeds.join(", ") : "80"} WPM</strong>
@@ -449,15 +451,19 @@ export default function AdminStenoPassagesPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Duration (Seconds)</label>
+                  <label className="text-xs font-bold text-slate-700">Duration (Minutes) *</label>
                   <Input
                     type="number"
-                    value={formData.durationSeconds}
-                    onChange={(e) => setFormData({ ...formData, durationSeconds: Number(e.target.value) })}
+                    min="1"
+                    value={formData.durationMinutes}
+                    onChange={(e) => setFormData({ ...formData, durationMinutes: Number(e.target.value) })}
+                    placeholder="e.g. 35, 45, 50"
                     className="rounded-xl text-xs font-semibold"
+                    required
                   />
                 </div>
               </div>
+
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Audio URL *</label>

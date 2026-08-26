@@ -9,6 +9,7 @@ export interface IStenoPassage extends Document {
   examType?: string;
   transcriptText: string;
   wordCount: number;
+  durationMinutes?: number;
   durationSeconds: number;
   audioUrl: string;
   videoUrl?: string;
@@ -36,8 +37,10 @@ const StenoPassageSchema = new Schema<IStenoPassage>(
     examType: { type: String, default: "SSC Steno" },
     transcriptText: { type: String, required: true },
     wordCount: { type: Number, default: 400 },
-    durationSeconds: { type: Number, default: 300 },
+    durationMinutes: { type: Number, default: 35 },
+    durationSeconds: { type: Number, default: 2100 },
     audioUrl: { type: String, required: true },
+
     videoUrl: { type: String },
     thumbnailUrl: { type: String },
     availableSpeeds: {

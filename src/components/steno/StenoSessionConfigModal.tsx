@@ -32,6 +32,7 @@ interface StenoSessionConfigModalProps {
   totalWords?: number;
   typingMode?: string;
   defaultExam?: string;
+  defaultDurationMinutes?: number;
 }
 
 export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = ({
@@ -41,26 +42,27 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   totalWords = 391,
   typingMode,
   defaultExam,
+  defaultDurationMinutes,
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
   const [selectedExam, setSelectedExam] = useState(defaultExam || "Allahabad High Court Steno");
   const [selectedMode, setSelectedMode] = useState<string>(typingMode || "unicode_hindi");
 
-  React.useEffect(() => {
-    if (typingMode) setSelectedMode(typingMode);
-    if (defaultExam) setSelectedExam(defaultExam);
-  }, [typingMode, defaultExam]);
-
   // Manual configuration state
   const [backspaceStatus, setBackspaceStatus] = useState<"Enabled" | "Disabled">("Enabled");
-
 
   const [spellingMistake, setSpellingMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [capitalizationMistake, setCapitalizationMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [punctuationMistake, setPunctuationMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [addedWordMistake, setAddedWordMistake] = useState<"Full" | "Half" | "Ignore">("Full");
   const [skippedWordMistake, setSkippedWordMistake] = useState<"Full" | "Half" | "Ignore">("Full");
-  const [durationMinutes, setDurationMinutes] = useState(35);
+  const [durationMinutes, setDurationMinutes] = useState(defaultDurationMinutes || 35);
+
+  React.useEffect(() => {
+    if (typingMode) setSelectedMode(typingMode);
+    if (defaultExam) setSelectedExam(defaultExam);
+    if (defaultDurationMinutes) setDurationMinutes(defaultDurationMinutes);
+  }, [typingMode, defaultExam, defaultDurationMinutes]);
 
   const examPresetsRules: Record<string, any> = {
     "Allahabad High Court Steno": {
@@ -109,6 +111,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
     const resolvedMode = resolveStenoTypingMode(selectedMode);
     if (activeTab === "exam") {
       const preset = examPresetsRules[selectedExam] || examPresetsRules["Allahabad High Court Steno"];
+      const effectiveDuration = defaultDurationMinutes || preset.transcriptionDuration;
       onSave({
         mode: "exam",
         examPresetName: selectedExam,
@@ -120,7 +123,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
         punctuationMistake: preset.punctuation,
         addedWordMistake: preset.added,
         skippedWordMistake: preset.skipped,
-        durationMinutes: preset.transcriptionDuration,
+        durationMinutes: effectiveDuration,
       });
     } else {
       onSave({
@@ -139,6 +142,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   };
 
   return (
+
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
         <DialogHeader className="p-6 pb-4 border-b border-slate-100 shrink-0 text-center space-y-1">

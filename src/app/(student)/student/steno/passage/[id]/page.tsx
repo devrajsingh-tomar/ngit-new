@@ -181,8 +181,10 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
         totalWords={passage.wordCount || 391}
         typingMode={passage.typingMode || (passage.language === "English" ? "english" : "unicode_hindi")}
         defaultExam={passage.examType || "Allahabad High Court Steno"}
+        defaultDurationMinutes={passage.durationMinutes || (passage.durationSeconds ? Math.round(passage.durationSeconds / 60) : 35)}
       />
     </div>
   );
+
 }
 

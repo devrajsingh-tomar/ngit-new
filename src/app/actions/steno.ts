@@ -210,12 +210,14 @@ export async function deleteStenoCustomTestAction(id: string) {
 export async function createStenoPassageAction(data: {
   title: string;
   language: "Hindi" | "English";
+  typingMode?: "unicode_hindi" | "krutidev_010" | "english";
   category: string;
   seriesId?: string;
   examType?: string;
   transcriptText: string;
   wordCount: number;
-  durationSeconds: number;
+  durationMinutes?: number;
+  durationSeconds?: number;
   audioUrl: string;
   videoUrl?: string;
   thumbnailUrl?: string;
@@ -232,10 +234,16 @@ export async function createStenoPassageAction(data: {
       return { success: false, error: "Admin authorization required" };
     }
 
+    const durationMins = Number(data.durationMinutes || (data.durationSeconds ? Math.round(data.durationSeconds / 60) : 35));
+    const durationSecs = Number(data.durationSeconds || durationMins * 60);
+
     const passage = await StenoPassage.create({
       ...data,
+      durationMinutes: durationMins,
+      durationSeconds: durationSecs,
       seriesId: data.seriesId || null,
     });
+
 
     if (data.seriesId) {
       await StenoSeries.findByIdAndUpdate(data.seriesId, {
@@ -260,7 +268,15 @@ export async function updateStenoPassageAction(id: string, data: any) {
       return { success: false, error: "Admin authorization required" };
     }
 
-    const updated = await StenoPassage.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+    const payload = { ...data };
+    if (payload.durationMinutes !== undefined) {
+      payload.durationMinutes = Number(payload.durationMinutes);
+      payload.durationSeconds = payload.durationMinutes * 60;
+    } else if (payload.durationSeconds !== undefined) {
+      payload.durationMinutes = Math.round(Number(payload.durationSeconds) / 60);
+    }
+
+    const updated = await StenoPassage.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
 
     revalidatePath("/admin/steno/passages");
     revalidatePath("/steno/dictation");
@@ -269,6 +285,7 @@ export async function updateStenoPassageAction(id: string, data: any) {
     return { success: false, error: err.message };
   }
 }
+
 
 export async function deleteStenoPassageAction(id: string) {
   try {

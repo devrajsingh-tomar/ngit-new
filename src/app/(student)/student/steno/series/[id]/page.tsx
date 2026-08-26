@@ -247,8 +247,9 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
                     <span className="flex items-center gap-1.5 text-slate-400">
                       <Clock className="w-3.5 h-3.5" /> Duration:
                     </span>
-                    <strong className="font-bold text-indigo-600">{Math.round((test.durationSeconds || 300) / 60)} Mins</strong>
+                    <strong className="font-bold text-indigo-600">{test.durationMinutes || Math.round((test.durationSeconds || 2100) / 60)} Mins</strong>
                   </p>
+
                   <p className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-slate-400">
                       <Keyboard className="w-3.5 h-3.5" /> Interface:
