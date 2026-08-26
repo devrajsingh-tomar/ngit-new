@@ -319,73 +319,9 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
         </div>
       </div>
 
-      {/* Dictation Player Bar */}
-      <Card className="p-4 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-sm space-y-3">
-        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-          <span className="text-xs font-black uppercase text-slate-500 flex items-center gap-1.5">
-            <Volume2 className="w-4 h-4 text-indigo-600" /> Dictation Media Engine
-          </span>
-          <span className="text-xs font-bold text-slate-500">
-            Target Dictation Speed: <strong className="text-indigo-600 font-black">{passage.targetWpm || 80} WPM</strong>
-          </span>
-        </div>
-
-        {passage.videoUrl ? (
-          <video
-            ref={mediaRef as any}
-            src={passage.videoUrl}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={() => setIsPlaying(false)}
-            className="w-full max-h-56 rounded-2xl bg-black"
-          />
-        ) : (
-          <audio
-            ref={mediaRef as any}
-            src={passage.audioUrl}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={() => setIsPlaying(false)}
-          />
-        )}
-
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Button
-            onClick={togglePlayMedia}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl h-10 w-10 flex items-center justify-center p-0 shrink-0 shadow-md"
-          >
-            {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white ml-0.5" />}
-          </Button>
-
-          <div className="flex-1 w-full space-y-1">
-            <input
-              type="range"
-              min="0"
-              max={duration || 100}
-              value={currentTime}
-              onChange={handleSeek}
-              className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-            />
-            <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
-              <span>Time: {formatCountdown(currentTime)}</span>
-              <span>Total: {formatCountdown(duration)}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {availableSpeeds.slice(0, 4).map((wpm) => (
-              <button
-                key={wpm}
-                onClick={() => handleSpeedChange(wpm)}
-                className="text-[9px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-indigo-600 hover:text-white transition-all"
-              >
-                {wpm} WPM
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
       {/* Main Split Grid Exam Canvas */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
         {/* Left Column: Official Answer Sheet Textarea Canvas */}
         <Card className="lg:col-span-3 p-6 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-md space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
