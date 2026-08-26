@@ -482,10 +482,14 @@ export async function getStudentStenoDashboardDataAction(filterOptions?: {
       bestWpm: 0,
       avgAccuracy: 0,
       bestAccuracy: 0,
+      currentRank: "N/A",
       recentRank: "N/A",
     };
 
     let continuePractice = null;
+    let commonRecurringMistakes: Array<{ original: string; typed: string; count: number; errorType: string }> = [];
+    let performanceByCategory: Array<{ category: string; attemptsCount: number; avgWpm: number; avgAccuracy: number }> = [];
+    let recentLogs: Array<any> = [];
 
     if (session?.user?.id) {
       const userResults = await StenoResult.find({ userId: session.user.id })
@@ -497,25 +501,125 @@ export async function getStudentStenoDashboardDataAction(filterOptions?: {
       if (userResults.length > 0) {
         stats.testsAttempted = userResults.length;
 
-        const totalWpm = userResults.reduce((acc, curr) => acc + (curr.speedWpm || 0), 0);
+        const totalWpm = userResults.reduce((acc, curr) => acc + (curr.netWpm || curr.speedWpm || 0), 0);
         stats.avgWpm = Math.round(totalWpm / userResults.length);
-        stats.bestWpm = Math.max(...userResults.map((r) => r.speedWpm || 0));
+        stats.bestWpm = Math.max(...userResults.map((r) => r.netWpm || r.speedWpm || 0));
 
         const totalAcc = userResults.reduce((acc, curr) => acc + (curr.accuracy || 0), 0);
         stats.avgAccuracy = Math.round(totalAcc / userResults.length);
         stats.bestAccuracy = Math.max(...userResults.map((r) => r.accuracy || 0));
 
+        // Global Leaderboard Rank among all participants
         const leaderboard = await StenoResult.aggregate([
-          { $group: { _id: "$userId", maxAcc: { $max: "$accuracy" }, maxSpeed: { $max: "$speedWpm" } } },
-          { $sort: { maxAcc: -1, maxSpeed: -1 } },
+          {
+            $group: {
+              _id: "$userId",
+              avgAcc: { $avg: "$accuracy" },
+              avgWpm: { $avg: { $ifNull: ["$netWpm", "$speedWpm"] } },
+              totalAttempts: { $sum: 1 },
+            },
+          },
+          { $sort: { avgAcc: -1, avgWpm: -1, totalAttempts: -1 } },
         ]);
 
         const rankIndex = leaderboard.findIndex((item) => item._id.toString() === session.user.id);
         if (rankIndex !== -1) {
+          stats.currentRank = `#${rankIndex + 1}`;
           stats.recentRank = `#${rankIndex + 1}`;
+        } else {
+          stats.currentRank = "#1";
+          stats.recentRank = "#1";
         }
 
         continuePractice = userResults[0];
+
+        // 1. Common Recurring Mistakes Aggregator
+        const recurringMistakesMap: Record<string, { original: string; typed: string; count: number; errorType: string }> = {};
+
+        userResults.forEach((res) => {
+          if (Array.isArray(res.errorLog) && res.errorLog.length > 0) {
+            res.errorLog.forEach((err: any) => {
+              const orig = (err.originalWord || "").trim();
+              const typed = (err.typedWord || "").trim();
+              if (orig || typed) {
+                const key = `${orig}:::${typed}`;
+                if (!recurringMistakesMap[key]) {
+                  recurringMistakesMap[key] = {
+                    original: orig || "(Omitted)",
+                    typed: typed || "(Missed)",
+                    count: 1,
+                    errorType: err.errorType || "Spelling Error",
+                  };
+                } else {
+                  recurringMistakesMap[key].count += 1;
+                }
+              }
+            });
+          } else if (Array.isArray(res.wordBreakdown)) {
+            res.wordBreakdown.forEach((wb: any) => {
+              if (wb.type && wb.type !== "correct") {
+                const orig = (wb.original || "").trim();
+                const typed = (wb.typed || "").trim();
+                if (orig || typed) {
+                  const key = `${orig}:::${typed}`;
+                  if (!recurringMistakesMap[key]) {
+                    recurringMistakesMap[key] = {
+                      original: orig || "(Omitted)",
+                      typed: typed || "(Missed)",
+                      count: 1,
+                      errorType: wb.type === "missing" ? "Missing Word" : wb.type === "added" ? "Added Word" : "Typing Mistake",
+                    };
+                  } else {
+                    recurringMistakesMap[key].count += 1;
+                  }
+                }
+              }
+            });
+          }
+        });
+
+        commonRecurringMistakes = Object.values(recurringMistakesMap)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10);
+
+        // 2. Performance by Category
+        const categoryStatsMap: Record<string, { count: number; totalWpm: number; totalAcc: number }> = {};
+        userResults.forEach((res) => {
+          const cat = res.passageId?.category || res.examTitle || "General Dictation";
+          if (!categoryStatsMap[cat]) {
+            categoryStatsMap[cat] = {
+              count: 1,
+              totalWpm: res.netWpm || res.speedWpm || 0,
+              totalAcc: res.accuracy || 0,
+            };
+          } else {
+            categoryStatsMap[cat].count += 1;
+            categoryStatsMap[cat].totalWpm += (res.netWpm || res.speedWpm || 0);
+            categoryStatsMap[cat].totalAcc += (res.accuracy || 0);
+          }
+        });
+
+        performanceByCategory = Object.entries(categoryStatsMap).map(([category, data]) => ({
+          category,
+          attemptsCount: data.count,
+          avgWpm: Math.round(data.totalWpm / data.count),
+          avgAccuracy: Math.round(data.totalAcc / data.count),
+        }));
+
+        // 3. Recent Transcription Logs
+        recentLogs = userResults.slice(0, 10).map((r) => ({
+          _id: r._id.toString(),
+          testTitle: r.passageTitle || r.passageId?.title || "Steno Practice Test",
+          dictationWpm: r.targetWpm || r.passageId?.targetWpm || 80,
+          netWpm: r.netWpm || r.speedWpm || 0,
+          grossWpm: r.grossWpm || r.speedWpm || 0,
+          accuracy: r.accuracy || 0,
+          totalErrors: r.totalMistakes || r.totalErrors || 0,
+          strokes: (r.typedTranscription || "").length,
+          category: r.passageId?.category || r.examTitle || "General",
+          status: r.status || "Evaluated",
+          date: r.createdAt,
+        }));
       }
     }
 
@@ -543,6 +647,9 @@ export async function getStudentStenoDashboardDataAction(filterOptions?: {
       success: true,
       data: {
         stats,
+        commonRecurringMistakes,
+        performanceByCategory,
+        recentLogs: JSON.parse(JSON.stringify(recentLogs)),
         continuePractice: JSON.parse(JSON.stringify(continuePractice)),
         recommendedPassages: JSON.parse(JSON.stringify(recommendedPassages)),
       },
@@ -551,6 +658,108 @@ export async function getStudentStenoDashboardDataAction(filterOptions?: {
     return { success: false, error: err.message };
   }
 }
+
+export async function getStudentStenoProfileDataAction(page = 1, limit = 10) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized: Please log in." };
+    }
+
+    const user = await User.findById(session.user.id).select("-password").lean();
+    const skip = (page - 1) * limit;
+
+    const [totalAttempts, resultsDocs] = await Promise.all([
+      StenoResult.countDocuments({ userId: session.user.id }),
+      StenoResult.find({ userId: session.user.id })
+        .populate("passageId")
+        .populate("examId")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    const allLeaderboard = await StenoResult.aggregate([
+      {
+        $group: {
+          _id: "$userId",
+          avgAcc: { $avg: "$accuracy" },
+          avgWpm: { $avg: { $ifNull: ["$netWpm", "$speedWpm"] } },
+        },
+      },
+      { $sort: { avgAcc: -1, avgWpm: -1 } },
+    ]);
+
+    const userRankIndex = allLeaderboard.findIndex((i) => i._id.toString() === session.user.id);
+    const overallRank = userRankIndex !== -1 ? `#${userRankIndex + 1}` : "#1";
+
+    const attempts = resultsDocs.map((r, idx) => ({
+      _id: r._id.toString(),
+      attemptNumber: totalAttempts - (skip + idx),
+      testName: r.passageTitle || r.passageId?.title || "Steno Practice Test",
+      category: r.passageId?.category || r.examTitle || "General",
+      language: r.language || "Hindi",
+      speedWpm: r.netWpm || r.speedWpm || 0,
+      grossWpm: r.grossWpm || r.speedWpm || 0,
+      accuracy: r.accuracy || 0,
+      grossAccuracy: Math.min(100, Math.round((r.accuracy || 0) * 1.05)),
+      mistakes: r.totalMistakes || r.totalErrors || 0,
+      strokes: (r.typedTranscription || "").length,
+      rank: overallRank,
+      status: r.status || "Evaluated",
+      date: r.createdAt,
+    }));
+
+    return {
+      success: true,
+      user: JSON.parse(JSON.stringify(user)),
+      activePlan: {
+        name: "Pro Shorthand & Steno Access Plan",
+        type: "Full Steno Portal Access",
+        status: "Active",
+        validTill: "Lifetime Access / Active",
+        features: ["Unlimited Audio Dictations", "SSC & High Court Exam Rules", "Live Speed Analysis", "PDF Export"],
+      },
+      pagination: {
+        page,
+        limit,
+        totalAttempts,
+        totalPages: Math.ceil(totalAttempts / limit) || 1,
+        hasMore: page * limit < totalAttempts,
+      },
+      attempts: JSON.parse(JSON.stringify(attempts)),
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteStenoResultAction(attemptId: string) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+    const result = await StenoResult.findById(attemptId);
+    if (!result) return { success: false, error: "Record not found" };
+
+    const userRole = (session.user as any).role;
+    if (result.userId.toString() !== session.user.id && userRole !== "ADMIN" && userRole !== "STENO_ADMIN") {
+      return { success: false, error: "Unauthorized to delete this test attempt" };
+    }
+
+    await StenoResult.findByIdAndDelete(attemptId);
+    revalidatePath("/student/steno/my-tests");
+    revalidatePath("/student/steno/dashboard");
+    revalidatePath("/student/steno/results");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 
 export async function submitStenoResultAction(data: {
   passageId?: string;

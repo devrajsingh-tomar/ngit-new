@@ -3,15 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  getStenoUserHistoryAction,
-  getUserStenoCustomTestsAction,
-  createStenoCustomTestAction,
-  deleteStenoCustomTestAction,
-  getStenoPassagesAction,
+  getStudentStenoProfileDataAction,
+  deleteStenoResultAction,
 } from "@/app/actions/steno";
+import { updateUserPassword } from "@/app/actions/user";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -20,118 +19,101 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Clock,
+  UserCircle,
+  ShieldCheck,
+  KeyRound,
+  Download,
+  Eye,
+  Trash2,
   RefreshCw,
   Award,
-  Plus,
-  Trash2,
-  Play,
-  Search,
-  Keyboard,
-  FileText,
-  Zap,
-  Sparkles,
-  Layers,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Lock,
+  Layers,
+  ArrowRight,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
-export default function StudentStenoMyTestsPage() {
-  const [results, setResults] = useState<any[]>([]);
-  const [customTests, setCustomTests] = useState<any[]>([]);
-  const [passages, setPassages] = useState<any[]>([]);
+export default function StudentStenoMyProfilePage() {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
-  // Filter & Search State
-  const [filterTab, setFilterTab] = useState<"all" | "hindi" | "english">("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  // Password Change Modal State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // Modal State
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    language: "Hindi",
-    hindiFont: "Kruti Dev 010",
-    category: "Custom Practice",
-    durationMinutes: 15,
-    targetWpm: 80,
-    passageId: "",
-  });
+  // Delete Confirmation Modal State
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadProfileAndAttempts(currentPage);
+  }, [currentPage]);
 
-  const loadData = async () => {
+  const loadProfileAndAttempts = async (page: number) => {
     setLoading(true);
-    const [historyRes, customRes, passagesRes] = await Promise.all([
-      getStenoUserHistoryAction(),
-      getUserStenoCustomTestsAction(),
-      getStenoPassagesAction(),
-    ]);
-
-    if (historyRes.success && historyRes.results) setResults(historyRes.results);
-    if (customRes.success && customRes.customTests) setCustomTests(customRes.customTests);
-    if (passagesRes.success && passagesRes.passages) {
-      setPassages(passagesRes.passages);
-      if (passagesRes.passages.length > 0) {
-        setFormData((prev) => ({ ...prev, passageId: passagesRes.passages[0]._id }));
-      }
+    const res = await getStudentStenoProfileDataAction(page, pageSize);
+    if (res.success) {
+      setProfileData(res);
+    } else {
+      toast.error(res.error || "Failed to load profile data");
     }
     setLoading(false);
   };
 
-  const handleCreateCustomTest = async (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.passageId) {
-      toast.error("Test Title and Original Dictation Passage are required!");
+    if (!currentPassword || !newPassword) {
+      toast.error("Please fill all password fields");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters");
       return;
     }
 
-    const res = await createStenoCustomTestAction({
-      title: formData.title.trim(),
-      language: formData.language as any,
-      hindiFont: formData.hindiFont,
-      category: formData.category,
-      durationMinutes: Number(formData.durationMinutes),
-      targetWpm: Number(formData.targetWpm),
-      passageId: formData.passageId,
-    });
+    setIsChangingPassword(true);
+    try {
+      const res = await updateUserPassword({
+        current: currentPassword,
+        new: newPassword,
+      });
 
-    if (res.success) {
-      toast.success("Custom Steno Test created successfully!");
-      setIsDialogOpen(false);
-      loadData();
-    } else {
-      toast.error(res.error || "Failed to create custom test");
+      if (res?.success) {
+        toast.success("Password updated successfully!");
+        setIsPasswordModalOpen(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        toast.error("Failed to update password. Verify your current password.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error updating password");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
-
-  const handleDeleteCustomTest = async (id: string) => {
-    if (!confirm("Delete this custom practice test?")) return;
-    const res = await deleteStenoCustomTestAction(id);
-    if (res.success) {
-      toast.success("Custom test deleted");
-      loadData();
-    } else {
-      toast.error(res.error || "Failed to delete test");
-    }
-  };
-
-  const filteredCustomTests = customTests.filter((t) => {
-    const matchesLang =
-      filterTab === "all"
-        ? true
-        : filterTab === "hindi"
-        ? t.language === "Hindi"
-        : t.language === "English";
-    const matchesSearch = t.title?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesLang && matchesSearch;
-  });
 
   const handleDownloadPdf = async (id: string, title: string) => {
     try {
-      toast.loading("Generating Steno Result PDF...", { id: `pdf-${id}` });
+      toast.loading("Preparing Steno Result PDF...", { id: `pdf-${id}` });
       const response = await fetch(`/api/steno/result/${id}/pdf`, { credentials: "include" });
       if (!response.ok) throw new Error("Failed to generate PDF");
       const blob = await response.blob();
@@ -144,326 +126,424 @@ export default function StudentStenoMyTestsPage() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      toast.success("Result PDF downloaded!", { id: `pdf-${id}` });
+      toast.success("Result PDF downloaded successfully!", { id: `pdf-${id}` });
     } catch (err: any) {
       toast.error(err.message || "Failed to download PDF", { id: `pdf-${id}` });
     }
   };
 
+  const handleDeleteAttempt = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    const res = await deleteStenoResultAction(deletingId);
+    if (res.success) {
+      toast.success("Test attempt removed");
+      setDeletingId(null);
+      loadProfileAndAttempts(currentPage);
+    } else {
+      toast.error(res.error || "Failed to delete attempt");
+    }
+    setIsDeleting(false);
+  };
+
+  const activePlan = profileData?.activePlan;
+  const attempts = profileData?.attempts || [];
+  const pagination = profileData?.pagination || { totalAttempts: 0, totalPages: 1, page: 1 };
+  const user = profileData?.user || session?.user;
+
   return (
     <div className="space-y-8 p-1 sm:p-2">
-      {/* NGIT Custom Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2 z-10">
-          <div className="flex items-center gap-2">
-            <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-400/30">
-              Personalized Practice Workspace
-            </span>
-            <span className="text-xs font-bold text-slate-300">• Shorthand Engine</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2.5">
-            <Sparkles className="w-7 h-7 text-indigo-400" /> My Custom Tests & History
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-400/30">
+            Student Steno Profile
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            {user?.name || "Student"}'s Profile & Test History
           </h1>
-          <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
-            Build custom practice tests with custom font styles, speed goals, and duration parameters, or review past performance reports.
+          <p className="text-xs text-slate-300">
+            Manage your active subscription plan, update credentials, and review all previous transcription tests.
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsDialogOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-11 px-6 text-xs rounded-2xl shadow-lg gap-2 shrink-0 z-10"
-        >
-          <Plus className="w-4 h-4" /> Create Custom Steno Test
-        </Button>
-
-        {/* Ambient Glow */}
-        <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-wrap gap-2.5 shrink-0">
+          <Button
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-10 px-5 text-xs rounded-xl shadow-md gap-1.5"
+          >
+            <KeyRound className="w-4 h-4" /> Change Password
+          </Button>
+          <Button
+            onClick={() => loadProfileAndAttempts(currentPage)}
+            variant="outline"
+            className="bg-white/10 hover:bg-white/20 text-white font-bold h-10 px-4 text-xs rounded-xl border border-white/20 shadow-xs gap-1.5"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
       </div>
 
-      {/* Filter Tabs & Search Navigation Bar */}
-      <Card className="p-4 rounded-3xl border-slate-200 bg-white shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0">
-          <button
-            onClick={() => setFilterTab("all")}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-              filterTab === "all"
-                ? "bg-indigo-600 text-white shadow-sm font-black"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            All Tests ({customTests.length})
-          </button>
-          <button
-            onClick={() => setFilterTab("hindi")}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-              filterTab === "hindi"
-                ? "bg-indigo-600 text-white shadow-sm font-black"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Hindi Steno
-          </button>
-          <button
-            onClick={() => setFilterTab("english")}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-              filterTab === "english"
-                ? "bg-indigo-600 text-white shadow-sm font-black"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            English Steno
-          </button>
-        </div>
+      {/* 1. ACTIVE ACCESS PLAN & 2. ACCOUNT SECURITY */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Active Access Plan Card */}
+        <Card className="p-6 rounded-3xl border-indigo-200 bg-gradient-to-br from-indigo-50/60 via-white to-white shadow-xs space-y-4 lg:col-span-2 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Active Access Plan
+              </span>
+              <Badge className="bg-emerald-100 text-emerald-800 border-none font-black text-xs px-3 py-1">
+                ACTIVE
+              </Badge>
+            </div>
 
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search custom tests by title..."
-            className="pl-10 rounded-2xl bg-slate-50 border-slate-200 text-xs font-semibold h-10"
-          />
-        </div>
-      </Card>
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-slate-900">{activePlan?.name || "Pro Shorthand & Steno Access Plan"}</h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Plan Validity: <strong className="text-indigo-600 font-bold">{activePlan?.validTill || "Lifetime Active"}</strong> • {activePlan?.type || "Full Portal Access"}
+              </p>
+            </div>
 
-      {/* Custom Practice Tests Grid */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-sm font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-indigo-600" /> Active Custom Test Sets ({filteredCustomTests.length})
-          </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+              {(activePlan?.features || [
+                "Unlimited Audio Dictations & Video lessons",
+                "SSC Grade C/D & High Court Exam Rules",
+                "Real-time Needleman-Wunsch Evaluation",
+                "Detailed PDF Scorecards with Analysis",
+              ]).map((feat: string, idx: number) => (
+                <div key={idx} className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                  <span className="truncate">{feat}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+            <span>Linked Email: <strong className="text-slate-800 font-bold">{user?.email || "Registered Student"}</strong></span>
+            <Link href="/student/steno/series" className="text-indigo-600 font-bold hover:underline flex items-center gap-1">
+              Explore Batches <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </Card>
+
+        {/* Account Security & Password Status Card */}
+        <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-5 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Account & Security
+              </h3>
+              <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                Protected
+              </span>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-400">Student Name</p>
+                <p className="font-black text-slate-900">{user?.name || "Student"}</p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-400">Registered Email</p>
+                <p className="font-bold text-slate-700 truncate">{user?.email || "—"}</p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-400">Password Status</p>
+                <p className="font-bold text-emerald-600 flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5" /> Secure Password Configured
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-10 text-xs rounded-xl gap-2 shadow-xs"
+          >
+            <KeyRound className="w-4 h-4" /> Update Account Password
+          </Button>
+        </Card>
+      </div>
+
+      {/* 3. ATTEMPTED TESTS TABLE (10 per page, View/PDF/Delete) */}
+      <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
+          <div>
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <Award className="w-5 h-5 text-indigo-600" /> Attempted Steno Tests
+            </h3>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
+              Detailed performance metrics, gross accuracy, error counts, and official PDF downloads (10 tests per page).
+            </p>
+          </div>
+
+          <span className="text-xs font-black text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            Total Completed Tests: {pagination.totalAttempts}
+          </span>
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-slate-400">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading custom tests...
+          <div className="py-16 text-center text-slate-400">
+            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+            <p className="text-xs font-bold">Loading your test records...</p>
           </div>
-        ) : filteredCustomTests.length === 0 ? (
-          <Card className="p-10 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
-            <Keyboard className="w-10 h-10 text-slate-300 mx-auto" />
-            <p className="text-sm font-bold text-slate-600">No custom practice tests created yet.</p>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 text-xs rounded-xl gap-1.5"
-            >
-              <Plus className="w-4 h-4" /> Create Your First Test
-            </Button>
-          </Card>
+        ) : attempts.length === 0 ? (
+          <div className="py-16 text-center text-slate-400">
+            <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs font-bold text-slate-600">No attempted tests found.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Explore our Steno Batches to start your first transcription exam.</p>
+            <Link href="/student/steno/series" className="inline-block mt-4">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 text-xs rounded-xl">
+                Explore Steno Batches
+              </Button>
+            </Link>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCustomTests.map((t) => (
-              <Card
-                key={t._id}
-                className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between"
-              >
-                {/* Header Tags & Actions */}
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100">
-                      {t.language}
-                    </span>
-                    <span className="text-[10px] font-black uppercase bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg border border-purple-100">
-                      {t.hindiFont || "Kruti Dev 010"}
-                    </span>
-                  </div>
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">
+                  <tr>
+                    <th className="p-3.5 pl-4 rounded-l-xl">Test Name</th>
+                    <th className="p-3.5 text-center">Attempt #</th>
+                    <th className="p-3.5">Date</th>
+                    <th className="p-3.5 text-center">Speed</th>
+                    <th className="p-3.5 text-center">Rank</th>
+                    <th className="p-3.5">Category</th>
+                    <th className="p-3.5 text-center">Accuracy</th>
+                    <th className="p-3.5 text-center">Gross Acc.</th>
+                    <th className="p-3.5 text-center">Mistakes</th>
+                    <th className="p-3.5 text-center">Strokes</th>
+                    <th className="p-3.5 pr-4 text-right rounded-r-xl">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {attempts.map((item: any) => (
+                    <tr key={item._id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="p-3.5 pl-4 font-black text-slate-900 max-w-[180px] truncate" title={item.testName}>
+                        {item.testName}
+                      </td>
+                      <td className="p-3.5 text-center font-bold text-indigo-600">
+                        #{item.attemptNumber}
+                      </td>
+                      <td className="p-3.5 text-slate-500 font-medium whitespace-nowrap">
+                        {new Date(item.date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="p-3.5 text-center font-black text-indigo-600 text-sm">
+                        {item.speedWpm} <span className="text-[10px] font-normal text-slate-400">WPM</span>
+                      </td>
+                      <td className="p-3.5 text-center font-black text-amber-600">
+                        {item.rank}
+                      </td>
+                      <td className="p-3.5">
+                        <Badge className="bg-slate-100 text-slate-700 text-[10px] font-bold border-slate-200">
+                          {item.category}
+                        </Badge>
+                      </td>
+                      <td className="p-3.5 text-center font-black text-emerald-600 text-sm">
+                        {item.accuracy}%
+                      </td>
+                      <td className="p-3.5 text-center font-bold text-slate-600">
+                        {item.grossAccuracy}%
+                      </td>
+                      <td className="p-3.5 text-center font-black text-rose-600">
+                        {item.mistakes}
+                      </td>
+                      <td className="p-3.5 text-center font-mono font-bold text-slate-500">
+                        {item.strokes}
+                      </td>
+                      <td className="p-3.5 pr-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* 1. View Result */}
+                          <Link href={`/student/steno/result/${item._id}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2.5 rounded-lg text-[11px] font-bold gap-1 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"
+                              title="View Full Result"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> View
+                            </Button>
+                          </Link>
 
-                  <button
-                    onClick={() => handleDeleteCustomTest(t._id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
-                    title="Delete Test"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                          {/* 2. Download PDF */}
+                          <Button
+                            onClick={() => handleDownloadPdf(item._id, item.testName)}
+                            size="sm"
+                            className="h-8 px-2.5 rounded-lg text-[11px] font-bold gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                            title="Download PDF Report"
+                          >
+                            <Download className="w-3.5 h-3.5" /> PDF
+                          </Button>
 
-                {/* Title */}
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 leading-snug">{t.title}</h3>
-                  <p className="text-xs text-slate-400 mt-1 font-medium">Category: {t.category || "Custom Practice"}</p>
-                </div>
+                          {/* 3. Delete Button */}
+                          <Button
+                            onClick={() => setDeletingId(item._id)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700"
+                            title="Delete Attempt"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                {/* Stats Bar */}
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center text-xs">
-                  <div>
-                    <span className="text-[9px] font-black text-slate-400 uppercase">Words</span>
-                    <p className="font-extrabold text-slate-800 mt-0.5">{t.passageId?.wordCount || 1}</p>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-black text-slate-400 uppercase">Duration</span>
-                    <p className="font-extrabold text-indigo-600 mt-0.5">{t.durationMinutes} Mins</p>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-black text-slate-400 uppercase">Target</span>
-                    <p className="font-extrabold text-emerald-600 mt-0.5">{t.targetWpm} WPM</p>
-                  </div>
-                </div>
+            {/* Pagination Controls (10 tests per page with refresh) */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              <span className="text-xs font-bold text-slate-500">
+                Showing {attempts.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{" "}
+                {Math.min(currentPage * pageSize, pagination.totalAttempts)} of {pagination.totalAttempts} tests
+              </span>
 
-                {/* Primary Button */}
-                <Link href={`/student/steno/custom-practice/${t._id}`} className="block pt-1">
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-xl shadow-md gap-2">
-                    <Play className="w-4 h-4 fill-white" /> Launch Practice Test
-                  </Button>
-                </Link>
-              </Card>
-            ))}
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1 || loading}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl text-xs font-bold gap-1 h-8"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Prev 10
+                </Button>
+
+                <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-black text-slate-700">
+                  Page {currentPage} of {pagination.totalPages}
+                </span>
+
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                  disabled={currentPage >= pagination.totalPages || loading}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl text-xs font-bold gap-1 h-8"
+                >
+                  Next 10 <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Evaluation Attempt History Section */}
-      <div className="space-y-4 pt-6 border-t border-slate-200">
-        <h2 className="text-sm font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-          <Award className="w-4 h-4 text-emerald-600" /> Evaluation Attempt History ({results.length})
-        </h2>
-
-        {results.length === 0 ? (
-          <Card className="p-8 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-            No completed dictation evaluation attempts yet.
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {results.map((r) => (
-              <Card
-                key={r._id}
-                className="p-5 rounded-2xl border-slate-200 bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-indigo-200 transition-all shadow-xs"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase ${
-                        r.status === "Passed"
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                          : "bg-rose-100 text-rose-800 border border-rose-200"
-                      }`}
-                    >
-                      {r.status}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400">
-                      {new Date(r.createdAt).toLocaleDateString("en-IN")}
-                    </span>
-                  </div>
-                  <h4 className="text-base font-black text-slate-900">{r.passageTitle || r.passageId?.title || "Steno Dictation Attempt"}</h4>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Speed: <strong className="text-indigo-600 font-bold">{r.speedWpm || r.netWpm || 0} WPM</strong> • Accuracy:{" "}
-                    <strong className="text-emerald-600 font-bold">{r.accuracy || 0}%</strong> • Total Errors: {r.totalErrors || r.totalMistakes || 0}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Link href={`/student/steno/result/${r._id}`}>
-                    <Button size="sm" variant="outline" className="h-9 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-indigo-600" /> Evaluation Report
-                    </Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    onClick={() => handleDownloadPdf(r._id, r.passageTitle || r.passageId?.title)}
-                    className="h-9 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
-                  >
-                    PDF
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Modal Dialog: Create Custom Test */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl rounded-3xl p-6 sm:p-8 bg-white border border-slate-200">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900">
-              Create Custom Practice Steno Test
+      {/* Change Password Modal */}
+      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+        <DialogContent className="max-w-md rounded-3xl p-6 bg-white border border-slate-200">
+          <DialogHeader className="space-y-1 text-center">
+            <DialogTitle className="text-xl font-black text-slate-900 flex items-center justify-center gap-2">
+              <KeyRound className="w-5 h-5 text-indigo-600" /> Change Account Password
             </DialogTitle>
+            <p className="text-xs text-slate-500 font-medium">
+              Enter your current password and set a new secure password.
+            </p>
           </DialogHeader>
 
-          <form onSubmit={handleCreateCustomTest} className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Test Title *</label>
+          <form onSubmit={handlePasswordChange} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Current Password</label>
               <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g. My Remington GAIL Speed Test"
-                className="rounded-xl text-xs font-semibold"
+                type="password"
                 required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter existing password"
+                className="rounded-xl text-xs"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Language</label>
-                <select
-                  value={formData.language}
-                  onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                >
-                  <option value="Hindi">Hindi</option>
-                  <option value="English">English</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Hindi Font</label>
-                <select
-                  value={formData.hindiFont}
-                  onChange={(e) => setFormData({ ...formData, hindiFont: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                >
-                  <option value="Mangal">Mangal</option>
-                  <option value="Kruti Dev 010">Krutidev</option>
-                  <option value="English">English</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Target Speed (WPM)</label>
-                <Input
-                  type="number"
-                  value={formData.targetWpm}
-                  onChange={(e) => setFormData({ ...formData, targetWpm: Number(e.target.value) })}
-                  className="rounded-xl text-xs font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Duration (Minutes)</label>
-                <Input
-                  type="number"
-                  value={formData.durationMinutes}
-                  onChange={(e) => setFormData({ ...formData, durationMinutes: Number(e.target.value) })}
-                  className="rounded-xl text-xs font-semibold"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Original Dictation Passage *</label>
-              <select
-                value={formData.passageId}
-                onChange={(e) => setFormData({ ...formData, passageId: e.target.value })}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">New Password</label>
+              <Input
+                type="password"
                 required
-              >
-                {passages.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.title} ({p.language} • {p.targetWpm} WPM)
-                  </option>
-                ))}
-              </select>
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters with 1 capital & 1 number"
+                className="rounded-xl text-xs"
+              />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl text-xs">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Confirm New Password</label>
+              <Input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="rounded-xl text-xs"
+              />
+            </div>
+
+            <DialogFooter className="pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="rounded-xl text-xs"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold">
-                Create Test
+              <Button
+                type="submit"
+                disabled={isChangingPassword}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold"
+              >
+                {isChangingPassword ? "Updating..." : "Update Password"}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Attempt Confirmation Modal */}
+      <Dialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-white border border-slate-200">
+          <DialogHeader className="space-y-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-lg font-black text-slate-900">
+              Delete Test Attempt?
+            </DialogTitle>
+            <p className="text-xs text-slate-500 font-medium">
+              Are you sure you want to permanently delete this test attempt from your history? This action cannot be undone.
+            </p>
+          </DialogHeader>
+
+          <DialogFooter className="pt-4 flex gap-2 sm:justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeletingId(null)}
+              className="rounded-xl text-xs flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteAttempt}
+              disabled={isDeleting}
+              className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex-1"
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

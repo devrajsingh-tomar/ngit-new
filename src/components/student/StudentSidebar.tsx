@@ -30,17 +30,16 @@ const menuItems = [
   { label: "Typing Exams", href: "/student/typing", icon: Keyboard },
   {
     label: "Steno / Short Hand",
-    href: "/student/steno",
+    href: "/student/steno/dashboard",
     icon: Mic,
     subItems: [
       { label: "Steno Dashboard", href: "/student/steno/dashboard" },
-      { label: "Steno Series & Batches", href: "/student/steno/series" },
-      { label: "Practice Passages", href: "/student/steno/practice" },
-      { label: "Mock Tests", href: "/student/steno/mock-tests" },
-      { label: "My Steno Tests", href: "/student/steno/my-tests" },
+      { label: "My Profile", href: "/student/steno/my-tests" },
+      { label: "Steno Batches", href: "/student/steno/series" },
       { label: "Steno Leaderboard", href: "/student/steno/leaderboard" },
     ],
   },
+
   { label: "Payments", href: "/student/fees", icon: CreditCard },
   { label: "Attendance", href: "/student/attendance", icon: ClipboardList },
   { label: "Certificates", href: "/student/certificates", icon: Award },
