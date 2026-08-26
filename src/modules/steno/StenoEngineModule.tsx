@@ -39,11 +39,11 @@ interface StenoEngineModuleProps {
   passage: {
     _id?: string;
     title: string;
-    audioUrl: string;
+    audioUrl?: string;
     videoUrl?: string;
     transcriptText: string;
     targetWpm?: number;
-    language?: "Hindi" | "English";
+    language?: "Hindi" | "English" | string;
     availableSpeeds?: number[];
   };
   presetRules?: {
@@ -55,6 +55,9 @@ interface StenoEngineModuleProps {
     maxAllowedErrorPercent?: number;
   };
   initialFont?: string;
+  initialDurationMinutes?: number;
+  presetName?: string;
+  backspaceStatus?: "Enabled" | "Disabled" | string;
   onComplete?: (result: any) => void;
 }
 
@@ -62,6 +65,9 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   passage,
   presetRules,
   initialFont,
+  initialDurationMinutes,
+  presetName,
+  backspaceStatus,
   onComplete,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -88,6 +94,14 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   const [showAltModal, setShowAltModal] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
+  // Backspace Permission State
+  const [backspaceAllowed, setBackspaceAllowed] = useState(backspaceStatus !== "Disabled");
+
+  useEffect(() => {
+    if (backspaceStatus) {
+      setBackspaceAllowed(backspaceStatus !== "Disabled");
+    }
+  }, [backspaceStatus]);
 
   // Editor Appearance Controls
   const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Mangal");
@@ -100,14 +114,20 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     }
   }, [initialFont]);
 
-
   const [fluctuationEnabled, setFluctuationEnabled] = useState(false);
   const [transcriptionUnlocked, setTranscriptionUnlocked] = useState(false);
   const [evaluation, setEvaluation] = useState<DetailedStenoEvaluationResult | null>(null);
 
   // Timer & Pause State
   const [isPaused, setIsPaused] = useState(false);
-  const [remainingTimeSeconds, setRemainingTimeSeconds] = useState(50 * 60);
+  const [remainingTimeSeconds, setRemainingTimeSeconds] = useState((initialDurationMinutes || 35) * 60);
+
+  useEffect(() => {
+    if (initialDurationMinutes) {
+      setRemainingTimeSeconds(initialDurationMinutes * 60);
+    }
+  }, [initialDurationMinutes]);
+
 
   // Helper to insert Alt-Code or character directly into textarea
   const handleInsertAltChar = (char: string) => {
@@ -380,6 +400,11 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                 if (e.getModifierState) {
                   setIsCapsLockOn(e.getModifierState("CapsLock"));
                 }
+                if (e.key === "Backspace" && !backspaceAllowed) {
+                  e.preventDefault();
+                  toast.error("Backspace is disabled for this examination!", { id: "backspace-disabled" });
+                  return;
+                }
                 handleHindiTextareaKeyDown(e, fontFamily, userTranscription, setUserTranscription);
               }}
               onKeyUp={(e) => {
@@ -398,11 +423,10 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
             />
           </div>
 
-
           {/* Bottom Status & Submit Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
             <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-slate-200">
-              FONT: {fontFamily.toUpperCase()} | BACKSPACE: ENABLED
+              FONT: {fontFamily.toUpperCase()} | BACKSPACE: {backspaceAllowed ? "ENABLED" : "DISABLED"}
             </span>
 
             <Button
@@ -423,17 +447,24 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
             {/* Settings Box */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs font-bold text-slate-700">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Layout preset:</span>
-                <span className="text-slate-900 font-black">SSC GRADE D STENO</span>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-400 shrink-0">Layout preset:</span>
+                <span className="text-slate-900 font-black uppercase text-right truncate" title={presetName || "Manual Setup"}>
+                  {presetName || "Manual Setup"}
+                </span>
               </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Backspace keys:</span>
-                <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-black border border-emerald-200">
-                  ENABLED
+                <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${
+                  backspaceAllowed 
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-200" 
+                    : "bg-rose-100 text-rose-800 border-rose-200"
+                }`}>
+                  {backspaceAllowed ? "ENABLED" : "DISABLED"}
                 </span>
               </div>
+
 
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Selected Font:</span>

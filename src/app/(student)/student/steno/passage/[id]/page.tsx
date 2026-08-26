@@ -120,11 +120,15 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
           passage={passage}
           presetRules={presetRulesObj}
           initialFont={sessionConfig?.selectedFont}
+          initialDurationMinutes={sessionConfig?.durationMinutes}
+          presetName={sessionConfig?.mode === "exam" ? sessionConfig.examPresetName : "Manual Setup"}
+          backspaceStatus={sessionConfig?.backspaceStatus}
           onComplete={handleComplete}
         />
       </div>
     );
   }
+
 
   // Dictation Player & Instructions View
   return (

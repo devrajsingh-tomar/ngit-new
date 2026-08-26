@@ -135,12 +135,16 @@ export default function StudentCustomPracticePreStartPage({
         <StenoEngineModule
           passage={passageObj}
           presetRules={presetRulesObj}
-          initialFont={customTest.hindiFont}
+          initialFont={sessionConfig?.selectedFont || customTest.hindiFont}
+          initialDurationMinutes={sessionConfig?.durationMinutes}
+          presetName={sessionConfig?.mode === "exam" ? sessionConfig.examPresetName : "Manual Setup"}
+          backspaceStatus={sessionConfig?.backspaceStatus}
           onComplete={handleComplete}
         />
       </div>
     );
   }
+
 
   // Pre-Start Informative Page (Image 2)
   return (
