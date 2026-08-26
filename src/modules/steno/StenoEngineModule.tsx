@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useStenoStore } from "@/store/useStenoStore";
 import { evaluateStenoTranscriptionDetailed, DetailedStenoEvaluationResult } from "./utils/stenoCalculations";
-import { handleHindiTextareaKeyDown, KRUTI_DEV_ALT_CODES } from "./utils/hindiKeystrokeMap";
+import { handleHindiTextareaKeyDown, KRUTI_DEV_ALT_CODES, STENO_TYPING_MODES, resolveStenoTypingMode, StenoTypingModeType } from "./utils/hindiKeystrokeMap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -55,6 +55,7 @@ interface StenoEngineModuleProps {
     maxAllowedErrorPercent?: number;
   };
   initialFont?: string;
+  typingMode?: StenoTypingModeType | string;
   initialDurationMinutes?: number;
   presetName?: string;
   backspaceStatus?: "Enabled" | "Disabled" | string;
@@ -65,6 +66,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   passage,
   presetRules,
   initialFont,
+  typingMode,
   initialDurationMinutes,
   presetName,
   backspaceStatus,
@@ -103,16 +105,22 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     }
   }, [backspaceStatus]);
 
-  // Editor Appearance Controls
-  const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Mangal");
+  // Canonical Typing Mode & Appearance Controls
+  const [currentModeType, setCurrentModeType] = useState<StenoTypingModeType>(() => {
+    return resolveStenoTypingMode(typingMode || initialFont || settings.fontFamily).type;
+  });
+
+  const activeModeConfig = resolveStenoTypingMode(currentModeType);
+
   const [fontSize, setFontSize] = useState(16); // 14px to 24px
   const [eyeCareBg, setEyeCareBg] = useState("#ffffff"); // Swatches: White, Mint, Blue, Peach, Sepia
 
   useEffect(() => {
-    if (initialFont) {
-      setFontFamily(initialFont);
+    if (typingMode || initialFont) {
+      setCurrentModeType(resolveStenoTypingMode(typingMode || initialFont).type);
     }
-  }, [initialFont]);
+  }, [typingMode, initialFont]);
+
 
   const [fluctuationEnabled, setFluctuationEnabled] = useState(false);
   const [transcriptionUnlocked, setTranscriptionUnlocked] = useState(false);
@@ -332,7 +340,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
             </div>
 
             {/* Quick Alt-Codes Insertion Strip for Kruti Dev */}
-            {(fontFamily.toLowerCase().includes("kruti") || fontFamily.toLowerCase().includes("remington")) && (
+            {activeModeConfig.type === "krutidev_010" && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
                   Quick Insert:
@@ -351,8 +359,8 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               </div>
             )}
 
-            {/* Caps Lock Alert Banner */}
-            {isCapsLockOn && (
+            {/* Caps Lock Alert Banner for Kruti Dev */}
+            {isCapsLockOn && activeModeConfig.type === "krutidev_010" && (
               <div className="bg-amber-50 text-amber-900 border border-amber-200 rounded-xl px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">
                 ⚠️ <span>Caps Lock is ON — Kruti Dev layout uses <strong>Shift</strong> for half-letters (ज्ञ, क्, थ्). Caps Lock does not alter key mappings.</span>
               </div>
@@ -372,7 +380,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                   toast.error("Backspace is disabled for this examination!", { id: "backspace-disabled" });
                   return;
                 }
-                handleHindiTextareaKeyDown(e, fontFamily, userTranscription, setUserTranscription);
+                handleHindiTextareaKeyDown(e, activeModeConfig.type, userTranscription, setUserTranscription);
               }}
               onKeyUp={(e) => {
                 if (e.getModifierState) {
@@ -382,7 +390,12 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               placeholder="Start typing your transcribed shorthand matter here..."
               rows={isFullscreen ? 18 : 14}
               style={{
-                fontFamily,
+                fontFamily:
+                  activeModeConfig.type === "krutidev_010"
+                    ? "'Kruti Dev 010', 'KrutiDev010', sans-serif"
+                    : activeModeConfig.type === "unicode_hindi"
+                    ? "'Mangal', 'Noto Sans Devanagari', sans-serif"
+                    : "inherit",
                 fontSize: `${fontSize}px`,
                 backgroundColor: eyeCareBg,
               }}
@@ -393,7 +406,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
           {/* Bottom Status & Submit Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
             <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-slate-200">
-              FONT: {fontFamily.toUpperCase()} | BACKSPACE: {backspaceAllowed ? "ENABLED" : "DISABLED"}
+              MODE: {activeModeConfig.label.toUpperCase()} | BACKSPACE: {backspaceAllowed ? "ENABLED" : "DISABLED"}
             </span>
 
             <Button
@@ -432,19 +445,21 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                 </span>
               </div>
 
-
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">Selected Font:</span>
+                <span className="text-slate-400">Typing Mode:</span>
                 <select
-                  value={fontFamily}
-                  onChange={(e) => setFontFamily(e.target.value)}
+                  value={currentModeType}
+                  onChange={(e) => setCurrentModeType(e.target.value as any)}
                   className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-black text-slate-900 focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="Mangal">MANGAL</option>
-                  <option value="Kruti Dev 010">KRUTIDEV</option>
-                  <option value="English">ENGLISH</option>
+                  {STENO_TYPING_MODES.map((mode) => (
+                    <option key={mode.type} value={mode.type}>
+                      {mode.label}
+                    </option>
+                  ))}
                 </select>
               </div>
+
 
               {/* Font Size Scaling Controls (A- 16px A+) */}
               <div className="space-y-1 pt-2 border-t border-slate-200">

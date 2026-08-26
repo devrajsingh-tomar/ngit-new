@@ -136,6 +136,7 @@ export default function StudentCustomPracticePreStartPage({
           passage={passageObj}
           presetRules={presetRulesObj}
           initialFont={sessionConfig?.selectedFont || customTest.hindiFont}
+          typingMode={sessionConfig?.typingMode}
           initialDurationMinutes={sessionConfig?.durationMinutes}
           presetName={sessionConfig?.mode === "exam" ? sessionConfig.examPresetName : "Manual Setup"}
           backspaceStatus={sessionConfig?.backspaceStatus}
@@ -144,6 +145,7 @@ export default function StudentCustomPracticePreStartPage({
       </div>
     );
   }
+
 
 
   // Pre-Start Informative Page (Image 2)

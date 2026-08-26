@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ClipboardList, Sliders } from "lucide-react";
+import { STENO_TYPING_MODES, resolveStenoTypingMode } from "@/modules/steno/utils/hindiKeystrokeMap";
 
 export interface StenoSessionConfig {
   mode: "exam" | "manual";
   examPresetName?: string;
   selectedFont: string;
+  typingMode?: "unicode_hindi" | "krutidev_010" | "english";
   backspaceStatus: "Enabled" | "Disabled";
   spellingMistake: "Full" | "Half" | "Ignore";
   capitalizationMistake: "Full" | "Half" | "Ignore";
@@ -38,10 +40,11 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
   const [selectedExam, setSelectedExam] = useState("Allahabad High Court Steno");
-  const [selectedFont, setSelectedFont] = useState("Mangal");
+  const [selectedMode, setSelectedMode] = useState<string>("unicode_hindi");
 
   // Manual configuration state
   const [backspaceStatus, setBackspaceStatus] = useState<"Enabled" | "Disabled">("Enabled");
+
   const [spellingMistake, setSpellingMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [capitalizationMistake, setCapitalizationMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [punctuationMistake, setPunctuationMistake] = useState<"Full" | "Half" | "Ignore">("Half");
@@ -93,12 +96,14 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   };
 
   const handleSaveAndContinue = () => {
+    const resolvedMode = resolveStenoTypingMode(selectedMode);
     if (activeTab === "exam") {
       const preset = examPresetsRules[selectedExam] || examPresetsRules["Allahabad High Court Steno"];
       onSave({
         mode: "exam",
         examPresetName: selectedExam,
-        selectedFont,
+        selectedFont: resolvedMode.displayFont,
+        typingMode: resolvedMode.type,
         backspaceStatus: preset.backspace,
         spellingMistake: preset.spelling,
         capitalizationMistake: preset.capitalization,
@@ -110,7 +115,8 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
     } else {
       onSave({
         mode: "manual",
-        selectedFont,
+        selectedFont: resolvedMode.displayFont,
+        typingMode: resolvedMode.type,
         backspaceStatus,
         spellingMistake,
         capitalizationMistake,
@@ -158,7 +164,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
           </button>
         </div>
 
-        {/* Tab 1: By Exam (Matching Image 5) */}
+        {/* Tab 1: By Exam */}
         {activeTab === "exam" && (
           <div className="space-y-4 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -180,21 +186,23 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                  CHOOSE FONT
+                  CHOOSE TYPING MODE
                 </label>
                 <select
-                  value={selectedFont}
-                  onChange={(e) => setSelectedFont(e.target.value)}
+                  value={selectedMode}
+                  onChange={(e) => setSelectedMode(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="Mangal">Mangal</option>
-                  <option value="Kruti Dev 010">Krutidev</option>
-                  <option value="English">English</option>
+                  {STENO_TYPING_MODES.map((mode) => (
+                    <option key={mode.type} value={mode.type}>
+                      {mode.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Exam Rules Summary Box (Matching Image 5) */}
+            {/* Exam Rules Summary Box */}
             <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
               <h4 className="text-xs font-black text-indigo-900 flex items-center gap-1.5 border-b border-indigo-100 pb-2">
                 📋 {selectedExam} — Exam Rules
@@ -220,18 +228,21 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
           <div className="space-y-4 pt-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                CHOOSE FONT
+                CHOOSE TYPING MODE
               </label>
               <select
-                value={selectedFont}
-                onChange={(e) => setSelectedFont(e.target.value)}
+                value={selectedMode}
+                onChange={(e) => setSelectedMode(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800"
               >
-                <option value="Mangal">Mangal</option>
-                <option value="Kruti Dev 010">Krutidev</option>
-                <option value="English">English</option>
+                {STENO_TYPING_MODES.map((mode) => (
+                  <option key={mode.type} value={mode.type}>
+                    {mode.label}
+                  </option>
+                ))}
               </select>
             </div>
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">

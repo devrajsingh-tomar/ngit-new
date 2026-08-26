@@ -1,6 +1,58 @@
 import { mapEventToInscript } from "@/modules/typing/utils/InscriptEngine";
 
+export type StenoTypingModeType = "unicode_hindi" | "krutidev_010" | "english";
+
+export interface StenoTypingModeConfig {
+  type: StenoTypingModeType;
+  label: string;
+  inputMode: "unicode" | "krutidev" | "english";
+  displayFont: string;
+}
+
+export const STENO_TYPING_MODES: StenoTypingModeConfig[] = [
+  {
+    type: "unicode_hindi",
+    label: "Hindi - Unicode / Mangal",
+    inputMode: "unicode",
+    displayFont: "Mangal",
+  },
+  {
+    type: "krutidev_010",
+    label: "Hindi - Kruti Dev 010",
+    inputMode: "krutidev",
+    displayFont: "Kruti Dev 010",
+  },
+  {
+    type: "english",
+    label: "English",
+    inputMode: "english",
+    displayFont: "English",
+  },
+];
+
+/**
+ * Resolves any font name or mode string into the canonical Steno typing mode
+ * Provides 100% backward compatibility for existing exams and test configurations.
+ */
+export function resolveStenoTypingMode(value?: string): StenoTypingModeConfig {
+  const norm = (value || "").toLowerCase().trim();
+  if (
+    norm === "krutidev_010" ||
+    norm.includes("kruti") ||
+    norm.includes("remington") ||
+    norm === "legacy"
+  ) {
+    return STENO_TYPING_MODES[1]; // Hindi - Kruti Dev 010
+  }
+  if (norm === "english" || norm.includes("arial") || norm === "en") {
+    return STENO_TYPING_MODES[2]; // English
+  }
+  // Default is Hindi - Unicode / Mangal
+  return STENO_TYPING_MODES[0];
+}
+
 // 1. Complete Kruti Dev 010 Direct Key Mapping (Normal + Shift)
+
 
 export const KRUTI_DEV_010_MAP: Record<string, string> = {
   // Top Row (Q to \)
@@ -535,18 +587,14 @@ export function transformKrutiDevInput(
  */
 export function handleHindiTextareaKeyDown(
   e: React.KeyboardEvent<HTMLTextAreaElement>,
-  fontFamily: string,
+  fontOrMode: string,
   currentText: string,
   setText: (newVal: string) => void
 ): boolean {
-  const normFont = (fontFamily || "").toLowerCase();
+  const modeConfig = resolveStenoTypingMode(fontOrMode);
 
-  // If font is English, do not intercept
-  if (
-    normFont.includes("arial") ||
-    normFont.includes("english") ||
-    (normFont.includes("sans-serif") && !normFont.includes("mangal") && !normFont.includes("kruti"))
-  ) {
+  // If English mode, do not intercept keyboard event
+  if (modeConfig.type === "english") {
     return false;
   }
 
@@ -580,10 +628,7 @@ export function handleHindiTextareaKeyDown(
   const before = currentText.substring(0, start);
   const after = currentText.substring(end);
 
-  const isKruti = normFont.includes("kruti") || normFont.includes("remington");
-  const isMangalInscript = normFont.includes("mangal") || normFont.includes("inscript") || normFont.includes("unicode") || normFont === "hindi";
-
-  if (isMangalInscript) {
+  if (modeConfig.type === "unicode_hindi") {
     const mappedChar = mapEventToInscript(e);
     if (mappedChar) {
       e.preventDefault();
@@ -595,8 +640,8 @@ export function handleHindiTextareaKeyDown(
       }, 0);
       return true;
     }
-  } else if (isKruti) {
-    // Kruti Dev 010 / Remington GAIL layout
+  } else if (modeConfig.type === "krutidev_010") {
+    // Kruti Dev 010 legacy layout mapping
     const res = mapEventToKrutiDev(e, before);
     if (res && res.replacement) {
       e.preventDefault();
@@ -613,5 +658,6 @@ export function handleHindiTextareaKeyDown(
 
   return false;
 }
+
 
 
