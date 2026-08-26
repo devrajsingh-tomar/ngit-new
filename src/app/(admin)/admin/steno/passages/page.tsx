@@ -36,7 +36,7 @@ export default function AdminStenoPassagesPage() {
   const [formData, setFormData] = useState({
     title: "",
     language: "Hindi",
-    typingMode: "both_hindi",
+    typingMode: "unicode_hindi",
     category: "General Dictation",
     seriesId: "",
     examType: "SSC Steno",
@@ -80,7 +80,7 @@ export default function AdminStenoPassagesPage() {
     setFormData({
       title: "",
       language: "Hindi",
-      typingMode: "both_hindi",
+      typingMode: "unicode_hindi",
       category: "General Dictation",
       seriesId: "",
       examType: "SSC Steno",
@@ -103,7 +103,7 @@ export default function AdminStenoPassagesPage() {
     setFormData({
       title: p.title || "",
       language: p.language || "Hindi",
-      typingMode: p.typingMode || (p.language === "English" ? "english" : "both_hindi"),
+      typingMode: p.typingMode || (p.language === "English" ? "english" : "unicode_hindi"),
       category: p.category || "General Dictation",
       seriesId: p.seriesId?._id || p.seriesId || "",
       examType: p.examType || "SSC Steno",
@@ -122,6 +122,7 @@ export default function AdminStenoPassagesPage() {
     });
     setIsDialogOpen(true);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,11 +189,10 @@ export default function AdminStenoPassagesPage() {
   const filteredPassages = passages.filter((p) => {
     // Mode filter
     if (filterMode === "unicode_hindi") {
-      if (p.language !== "Hindi" && p.typingMode !== "unicode_hindi" && p.typingMode !== "both_hindi") return false;
+      if (p.language !== "Hindi" && p.typingMode !== "unicode_hindi") return false;
       if (p.typingMode === "krutidev_010") return false;
     } else if (filterMode === "krutidev_010") {
-      if (p.language !== "Hindi" && p.typingMode !== "krutidev_010" && p.typingMode !== "both_hindi") return false;
-      if (p.typingMode === "unicode_hindi") return false;
+      if (p.typingMode !== "krutidev_010") return false;
     } else if (filterMode === "english") {
       if (p.language !== "English" && p.typingMode !== "english") return false;
     }
@@ -211,6 +211,7 @@ export default function AdminStenoPassagesPage() {
 
     return true;
   });
+
 
   return (
     <div className="bg-[#f8fafc] p-4 sm:p-6 min-h-screen space-y-6">
@@ -390,12 +391,12 @@ export default function AdminStenoPassagesPage() {
                     }}
                     className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                   >
-                    <option value="both_hindi">Both Hindi Modes (Mangal & Kruti Dev)</option>
-                    <option value="unicode_hindi">Unicode Hindi / Mangal Only</option>
-                    <option value="krutidev_010">Kruti Dev 010 (Legacy Hindi) Only</option>
+                    <option value="unicode_hindi">Unicode Hindi / Mangal Font</option>
+                    <option value="krutidev_010">Kruti Dev 010 / Legacy Hindi Font</option>
                     <option value="english">English</option>
                   </select>
                 </div>
+
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Category</label>

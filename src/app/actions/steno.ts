@@ -37,15 +37,10 @@ export async function getStenoPassagesAction(query?: any) {
       if (query.typingMode === "unicode_hindi") {
         filter.$or = [
           { typingMode: "unicode_hindi" },
-          { typingMode: "both_hindi" },
           { typingMode: { $exists: false }, language: "Hindi" },
         ];
       } else if (query.typingMode === "krutidev_010") {
-        filter.$or = [
-          { typingMode: "krutidev_010" },
-          { typingMode: "both_hindi" },
-          { typingMode: { $exists: false }, language: "Hindi" },
-        ];
+        filter.typingMode = "krutidev_010";
       } else if (query.typingMode === "english") {
         filter.$or = [
           { typingMode: "english" },
@@ -53,6 +48,7 @@ export async function getStenoPassagesAction(query?: any) {
         ];
       }
     }
+
 
 
     const passages = await StenoPassage.find(filter)

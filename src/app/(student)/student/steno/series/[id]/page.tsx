@@ -85,11 +85,10 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
   const filteredTests = allPassages.filter((t) => {
     // Mode match
     if (selectedMode === "unicode_hindi") {
-      if (t.language !== "Hindi" && t.typingMode !== "unicode_hindi" && t.typingMode !== "both_hindi") return false;
+      if (t.language !== "Hindi" && t.typingMode !== "unicode_hindi") return false;
       if (t.typingMode === "krutidev_010") return false;
     } else if (selectedMode === "krutidev_010") {
-      if (t.language !== "Hindi" && t.typingMode !== "krutidev_010" && t.typingMode !== "both_hindi") return false;
-      if (t.typingMode === "unicode_hindi") return false;
+      if (t.typingMode !== "krutidev_010") return false;
     } else if (selectedMode === "english") {
       if (t.language !== "English" && t.typingMode !== "english") return false;
     }
@@ -99,6 +98,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     }
     return true;
   });
+
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-1 sm:p-2">
