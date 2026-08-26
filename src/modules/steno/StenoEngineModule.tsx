@@ -184,63 +184,29 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
   // Countdown timer effect
   useEffect(() => {
-    if (!transcriptionUnlocked || isPaused || isFinished) return;
+    if (isPaused || isFinished) return;
     const timer = setInterval(() => {
-      setRemainingTimeSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+      setRemainingTimeSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmitTranscription();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [transcriptionUnlocked, isPaused, isFinished]);
-
-  const togglePlayMedia = () => {
-    if (!mediaRef.current) return;
-    if (isPlaying) {
-      mediaRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      mediaRef.current.play();
-      setIsPlaying(true);
-      setTranscriptionUnlocked(true);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (mediaRef.current) {
-      setCurrentTime(mediaRef.current.currentTime);
-      setDuration(mediaRef.current.duration || 0);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    setCurrentTime(time);
-    if (mediaRef.current) {
-      mediaRef.current.currentTime = time;
-    }
-  };
-
-  const handleSpeedChange = (wpmSpeed: number) => {
-    const baseTarget = passage.targetWpm || 80;
-    const rate = Math.min(2.0, Math.max(0.5, wpmSpeed / baseTarget));
-    setAudioSpeed(rate);
-    if (mediaRef.current) {
-      mediaRef.current.playbackRate = rate;
-    }
-  };
-
-  const sessionStartTimeRef = useRef<number>(Date.now());
+  }, [isPaused, isFinished]);
 
   const handleSubmitTranscription = () => {
     if (!userTranscription.trim()) {
       toast.error("Please type your transcription before submitting!");
       return;
     }
-    if (mediaRef.current) {
-      mediaRef.current.pause();
-    }
-    setIsPlaying(false);
     finishStenoSession();
 
-    const elapsedSeconds = Math.max(1, Math.round((Date.now() - sessionStartTimeRef.current) / 1000));
+    const totalAllocatedSeconds = (initialDurationMinutes || 35) * 60;
+    const elapsedSeconds = Math.max(1, totalAllocatedSeconds - remainingTimeSeconds);
     const timeMin = Math.max(0.1, elapsedSeconds / 60);
     const evalData = evaluateStenoTranscriptionDetailed(userTranscription, passage.transcriptText, timeMin, presetRules);
     const res = {
@@ -249,6 +215,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
       userTranscription,
     };
     setEvaluation(evalData);
+
 
     if (isFullscreen && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});

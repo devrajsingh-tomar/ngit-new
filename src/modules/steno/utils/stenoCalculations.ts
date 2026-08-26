@@ -95,6 +95,26 @@ export const isHindiPunctuationDifference = (word1: string, word2: string): bool
   return clean1 === clean2 && clean1.length > 0;
 };
 
+function getWordSimilarityScore(orig: string, typed: string): number {
+  if (!orig || !typed) return -1;
+  if (orig === typed) return 3;
+  if (isHindiPunctuationDifference(orig, typed)) return 2;
+  if (isHindiMatraDifference(orig, typed)) return 2;
+
+  const longer = orig.length > typed.length ? orig : typed;
+  const shorter = orig.length > typed.length ? typed : orig;
+  if (longer.length === 0) return 3;
+
+  let commonChars = 0;
+  for (const c of shorter) {
+    if (longer.includes(c)) commonChars++;
+  }
+  const ratio = commonChars / longer.length;
+  if (ratio >= 0.5) return 1;
+
+  return -1;
+}
+
 export const evaluateStenoTranscriptionDetailed = (
   typedText: string,
   originalText: string,
@@ -125,56 +145,76 @@ export const evaluateStenoTranscriptionDetailed = (
 
   const wordBreakdown: DetailedStenoEvaluationResult["wordBreakdown"] = [];
 
-  let passageIdx = 0;
-  typedWords.forEach((typedWord) => {
-    if (passageIdx < originalWords.length) {
-      const origWord = originalWords[passageIdx];
+  // Needleman-Wunsch Sequence Alignment
+  const n = originalWords.length;
+  const m = typedWords.length;
+  const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
 
-      if (typedWord === origWord) {
+  for (let i = 0; i <= n; i++) dp[i][0] = -i;
+  for (let j = 0; j <= m; j++) dp[0][j] = -j;
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const sim = getWordSimilarityScore(originalWords[i - 1], typedWords[j - 1]);
+      const match = dp[i - 1][j - 1] + sim;
+      const deleteOrig = dp[i - 1][j] - 1;
+      const insertTyped = dp[i][j - 1] - 1;
+      dp[i][j] = Math.max(match, deleteOrig, insertTyped);
+    }
+  }
+
+  // Backtrack
+  let i = n;
+  let j = m;
+  const alignment: { orig: string | null; typed: string | null }[] = [];
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0) {
+      const sim = getWordSimilarityScore(originalWords[i - 1], typedWords[j - 1]);
+      if (dp[i][j] === dp[i - 1][j - 1] + sim && sim > 0) {
+        alignment.unshift({ orig: originalWords[i - 1], typed: typedWords[j - 1] });
+        i--;
+        j--;
+        continue;
+      }
+    }
+    if (j > 0 && (i === 0 || dp[i][j] === dp[i][j - 1] - 1)) {
+      alignment.unshift({ orig: null, typed: typedWords[j - 1] });
+      j--;
+    } else if (i > 0) {
+      alignment.unshift({ orig: originalWords[i - 1], typed: null });
+      i--;
+    } else {
+      break;
+    }
+  }
+
+  for (const pair of alignment) {
+    if (pair.orig !== null && pair.typed !== null) {
+      if (pair.orig === pair.typed) {
         correctWords++;
-        wordBreakdown.push({ original: origWord, typed: typedWord, type: "correct" });
-        passageIdx++;
-      } else if (isHindiPunctuationDifference(origWord, typedWord)) {
-        // Punctuation error
+        wordBreakdown.push({ original: pair.orig, typed: pair.typed, type: "correct" });
+      } else if (isHindiPunctuationDifference(pair.orig, pair.typed)) {
         punctuationErrors++;
-        wordBreakdown.push({ original: origWord, typed: typedWord, type: "punctuation" });
-        passageIdx++;
-      } else if (isHindiMatraDifference(origWord, typedWord)) {
-        // Hindi Matra error
+        wordBreakdown.push({ original: pair.orig, typed: pair.typed, type: "punctuation" });
+      } else if (isHindiMatraDifference(pair.orig, pair.typed)) {
         matraErrors++;
         wrongWords++;
-        wordBreakdown.push({ original: origWord, typed: typedWord, type: "matra" });
-        passageIdx++;
-      } else if (
-        passageIdx + 1 < originalWords.length &&
-        typedWord.toLowerCase() === originalWords[passageIdx + 1].toLowerCase()
-      ) {
-        // Skipped word in original text
-        skippedWords++;
-        wordBreakdown.push({ original: origWord, typed: "[SKIPPED]", type: "skipped" });
-        wordBreakdown.push({ original: originalWords[passageIdx + 1], typed: typedWord, type: "correct" });
-        correctWords++;
-        passageIdx += 2;
+        wordBreakdown.push({ original: pair.orig, typed: pair.typed, type: "matra" });
       } else {
-        // Full spelling error
         spellingErrors++;
         wrongWords++;
-        wordBreakdown.push({ original: origWord, typed: typedWord, type: "spelling" });
-        passageIdx++;
+        wordBreakdown.push({ original: pair.orig, typed: pair.typed, type: "spelling" });
       }
-    } else {
-      // Extra typed words
+    } else if (pair.orig !== null && pair.typed === null) {
+      skippedWords++;
+      wordBreakdown.push({ original: pair.orig, typed: "[SKIPPED]", type: "skipped" });
+    } else if (pair.orig === null && pair.typed !== null) {
       addedWords++;
-      wordBreakdown.push({ original: "[ADDED]", typed: typedWord, type: "added" });
+      wordBreakdown.push({ original: "[ADDED]", typed: pair.typed, type: "added" });
     }
-  });
-
-  // Remaining un-typed words are skipped
-  while (passageIdx < originalWords.length) {
-    skippedWords++;
-    wordBreakdown.push({ original: originalWords[passageIdx], typed: "[SKIPPED]", type: "skipped" });
-    passageIdx++;
   }
+
 
   // Total error weight calculation based on preset rules
   const totalErrors =

@@ -46,13 +46,14 @@ export async function GET(
     }
 
     const docElement = React.createElement(StenoResultPdfDocument, { result: JSON.parse(JSON.stringify(resultDoc)) });
-    const pdfStream = await pdf(docElement as any).toBuffer();
+    const pdfBuffer = await pdf(docElement as any).toBuffer();
 
     const studentNameSanitized = ((resultDoc.userId as any)?.name || "Student").replace(/[^a-zA-Z0-9]/g, "_");
     const testTitleSanitized = (resultDoc.passageTitle || "Test").replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `NGIT_Steno_Result_${testTitleSanitized}_${studentNameSanitized}.pdf`;
 
-    return new NextResponse(pdfStream as any, {
+    return new Response(pdfBuffer, {
+      status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
@@ -61,6 +62,7 @@ export async function GET(
     });
   } catch (error: any) {
     console.error("Steno PDF Generation Error:", error);
-    return NextResponse.json({ error: "Failed to generate Steno PDF report" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to generate Steno PDF report" }, { status: 500 });
   }
+
 }

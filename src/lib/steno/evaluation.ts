@@ -103,9 +103,36 @@ export function cleanOriginalPassageText(text: string): string {
     .replace(/[|]/g, "।")
     .replace(/\s+\d{2,4}\b/g, " ")
     .replace(/[\(\[\{]\s*\d+\s*[\)\]\}]/g, " ")
+    .replace(/[\u0958]/g, "क")
+    .replace(/[\u0959]/g, "ख")
+    .replace(/[\u095A]/g, "ग")
+    .replace(/[\u095B]/g, "ज")
+    .replace(/[\u095C]/g, "ड")
+    .replace(/[\u095D]/g, "ढ")
+    .replace(/[\u095E]/g, "फ")
+    .replace(/[\u095F]/g, "य")
     .trim();
 }
 
+function getWordSimilarityScore(orig: string, typed: string): number {
+  if (!orig || !typed) return -1;
+  if (orig === typed) return 3;
+  if (isPunctuationError(orig, typed)) return 2;
+  if (isMatraError(orig, typed)) return 2;
+
+  const longer = orig.length > typed.length ? orig : typed;
+  const shorter = orig.length > typed.length ? typed : orig;
+  if (longer.length === 0) return 3;
+
+  let commonChars = 0;
+  for (const c of shorter) {
+    if (longer.includes(c)) commonChars++;
+  }
+  const ratio = commonChars / longer.length;
+  if (ratio >= 0.5) return 1;
+
+  return -1;
+}
 
 export function evaluateStenoTranscription(
   originalText: string,
@@ -117,8 +144,9 @@ export function evaluateStenoTranscription(
   const activeRules: ExamRules = { ...DEFAULT_EXAM_RULES, ...rules };
 
   const cleanedOrig = cleanOriginalPassageText(originalText);
+  const cleanedTyped = cleanOriginalPassageText(typedText || "");
   const origWords = cleanedOrig.split(/\s+/).filter(Boolean);
-  const typedWords = (typedText || "").trim().split(/\s+/).filter(Boolean);
+  const typedWords = cleanedTyped.split(/\s+/).filter(Boolean);
 
   const originalWordCount = origWords.length;
   const typedWordCount = typedWords.length;
@@ -133,18 +161,21 @@ export function evaluateStenoTranscription(
   let punctuationCount = 0;
   let totalPenalty = 0;
 
-  // LCS Dynamic Programming Matrix to find optimal sequence alignment
+  // Needleman-Wunsch Alignment for Word Sequences
   const n = origWords.length;
   const m = typedWords.length;
   const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
 
+  for (let i = 0; i <= n; i++) dp[i][0] = -i;
+  for (let j = 0; j <= m; j++) dp[0][j] = -j;
+
   for (let i = 1; i <= n; i++) {
     for (let j = 1; j <= m; j++) {
-      if (origWords[i - 1] === typedWords[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-      }
+      const sim = getWordSimilarityScore(origWords[i - 1], typedWords[j - 1]);
+      const match = dp[i - 1][j - 1] + sim;
+      const deleteOrig = dp[i - 1][j] - 1;
+      const insertTyped = dp[i][j - 1] - 1;
+      dp[i][j] = Math.max(match, deleteOrig, insertTyped);
     }
   }
 
@@ -154,16 +185,23 @@ export function evaluateStenoTranscription(
   const alignment: { orig: string | null; typed: string | null }[] = [];
 
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && origWords[i - 1] === typedWords[j - 1]) {
-      alignment.unshift({ orig: origWords[i - 1], typed: typedWords[j - 1] });
-      i--;
-      j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+    if (i > 0 && j > 0) {
+      const sim = getWordSimilarityScore(origWords[i - 1], typedWords[j - 1]);
+      if (dp[i][j] === dp[i - 1][j - 1] + sim && sim > 0) {
+        alignment.unshift({ orig: origWords[i - 1], typed: typedWords[j - 1] });
+        i--;
+        j--;
+        continue;
+      }
+    }
+    if (j > 0 && (i === 0 || dp[i][j] === dp[i][j - 1] - 1)) {
       alignment.unshift({ orig: null, typed: typedWords[j - 1] });
       j--;
-    } else {
+    } else if (i > 0) {
       alignment.unshift({ orig: origWords[i - 1], typed: null });
       i--;
+    } else {
+      break;
     }
   }
 
@@ -258,6 +296,7 @@ export function evaluateStenoTranscription(
         type: "missing",
         category: "Missing",
       });
+
 
       errorLog.push({
         index: errorIndex++,
