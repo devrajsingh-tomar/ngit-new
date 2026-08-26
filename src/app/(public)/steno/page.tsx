@@ -92,55 +92,40 @@ export default function StenoMainLandingPage() {
         </div>
 
         {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
-              <Headphones className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-black text-slate-900">Audio Dictation Player</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Native HTML5 audio player supporting 40 WPM to 120 WPM playback speed adjustments with speed fluctuation simulation.
-            </p>
-            <Link
-              href={isLoggedIn ? "/student/steno/dictation" : "/login?callbackUrl=/student/steno/dictation"}
-              className="inline-flex items-center text-xs font-bold text-indigo-600 hover:gap-2 transition-all"
-            >
-              {isLoggedIn ? "Open Dictation Player" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
-          </Card>
-
-          <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6 sm:p-8 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
               <Layers className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-slate-900">Series & Passages CMS</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Curated Legal, Editorial, PYQ, and Essay passage collections categorized for targeted speed enhancement.
+            <h3 className="text-xl font-black text-slate-900">Steno Batches & Series Collections</h3>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+              Curated Legal, Editorial, PYQ, and Speed Building passage collections categorized for targeted speed enhancement.
             </p>
             <Link
               href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
               className="inline-flex items-center text-xs font-bold text-emerald-600 hover:gap-2 transition-all"
             >
-              {isLoggedIn ? "Browse Series Collections" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
+              {isLoggedIn ? "Browse Steno Batches & Series" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Card>
 
-          <Card className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
+          <Card className="p-6 sm:p-8 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
               <Award className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-slate-900">Official Exam Presets</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              SSC Steno Grade C & D, Allahabad High Court, UPSSSC, and HSSC pattern mock exams with strict marking rules.
+            <h3 className="text-xl font-black text-slate-900">Official Exam Presets & Evaluation</h3>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+              SSC Steno Grade C & D, Allahabad High Court, UPSSSC, and HSSC pattern shorthand exams with automated mistake calculations.
             </p>
             <Link
-              href={isLoggedIn ? "/student/steno/mock-tests" : "/login?callbackUrl=/student/steno/mock-tests"}
+              href={isLoggedIn ? "/student/steno/dashboard" : "/login?callbackUrl=/student/steno/dashboard"}
               className="inline-flex items-center text-xs font-bold text-amber-600 hover:gap-2 transition-all"
             >
-              {isLoggedIn ? "Attempt Mock Tests" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
+              {isLoggedIn ? "Open Student Dashboard" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Card>
         </div>
+
 
         {/* Informational Exam Standards & Font Support Banner */}
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
