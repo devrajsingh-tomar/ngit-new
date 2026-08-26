@@ -54,32 +54,13 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
   const handleDownloadPdf = async () => {
     try {
       setDownloading(true);
-      toast.loading("Generating Steno Result PDF...", { id: "pdf-download" });
+      toast.loading("Generating High-Resolution Steno Result PDF...", { id: "pdf-download" });
 
-      const response = await fetch(`/api/steno/result/${result._id}/pdf`, {
-        credentials: "include",
+      await generateStenoResultImagePdf({
+        elementId: "steno-result-printable-area",
+        candidateName: result.userId?.name || "Student",
+        testTitle: result.passageTitle || "Steno_Result",
       });
-
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => null);
-        throw new Error(errJson?.error || "Unable to generate result PDF. Please try again.");
-      }
-
-
-      const blob = await response.blob();
-      if (blob.type !== "application/pdf" && !blob.type.includes("pdf")) {
-        throw new Error("Server did not return a valid PDF report.");
-      }
-
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `NGIT_Steno_Result_${(result.passageTitle || "Test").replace(/\s+/g, "_")}.pdf`;
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
 
       toast.success("Result PDF downloaded successfully!", { id: "pdf-download" });
     } catch (err: any) {
@@ -91,7 +72,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
   };
 
   return (
-    <div className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+    <div id="steno-result-printable-area" className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500 bg-[#f8fafc]">
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
