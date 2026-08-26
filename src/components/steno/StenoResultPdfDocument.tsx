@@ -1,24 +1,26 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import path from "path";
+import fs from "fs";
 
-// Register Noto Sans Devanagari TrueType font via Google Fonts CDN for fast reliable rendering
+// Register Noto Sans Devanagari from local disk for 100% reliable offline server rendering
 try {
-  Font.register({
-    family: "NotoSansDevanagari",
-    fonts: [
-      {
-        src: "https://fonts.gstatic.com/s/notosansdevanagari/v27/5aUu9_a8oxmIfJNZ5lu-AZ886521xXFl.ttf",
-        fontWeight: "normal",
-      },
-      {
-        src: "https://fonts.gstatic.com/s/notosansdevanagari/v27/5aUv9_a8oxmIfJNZ5lu-AZ88651-yX1FvG4.ttf",
-        fontWeight: "bold",
-      },
-    ],
-  });
+  const regularPath = path.join(process.cwd(), "public", "fonts", "NotoSansDevanagari-Regular.ttf");
+  const boldPath = path.join(process.cwd(), "public", "fonts", "NotoSansDevanagari-Bold.ttf");
+
+  if (fs.existsSync(regularPath) && fs.existsSync(boldPath)) {
+    Font.register({
+      family: "NotoSansDevanagari",
+      fonts: [
+        { src: regularPath, fontWeight: "normal" },
+        { src: boldPath, fontWeight: "bold" },
+      ],
+    });
+  }
 } catch (e) {
-  console.warn("PDF Font registration note:", e);
+  console.warn("Local PDF font registration note:", e);
 }
+
 
 const styles = StyleSheet.create({
 
