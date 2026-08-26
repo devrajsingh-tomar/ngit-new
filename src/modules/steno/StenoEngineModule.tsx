@@ -159,13 +159,10 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
 
   // Available speeds from passage config or defaults
-  const availableSpeeds = passage.availableSpeeds || [40, 50, 60, 70, 80, 90, 100, 110, 120];
-
-  useEffect(() => {
-    if (initialFont) setFontFamily(initialFont);
-  }, [initialFont]);
+  const availableSpeeds = passage?.availableSpeeds || [40, 50, 60, 70, 80, 90, 100, 110, 120];
 
   // Handle Fullscreen toggle
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       if (containerRef.current?.requestFullscreen) {
@@ -214,15 +211,15 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     finishStenoSession();
 
     const totalAllocatedSeconds = (initialDurationMinutes || 35) * 60;
-    const elapsedSeconds = Math.max(1, totalAllocatedSeconds - remainingTimeSeconds);
-    const timeMin = Math.max(0.1, elapsedSeconds / 60);
-    const evalData = evaluateStenoTranscriptionDetailed(userTranscription, passage.transcriptText, timeMin, presetRules);
+    const originalText = passage?.transcriptText || (passage as any)?.text || "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ।";
+    const evalData = evaluateStenoTranscriptionDetailed(userTranscription, originalText, timeMin, presetRules);
     const res = {
       ...evalData,
       timeSpentSeconds: elapsedSeconds,
       userTranscription,
     };
     setEvaluation(evalData);
+
 
 
     if (isFullscreen && document.exitFullscreen) {
