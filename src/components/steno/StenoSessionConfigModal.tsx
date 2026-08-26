@@ -30,6 +30,8 @@ interface StenoSessionConfigModalProps {
   onClose: () => void;
   onSave: (config: StenoSessionConfig) => void;
   totalWords?: number;
+  typingMode?: string;
+  defaultExam?: string;
 }
 
 export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = ({
@@ -37,13 +39,21 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   onClose,
   onSave,
   totalWords = 391,
+  typingMode,
+  defaultExam,
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
-  const [selectedExam, setSelectedExam] = useState("Allahabad High Court Steno");
-  const [selectedMode, setSelectedMode] = useState<string>("unicode_hindi");
+  const [selectedExam, setSelectedExam] = useState(defaultExam || "Allahabad High Court Steno");
+  const [selectedMode, setSelectedMode] = useState<string>(typingMode || "unicode_hindi");
+
+  React.useEffect(() => {
+    if (typingMode) setSelectedMode(typingMode);
+    if (defaultExam) setSelectedExam(defaultExam);
+  }, [typingMode, defaultExam]);
 
   // Manual configuration state
   const [backspaceStatus, setBackspaceStatus] = useState<"Enabled" | "Disabled">("Enabled");
+
 
   const [spellingMistake, setSpellingMistake] = useState<"Full" | "Half" | "Ignore">("Half");
   const [capitalizationMistake, setCapitalizationMistake] = useState<"Full" | "Half" | "Ignore">("Half");

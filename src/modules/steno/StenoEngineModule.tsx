@@ -130,15 +130,14 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [remainingTimeSeconds, setRemainingTimeSeconds] = useState((initialDurationMinutes || 35) * 60);
 
-  useEffect(() => {
-    if (initialDurationMinutes) {
-      setRemainingTimeSeconds(initialDurationMinutes * 60);
-    }
-  }, [initialDurationMinutes]);
-
+  // Memoized typed word count
+  const typedWordsCount = React.useMemo(() => {
+    return (userTranscription || "").trim() ? (userTranscription || "").trim().split(/\s+/).filter(Boolean).length : 0;
+  }, [userTranscription]);
 
   // Helper to insert Alt-Code or character directly into textarea
   const handleInsertAltChar = (char: string) => {
+
     if (!textareaRef.current) {
       setUserTranscription(userTranscription + char);
       return;
