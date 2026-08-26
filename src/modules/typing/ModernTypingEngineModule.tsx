@@ -6,13 +6,14 @@ import { useTimer } from './hooks/useTimer';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { mapKeyToHindi, transformKrutiDevInput, KRUTI_DEV_ALT_CODES } from './utils/hindiMapping';
+import { mapKeyToHindi, mapEventToKrutiDev, transformKrutiDevInput, KRUTI_DEV_ALT_CODES } from './utils/hindiMapping';
 import { mapEventToInscript } from './utils/InscriptEngine';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
 import { Keyboard } from 'lucide-react';
 import { normalizeChar } from './utils/calculations';
+
 
 
 interface ModernTypingEngineModuleProps {
@@ -399,26 +400,27 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     const isKruti = (settings.layout || '').toLowerCase().includes('kruti') || 
                     (settings.layout || '').toLowerCase().includes('remington') || 
                     settings.language === 'Krutidev Hindi';
-    if (isKruti && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && e.key !== ' ') {
+    if (isKruti && !e.ctrlKey && !e.altKey && !e.metaKey && e.key !== ' ') {
         const start = e.currentTarget.selectionStart || 0;
         const end = e.currentTarget.selectionEnd || 0;
         const before = typedText.substring(0, start);
         const after = typedText.substring(end);
-        const { replacement, deleteCount } = transformKrutiDevInput(before, e.key);
-        if (replacement) {
+        const res = mapEventToKrutiDev(e, before);
+        if (res && res.replacement) {
             e.preventDefault();
-            const cleanBefore = deleteCount > 0 ? before.slice(0, -deleteCount) : before;
-            const newVal = cleanBefore + replacement + after;
+            const cleanBefore = res.deleteCount > 0 ? before.slice(0, -res.deleteCount) : before;
+            const newVal = cleanBefore + res.replacement + after;
             setTypedText(newVal);
             setTimeout(() => {
                 if (inputRef.current) {
-                    const newPos = cleanBefore.length + replacement.length;
+                    const newPos = cleanBefore.length + res.replacement.length;
                     inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
                 }
             }, 0);
             return;
         }
     }
+
 
 
     if (e.key === 'Backspace') {

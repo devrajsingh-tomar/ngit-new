@@ -1,12 +1,15 @@
 export {
   KRUTI_DEV_010_MAP,
+  KRUTI_DEV_CODE_MAP,
   REMINGTON_MAP,
   INSCRIPT_MAP,
   KRUTI_DEV_ALT_CODES,
   mapKeystrokeToHindi,
+  mapEventToKrutiDev,
   transformKrutiDevInput,
   handleHindiTextareaKeyDown,
 } from "@/modules/steno/utils/hindiKeystrokeMap";
+
 
 import {
   KRUTI_DEV_010_MAP,

@@ -86,6 +86,8 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   // Full Screen Exam Mode State
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showAltModal, setShowAltModal] = useState(false);
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+
 
   // Editor Appearance Controls
   const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Kruti Dev 010");
@@ -419,13 +421,28 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               </div>
             )}
 
+            {/* Caps Lock Alert Banner */}
+            {isCapsLockOn && (
+              <div className="bg-amber-50 text-amber-900 border border-amber-200 rounded-xl px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">
+                ⚠️ <span>Caps Lock is ON — Kruti Dev layout uses <strong>Shift</strong> for half-letters (ज्ञ, क्, थ्). Caps Lock does not alter key mappings.</span>
+              </div>
+            )}
+
             {/* Main Textarea with Eye-Care Background Tint & Scalable Font Size */}
             <textarea
               ref={textareaRef}
               value={userTranscription}
               onChange={(e) => setUserTranscription(e.target.value)}
               onKeyDown={(e) => {
+                if (e.getModifierState) {
+                  setIsCapsLockOn(e.getModifierState("CapsLock"));
+                }
                 handleHindiTextareaKeyDown(e, fontFamily, userTranscription, setUserTranscription);
+              }}
+              onKeyUp={(e) => {
+                if (e.getModifierState) {
+                  setIsCapsLockOn(e.getModifierState("CapsLock"));
+                }
               }}
               placeholder="Start typing your transcribed shorthand matter here..."
               rows={isFullscreen ? 18 : 14}
@@ -437,6 +454,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
               className="w-full p-5 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium text-slate-900 leading-relaxed resize-y transition-all shadow-inner"
             />
           </div>
+
 
           {/* Bottom Status & Submit Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
