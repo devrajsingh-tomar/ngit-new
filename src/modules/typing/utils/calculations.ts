@@ -26,8 +26,17 @@ export const normalizeChar = (char: string): string => {
     .replace(/[\u2018\u2019\u201B\u2032\u2035]/g, "'")
     .replace(/[\u201C\u201D\u201F\u2033\u2036]/g, '"')
     .replace(/[\uFF0C]/g, ",")
-    .replace(/[\u00A0]/g, " ");
+    .replace(/[\u00A0\u200B\uFEFF]/g, " ")
+    .replace(/[|]/g, "।")
+    .replace(/[\u0958]/g, "क")
+    .replace(/[\u0959]/g, "ख")
+    .replace(/[\u095A]/g, "ग")
+    .replace(/[\u095B]/g, "ज")
+    .replace(/[\u095C]/g, "ड")
+    .replace(/[\u095D]/g, "ढ")
+    .replace(/[\u095E]/g, "फ");
 };
+
 
 /**
  * Calculates typing metrics based on the provided input and original passage

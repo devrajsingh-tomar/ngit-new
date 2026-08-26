@@ -47,7 +47,7 @@ export const SettingsManager: React.FC = () => {
         </div>
 
         {/* Keyboard Layout (For Hindi) */}
-        {settings.language === 'Hindi' && (
+        {(settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi') && (
           <div className="space-y-2">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Keyboard Layout</label>
             <select 
@@ -56,10 +56,13 @@ export const SettingsManager: React.FC = () => {
               onChange={(e) => handleUpdate('layout', e.target.value)}
               className="w-full p-3 bg-slate-50 border-transparent rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
             >
+              <option value="Kruti Dev 010">Kruti Dev 010</option>
+              <option value="Remington GAIL">Remington GAIL</option>
               <option value="Inscript">Mangal Inscript</option>
             </select>
           </div>
         )}
+
 
         {/* Highlight Mode */}
         <div className="space-y-2">

@@ -98,11 +98,14 @@ export function cleanOriginalPassageText(text: string): string {
   return text
     .replace(/[\u2018\u2019\u201B\u2032\u2035]/g, "'")
     .replace(/[\u201C\u201D\u201F\u2033\u2036]/g, '"')
-    .replace(/[\u00A0]/g, " ")
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/[\u00A0\u200B\uFEFF]/g, " ")
+    .replace(/[|]/g, "।")
     .replace(/\s+\d{2,4}\b/g, " ")
     .replace(/[\(\[\{]\s*\d+\s*[\)\]\}]/g, " ")
     .trim();
 }
+
 
 export function evaluateStenoTranscription(
   originalText: string,

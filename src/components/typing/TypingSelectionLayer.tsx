@@ -25,7 +25,8 @@ export default function TypingSelectionLayer() {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>('English');
-  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Inscript'>('English');
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Inscript' | 'Kruti Dev 010' | 'Remington GAIL'>('English');
+
   const [selectedDifficulty, setSelectedDifficulty] = useState<'Easy' | 'Medium' | 'Hard' | null>(null);
   const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[], current: any[], books: any[]}>({ words: [], essays: [], current: [], books: [] });
   const [loadingTaxonomy, setLoadingTaxonomy] = useState(true);
@@ -195,8 +196,7 @@ export default function TypingSelectionLayer() {
       <Card 
         onClick={() => {
             setSelectedLanguage('Hindi');
-            setSelectedLayout('Inscript');
-            setStep(selectedModule ? 2 : 1);
+            setStep(0.5);
         }}
         className="p-10 rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all text-center border-slate-100 group"
       >
@@ -204,22 +204,28 @@ export default function TypingSelectionLayer() {
            <span className="text-3xl font-black">HI</span>
         </div>
         <h3 className="text-3xl font-black text-slate-900 mb-2">Hindi</h3>
-        <p className="text-slate-400 font-bold">Mangal Inscript Support</p>
+        <p className="text-slate-400 font-bold">Mangal Inscript & Kruti Dev 010</p>
       </Card>
     </div>
   );
 
   const renderStep05 = () => (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-4xl mx-auto animate-in fade-in duration-300">
         <button 
           onClick={() => setStep(0)}
-          className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+          className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Language
         </button>
+        <div className="text-center space-y-2 mb-4">
+          <h3 className="text-3xl font-black text-slate-900">Select Hindi Keyboard Layout</h3>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Choose your preferred Hindi typing layout</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { id: 'Inscript', name: 'Mangal Inscript', sub: 'Official Government Standard' }
+            { id: 'Inscript', name: 'Mangal Inscript', sub: 'Official Govt Standard (Mangal Font)' },
+            { id: 'Kruti Dev 010', name: 'Kruti Dev 010', sub: 'Kruti Dev 010 Remington Layout' },
+            { id: 'Remington GAIL', name: 'Remington GAIL', sub: 'Remington GAIL Hindi Layout' }
           ].map((layout) => (
             <Card 
               key={layout.id}
@@ -238,6 +244,7 @@ export default function TypingSelectionLayer() {
         </div>
     </div>
   );
+
 
   const renderStep1 = () => (
     <div className="space-y-8">

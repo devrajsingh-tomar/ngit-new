@@ -6,12 +6,13 @@ import { useTimer } from './hooks/useTimer';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { mapKeyToHindi } from './utils/hindiMapping';
+import { mapKeyToHindi, transformKrutiDevInput, KRUTI_DEV_ALT_CODES } from './utils/hindiMapping';
 import { mapEventToInscript } from './utils/InscriptEngine';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
 import { normalizeChar } from './utils/calculations';
+
 
 interface ClassicTypingEngineModuleProps {
   exam?: any;
@@ -387,12 +388,12 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     }
 
     // 1. Physical Inscript Mapping (Government Exam Standard)
-    if (settings.layout === 'Inscript' && settings.language === 'Hindi') {
+    if (settings.layout === 'Inscript' && (settings.language === 'Hindi' || settings.language === 'Unicode Hindi')) {
         const mappedChar = mapEventToInscript(e);
         if (mappedChar) {
             e.preventDefault();
-            const start = e.currentTarget.selectionStart;
-            const end = e.currentTarget.selectionEnd;
+            const start = e.currentTarget.selectionStart || 0;
+            const end = e.currentTarget.selectionEnd || 0;
             const val = typedText;
             const newVal = val.substring(0, start) + mappedChar + val.substring(end);
             
@@ -407,6 +408,32 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             return;
         }
     }
+
+    // 2. Kruti Dev 010 / Remington GAIL Layout Mapping
+    const isKruti = (settings.layout || '').toLowerCase().includes('kruti') || 
+                    (settings.layout || '').toLowerCase().includes('remington') || 
+                    settings.language === 'Krutidev Hindi';
+    if (isKruti && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && e.key !== ' ') {
+        const start = e.currentTarget.selectionStart || 0;
+        const end = e.currentTarget.selectionEnd || 0;
+        const before = typedText.substring(0, start);
+        const after = typedText.substring(end);
+        const { replacement, deleteCount } = transformKrutiDevInput(before, e.key);
+        if (replacement) {
+            e.preventDefault();
+            const cleanBefore = deleteCount > 0 ? before.slice(0, -deleteCount) : before;
+            const newVal = cleanBefore + replacement + after;
+            setTypedText(newVal);
+            setTimeout(() => {
+                if (inputRef.current) {
+                    const newPos = cleanBefore.length + replacement.length;
+                    inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+                }
+            }, 0);
+            return;
+        }
+    }
+
 
     if (e.key === 'Backspace') {
       if (settings.backspaceMode === 'disabled') {

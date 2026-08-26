@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useStenoStore } from "@/store/useStenoStore";
 import { evaluateStenoTranscriptionDetailed, DetailedStenoEvaluationResult } from "./utils/stenoCalculations";
-import { handleHindiTextareaKeyDown } from "./utils/hindiKeystrokeMap";
+import { handleHindiTextareaKeyDown, KRUTI_DEV_ALT_CODES } from "./utils/hindiKeystrokeMap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -29,6 +29,8 @@ import {
   Minimize2,
   ShieldCheck,
   Lock,
+  Keyboard,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -64,6 +66,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { data: session } = useSession();
   const {
     userTranscription,
@@ -82,6 +85,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
   // Full Screen Exam Mode State
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showAltModal, setShowAltModal] = useState(false);
 
   // Editor Appearance Controls
   const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Kruti Dev 010");
@@ -95,6 +99,27 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   // Timer & Pause State
   const [isPaused, setIsPaused] = useState(false);
   const [remainingTimeSeconds, setRemainingTimeSeconds] = useState(50 * 60);
+
+  // Helper to insert Alt-Code or character directly into textarea
+  const handleInsertAltChar = (char: string) => {
+    if (!textareaRef.current) {
+      setUserTranscription(userTranscription + char);
+      return;
+    }
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const before = userTranscription.substring(0, start);
+    const after = userTranscription.substring(end);
+    const newText = before + char + after;
+    setUserTranscription(newText);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + char.length, start + char.length);
+    }, 0);
+    toast.success(`Inserted "${char}"`);
+  };
+
 
   // Available speeds from passage config or defaults
   const availableSpeeds = passage.availableSpeeds || [40, 50, 60, 70, 80, 90, 100, 110, 120];
@@ -355,17 +380,48 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
         {/* Left Column: Official Answer Sheet Textarea Canvas */}
         <Card className="lg:col-span-3 p-6 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-md space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div className="flex flex-wrap justify-between items-center border-b border-slate-100 pb-3 gap-2">
               <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-indigo-600" /> Type your transcription below:
               </span>
-              <span className="text-xs font-bold text-slate-500">
-                Typed Words: <strong className="text-indigo-600 font-black">{userTranscription.trim().split(/\s+/).filter(Boolean).length}</strong>
-              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAltModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-[11px] font-black transition-all shadow-xs cursor-pointer"
+                  title="View Kruti Dev Alt-Codes Reference Chart"
+                >
+                  <Keyboard className="w-3.5 h-3.5 text-amber-600" /> Kruti Dev Alt Codes (Alt+0161..)
+                </button>
+                <span className="text-xs font-bold text-slate-500">
+                  Typed Words: <strong className="text-indigo-600 font-black">{userTranscription.trim().split(/\s+/).filter(Boolean).length}</strong>
+                </span>
+              </div>
             </div>
+
+            {/* Quick Alt-Codes Insertion Strip for Kruti Dev */}
+            {(fontFamily.toLowerCase().includes("kruti") || fontFamily.toLowerCase().includes("remington")) && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
+                  Quick Insert:
+                </span>
+                {Object.entries(KRUTI_DEV_ALT_CODES).map(([code, item]) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleInsertAltChar(item.char)}
+                    className="px-2 py-1 bg-slate-100 hover:bg-indigo-600 hover:text-white border border-slate-200 rounded-lg text-xs font-black text-slate-800 transition-all shrink-0 cursor-pointer shadow-2xs"
+                    title={`Alt+${code} • ${item.desc} (${item.example})`}
+                  >
+                    {item.char} <span className="text-[9px] opacity-60 font-mono">({code})</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Main Textarea with Eye-Care Background Tint & Scalable Font Size */}
             <textarea
+              ref={textareaRef}
               value={userTranscription}
               onChange={(e) => setUserTranscription(e.target.value)}
               onKeyDown={(e) => {
@@ -522,6 +578,70 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Kruti Dev 010 Alt-Codes Reference Modal */}
+      {showAltModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                  <Keyboard className="w-5 h-5 text-indigo-600" /> Kruti Dev 010 Alt-Codes Reference
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Click any code to insert the character directly into your transcription.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAltModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-y-auto p-2 my-4">
+              {Object.entries(KRUTI_DEV_ALT_CODES).map(([code, item]) => (
+                <div
+                  key={code}
+                  onClick={() => {
+                    handleInsertAltChar(item.char);
+                    setShowAltModal(false);
+                  }}
+                  className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/60 transition-all cursor-pointer group bg-slate-50/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-10 h-10 rounded-xl bg-white border border-slate-200 group-hover:border-indigo-400 group-hover:bg-indigo-600 group-hover:text-white font-black text-lg flex items-center justify-center text-slate-900 shadow-2xs transition-colors">
+                      {item.char}
+                    </span>
+                    <div>
+                      <div className="text-xs font-black text-slate-800 group-hover:text-indigo-900">
+                        {item.desc}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-medium">
+                        उदा: {item.example}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="font-mono text-xs font-black px-2 py-1 rounded-lg bg-indigo-100/80 text-indigo-800 border border-indigo-200/60 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    Alt+{code}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex justify-end">
+              <Button
+                onClick={() => setShowAltModal(false)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs px-6"
+              >
+                Close Reference
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

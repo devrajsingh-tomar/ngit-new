@@ -1,188 +1,305 @@
-// Keystroke Layout Transformers for Remington GAIL, Kruti Dev, and Inscript Devanagari
+/**
+ * Comprehensive Keystroke Layout Transformers for Kruti Dev 010, Remington GAIL, and Inscript Devanagari
+ * Standard Government Typing & Steno Examination Grade Mapping
+ */
 
-// 1. Remington GAIL & Kruti Dev 010 Layout Map
-export const REMINGTON_MAP: Record<string, string> = {
-  // Lowercase keys
-  a: "ं",
-  b: "इ",
-  c: "ब",
-  d: "्",
-  e: "म",
-  f: "ि",
-  g: "ु",
-  h: "प",
-  i: "प",
-  j: "र",
-  k: "ा",
-  l: "स",
-  m: "ड",
-  n: "द",
-  o: "व",
-  p: "च",
-  q: "ु",
-  r: "त",
-  s: "े",
-  t: "ज",
-  u: "न",
-  v: "अ",
-  w: "ू",
-  x: "ग",
-  y: "ल",
-  z: "्र",
-  ";": "य",
-  "'": "श",
-  ",": "ए",
-  ".": "ण",
-  "/": "य",
-  "[": "ख",
-  "]": "द",
-  "\\": "्",
-  "`": "्",
-  "-": "ः",
-  "=": "ृ",
-
-  // Uppercase keys
-  A: "़",
-  B: "ठ",
-  C: "ब्",
-  D: "अ",
-  E: "म्",
-  F: "इ",
-  G: "उ",
-  H: "फ",
-  I: "प्",
-  J: "श्र",
-  K: "ज्ञा",
-  L: "ष",
-  M: "ढ",
-  N: "छ",
-  O: "व्",
-  P: "च्",
+// 1. Complete Kruti Dev 010 Direct Key Mapping (Normal + Shift)
+export const KRUTI_DEV_010_MAP: Record<string, string> = {
+  // Top Row (Q to \)
+  q: "कु",
   Q: "फ",
+  w: "कू",
+  W: "कॅ",
+  e: "म",
+  E: "म्",
+  r: "त",
   R: "त्",
-  S: "ै",
+  t: "ज",
   T: "ज्",
-  U: "न्",
-  V: "ट",
-  W: "ऑ",
-  X: "ग्",
+  y: "ल",
   Y: "ल्",
-  Z: "र्",
-  ":": "छ",
-  '"': "ठ",
-  "<": "ढ",
-  ">": "झ",
-  "?": "घ",
-  "{": "ख्",
-  "}": "ध",
-  "|": "।",
-  "~": "्",
-  "_": "ऋ",
-  "+": "ऋ",
+  u: "न",
+  U: "न्",
+  i: "प",
+  I: "प्",
+  o: "व",
+  O: "व्",
+  p: "च",
+  P: "च्",
+  "[": "ख्",
+  "{": "क्ष्",
+  "]": ",",
+  "}": "द्व",
+  "\\": "?",
+  "|": "द्य",
 
-  // Digits & Symbols
-  "1": "१",
-  "2": "२",
-  "3": "३",
-  "4": "४",
-  "5": "५",
-  "6": "६",
-  "7": "७",
-  "8": "८",
-  "9": "९",
-  "0": "०",
+  // Special Keys & Numbers
+  "`": "कृ",
+  "~": "क्",
+  "=": "त्र",
+  "+": "क़",
+  "-": ".",
+  "_": "ऋ",
+  "0": "0",
+  ")": "द्ध",
+  "1": "1",
   "!": "!",
-  "@": "ज्ञ",
-  "#": "त्र",
-  "$": "क्ष",
+  "2": "2",
+  "@": "@",
+  "3": "3",
+  "#": "#",
+  "4": "4",
+  "$": "$",
+  "5": "5",
   "%": "%",
+  "6": "6",
   "^": "‘",
+  "7": "7",
   "&": "’",
+  "8": "8",
   "*": "₹",
+  "9": "9",
   "(": "(",
-  ")": ")",
+
+  // Home Row (A to ')
+  a: "कं",
+  A: "।",
+  s: "के",
+  S: "कै",
+  d: "क",
+  D: "क्",
+  f: "कि",
+  F: "थ्",
+  g: "ह",
+  G: "ळ",
+  h: "की",
+  H: "भ्",
+  j: "र",
+  J: "श्र",
+  k: "का",
+  K: "ज्ञ",
+  l: "स",
+  L: "स्",
+  ";": "य",
+  ":": "रू",
+  "'": "श्",
+  '"': "ष्",
+
+  // Bottom Row (Z to /)
+  z: "क्र",
+  Z: "र्",
+  x: "ग",
+  X: "ग्",
+  c: "ब",
+  C: "ब्",
+  v: "अ",
+  V: "ट",
+  b: "इ",
+  B: "ठ",
+  n: "द",
+  N: "छ",
+  m: "उ",
+  M: "ड",
+  ",": "ए",
+  "<": "ढ",
+  ".": "ण्",
+  ">": "झ",
+  "/": "ध्",
+  "?": "घ्",
 };
+
+// Aliased to REMINGTON_MAP for backward compatibility
+export const REMINGTON_MAP: Record<string, string> = { ...KRUTI_DEV_010_MAP };
 
 // 2. Inscript Devanagari Layout Map
 export const INSCRIPT_MAP: Record<string, string> = {
-  a: "ो",
-  b: "व",
-  c: "म",
-  d: "्",
-  e: "ा",
-  f: "ि",
-  g: "ु",
-  h: "प",
-  i: "ग",
-  j: "र",
-  k: "ा",
-  l: "स",
-  m: "स",
-  n: "ल",
-  o: "द",
-  p: "ज",
-  q: "ौ",
-  r: "ी",
-  s: "े",
-  t: "ू",
-  u: "ह",
-  v: "न",
-  w: "ै",
-  x: "ं",
-  y: "ब",
-  z: "े",
-  ";": "य",
-  "'": "श्",
-  ",": ",",
-  ".": "।",
-  "/": "य",
-  "[": "ड",
-  "]": "़",
+  // Row 1 (Numbers & Symbols)
+  "`": "ो",
+  "~": "ओ",
+  "1": "1",
+  "!": "ऍ",
+  "2": "2",
+  "@": "ॅ",
+  "3": "3",
+  "#": "्र",
+  "4": "4",
+  "$": "र्",
+  "5": "5",
+  "%": "ज्ञ",
+  "6": "6",
+  "^": "त्र",
+  "7": "7",
+  "&": "क्ष",
+  "8": "8",
+  "*": "श्र",
+  "9": "9",
+  "(": "(",
+  "0": "0",
+  ")": ")",
+  "-": "-",
+  "_": "ः",
+  "=": "ृ",
+  "+": "ऋ",
 
-  A: "ौ",
-  B: "व",
-  C: "ण",
-  D: "अ",
-  E: "आ",
-  F: "इ",
-  G: "उ",
-  H: "फ",
-  I: "घ",
-  J: "्र",
-  K: "आ",
-  L: "ष",
-  M: "श",
-  N: "ळ",
-  O: "ध",
-  P: "झ",
+  // Row 2
+  q: "ौ",
   Q: "औ",
-  R: "ई",
-  S: "ऐ",
-  T: "ऊ",
-  U: "ङ",
-  V: "न",
+  w: "ै",
   W: "ऐ",
-  X: "ँ",
+  e: "ा",
+  E: "आ",
+  r: "ी",
+  R: "ई",
+  t: "ू",
+  T: "ऊ",
+  y: "ब",
   Y: "भ",
-  Z: "ऐ",
-  ":": "छ",
-  '"': "ठ",
-  "<": "ष",
-  ">": "।",
-  "?": "घ",
+  u: "ह",
+  U: "ङ",
+  i: "ग",
+  I: "घ",
+  o: "द",
+  O: "ध",
+  p: "ज",
+  P: "झ",
+  "[": "ड",
   "{": "ढ",
+  "]": "़",
   "}": "ञ",
+  "\\": "ॉ",
+  "|": "ऑ",
+
+  // Row 3
+  a: "ो",
+  A: "ओ",
+  s: "े",
+  S: "ए",
+  d: "्",
+  D: "अ",
+  f: "ि",
+  F: "इ",
+  g: "ु",
+  G: "उ",
+  h: "प",
+  H: "फ",
+  j: "र",
+  J: "ऱ",
+  k: "क",
+  K: "ख",
+  l: "त",
+  L: "थ",
+  ";": "च",
+  ":": "छ",
+  "'": "ट",
+  '"': "ठ",
+
+  // Row 4
+  z: "ॄ",
+  Z: "ऋ",
+  x: "ं",
+  X: "ँ",
+  c: "म",
+  C: "ण",
+  v: "न",
+  V: "ऩ",
+  b: "व",
+  B: "ळ",
+  n: "ल",
+  N: "ळ",
+  m: "स",
+  M: "श",
+  ",": ",",
+  "<": "ष",
+  ".": "।",
+  ">": "।",
+  "/": "य",
+  "?": "य",
+};
+
+// 3. Kruti Dev Alt-Codes Reference Chart
+export interface KrutiDevAltCode {
+  code: string;
+  char: string;
+  desc: string;
+  example: string;
+}
+
+export const KRUTI_DEV_ALT_CODES: Record<string, KrutiDevAltCode> = {
+  "0161": { code: "0161", char: "कँ", desc: "चंद्रबिंदु", example: "हूँ, नहीं" },
+  "0165": { code: "0165", char: "ञ", desc: "ञ अक्षर", example: "पञ्चायत" },
+  "0179": { code: "0179", char: "ङ", desc: "ङ अक्षर", example: "शङ्का, गङ्गा" },
+  "0196": { code: "0196", char: "घ", desc: "घ अक्षर", example: "घर, बाघ" },
+  "0197": { code: "0197", char: "ऊ", desc: "बड़ा ऊ (दीर्घ स्वर)", example: "ऊपर" },
+  "0210": { code: "0210", char: "भ", desc: "भ अक्षर", example: "भारत, सभा" },
+  "0216": { code: "0216", char: "क्र", desc: "क्र संयुक्त अक्षर", example: "क्रम, चक्र" },
+  "0221": { code: "0221", char: "फ्र", desc: "फ्र संयुक्त अक्षर", example: "फ्रांस" },
+  "0224": { code: "0224", char: "ह्न", desc: "ह्न संयुक्त अक्षर", example: "चिह्न" },
+  "0225": { code: "0225", char: "ह्य", desc: "ह्य संयुक्त अक्षर", example: "सह्य" },
+  "0227": { code: "0227", char: "ह्म", desc: "ह्म संयुक्त अक्षर", example: "ब्रह्म" },
+  "0228": { code: "0228", char: "क्त", desc: "क्त संयुक्त अक्षर", example: "तथ्य, संपर्क, रक्त" },
+  "0229": { code: "0229", char: "॰", desc: "लाघव चिह्न (संक्षेप)", example: "डॉ॰" },
+  "0230": { code: "0230", char: "द्र", desc: "द्र संयुक्त अक्षर", example: "द्रव्य, समुद्र" },
+  "0231": { code: "0231", char: "प्र", desc: "प्र संयुक्त अक्षर", example: "प्रश्न, प्रधान" },
+  "0233": { code: "0233", char: "न्न", desc: "न्न संयुक्त अक्षर", example: "अन्न, सन्नाटा" },
+  "0243": { code: "0243", char: "स्त्र", desc: "स्त्र संयुक्त अक्षर", example: "शास्त्र, अस्त्र" },
+  "0244": { code: "0244", char: "क्क", desc: "क्क संयुक्त अक्षर", example: "मक्का, धक्का" },
+  "0217": { code: "0217", char: "ज्ञ", desc: "ज्ञ संयुक्त अक्षर", example: "ज्ञान, विज्ञान" },
+  "0226": { code: "0226", char: "श्र", desc: "श्र संयुक्त अक्षर", example: "श्री, श्रम" },
+};
+
+// Map of half consonants in Kruti Dev to their base consonants
+const HALF_TO_FULL_CONSONANT: Record<string, string> = {
+  "क्": "क",
+  "ख्": "ख",
+  "ग्": "ग",
+  "घ्": "घ",
+  "च्": "च",
+  "छ्": "छ",
+  "ज्": "ज",
+  "झ्": "झ",
+  "त्": "त",
+  "थ्": "थ",
+  "द्": "द",
+  "ध्": "ध",
+  "न्": "न",
+  "प्": "प",
+  "फ्": "फ",
+  "ब्": "ब",
+  "भ्": "भ",
+  "म्": "म",
+  "य्": "य",
+  "र्": "र",
+  "ल्": "ल",
+  "व्": "व",
+  "श्": "श",
+  "ष्": "ष",
+  "स्": "स",
+  "ह्": "ह",
+  "क्ष्": "क्ष",
+  "त्र्": "त्र",
+  "ज्ञ्": "ज्ञ",
+  "श्र्": "श्र",
+  "ण्": "ण",
+};
+
+// Check if character is a full Devanagari consonant
+const isDevanagariConsonant = (char: string): boolean => {
+  return /^[क-हक़-य़]$/.test(char);
 };
 
 /**
- * Transforms a single key char into Hindi Devanagari character based on selected layout font
+ * Transforms a key char into Hindi Devanagari character based on selected layout font
  */
 export function mapKeystrokeToHindi(keyChar: string, fontFamily: string): string | null {
   const normFont = (fontFamily || "").toLowerCase();
 
   // If font is English (Arial, Times, Helvetica, Standard), do not convert
-  if (normFont.includes("arial") || normFont.includes("english") || normFont.includes("sans-serif")) {
-    return null; // Return null so original key is preserved
+  if (
+    normFont.includes("arial") ||
+    normFont.includes("english") ||
+    (normFont.includes("sans-serif") && !normFont.includes("mangal") && !normFont.includes("kruti"))
+  ) {
+    return null;
   }
 
   // If layout is Inscript
@@ -190,12 +307,91 @@ export function mapKeystrokeToHindi(keyChar: string, fontFamily: string): string
     return INSCRIPT_MAP[keyChar] || null;
   }
 
-  // Default to Remington GAIL / Kruti Dev 010 Layout (Used by Mangal Remington GAIL & Kruti Dev 010)
-  return REMINGTON_MAP[keyChar] || null;
+  // Default to Kruti Dev 010 Layout
+  return KRUTI_DEV_010_MAP[keyChar] || null;
 }
 
 /**
- * Handles input transformation on textarea event for Hindi Typing
+ * Smart Kruti Dev 010 text transformation engine
+ * Handles post-base matras (e.g. D(क) + F(ि) = कि), half-consonant completion (D(क्) + K(ा) = क),
+ * rakar (z -> ्र), and reph (Shift+Z -> र्)
+ */
+export function transformKrutiDevInput(
+  beforeCursor: string,
+  keyChar: string
+): { replacement: string; deleteCount: number } {
+  const lastChar = beforeCursor.slice(-1);
+
+  // 1. Half-consonant completion rule: Half-consonant + K(ा) -> Full consonant (e.g. क् + k = क)
+  if (keyChar === "k") {
+    if (beforeCursor.endsWith("्") && beforeCursor.length >= 2) {
+      const baseHalf = beforeCursor.slice(-2); // e.g. "क्"
+      const full = HALF_TO_FULL_CONSONANT[baseHalf];
+      if (full) {
+        return { replacement: full, deleteCount: 2 };
+      }
+    }
+  }
+
+  // 2. Post-base Matra Composition after Devanagari Consonant
+  if (isDevanagariConsonant(lastChar)) {
+    // F key (ि) - typed AFTER consonant: क + f -> कि
+    if (keyChar === "f") {
+      return { replacement: "ि", deleteCount: 0 };
+    }
+    // K key (ा): क + k -> का
+    if (keyChar === "k") {
+      return { replacement: "ा", deleteCount: 0 };
+    }
+    // H key (ी): क + h -> की
+    if (keyChar === "h") {
+      return { replacement: "ी", deleteCount: 0 };
+    }
+    // Q key (ु): क + q -> कु
+    if (keyChar === "q") {
+      return { replacement: "ु", deleteCount: 0 };
+    }
+    // W key (ू): क + w -> कू
+    if (keyChar === "w") {
+      return { replacement: "ू", deleteCount: 0 };
+    }
+    // Shift+W (कॅ / ॅ): क + W -> कॅ
+    if (keyChar === "W") {
+      return { replacement: "ॅ", deleteCount: 0 };
+    }
+    // S key (े): क + s -> के
+    if (keyChar === "s") {
+      return { replacement: "े", deleteCount: 0 };
+    }
+    // Shift+S key (ै): क + S -> कै
+    if (keyChar === "S") {
+      return { replacement: "ै", deleteCount: 0 };
+    }
+    // A key (ं): क + a -> कं
+    if (keyChar === "a") {
+      return { replacement: "ं", deleteCount: 0 };
+    }
+    // ` key (ृ): क + ` -> कृ
+    if (keyChar === "`") {
+      return { replacement: "ृ", deleteCount: 0 };
+    }
+    // Z key (्र - rakar): क + z -> क्र
+    if (keyChar === "z") {
+      return { replacement: "्र", deleteCount: 0 };
+    }
+  }
+
+  // 3. Fallback to direct mapping
+  const mapped = KRUTI_DEV_010_MAP[keyChar];
+  if (mapped) {
+    return { replacement: mapped, deleteCount: 0 };
+  }
+
+  return { replacement: keyChar, deleteCount: 0 };
+}
+
+/**
+ * Handles input transformation on textarea event for Hindi & Kruti Dev Typing
  */
 export function handleHindiTextareaKeyDown(
   e: React.KeyboardEvent<HTMLTextAreaElement>,
@@ -203,10 +399,20 @@ export function handleHindiTextareaKeyDown(
   currentText: string,
   setText: (newVal: string) => void
 ): boolean {
-  // If control/alt/cmd key is held, or special navigation key (Backspace, Enter, Tab, Arrow keys), allow default browser behavior
+  const normFont = (fontFamily || "").toLowerCase();
+
+  // If font is English, do not intercept
+  if (
+    normFont.includes("arial") ||
+    normFont.includes("english") ||
+    (normFont.includes("sans-serif") && !normFont.includes("mangal") && !normFont.includes("kruti"))
+  ) {
+    return false;
+  }
+
+  // Allow standard control/navigation keys
   if (
     e.ctrlKey ||
-    e.altKey ||
     e.metaKey ||
     e.key === "Backspace" ||
     e.key === "Enter" ||
@@ -218,34 +424,50 @@ export function handleHindiTextareaKeyDown(
     return false;
   }
 
-  // If typing spacebar, space is space
+  // Handle Alt-Codes on KeyUp or Alt-combination
+  if (e.altKey) {
+    return false;
+  }
+
+  // If typing spacebar, pass through naturally
   if (e.key === " ") {
     return false;
   }
 
-  // Convert key char if mapped
+  // Process standard character keys
   if (e.key.length === 1) {
-    const hindiChar = mapKeystrokeToHindi(e.key, fontFamily);
-    if (hindiChar) {
-      e.preventDefault();
+    const textarea = e.currentTarget;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const before = currentText.substring(0, start);
+    const after = currentText.substring(end);
 
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart || 0;
-      const end = textarea.selectionEnd || 0;
-
-      const before = currentText.substring(0, start);
-      const after = currentText.substring(end);
-      const newText = before + hindiChar + after;
-
-      setText(newText);
-
-      // Restore cursor position right after inserted Hindi character
-      setTimeout(() => {
-        const newPos = start + hindiChar.length;
-        textarea.setSelectionRange(newPos, newPos);
-      }, 0);
-
-      return true;
+    if (normFont.includes("inscript")) {
+      const mappedChar = INSCRIPT_MAP[e.key];
+      if (mappedChar) {
+        e.preventDefault();
+        const newText = before + mappedChar + after;
+        setText(newText);
+        setTimeout(() => {
+          const newPos = start + mappedChar.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+        return true;
+      }
+    } else {
+      // Kruti Dev 010 / Remington GAIL layout
+      const { replacement, deleteCount } = transformKrutiDevInput(before, e.key);
+      if (replacement) {
+        e.preventDefault();
+        const cleanBefore = deleteCount > 0 ? before.slice(0, -deleteCount) : before;
+        const newText = cleanBefore + replacement + after;
+        setText(newText);
+        setTimeout(() => {
+          const newPos = cleanBefore.length + replacement.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+        return true;
+      }
     }
   }
 

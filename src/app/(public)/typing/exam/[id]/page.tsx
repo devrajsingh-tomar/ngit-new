@@ -27,9 +27,10 @@ export default function TypingExamPage() {
   const initialLayout = searchParams?.get("layout") || "English";
 
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>(initialLang as any);
-  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Inscript'>(
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Inscript' | 'Kruti Dev 010' | 'Remington GAIL'>(
     (initialLayout || (initialLang === 'Hindi' ? 'Inscript' : 'English')) as any
   );
+
 
   useEffect(() => {
     if (initialLang) setSelectedLanguage(initialLang as any);
@@ -282,18 +283,19 @@ export default function TypingExamPage() {
                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                         <h4 className="text-xl font-black mb-6 flex items-center gap-2">
                             <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">2</span>
-                            Select Keyboard
+                            Select Keyboard Layout
                         </h4>
                         <div className="grid grid-cols-1 gap-3">
                             {[
-                                { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard' },
-                                { id: 'Unicode', name: 'Unicode (Standard)', sub: 'Modern Typing' }
+                                { id: 'Inscript', name: 'Mangal Inscript', sub: 'Government Standard (Mangal Font)' },
+                                { id: 'Kruti Dev 010', name: 'Kruti Dev 010', sub: 'Kruti Dev 010 Remington Layout' },
+                                { id: 'Remington GAIL', name: 'Remington GAIL', sub: 'Remington GAIL Layout' }
                             ].map((lay) => (
                                 <button 
                                     key={lay.id}
                                     onClick={() => setSelectedLayout(lay.id as any)}
                                     className={cn(
-                                        "p-4 rounded-xl border-2 text-left transition-all flex justify-between items-center",
+                                        "p-4 rounded-xl border-2 text-left transition-all flex justify-between items-center cursor-pointer",
                                         selectedLayout === lay.id ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
                                     )}
                                 >
@@ -309,6 +311,7 @@ export default function TypingExamPage() {
                         </div>
                     </div>
                 )}
+
 
                 <div className="mt-auto pt-8 flex items-center gap-3 text-slate-400">
                     <Keyboard className="w-5 h-5" />

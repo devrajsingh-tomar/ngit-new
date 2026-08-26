@@ -61,7 +61,7 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
     const isDeletion = val.length < typedText.length;
 
     // 0. HINDI MAPPING LOGIC
-    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi';
+    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
     if (isHindi && !isDeletion && val.length > typedText.length) {
         const lastChar = val.slice(-1);
         if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
@@ -69,6 +69,7 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
             val = val.slice(0, -1) + mapped;
         }
     }
+
 
     if (!isActive && val.length > 0) {
       startTest(); // Auto-start on first key

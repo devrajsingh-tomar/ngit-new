@@ -1,26 +1,23 @@
-export const INSCRIPT_MAP: Record<string, string> = {
-    // Row 1 (Numbers & Symbols)
-    '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '0': '0',
-    '!': 'ऍ', '@': 'ॅ', '#': '्र', '$': 'र्', '%': 'ज्ञ', '^': 'त्र', '&': 'क्ष', '*': 'श्र', '(': '(', ')': ')',
-    '-': '-', '_': 'ः', '=': 'ृ', '+': 'ऋ',
-    
-    // Row 2
-    'q': 'ौ', 'w': 'ै', 'e': 'ा', 'r': 'ी', 't': 'ू', 'y': 'ब', 'u': 'ह', 'i': 'ग', 'o': 'द', 'p': 'ज', '[': 'ड', ']': '़', '\\': 'ॉ',
-    'Q': 'औ', 'W': 'ऐ', 'E': 'आ', 'R': 'ई', 'T': 'ऊ', 'Y': 'भ', 'U': 'ङ', 'I': 'घ', 'O': 'ध', 'P': 'झ', '{': 'ढ', '}': 'ञ', '|': 'ऑ',
-    
-    // Row 3
-    'a': 'ो', 's': 'े', 'd': '्', 'f': 'ि', 'g': 'ु', 'h': 'प', 'j': 'र', 'k': 'क', 'l': 'त', ';': 'च', "'": 'ट',
-    'A': 'ओ', 'S': 'ए', 'D': 'अ', 'F': 'इ', 'G': 'उ', 'H': 'फ', 'J': 'ऱ', 'K': 'ख', 'L': 'थ', ':': 'छ', '"': 'ठ',
-    
-    // Row 4
-    'z': 'ॄ', 'x': 'ं', 'c': 'म', 'v': 'न', 'b': 'व', 'n': 'ल', 'm': 'स', ',': ',', '.': '।', '/': 'य',
-    'Z': 'ऋ', 'X': 'ँ', 'C': 'ण', 'V': 'ऩ', 'B': 'ळ', 'N': 'ळ', 'M': 'श', '<': 'ष', '>': '।', '?': 'य',
+export {
+  KRUTI_DEV_010_MAP,
+  REMINGTON_MAP,
+  INSCRIPT_MAP,
+  KRUTI_DEV_ALT_CODES,
+  mapKeystrokeToHindi,
+  transformKrutiDevInput,
+  handleHindiTextareaKeyDown,
+} from "@/modules/steno/utils/hindiKeystrokeMap";
 
-    // Extra / Symbols
-    '`': 'ो', '~': 'ओ'
+import {
+  KRUTI_DEV_010_MAP,
+  INSCRIPT_MAP,
+} from "@/modules/steno/utils/hindiKeystrokeMap";
+
+export const mapKeyToHindi = (key: string, layout: string = "Inscript"): string => {
+  const normLayout = (layout || "").toLowerCase();
+  if (normLayout.includes("kruti") || normLayout.includes("remington")) {
+    return KRUTI_DEV_010_MAP[key] || key;
+  }
+  return INSCRIPT_MAP[key] || key;
 };
 
-export const mapKeyToHindi = (key: string, layout: string): string => {
-    // Standard Inscript mapping
-    return INSCRIPT_MAP[key] || key;
-};

@@ -11,9 +11,10 @@ interface TypingSettings {
   fontSize: number;
   passageHeight: number;
   showScrollbar: boolean;
-  layout: 'English' | 'Inscript';
+  layout: 'English' | 'Inscript' | 'Kruti Dev 010' | 'Remington GAIL' | string;
   sourcePosition: 'top' | 'left' | 'right' | 'bottom';
   examMode: string;
+
 }
 
 interface TypingState {
