@@ -56,29 +56,34 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
   };
 
   const handleComplete = async (evaluationResult: any) => {
-    toast.loading("Submitting evaluation attempt...");
-    const submitRes = await submitStenoResultAction({
-      passageId: passage?._id || resolvedParams.id,
-      typedTranscription: evaluationResult.userTranscription || "",
-      speedWpm: evaluationResult.netWpm,
-      accuracy: evaluationResult.accuracy,
-      fullErrors: evaluationResult.spellingErrors + evaluationResult.addedWords + evaluationResult.skippedWords,
-      halfErrors: evaluationResult.matraErrors + evaluationResult.punctuationErrors,
-      totalErrors: evaluationResult.totalErrors,
-      score: evaluationResult.finalScore,
-      status: evaluationResult.status,
-      timeSpentSeconds: evaluationResult.timeSpentSeconds || 60,
-    });
+    const toastId = toast.loading("Submitting evaluation attempt...");
+    try {
+      const submitRes = await submitStenoResultAction({
+        passageId: passage?._id || resolvedParams.id,
+        typedTranscription: evaluationResult.userTranscription || "",
+        speedWpm: evaluationResult.netWpm || 0,
+        accuracy: evaluationResult.accuracy || 0,
+        fullErrors: (evaluationResult.spellingErrors || 0) + (evaluationResult.addedWords || 0) + (evaluationResult.skippedWords || 0),
+        halfErrors: (evaluationResult.matraErrors || 0) + (evaluationResult.punctuationErrors || 0),
+        totalErrors: evaluationResult.totalErrors || 0,
+        score: evaluationResult.finalScore || 0,
+        status: evaluationResult.status || "Evaluated",
+        timeSpentSeconds: evaluationResult.timeSpentSeconds || 60,
+      });
 
-    if (submitRes.success && submitRes.resultId) {
-      toast.dismiss();
-      toast.success("Attempt saved successfully!");
-      router.push(`/student/steno/result/${submitRes.resultId}`);
-    } else {
-      toast.dismiss();
-      toast.error(submitRes.error || "Failed to submit attempt");
+      toast.dismiss(toastId);
+      if (submitRes.success && submitRes.resultId) {
+        toast.success("Attempt saved successfully!");
+        router.push(`/student/steno/result/${submitRes.resultId}`);
+      } else {
+        toast.error(submitRes.error || "Failed to submit attempt");
+      }
+    } catch (e: any) {
+      toast.dismiss(toastId);
+      toast.error(e.message || "Failed to submit attempt");
     }
   };
+
 
   if (loading) {
     return (

@@ -187,7 +187,22 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  // Countdown timer effect
+  const checkCapsLock = (e: any) => {
+    if (e.getModifierState) {
+      setIsCapsLockOn(e.getModifierState("CapsLock"));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    checkCapsLock(e);
+    if (e.key === "Backspace" && !backspaceAllowed) {
+      e.preventDefault();
+      toast.error("Backspace is disabled for this examination!", { id: "backspace-disabled" });
+      return;
+    }
+    handleHindiTextareaKeyDown(e, activeModeConfig.type, userTranscription, setUserTranscription);
+  };
+
   useEffect(() => {
     if (isPaused || isFinished) return;
     const timer = setInterval(() => {
@@ -211,6 +226,8 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     finishStenoSession();
 
     const totalAllocatedSeconds = (initialDurationMinutes || 35) * 60;
+    const elapsedSeconds = Math.max(1, totalAllocatedSeconds - remainingTimeSeconds);
+    const timeMin = Math.max(0.1, elapsedSeconds / 60);
     const originalText = passage?.transcriptText || (passage as any)?.text || "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ।";
     const evalData = evaluateStenoTranscriptionDetailed(userTranscription, originalText, timeMin, presetRules);
     const res = {
@@ -219,8 +236,6 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
       userTranscription,
     };
     setEvaluation(evalData);
-
-
 
     if (isFullscreen && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
@@ -241,16 +256,13 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   return (
     <div
       ref={containerRef}
-      onContextMenu={(e) => isFullscreen && e.preventDefault()}
       className={
         isFullscreen
           ? "fixed inset-0 z-[9999] bg-[#0b132b] text-slate-100 p-4 sm:p-6 overflow-y-auto space-y-4"
           : "max-w-7xl mx-auto p-2 sm:p-4 space-y-6"
       }
     >
-      {/* Official Government Examination Top Header Bar */}
       <div className="bg-slate-900 text-white border border-slate-800 p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Left: Exam Badge & Title */}
         <div className="flex items-center gap-3">
           <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-xs uppercase px-3.5 py-1 rounded-xl shadow-md flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5" /> STENO EXAM MODE
@@ -265,7 +277,6 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
           </div>
         </div>
 
-        {/* Center: Live Timer Countdown Badge & Controls */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5 bg-rose-950/80 border border-rose-500/40 px-4 py-2 rounded-2xl shadow-inner">
             <Clock className="w-4 h-4 text-rose-400 animate-pulse" />
@@ -282,7 +293,6 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
             {isPaused ? "Resume" : "Pause"}
           </Button>
 
-          {/* Full Screen Mode Toggle Button */}
           <Button
             onClick={toggleFullscreen}
             variant="outline"
@@ -293,7 +303,6 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
           </Button>
         </div>
 
-        {/* Right: Candidate Profile Details */}
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-md border border-white/10 overflow-hidden">
             {session?.user?.image ? (
@@ -311,10 +320,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
         </div>
       </div>
 
-      {/* Main Split Grid Exam Canvas */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-        {/* Left Column: Official Answer Sheet Textarea Canvas */}
         <Card className="lg:col-span-3 p-6 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-md space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex flex-wrap justify-between items-center border-b border-slate-100 pb-3 gap-2">
@@ -322,111 +328,68 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                 <Edit3 className="w-4 h-4 text-indigo-600" /> Type your transcription below:
               </span>
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAltModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-[11px] font-black transition-all shadow-xs cursor-pointer"
-                  title="View Kruti Dev Alt-Codes Reference Chart"
-                >
-                  <Keyboard className="w-3.5 h-3.5 text-amber-600" /> Kruti Dev Alt Codes (Alt+0161..)
-                </button>
                 <span className="text-xs font-bold text-slate-500">
-                  Typed Words: <strong className="text-indigo-600 font-black">{userTranscription.trim().split(/\s+/).filter(Boolean).length}</strong>
+                  Typed Words: <strong className="text-indigo-600 font-black">{typedWordsCount}</strong>
                 </span>
               </div>
             </div>
 
-            {/* Quick Alt-Codes Insertion Strip for Kruti Dev */}
-            {activeModeConfig.type === "krutidev_010" && (
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
-                  Quick Insert:
-                </span>
-                {Object.entries(KRUTI_DEV_ALT_CODES).map(([code, item]) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => handleInsertAltChar(item.char)}
-                    className="px-2 py-1 bg-slate-100 hover:bg-indigo-600 hover:text-white border border-slate-200 rounded-lg text-xs font-black text-slate-800 transition-all shrink-0 cursor-pointer shadow-2xs"
-                    title={`Alt+${code} • ${item.desc} (${item.example})`}
-                  >
-                    {item.char} <span className="text-[9px] opacity-60 font-mono">({code})</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Caps Lock Alert Banner for Kruti Dev */}
             {isCapsLockOn && activeModeConfig.type === "krutidev_010" && (
-              <div className="bg-amber-50 text-amber-900 border border-amber-200 rounded-xl px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">
-                ⚠️ <span>Caps Lock is ON — Kruti Dev layout uses <strong>Shift</strong> for half-letters (ज्ञ, क्, थ्). Caps Lock does not alter key mappings.</span>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-xs text-rose-800 font-bold animate-bounce">
+                <span className="w-2 h-2 rounded-full bg-rose-600" />
+                ⚠️ Warning: CAPS LOCK is ON! Kruti Dev typing gives wrong characters when Caps Lock is enabled. Please turn Caps Lock OFF.
               </div>
             )}
 
-            {/* Main Textarea with Eye-Care Background Tint & Scalable Font Size */}
-            <textarea
-              ref={textareaRef}
-              value={userTranscription}
-              onChange={(e) => setUserTranscription(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.getModifierState) {
-                  setIsCapsLockOn(e.getModifierState("CapsLock"));
-                }
-                if (e.key === "Backspace" && !backspaceAllowed) {
-                  e.preventDefault();
-                  toast.error("Backspace is disabled for this examination!", { id: "backspace-disabled" });
-                  return;
-                }
-                handleHindiTextareaKeyDown(e, activeModeConfig.type, userTranscription, setUserTranscription);
-              }}
-              onKeyUp={(e) => {
-                if (e.getModifierState) {
-                  setIsCapsLockOn(e.getModifierState("CapsLock"));
-                }
-              }}
-              placeholder="Start typing your transcribed shorthand matter here..."
-              rows={isFullscreen ? 18 : 14}
-              style={{
-                fontFamily:
-                  activeModeConfig.type === "krutidev_010"
-                    ? "'Kruti Dev 010', 'KrutiDev010', sans-serif"
-                    : activeModeConfig.type === "unicode_hindi"
-                    ? "'Mangal', 'Noto Sans Devanagari', sans-serif"
-                    : "inherit",
-                fontSize: `${fontSize}px`,
-                backgroundColor: eyeCareBg,
-              }}
-              className="w-full p-5 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium text-slate-900 leading-relaxed resize-y transition-all shadow-inner"
-            />
+            <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+              <textarea
+                ref={textareaRef}
+                value={userTranscription}
+                onChange={(e) => {
+                  setUserTranscription(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
+                onKeyUp={checkCapsLock}
+                onClick={checkCapsLock}
+                disabled={isPaused}
+                placeholder="Type your official steno transcription here..."
+                style={{
+                  fontFamily: activeModeConfig.fontFamily,
+                  fontSize: `${fontSize}px`,
+                  backgroundColor: eyeCareBg,
+                  lineHeight: "1.8",
+                }}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoComplete="off"
+                autoCorrect="off"
+                className="w-full h-[460px] p-6 focus:outline-none resize-none font-medium leading-relaxed transition-all disabled:opacity-50 disabled:cursor-not-allowed selection:bg-indigo-500 selection:text-white"
+              />
+            </div>
           </div>
 
-          {/* Bottom Status & Submit Toolbar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
-            <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-slate-200">
-              MODE: {activeModeConfig.label.toUpperCase()} | BACKSPACE: {backspaceAllowed ? "ENABLED" : "DISABLED"}
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-500 pt-2 border-t border-slate-100">
+            <span className="flex items-center gap-1.5 text-indigo-600">
+              <Type className="w-3.5 h-3.5" /> Engine Mode: {activeModeConfig.label} ({activeModeConfig.fontFamily})
             </span>
-
-            <Button
-              onClick={handleSubmitTranscription}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black h-11 px-8 text-xs rounded-2xl shadow-lg gap-2 w-full sm:w-auto"
-            >
-              <CheckCircle2 className="w-4 h-4" /> SUBMIT EXAM
-            </Button>
+            <span className="text-slate-400">
+              Session ID: #{passage._id?.substring(passage._id.length - 6).toUpperCase() || "STENO-LIVE"}
+            </span>
           </div>
         </Card>
 
-        {/* Right Column: Exam Settings & Action Panel */}
         <div className="space-y-4">
-          <Card className="p-5 rounded-3xl border-slate-200 bg-white text-slate-900 shadow-xs space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 border-b pb-2">
-              EXAM SETTINGS
-            </h3>
+          <Card className="p-5 rounded-3xl border-slate-200 bg-white shadow-md space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" /> Exam Settings
+              </h3>
+            </div>
 
-            {/* Settings Box */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs font-bold text-slate-700">
-              <div className="flex justify-between items-center gap-2">
-                <span className="text-slate-400 shrink-0">Layout preset:</span>
-                <span className="text-slate-900 font-black uppercase text-right truncate" title={presetName || "Manual Setup"}>
+            <div className="space-y-3 text-xs font-bold text-slate-600">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Layout preset:</span>
+                <span className="text-slate-900 font-extrabold truncate max-w-[120px]">
                   {presetName || "Manual Setup"}
                 </span>
               </div>
@@ -444,21 +407,11 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Typing Mode:</span>
-                <select
-                  value={currentModeType}
-                  onChange={(e) => setCurrentModeType(e.target.value as any)}
-                  className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-black text-slate-900 focus:ring-1 focus:ring-indigo-500"
-                >
-                  {STENO_TYPING_MODES.map((mode) => (
-                    <option key={mode.type} value={mode.type}>
-                      {mode.label}
-                    </option>
-                  ))}
-                </select>
+                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  {activeModeConfig.label}
+                </span>
               </div>
 
-
-              {/* Font Size Scaling Controls (A- 16px A+) */}
               <div className="space-y-1 pt-2 border-t border-slate-200">
                 <span className="text-[10px] text-slate-400 font-black uppercase">Font Size:</span>
                 <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
@@ -478,41 +431,19 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
                 </div>
               </div>
 
-              {/* Eye-Care Color Swatches */}
               <div className="space-y-1 pt-2 border-t border-slate-200">
                 <span className="text-[10px] text-slate-400 font-black uppercase">Eye-care Filter:</span>
                 <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => setEyeCareBg("#ffffff")}
-                    title="White Default"
-                    className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#ffffff" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-white`}
-                  />
-                  <button
-                    onClick={() => setEyeCareBg("#e8f5e9")}
-                    title="Soft Mint"
-                    className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#e8f5e9" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#e8f5e9]`}
-                  />
-                  <button
-                    onClick={() => setEyeCareBg("#e3f2fd")}
-                    title="Soft Blue"
-                    className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#e3f2fd" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#e3f2fd]`}
-                  />
-                  <button
-                    onClick={() => setEyeCareBg("#fff3e0")}
-                    title="Soft Peach"
-                    className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#fff3e0" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#fff3e0]`}
-                  />
-                  <button
-                    onClick={() => setEyeCareBg("#f5f5f1")}
-                    title="Sepia"
-                    className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#f5f5f1" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#f5f5f1]`}
-                  />
+                  <button onClick={() => setEyeCareBg("#ffffff")} title="White Default" className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#ffffff" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-white`} />
+                  <button onClick={() => setEyeCareBg("#e8f5e9")} title="Soft Mint" className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#e8f5e9" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#e8f5e9]`} />
+                  <button onClick={() => setEyeCareBg("#e3f2fd")} title="Soft Blue" className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#e3f2fd" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#e3f2fd]`} />
+                  <button onClick={() => setEyeCareBg("#fff3e0")} title="Soft Peach" className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#fff3e0" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#fff3e0]`} />
+                  <button onClick={() => setEyeCareBg("#f5f5f1")} title="Sepia" className={`w-6 h-6 rounded-lg border-2 ${eyeCareBg === "#f5f5f1" ? "border-indigo-600 ring-2 ring-indigo-200" : "border-slate-300"} bg-[#f5f5f1]`} />
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Action Control Buttons */}
           <div className="space-y-2.5">
             <Button
               onClick={handleSubmitTranscription}
@@ -549,69 +480,6 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Kruti Dev 010 Alt-Codes Reference Modal */}
-      {showAltModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                  <Keyboard className="w-5 h-5 text-indigo-600" /> Kruti Dev 010 Alt-Codes Reference
-                </h3>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Click any code to insert the character directly into your transcription.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowAltModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-y-auto p-2 my-4">
-              {Object.entries(KRUTI_DEV_ALT_CODES).map(([code, item]) => (
-                <div
-                  key={code}
-                  onClick={() => {
-                    handleInsertAltChar(item.char);
-                    setShowAltModal(false);
-                  }}
-                  className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/60 transition-all cursor-pointer group bg-slate-50/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-xl bg-white border border-slate-200 group-hover:border-indigo-400 group-hover:bg-indigo-600 group-hover:text-white font-black text-lg flex items-center justify-center text-slate-900 shadow-2xs transition-colors">
-                      {item.char}
-                    </span>
-                    <div>
-                      <div className="text-xs font-black text-slate-800 group-hover:text-indigo-900">
-                        {item.desc}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium">
-                        उदा: {item.example}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs font-black px-2 py-1 rounded-lg bg-indigo-100/80 text-indigo-800 border border-indigo-200/60 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    Alt+{code}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
-              <Button
-                onClick={() => setShowAltModal(false)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs px-6"
-              >
-                Close Reference
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
