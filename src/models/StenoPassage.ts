@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IStenoPassage extends Document {
   title: string;
   language: "Hindi" | "English";
+  typingMode?: "unicode_hindi" | "krutidev_010" | "english" | "both_hindi";
   category: string;
   seriesId?: mongoose.Types.ObjectId;
   examType?: string;
@@ -24,6 +25,11 @@ const StenoPassageSchema = new Schema<IStenoPassage>(
   {
     title: { type: String, required: true },
     language: { type: String, enum: ["Hindi", "English"], default: "Hindi" },
+    typingMode: {
+      type: String,
+      enum: ["unicode_hindi", "krutidev_010", "english", "both_hindi"],
+      default: "both_hindi",
+    },
     category: { type: String, default: "General Dictation" },
     seriesId: { type: Schema.Types.ObjectId, ref: "StenoSeries" },
     examType: { type: String, default: "SSC Steno" },

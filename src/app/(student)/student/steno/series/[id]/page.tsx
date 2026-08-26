@@ -13,6 +13,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
   const resolvedParams = use(params);
   const [series, setSeries] = useState<any>(null);
   const [passages, setPassages] = useState<any[]>([]);
+  const [selectedMode, setSelectedMode] = useState<"all" | "unicode_hindi" | "krutidev_010" | "english">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -81,9 +82,23 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     }
   }
 
-  const filteredTests = allPassages.filter((t) =>
-    (t.title || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTests = allPassages.filter((t) => {
+    // Mode match
+    if (selectedMode === "unicode_hindi") {
+      if (t.language !== "Hindi" && t.typingMode !== "unicode_hindi" && t.typingMode !== "both_hindi") return false;
+      if (t.typingMode === "krutidev_010") return false;
+    } else if (selectedMode === "krutidev_010") {
+      if (t.language !== "Hindi" && t.typingMode !== "krutidev_010" && t.typingMode !== "both_hindi") return false;
+      if (t.typingMode === "unicode_hindi") return false;
+    } else if (selectedMode === "english") {
+      if (t.language !== "English" && t.typingMode !== "english") return false;
+    }
+
+    if (searchQuery.trim()) {
+      return (t.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-1 sm:p-2">
@@ -127,18 +142,63 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
         </div>
       )}
 
-      {/* Search Bar (if tests exist) */}
-      {allPassages.length > 0 && (
-        <div className="relative max-w-xl mx-auto">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+      {/* Language / Typing Mode Selection Tabs */}
+      <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/60 overflow-x-auto w-full sm:w-auto">
+          <button
+            onClick={() => setSelectedMode("all")}
+            className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
+              selectedMode === "all"
+                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            🌐 All Dictations ({allPassages.length})
+          </button>
+          <button
+            onClick={() => setSelectedMode("unicode_hindi")}
+            className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
+              selectedMode === "unicode_hindi"
+                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            🇮🇳 Hindi - Mangal
+          </button>
+          <button
+            onClick={() => setSelectedMode("krutidev_010")}
+            className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
+              selectedMode === "krutidev_010"
+                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            ⌨️ Hindi - Kruti Dev 010
+          </button>
+          <button
+            onClick={() => setSelectedMode("english")}
+            className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
+              selectedMode === "english"
+                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            🔤 English
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full sm:w-64">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search dictation tests in this series..."
-            className="pl-11 rounded-2xl bg-white border-slate-200 text-xs font-semibold h-11 shadow-xs"
+            placeholder="Search dictations..."
+            className="pl-9 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold h-9 shadow-xs"
           />
         </div>
-      )}
+      </div>
+
 
       {/* Tests Grid */}
       {filteredTests.length === 0 ? (

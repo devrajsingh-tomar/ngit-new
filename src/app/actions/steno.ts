@@ -33,6 +33,28 @@ export async function getStenoPassagesAction(query?: any) {
     if (query?.targetWpm) filter.targetWpm = Number(query.targetWpm);
     if (query?.seriesId) filter.seriesId = query.seriesId;
 
+    if (query?.typingMode) {
+      if (query.typingMode === "unicode_hindi") {
+        filter.$or = [
+          { typingMode: "unicode_hindi" },
+          { typingMode: "both_hindi" },
+          { typingMode: { $exists: false }, language: "Hindi" },
+        ];
+      } else if (query.typingMode === "krutidev_010") {
+        filter.$or = [
+          { typingMode: "krutidev_010" },
+          { typingMode: "both_hindi" },
+          { typingMode: { $exists: false }, language: "Hindi" },
+        ];
+      } else if (query.typingMode === "english") {
+        filter.$or = [
+          { typingMode: "english" },
+          { language: "English" },
+        ];
+      }
+    }
+
+
     const passages = await StenoPassage.find(filter)
       .populate("seriesId")
       .sort({ sortOrder: 1, createdAt: -1 })

@@ -5,8 +5,10 @@ import StenoResult from "@/models/StenoResult";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import React from "react";
-import { pdf } from "@react-pdf/renderer";
 import { StenoResultPdfDocument } from "@/components/steno/StenoResultPdfDocument";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
@@ -45,14 +47,15 @@ export async function GET(
       );
     }
 
+    const { renderToBuffer } = await import("@react-pdf/renderer");
     const docElement = React.createElement(StenoResultPdfDocument, { result: JSON.parse(JSON.stringify(resultDoc)) });
-    const pdfBuffer = await pdf(docElement as any).toBuffer();
+    const pdfBuffer = await renderToBuffer(docElement as any);
 
     const studentNameSanitized = ((resultDoc.userId as any)?.name || "Student").replace(/[^a-zA-Z0-9]/g, "_");
     const testTitleSanitized = (resultDoc.passageTitle || "Test").replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `NGIT_Steno_Result_${testTitleSanitized}_${studentNameSanitized}.pdf`;
 
-    return new Response(pdfBuffer, {
+    return new Response(pdfBuffer as any, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

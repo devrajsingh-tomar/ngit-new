@@ -1,23 +1,27 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
 
-// Register Noto Sans Devanagari TrueType font for Devanagari Hindi text rendering in PDF
-Font.register({
-  family: "NotoSansDevanagari",
-  fonts: [
-    {
-      src: "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf",
-      fontWeight: "normal",
-    },
-    {
-      src: "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Bold.ttf",
-      fontWeight: "bold",
-    },
-  ],
-});
-
+// Register Noto Sans Devanagari TrueType font via Google Fonts CDN for fast reliable rendering
+try {
+  Font.register({
+    family: "NotoSansDevanagari",
+    fonts: [
+      {
+        src: "https://fonts.gstatic.com/s/notosansdevanagari/v27/5aUu9_a8oxmIfJNZ5lu-AZ886521xXFl.ttf",
+        fontWeight: "normal",
+      },
+      {
+        src: "https://fonts.gstatic.com/s/notosansdevanagari/v27/5aUv9_a8oxmIfJNZ5lu-AZ88651-yX1FvG4.ttf",
+        fontWeight: "bold",
+      },
+    ],
+  });
+} catch (e) {
+  console.warn("PDF Font registration note:", e);
+}
 
 const styles = StyleSheet.create({
+
   page: {
     padding: 30,
     backgroundColor: "#ffffff",
