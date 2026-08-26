@@ -1,6 +1,3 @@
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-
 export interface GenerateStenoResultPdfOptions {
   elementId?: string;
   element?: HTMLElement;
@@ -21,6 +18,11 @@ export async function generateStenoResultImagePdf({
     throw new Error("Result report printable area not found!");
   }
 
+  // Dynamic runtime imports
+  const html2canvasModule = await import("html2canvas");
+  const html2canvas = html2canvasModule.default || html2canvasModule;
+  const { jsPDF } = await import("jspdf");
+
   // 1. Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
   const canvas = await html2canvas(targetElement, {
     scale: 2,
@@ -33,6 +35,7 @@ export async function generateStenoResultImagePdf({
 
   // 2. Initialize A4 PDF (210mm x 297mm)
   const pdf = new jsPDF("p", "mm", "a4");
+
   const pdfWidth = 210;
   const pdfHeight = 297;
 
