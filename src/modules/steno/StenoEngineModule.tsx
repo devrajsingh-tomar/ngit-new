@@ -90,9 +90,16 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
 
   // Editor Appearance Controls
-  const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Kruti Dev 010");
+  const [fontFamily, setFontFamily] = useState(initialFont || settings.fontFamily || "Mangal");
   const [fontSize, setFontSize] = useState(16); // 14px to 24px
   const [eyeCareBg, setEyeCareBg] = useState("#ffffff"); // Swatches: White, Mint, Blue, Peach, Sepia
+
+  useEffect(() => {
+    if (initialFont) {
+      setFontFamily(initialFont);
+    }
+  }, [initialFont]);
+
 
   const [fluctuationEnabled, setFluctuationEnabled] = useState(false);
   const [transcriptionUnlocked, setTranscriptionUnlocked] = useState(false);

@@ -1,9 +1,7 @@
-/**
- * Comprehensive Keystroke Layout Transformers for Kruti Dev 010, Remington GAIL, and Inscript Devanagari
- * Standard Government Typing & Steno Examination Grade Mapping
- */
+import { mapEventToInscript } from "@/modules/typing/utils/InscriptEngine";
 
 // 1. Complete Kruti Dev 010 Direct Key Mapping (Normal + Shift)
+
 export const KRUTI_DEV_010_MAP: Record<string, string> = {
   // Top Row (Q to \)
   q: "कु",
@@ -365,12 +363,17 @@ export function mapKeystrokeToHindi(keyChar: string, fontFamily: string): string
     return null;
   }
 
-  if (normFont.includes("inscript")) {
+  if (normFont.includes("mangal") || normFont.includes("inscript") || normFont.includes("unicode")) {
     return INSCRIPT_MAP[keyChar] || null;
   }
 
-  return KRUTI_DEV_010_MAP[keyChar] || null;
+  if (normFont.includes("kruti") || normFont.includes("remington")) {
+    return KRUTI_DEV_010_MAP[keyChar] || null;
+  }
+
+  return null;
 }
+
 
 /**
  * Smart Kruti Dev 010 Event Transformer
@@ -577,8 +580,11 @@ export function handleHindiTextareaKeyDown(
   const before = currentText.substring(0, start);
   const after = currentText.substring(end);
 
-  if (normFont.includes("inscript")) {
-    const mappedChar = INSCRIPT_MAP[e.key];
+  const isKruti = normFont.includes("kruti") || normFont.includes("remington");
+  const isMangalInscript = normFont.includes("mangal") || normFont.includes("inscript") || normFont.includes("unicode") || normFont === "hindi";
+
+  if (isMangalInscript) {
+    const mappedChar = mapEventToInscript(e);
     if (mappedChar) {
       e.preventDefault();
       const newText = before + mappedChar + after;
@@ -589,7 +595,7 @@ export function handleHindiTextareaKeyDown(
       }, 0);
       return true;
     }
-  } else {
+  } else if (isKruti) {
     // Kruti Dev 010 / Remington GAIL layout
     const res = mapEventToKrutiDev(e, before);
     if (res && res.replacement) {
@@ -607,4 +613,5 @@ export function handleHindiTextareaKeyDown(
 
   return false;
 }
+
 
