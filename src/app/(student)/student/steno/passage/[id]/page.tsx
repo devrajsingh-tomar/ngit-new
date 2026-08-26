@@ -168,8 +168,9 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
           <li>3. यदि फिर भी समस्या बनी रहती है, तो इस नंबर पर संपर्क करें: <strong className="text-indigo-900 font-bold">+91 80049 58441</strong></li>
         </ol>
         <div className="pt-2 border-t border-indigo-100 text-[11px] font-bold text-slate-500">
-          सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v1.1.3 (जुलाई 18, 2026) — यदि यह न दिखे, तो <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।
+          सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v2.1.0 (26 अगस्त, 2026) — यदि यह न दिखे, तो <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।
         </div>
+
       </div>
 
       {/* Session Configuration Modal */}

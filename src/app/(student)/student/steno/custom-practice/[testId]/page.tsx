@@ -212,8 +212,9 @@ export default function StudentCustomPracticePreStartPage({
           <li>3. If the problem still persists, contact us at: <strong className="text-indigo-900 font-bold">+91 80049 58441</strong></li>
         </ol>
         <div className="pt-2 border-t border-indigo-100 text-[11px] font-bold text-slate-500">
-          Software Version (Latest): v1.1.3 (July 18, 2026) — If not visible, press <strong className="text-indigo-900">Ctrl + F5</strong> to refresh the page.
+          Software Version (Latest): v2.1.0 (August 26, 2026) — If not visible, press <strong className="text-indigo-900">Ctrl + F5</strong> to refresh the page.
         </div>
+
       </div>
 
       {/* Session Configuration Modal (Image 3 & Image 4) */}
