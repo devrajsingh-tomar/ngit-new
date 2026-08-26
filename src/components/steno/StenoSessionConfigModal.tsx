@@ -169,8 +169,6 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
           {/* Tab 1: By Exam */}
           {activeTab === "exam" && (
             <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                   SELECT EXAM PRESET
@@ -187,67 +185,32 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                  CHOOSE TYPING MODE
-                </label>
-                <select
-                  value={selectedMode}
-                  onChange={(e) => setSelectedMode(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
-                >
-                  {STENO_TYPING_MODES.map((mode) => (
-                    <option key={mode.type} value={mode.type}>
-                      {mode.label}
-                    </option>
-                  ))}
-                </select>
+              {/* Exam Rules Summary Box */}
+              <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
+                <h4 className="text-xs font-black text-indigo-900 flex items-center gap-1.5 border-b border-indigo-100 pb-2">
+                  📋 {selectedExam} — Exam Rules
+                </h4>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-medium text-slate-700">
+                  <p>• Backspace: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.backspace}</strong></p>
+                  <p>• Transcription Duration: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.transcriptionDuration} Mins</strong></p>
+                  <p>• Total Words: <strong className="text-indigo-900 font-bold">{totalWords}</strong></p>
+                  <p>• Dictation Duration: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.dictationDuration} Mins</strong></p>
+                  <p>• Spelling Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.spelling}</strong></p>
+                  <p>• Maatra Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.capitalization}</strong></p>
+                  <p>• Punctuation: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.punctuation}</strong></p>
+                  <p>• Added Words: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.added}</strong></p>
+                  <p>• Skipped Words: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.skipped}</strong></p>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Exam Rules Summary Box */}
-            <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
-              <h4 className="text-xs font-black text-indigo-900 flex items-center gap-1.5 border-b border-indigo-100 pb-2">
-                📋 {selectedExam} — Exam Rules
-              </h4>
+          {/* Tab 2: Manual */}
+          {activeTab === "manual" && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-medium text-slate-700">
-                <p>• Backspace: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.backspace}</strong></p>
-                <p>• Transcription Duration: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.transcriptionDuration} Mins</strong></p>
-                <p>• Total Words: <strong className="text-indigo-900 font-bold">{totalWords}</strong></p>
-                <p>• Dictation Duration: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.dictationDuration} Mins</strong></p>
-                <p>• Spelling Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.spelling}</strong></p>
-                <p>• Maatra Error: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.capitalization}</strong></p>
-                <p>• Punctuation: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.punctuation}</strong></p>
-                <p>• Added Words: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.added}</strong></p>
-                <p>• Skipped Words: <strong className="text-indigo-900 font-bold">{examPresetsRules[selectedExam]?.skipped}</strong></p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Manual */}
-        {activeTab === "manual" && (
-          <div className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                CHOOSE TYPING MODE
-              </label>
-              <select
-                value={selectedMode}
-                onChange={(e) => setSelectedMode(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800"
-              >
-                {STENO_TYPING_MODES.map((mode) => (
-                  <option key={mode.type} value={mode.type}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                   BACKSPACE STATUS

@@ -3,7 +3,11 @@ import { getPublicCourses } from '@/app/actions/courses'
 import { getEvents } from '@/app/actions/events'
 import { listBlogPosts } from '@/app/actions/blog'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ngitedu.com'
 
   // Public static routes
