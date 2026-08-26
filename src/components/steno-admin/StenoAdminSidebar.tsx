@@ -29,17 +29,13 @@ const stenoAdminMenuGroups = [
         groupLabel: "Steno Management",
         items: [
             { label: "Steno Control Center", href: "/steno/admin/dashboard", icon: Mic },
-            { label: "Dictation Passages CMS", href: "/steno/admin/passages", icon: Headphones },
-            { label: "Steno Series Collections", href: "/steno/admin/series", icon: Layers },
-            { label: "Exam Presets", href: "/steno/admin/exams", icon: Award },
-            { label: "Official Mock Tests", href: "/steno/admin/mock-tests", icon: FileText },
-            { label: "Custom Tests", href: "/steno/admin/custom-tests", icon: Clock },
-            { label: "Fonts Manager", href: "/steno/admin/fonts", icon: Type },
-            { label: "Mistake Penalty Rules", href: "/steno/admin/error-rules", icon: Sliders },
-            { label: "Attempts & Results", href: "/steno/admin/results", icon: BarChart3 },
-            { label: "Global Leaderboard", href: "/steno/admin/leaderboard", icon: Trophy },
+            { label: "Steno Batches & Series", href: "/steno/admin/series", icon: Layers },
+            { label: "Dictation Passages", href: "/steno/admin/passages", icon: Headphones },
+            { label: "Exam Presets & Rules", href: "/steno/admin/exams", icon: Award },
+            { label: "Student Results", href: "/steno/admin/results", icon: BarChart3 },
         ]
     }
+
 ];
 
 interface StenoAdminSidebarProps {

@@ -257,28 +257,45 @@ export default function AdminGalleryPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {images.map((img) => (
-                    <div key={img.id} className="bg-white border rounded-2xl overflow-hidden group shadow-sm">
-                        <div className="aspect-square relative overflow-hidden">
-                            <img src={img.url} alt={img.title} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <Button variant="secondary" size="icon" className="rounded-full h-12 w-12" onClick={() => handleCopyUrl(img.url)}>
-                                    <Copy className="w-5 h-5" />
-                                </Button>
-                                <Button variant="destructive" size="icon" className="rounded-full h-12 w-12" onClick={() => handleDelete(img.id)}>
-                                    <Trash2 className="w-5 h-5" />
-                                </Button>
-                            </div>
+                    <div key={img.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden group shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div className="aspect-square relative overflow-hidden bg-slate-100">
+                            <img src={img.url} alt={img.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            
                             <div className="absolute top-3 left-3">
-                                <span className="bg-white/90 backdrop-blur-sm text-[10px] font-black px-3 py-1 rounded-full uppercase text-slate-900 border border-white">
+                                <span className="bg-white/95 backdrop-blur-sm text-[10px] font-black px-3 py-1 rounded-full uppercase text-slate-900 border border-slate-200 shadow-xs">
                                     {img.category}
                                 </span>
                             </div>
+
+                            <div className="absolute top-3 right-3">
+                                <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="rounded-full h-8 w-8 shadow-md"
+                                    onClick={() => handleDelete(img.id)}
+                                    title="Delete Image"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
                         </div>
-                        <div className="p-4">
-                            <h3 className="font-bold text-sm truncate">{img.title}</h3>
+
+                        <div className="p-4 space-y-3">
+                            <h3 className="font-black text-sm text-slate-900 truncate" title={img.title}>{img.title}</h3>
+                            
+                            {/* Prominent Copy Image URL Button */}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleCopyUrl(img.url)}
+                                className="w-full h-9 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border-indigo-200 transition-all gap-1.5 shadow-2xs"
+                            >
+                                <Copy className="w-3.5 h-3.5" /> Copy Image URL
+                            </Button>
                         </div>
                     </div>
                 ))}
+
 
                 {images.length === 0 && !showUpload && (
                     <div className="col-span-full py-20 text-center border-2 border-dashed rounded-[2rem] text-slate-400 font-medium">

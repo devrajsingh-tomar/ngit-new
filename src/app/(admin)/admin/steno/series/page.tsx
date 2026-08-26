@@ -188,17 +188,34 @@ export default function AdminStenoSeriesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {seriesList.map((s) => (
             <Card key={s._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative">
-              <div className="flex justify-between items-start">
-                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-100">
-                  {s.language} Series
-                </span>
-                <span
-                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-                    s.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {s.isPublished ? "Published" : "Draft"}
-                </span>
+              {/* Image Preview / Banner */}
+              <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative">
+                {s.thumbnailUrl ? (
+                  <img
+                    src={s.thumbnailUrl}
+                    alt={s.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 to-slate-900 text-white/50 p-4 text-center">
+                    <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
+                    <span className="text-[10px] font-bold">No Image Uploaded</span>
+                  </div>
+                )}
+                <div className="absolute top-2 left-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md text-white px-2.5 py-1 rounded-md border border-white/20">
+                    {s.language} Series
+                  </span>
+                </div>
+                <div className="absolute top-2 right-2">
+                  <span
+                    className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm ${
+                      s.isPublished ? "bg-emerald-500 text-white font-bold" : "bg-slate-700 text-white"
+                    }`}
+                  >
+                    {s.isPublished ? "Published" : "Draft"}
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -240,10 +257,10 @@ export default function AdminStenoSeriesPage() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl p-6">
+        <DialogContent className="max-w-xl rounded-3xl p-6 sm:p-8 bg-white border border-slate-200">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-slate-900">
-              {editingSeries ? "Edit Steno Series" : "Create Steno Series"}
+              {editingSeries ? "Edit Steno Series / Batch" : "Create New Steno Series / Batch"}
             </DialogTitle>
           </DialogHeader>
 
@@ -294,17 +311,37 @@ export default function AdminStenoSeriesPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Thumbnail URL (Optional)</label>
-                <Input
-                  value={formData.thumbnailUrl}
-                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="https://domain.com/series-thumb.jpg"
-                  className="rounded-xl text-xs font-semibold"
-                />
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-slate-700">Thumbnail URL</label>
+                <a
+                  href="/admin/gallery"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1"
+                >
+                  <ImageIcon className="w-3 h-3" /> Get URL from Gallery CMS →
+                </a>
               </div>
+              <Input
+                value={formData.thumbnailUrl}
+                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                placeholder="Paste image URL here (e.g. /uploads/image.jpg or https://...)"
+                className="rounded-xl text-xs font-semibold"
+              />
+              {formData.thumbnailUrl && (
+                <div className="h-28 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                  <img
+                    src={formData.thumbnailUrl}
+                    alt="Thumbnail Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                </div>
+              )}
+            </div>
 
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Sort Order</label>
                 <Input
@@ -313,6 +350,17 @@ export default function AdminStenoSeriesPage() {
                   onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
                   className="rounded-xl text-xs font-semibold"
                 />
+              </div>
+              <div className="space-y-1 flex flex-col justify-end">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer pt-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.isPublished}
+                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                    className="w-4 h-4 rounded text-emerald-600"
+                  />
+                  Published & Active
+                </label>
               </div>
             </div>
 

@@ -36,18 +36,14 @@ const menuGroups = [
     {
         groupLabel: "Steno Management",
         items: [
-            { label: "Steno Control Center", href: "/admin/steno", icon: Mic },
-            { label: "Dictation Passages CMS", href: "/admin/steno/passages", icon: Headphones },
-            { label: "Steno Series Collections", href: "/admin/steno/series", icon: Layers },
-            { label: "Exam Presets (SSC/HC/UP)", href: "/admin/steno/exams", icon: Award },
-            { label: "Official Mock Tests", href: "/admin/steno/mock-tests", icon: FileText },
-            { label: "Custom Tests Overview", href: "/admin/steno/custom-tests", icon: Clock },
-            { label: "Fonts Manager (Kruti/Mangal)", href: "/admin/steno/fonts", icon: Type },
-            { label: "Mistake Penalty Rules", href: "/admin/steno/error-rules", icon: Sliders },
-            { label: "Attempts & Results", href: "/admin/steno/results", icon: BarChart3 },
-            { label: "Global Leaderboard", href: "/admin/steno/leaderboard", icon: Trophy },
+            { label: "Steno Overview", href: "/admin/steno", icon: Mic },
+            { label: "Steno Batches & Series", href: "/admin/steno/series", icon: Layers },
+            { label: "Dictation Passages", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Exam Presets & Rules", href: "/admin/steno/exams", icon: Award },
+            { label: "Student Results", href: "/admin/steno/results", icon: BarChart3 },
         ]
     },
+
     {
         groupLabel: "Typing Simulator",
         items: [

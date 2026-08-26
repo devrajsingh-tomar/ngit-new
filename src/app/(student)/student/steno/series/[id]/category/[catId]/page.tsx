@@ -62,20 +62,12 @@ export default function StudentCategoryDictationsPage({
 
   const seriesName = series?.title || "Steno Course Series";
 
-  const rawList = passages.length > 0
-    ? passages.map((p, idx) => ({
-        _id: p._id,
-        title: p.title || `Test - ${idx + 1}`,
-        wordCount: p.wordCount || 390,
-        status: "Not Attempted yet",
-      }))
-    : [
-        { _id: "test-1", title: "Test - 1", wordCount: 391, status: "Not Attempted yet" },
-        { _id: "test-2", title: "Test - 2", wordCount: 370, status: "Not Attempted yet" },
-        { _id: "test-3", title: "Test - 3", wordCount: 330, status: "Not Attempted yet" },
-        { _id: "test-4", title: "Test - 4", wordCount: 378, status: "Not Attempted yet" },
-        { _id: "test-5", title: "Test - 5", wordCount: 403, status: "Not Attempted yet" },
-      ];
+  const rawList = passages.map((p, idx) => ({
+    _id: p._id,
+    title: p.title || `Test - ${idx + 1}`,
+    wordCount: p.wordCount || 390,
+    status: "Not Attempted yet",
+  }));
 
   const filteredTests = rawList.filter((t) =>
     t.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -99,53 +91,66 @@ export default function StudentCategoryDictationsPage({
       </div>
 
       {/* Search Bar */}
-      <div className="relative max-w-xl mx-auto">
-        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-        <Input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search dictation test..."
-          className="pl-11 rounded-2xl bg-white border-slate-200 text-xs font-semibold h-11 shadow-xs"
-        />
-      </div>
+      {rawList.length > 0 && (
+        <div className="relative max-w-xl mx-auto">
+          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search dictation test..."
+            className="pl-11 rounded-2xl bg-white border-slate-200 text-xs font-semibold h-11 shadow-xs"
+          />
+        </div>
+      )}
 
       {/* Dictation Tests Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filteredTests.map((test) => (
-          <Card key={test._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-slate-300 transition-all flex flex-col justify-between">
-            <div className="space-y-3">
-              <h3 className="text-xl font-black text-slate-900">{test.title}</h3>
+      {filteredTests.length === 0 ? (
+        <Card className="p-12 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+          <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="text-base font-black text-slate-700">No Dictation Tests Available</h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            There are currently no dictations published under this series category.
+          </p>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filteredTests.map((test) => (
+            <Card key={test._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-slate-300 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <h3 className="text-xl font-black text-slate-900">{test.title}</h3>
 
-              <div className="space-y-2 text-xs font-medium text-slate-600">
-                <p className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-slate-400" /> {test.wordCount} Words
-                </p>
-                <p className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-400" /> All Speeds Available
-                </p>
-                <p className="flex items-center gap-2">
-                  <Keyboard className="w-4 h-4 text-slate-400" /> SSC typing interface
-                </p>
-                <p className="flex items-center gap-2 text-slate-400">
-                  <span className="w-2.5 h-2.5 rounded-full border-2 border-slate-300" /> {test.status}
-                </p>
+                <div className="space-y-2 text-xs font-medium text-slate-600">
+                  <p className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-400" /> {test.wordCount} Words
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-400" /> All Speeds Available
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Keyboard className="w-4 h-4 text-slate-400" /> SSC typing interface
+                  </p>
+                  <p className="flex items-center gap-2 text-slate-400">
+                    <span className="w-2.5 h-2.5 rounded-full border-2 border-slate-300" /> {test.status}
+                  </p>
+                </div>
+
+                <Link href="/student/steno/leaderboard" className="block pt-1">
+                  <span className="text-[11px] font-extrabold text-amber-600 hover:underline flex items-center gap-1">
+                    <Trophy className="w-3.5 h-3.5" /> View Test Leaderboard & Ranks
+                  </span>
+                </Link>
               </div>
 
-              <Link href="/student/steno/leaderboard" className="block pt-1">
-                <span className="text-[11px] font-extrabold text-amber-600 hover:underline flex items-center gap-1">
-                  <Trophy className="w-3.5 h-3.5" /> View Test Leaderboard & Ranks
-                </span>
+              <Link href={`/student/steno/passage/${test._id}`} className="block pt-2">
+                <Button className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white font-black h-11 text-xs rounded-xl shadow-md gap-2">
+                  <Play className="w-4 h-4 fill-white" /> Play Dictation
+                </Button>
               </Link>
-            </div>
-
-            <Link href={`/student/steno/passage/${test._id}`} className="block pt-2">
-              <Button className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white font-black h-11 text-xs rounded-xl shadow-md gap-2">
-                <Play className="w-4 h-4 fill-white" /> Play Dictation
-              </Button>
-            </Link>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
