@@ -130,8 +130,8 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl rounded-3xl p-6 sm:p-8 bg-white border border-slate-200">
-        <DialogHeader className="text-center space-y-1">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b border-slate-100 shrink-0 text-center space-y-1">
           <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight text-center">
             Configure Your Transcription Session
           </DialogTitle>
@@ -140,34 +140,37 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
           </p>
         </DialogHeader>
 
-        {/* Tab Toggle Bar */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 mt-4">
-          <button
-            onClick={() => setActiveTab("exam")}
-            className={`flex-1 py-3 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
-              activeTab === "exam"
-                ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <ClipboardList className="w-4 h-4" /> By Exam
-          </button>
-          <button
-            onClick={() => setActiveTab("manual")}
-            className={`flex-1 py-3 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
-              activeTab === "manual"
-                ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <Sliders className="w-4 h-4" /> Manual
-          </button>
-        </div>
+        {/* Scrollable Modal Body */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
+          {/* Tab Toggle Bar */}
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            <button
+              onClick={() => setActiveTab("exam")}
+              className={`flex-1 py-3 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
+                activeTab === "exam"
+                  ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <ClipboardList className="w-4 h-4" /> By Exam
+            </button>
+            <button
+              onClick={() => setActiveTab("manual")}
+              className={`flex-1 py-3 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
+                activeTab === "manual"
+                  ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <Sliders className="w-4 h-4" /> Manual
+            </button>
+          </div>
 
-        {/* Tab 1: By Exam */}
-        {activeTab === "exam" && (
-          <div className="space-y-4 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Tab 1: By Exam */}
+          {activeTab === "exam" && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                   SELECT EXAM PRESET
@@ -355,9 +358,10 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
             </div>
           </div>
         )}
+        </div>
 
-        {/* Modal Footer */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+        {/* Sticky Modal Footer */}
+        <div className="p-4 px-6 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-end gap-3">
           <Button
             type="button"
             variant="outline"
@@ -378,3 +382,4 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
     </Dialog>
   );
 };
+

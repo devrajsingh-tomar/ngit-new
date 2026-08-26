@@ -257,159 +257,151 @@ export default function AdminStenoSeriesPage() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl rounded-3xl p-6 sm:p-8 bg-white border border-slate-200">
-          <DialogHeader>
+        <DialogContent className="max-w-xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0">
             <DialogTitle className="text-xl font-black text-slate-900">
               {editingSeries ? "Edit Steno Series / Batch" : "Create New Steno Series / Batch"}
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Series Title *</label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g. UPSSSC PYQ, High Court Steno, Editorial"
-                className="rounded-xl text-xs font-semibold"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            {/* Scrollable Form Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Language</label>
-                <select
-                  value={formData.language}
-                  onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                >
-                  <option value="Hindi">Hindi</option>
-                  <option value="English">English</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Category</label>
+                <label className="text-xs font-bold text-slate-700">Series Title *</label>
                 <Input
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g. PYQ, Legal, Editorial, Essay"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. UPSSSC PYQ, High Court Steno, Editorial"
                   className="rounded-xl text-xs font-semibold"
+                  required
                 />
               </div>
-            </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Course series description..."
-                rows={3}
-                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
-              />
-            </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Language</label>
+                  <select
+                    value={formData.language}
+                    onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                  >
+                    <option value="Hindi">Hindi</option>
+                    <option value="English">English</option>
+                  </select>
+                </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-slate-700">Thumbnail URL</label>
-                <a
-                  href="/admin/gallery"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1"
-                >
-                  <ImageIcon className="w-3 h-3" /> Get URL from Gallery CMS →
-                </a>
-              </div>
-              <Input
-                value={formData.thumbnailUrl}
-                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                placeholder="Paste image URL here (e.g. /uploads/image.jpg or https://...)"
-                className="rounded-xl text-xs font-semibold"
-              />
-              {formData.thumbnailUrl && (
-                <div className="h-28 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
-                  <img
-                    src={formData.thumbnailUrl}
-                    alt="Thumbnail Preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => (e.currentTarget.style.display = "none")}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Category</label>
+                  <Input
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g. PYQ, Legal, Editorial, Essay"
+                    className="rounded-xl text-xs font-semibold"
                   />
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Sort Order</label>
+                <label className="text-xs font-bold text-slate-700">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Course series description..."
+                  rows={3}
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-700">Thumbnail URL</label>
+                  <a
+                    href="/admin/gallery"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1"
+                  >
+                    <ImageIcon className="w-3 h-3" /> Get URL from Gallery CMS →
+                  </a>
+                </div>
                 <Input
-                  type="number"
-                  value={formData.sortOrder}
-                  onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
+                  value={formData.thumbnailUrl}
+                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                  placeholder="Paste image URL here (e.g. /uploads/image.jpg or https://...)"
                   className="rounded-xl text-xs font-semibold"
                 />
-              </div>
-              <div className="space-y-1 flex flex-col justify-end">
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer pt-3">
-                  <input
-                    type="checkbox"
-                    checked={formData.isPublished}
-                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                    className="w-4 h-4 rounded text-emerald-600"
-                  />
-                  Published & Active
-                </label>
-              </div>
-            </div>
-
-            {/* Passages Selection */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700">Assign Passages to Series</label>
-              <div className="max-h-40 overflow-y-auto p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
-                {passages.length === 0 ? (
-                  <p className="text-xs text-slate-400">No passages available to assign.</p>
-                ) : (
-                  passages.map((p) => {
-                    const isChecked = formData.selectedPassages.includes(p._id);
-                    return (
-                      <label
-                        key={p._id}
-                        onClick={() => togglePassageSelection(p._id)}
-                        className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-all ${
-                          isChecked ? "bg-emerald-100 text-emerald-900 font-bold" : "hover:bg-white text-slate-700"
-                        }`}
-                      >
-                        <span>{p.title} ({p.language} • {p.targetWpm} WPM)</span>
-                        <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-600" />
-                      </label>
-                    );
-                  })
+                {formData.thumbnailUrl && (
+                  <div className="h-28 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                    <img
+                      src={formData.thumbnailUrl}
+                      alt="Thumbnail Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                  </div>
                 )}
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Sort Order</label>
+                  <Input
+                    type="number"
+                    value={formData.sortOrder}
+                    onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
+                    className="rounded-xl text-xs font-semibold"
+                  />
+                </div>
+                <div className="space-y-1 flex flex-col justify-end">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer pb-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.isPublished}
+                      onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                      className="w-4 h-4 rounded text-emerald-600"
+                    />
+                    Published & Active
+                  </label>
+                </div>
+              </div>
+
+              {/* Passages Selection */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700">Assign Passages to Series</label>
+                <div className="max-h-36 overflow-y-auto p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+                  {passages.length === 0 ? (
+                    <p className="text-xs text-slate-400">No passages available to assign.</p>
+                  ) : (
+                    passages.map((p) => {
+                      const isChecked = formData.selectedPassages.includes(p._id);
+                      return (
+                        <label
+                          key={p._id}
+                          onClick={() => togglePassageSelection(p._id)}
+                          className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-all ${
+                            isChecked ? "bg-emerald-100 text-emerald-900 font-bold" : "hover:bg-white text-slate-700"
+                          }`}
+                        >
+                          <span>{p.title} ({p.language} • {p.targetWpm} WPM)</span>
+                          <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-600" />
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isPublished}
-                  onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                  className="rounded text-emerald-600"
-                />
-                Published Status
-              </label>
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl text-xs">
+            {/* Sticky Modal Footer */}
+            <div className="p-4 px-6 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl text-xs px-5 font-bold">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs px-6 font-bold shadow-md">
                 {editingSeries ? "Save Changes" : "Create Series"}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
