@@ -63,33 +63,17 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
 
     const fallbackLinks: NavLink[] = [
         { label: "Home", href: "/" },
-        { label: "Online Admission", href: "/enroll" },
-        { label: "Typing Test", href: "/typing" },
-        { label: "Steno / Short Hand", href: "/steno" },
+        { label: "Courses", href: "/courses" },
+        { label: "Typing Tests", href: "/typing" },
+        { label: "ShortHand", href: "/steno" },
         { label: "Practical Tools", href: "/tools" },
-        { label: "Mock Tests", href: "/exams" },
-        { label: "Results", href: "/results" },
-        { label: "Gallery", href: "/gallery" },
-        { label: "Faculty", href: "/faculty" },
-        { label: "About", href: "/about" },
+        { label: "Online Admission", href: "/enroll" },
         { label: "Contact", href: "/contact" },
     ];
 
-    const baseLinks: NavLink[] = (headerData?.navigation && headerData.navigation.length > 0)
+    const navLinks: NavLink[] = (headerData?.navigation && headerData.navigation.length > 0)
         ? headerData.navigation
         : fallbackLinks;
-
-    const navLinks: NavLink[] = [...baseLinks];
-
-    if (!navLinks.some(l => l.href === "/enroll")) {
-        const homeIdx = navLinks.findIndex(l => l.href === "/");
-        navLinks.splice(homeIdx >= 0 ? homeIdx + 1 : 1, 0, { label: "Online Admission", href: "/enroll" });
-    }
-
-    if (!navLinks.some(l => l.href === "/tools")) {
-        const insertIdx = navLinks.findIndex(l => l.href === "/steno" || l.href === "/typing");
-        navLinks.splice(insertIdx >= 0 ? insertIdx + 1 : 2, 0, { label: "Practical Tools", href: "/tools" });
-    }
 
     return (
         <nav className={cn(
