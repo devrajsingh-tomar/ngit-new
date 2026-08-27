@@ -61,7 +61,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
         };
     }, [initialData]);
 
-    const fallbackLinks: NavLink[] = [
+    const requiredLinks: NavLink[] = [
         { label: "Home", href: "/" },
         { label: "Courses", href: "/courses" },
         { label: "Typing Tests", href: "/typing" },
@@ -71,9 +71,16 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
         { label: "Contact", href: "/contact" },
     ];
 
-    const navLinks: NavLink[] = (headerData?.navigation && headerData.navigation.length > 0)
+    const cmsNav = (headerData?.navigation && Array.isArray(headerData.navigation))
         ? headerData.navigation
-        : fallbackLinks;
+        : [];
+
+    const navLinks: NavLink[] = [...requiredLinks];
+    cmsNav.forEach((item) => {
+        if (item?.href && !navLinks.some(l => l.href === item.href)) {
+            navLinks.push(item);
+        }
+    });
 
     return (
         <nav className={cn(

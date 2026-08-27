@@ -16,18 +16,20 @@ export async function getHeaderFooterData() {
             CMSContent.findOne({ key: "FOOTER" }),
         ]);
 
+        const requiredNavigation = [
+            { label: "Home", href: "/" },
+            { label: "Courses", href: "/courses" },
+            { label: "Typing Tests", href: "/typing" },
+            { label: "ShortHand", href: "/steno" },
+            { label: "Practical Tools", href: "/tools" },
+            { label: "Online Admission", href: "/enroll" },
+            { label: "Contact", href: "/contact" },
+        ];
+
         const defaultHeader = {
             logoImage: "",
             logoText: "NGIT",
-            navigation: [
-                { label: "Home", href: "/" },
-                { label: "Courses", href: "/courses" },
-                { label: "Typing Tests", href: "/typing" },
-                { label: "ShortHand", href: "/steno" },
-                { label: "Practical Tools", href: "/tools" },
-                { label: "Online Admission", href: "/enroll" },
-                { label: "Contact", href: "/contact" },
-            ],
+            navigation: requiredNavigation,
             ctaButton: { label: "Login", href: "/student/login" },
         };
 
@@ -59,9 +61,22 @@ export async function getHeaderFooterData() {
             copyright: "© 2024 NGIT Institute. All rights reserved.",
         };
 
+        const mergedHeaderData = header?.data || {};
+        const cmsNav = Array.isArray(mergedHeaderData.navigation) ? mergedHeaderData.navigation : [];
+        const finalNav = [...requiredNavigation];
+        cmsNav.forEach((item: any) => {
+            if (item?.href && !finalNav.some(n => n.href === item.href)) {
+                finalNav.push(item);
+            }
+        });
+
         return {
             success: true,
-            header: { ...defaultHeader, ...(header?.data || {}) },
+            header: {
+                ...defaultHeader,
+                ...mergedHeaderData,
+                navigation: finalNav,
+            },
             footer: { ...defaultFooter, ...(footer?.data || {}) },
         };
     } catch (error) {
