@@ -75,7 +75,21 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
         { label: "Contact", href: "/contact" },
     ];
 
-    const navLinks: NavLink[] = headerData?.navigation || fallbackLinks;
+    const baseLinks: NavLink[] = (headerData?.navigation && headerData.navigation.length > 0)
+        ? headerData.navigation
+        : fallbackLinks;
+
+    const navLinks: NavLink[] = [...baseLinks];
+
+    if (!navLinks.some(l => l.href === "/enroll")) {
+        const homeIdx = navLinks.findIndex(l => l.href === "/");
+        navLinks.splice(homeIdx >= 0 ? homeIdx + 1 : 1, 0, { label: "Online Admission", href: "/enroll" });
+    }
+
+    if (!navLinks.some(l => l.href === "/tools")) {
+        const insertIdx = navLinks.findIndex(l => l.href === "/steno" || l.href === "/typing");
+        navLinks.splice(insertIdx >= 0 ? insertIdx + 1 : 2, 0, { label: "Practical Tools", href: "/tools" });
+    }
 
     return (
         <nav className={cn(

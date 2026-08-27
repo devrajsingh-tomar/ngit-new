@@ -21,6 +21,10 @@ export async function getHeaderFooterData() {
             logoText: "NGIT",
             navigation: [
                 { label: "Home", href: "/" },
+                { label: "Online Admission", href: "/enroll" },
+                { label: "Typing Test", href: "/typing" },
+                { label: "Steno / Short Hand", href: "/steno" },
+                { label: "Practical Tools", href: "/tools" },
                 { label: "Mock Tests", href: "/exams" },
                 { label: "Results", href: "/results" },
                 { label: "Gallery", href: "/gallery" },
