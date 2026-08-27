@@ -17,7 +17,12 @@ import {
     Zap,
     FileText,
     TrendingUp,
-    User
+    User,
+    Code2,
+    ExternalLink,
+    Globe,
+    Terminal,
+    Cpu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -247,6 +252,59 @@ export default function StudentDashboardClient({ data }: StudentDashboardClientP
                                     <p className="font-bold text-sm">No typing attempts recorded yet.</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Practical Online Tools Section */}
+                    <div className="space-y-8">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none flex items-center gap-3">
+                                    <Code2 className="w-6 h-6 text-primary" />
+                                    Practical <span className="text-gradient">Online Tools</span>
+                                </h2>
+                                <p className="text-slate-500 text-xs font-semibold mt-2">
+                                    Write, run, and test practical programs directly in your browser.
+                                </p>
+                            </div>
+                            <Link href="/student/tools">
+                                <Button variant="ghost" className="text-primary font-black gap-2 uppercase text-[10px] tracking-widest">
+                                    View All <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[
+                                { title: "Open HTML Editor", url: "https://onecompiler.com/html", icon: Globe, bg: "bg-orange-50 text-orange-600 border-orange-100", label: "Web / HTML / CSS / JS" },
+                                { title: "Open Python Compiler", url: "https://onecompiler.com/python", icon: Terminal, bg: "bg-blue-50 text-blue-600 border-blue-100", label: "Python 3 Runtime" },
+                                { title: "Open C Compiler", url: "https://onecompiler.com/c", icon: Code2, bg: "bg-emerald-50 text-emerald-600 border-emerald-100", label: "C / GCC Compiler" },
+                                { title: "Open Arduino Simulator", url: "https://wokwi.com/projects/new/arduino-uno", icon: Cpu, bg: "bg-purple-50 text-purple-600 border-purple-100", label: "Wokwi Arduino Uno" },
+                            ].map((tool, idx) => {
+                                const ToolIcon = tool.icon;
+                                return (
+                                    <a
+                                        key={idx}
+                                        href={tool.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex items-center justify-between group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110", tool.bg)}>
+                                                <ToolIcon className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-slate-900 text-sm group-hover:text-primary transition-colors">{tool.title}</h3>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">{tool.label}</p>
+                                            </div>
+                                        </div>
+                                        <div className="w-9 h-9 rounded-xl bg-slate-50 group-hover:bg-primary group-hover:text-white transition-colors flex items-center justify-center text-slate-400 shrink-0">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </div>
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

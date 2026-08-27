@@ -99,11 +99,24 @@ export default function RegisterPage() {
                     <div className="text-center mb-6 space-y-2">
                         <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-primary/5 border border-primary/10">
                             <Sparkles className="w-3 h-3 text-primary" />
-                            <span className="text-primary font-black uppercase tracking-widest text-[9px]">New Enrollment</span>
+                            <span className="text-primary font-black uppercase tracking-widest text-[9px]">New Student Account</span>
                         </div>
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none italic">
                             Create Your <span className="text-primary">Identity.</span>
                         </h1>
+                        <div className="pt-2">
+                            <Link href="/enroll">
+                                <div className="bg-gradient-to-r from-primary to-blue-700 text-white p-3 rounded-2xl flex items-center justify-between shadow-lg hover:shadow-xl transition-all group">
+                                    <div className="text-left pl-2">
+                                        <p className="text-xs font-black uppercase tracking-wider">Online Course Admission & Enrollment</p>
+                                        <p className="text-[10px] text-slate-200 font-medium">Register, select degree/diploma & pay online</p>
+                                    </div>
+                                    <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                                        <ArrowRight className="w-4 h-4 text-white" />
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Registration Card */}

@@ -20,12 +20,14 @@ import {
   ChevronRight,
   ChevronDown,
   Mic,
+  Code2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 
 const menuItems = [
   { label: "Dashboard", href: "/student", icon: Home },
+  { label: "Practical Tools", href: "/student/tools", icon: Code2 },
   { label: "Global Leaderboard", href: "/student/leaderboard", icon: Award },
   { label: "Typing Exams", href: "/student/typing", icon: Keyboard },
   {

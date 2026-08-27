@@ -63,8 +63,10 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
 
     const fallbackLinks: NavLink[] = [
         { label: "Home", href: "/" },
+        { label: "Online Admission", href: "/enroll" },
         { label: "Typing Test", href: "/typing" },
         { label: "Steno / Short Hand", href: "/steno" },
+        { label: "Practical Tools", href: "/tools" },
         { label: "Mock Tests", href: "/exams" },
         { label: "Results", href: "/results" },
         { label: "Gallery", href: "/gallery" },
@@ -202,14 +204,21 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                     </DropdownMenu>
                                 </div>
                                 </div>
-                            ) : (
-                                <Link href="/student/login">
-                                    <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-5 py-2 transition-all duration-300 rounded-xl">
-                                        <LogIn className="w-4 h-4" />
-                                        Student Login
-                                    </Button>
-                                </Link>
-                            )}
+                             ) : (
+                                <div className="flex items-center gap-2">
+                                    <Link href="/enroll">
+                                        <Button className="gap-2 bg-primary hover:bg-primary-dark text-white font-black px-4 py-2 transition-all duration-300 rounded-xl shadow-md shadow-primary/20 text-xs uppercase tracking-wider">
+                                            Online Admission
+                                        </Button>
+                                    </Link>
+                                    <Link href="/student/login">
+                                        <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 transition-all duration-300 rounded-xl text-xs">
+                                            <LogIn className="w-4 h-4" />
+                                            Login
+                                        </Button>
+                                    </Link>
+                                </div>
+                             )}
                         </div>
                     </div>
 
