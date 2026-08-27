@@ -9,7 +9,24 @@ export interface CatalogCourse {
 }
 
 export const COURSE_CATALOG: CatalogCourse[] = [
-    // UG Programmes
+    // Featured UG Programmes
+    {
+        id: "ug-bsc",
+        level: "UG",
+        name: "B.Sc.",
+        fee: 22000,
+        category: "Undergraduate",
+        description: "Bachelor of Science degree in foundational scientific disciplines and practical laboratory skills."
+    },
+    {
+        id: "ug-llb",
+        level: "UG",
+        name: "LLB",
+        fee: 8500,
+        feeNote: "per semester",
+        category: "Undergraduate",
+        description: "Professional law degree program focusing on Indian jurisprudence, constitutional law, and legal procedure."
+    },
     {
         id: "ug-ba",
         level: "UG",
@@ -58,25 +75,16 @@ export const COURSE_CATALOG: CatalogCourse[] = [
         category: "Undergraduate",
         description: "Journalism and Mass Communication program covering print, digital media, and broadcasting."
     },
-    {
-        id: "ug-llb",
-        level: "UG",
-        name: "LLB",
-        fee: 8500,
-        feeNote: "per semester",
-        category: "Undergraduate",
-        description: "Professional law degree program focusing on Indian jurisprudence, constitutional law, and legal procedure."
-    },
-    {
-        id: "ug-bsc",
-        level: "UG",
-        name: "B.Sc.",
-        fee: 22000,
-        category: "Undergraduate",
-        description: "Bachelor of Science degree in foundational scientific disciplines and practical laboratory skills."
-    },
 
-    // PG Programmes
+    // Featured PG Programmes
+    {
+        id: "pg-pgdca",
+        level: "PG",
+        name: "PGDCA",
+        fee: 28500,
+        category: "Postgraduate",
+        description: "Post Graduate Diploma in Computer Applications covering programming, database management, and web technology."
+    },
     {
         id: "pg-ma-buddhist",
         level: "PG",
