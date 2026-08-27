@@ -62,20 +62,13 @@ export async function getHeaderFooterData() {
         };
 
         const mergedHeaderData = header?.data || {};
-        const cmsNav = Array.isArray(mergedHeaderData.navigation) ? mergedHeaderData.navigation : [];
-        const finalNav = [...requiredNavigation];
-        cmsNav.forEach((item: any) => {
-            if (item?.href && !finalNav.some(n => n.href === item.href)) {
-                finalNav.push(item);
-            }
-        });
 
         return {
             success: true,
             header: {
                 ...defaultHeader,
                 ...mergedHeaderData,
-                navigation: finalNav,
+                navigation: requiredNavigation,
             },
             footer: { ...defaultFooter, ...(footer?.data || {}) },
         };

@@ -61,7 +61,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
         };
     }, [initialData]);
 
-    const requiredLinks: NavLink[] = [
+    const navLinks: NavLink[] = [
         { label: "Home", href: "/" },
         { label: "Courses", href: "/courses" },
         { label: "Typing Tests", href: "/typing" },
@@ -70,17 +70,6 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
         { label: "Online Admission", href: "/enroll" },
         { label: "Contact", href: "/contact" },
     ];
-
-    const cmsNav = (headerData?.navigation && Array.isArray(headerData.navigation))
-        ? headerData.navigation
-        : [];
-
-    const navLinks: NavLink[] = [...requiredLinks];
-    cmsNav.forEach((item) => {
-        if (item?.href && !navLinks.some(l => l.href === item.href)) {
-            navLinks.push(item);
-        }
-    });
 
     return (
         <nav className={cn(
