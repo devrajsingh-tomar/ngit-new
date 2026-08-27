@@ -140,6 +140,12 @@ export default async function Footer() {
                                     <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
                                 </li>
                                 <li>
+                                    <Link href="/enroll" className="text-indigo-600 font-bold hover:text-slate-900 transition-colors">Online Admission</Link>
+                                </li>
+                                <li>
+                                    <Link href="/tools" className="hover:text-slate-900 transition-colors">Practical Tools</Link>
+                                </li>
+                                <li>
                                     <Link href="/about" className="hover:text-slate-900 transition-colors">About Us</Link>
                                 </li>
                                 <li>

@@ -27,6 +27,7 @@ import { useSession } from "next-auth/react";
 
 const menuItems = [
   { label: "Dashboard", href: "/student", icon: Home },
+  { label: "Online Admission", href: "/enroll", icon: GraduationCap },
   { label: "Practical Tools", href: "/student/tools", icon: Code2 },
   { label: "Global Leaderboard", href: "/student/leaderboard", icon: Award },
   { label: "Typing Exams", href: "/student/typing", icon: Keyboard },

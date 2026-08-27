@@ -24,6 +24,7 @@ interface StudentNavbarProps {
 }
 
 const quickLinks = [
+    { label: "Practical Tools", href: "/student/tools", icon: PlayCircle, color: "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border-emerald-200" },
     { label: "Back to Website", href: "/", icon: Home, color: "text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" },
 ];
 
