@@ -72,17 +72,27 @@ export default function HeroSlider({ blocks = [] }: HeroSliderProps) {
                             const rel = slide.openInNewTab ? "noopener noreferrer" : undefined;
 
                             const slideContent = (
-                                <div className="relative w-full h-[280px] sm:h-[400px] md:h-[550px] lg:h-[600px] overflow-hidden group/slide">
+                                <div className="relative w-full aspect-[16/9] max-h-[80vh] overflow-hidden group/slide flex items-center justify-center bg-slate-950">
+                                    {/* Ambient Blurred Background for non-16:9 fallbacks */}
+                                    <Image
+                                        src={imageUrl}
+                                        alt=""
+                                        fill
+                                        sizes="100vw"
+                                        className="object-cover blur-2xl opacity-40 scale-110 pointer-events-none"
+                                        aria-hidden="true"
+                                    />
+                                    {/* Main Hero Poster - Exact 16:9 aspect fit matching 1024x576 dimensions */}
                                     <Image
                                         src={imageUrl}
                                         alt={slide.title || "Promotional Banner"}
                                         fill
                                         sizes="100vw"
                                         priority={idx === 0}
-                                        className="object-cover"
+                                        className="object-contain relative z-10"
                                         loading={idx === 0 ? "eager" : "lazy"}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent pointer-events-none" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent pointer-events-none z-20" />
                                 </div>
                             );
 

@@ -64,24 +64,31 @@ export default function StudentStenoSeriesPage() {
             const gradient = index % 3 === 0 ? "from-indigo-600 to-purple-800" : index % 3 === 1 ? "from-emerald-700 to-teal-900" : "from-amber-600 to-rose-700";
             return (
               <Card key={batch._id} className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group">
-                {/* Banner Thumbnail */}
-                <div className="h-44 relative overflow-hidden bg-slate-950">
+                {/* Banner Thumbnail - Exact 16:9 ratio matching 1024x576 poster dimensions */}
+                <div className="w-full aspect-[16/9] relative overflow-hidden bg-slate-950 flex items-center justify-center p-1">
                   {batch.thumbnailUrl ? (
                     <>
+                      {/* Ambient Blur Backdrop */}
+                      <img
+                        src={batch.thumbnailUrl}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+                      />
+                      {/* Full Complete Thumbnail - Zero Cropping */}
                       <img
                         src={batch.thumbnailUrl}
                         alt={batch.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="relative z-10 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 rounded-lg"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
-                        <div className="flex justify-between items-start z-10">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4 z-20 pointer-events-none">
+                        <div className="flex justify-between items-start">
                           <span className="bg-white/90 backdrop-blur-md text-slate-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
                             {batch.category || "Official Batch"}
                           </span>
                           <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
                         </div>
 
-                        <div className="z-10 space-y-0.5">
+                        <div className="space-y-0.5">
                           <span className="text-[9px] font-black uppercase tracking-widest text-amber-300">
                             STENO SOFTWARE BATCH
                           </span>

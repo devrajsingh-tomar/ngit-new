@@ -4,7 +4,7 @@ import { FileText, Clock, Target, ArrowRight, Zap, ChevronRight, BrainCircuit } 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/useSafeSession";
 
 interface PublicExamsGridProps {
     exams: any[];
@@ -13,7 +13,7 @@ interface PublicExamsGridProps {
 }
 
 export default function PublicExamsGrid({ exams, data, session: propSession }: PublicExamsGridProps) {
-    const { data: clientSession } = useSession();
+    const { data: clientSession } = useSafeSession();
     const session = propSession || clientSession;
     const title = data?.section_name || "Mock Test Performance Hub";
     const subtitle = data?.subtitle || "Assessment Engine";

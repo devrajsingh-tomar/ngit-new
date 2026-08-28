@@ -302,6 +302,21 @@ export default function AdminStenoPassagesPage() {
             return (
               <Card key={p._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative flex flex-col justify-between">
                 <div className="space-y-3">
+                  {/* 16:9 Dictation Passage Thumbnail */}
+                  {p.thumbnailUrl && (
+                    <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-950 relative flex items-center justify-center p-1 border border-slate-100 shadow-xs mb-2">
+                      <img
+                        src={p.thumbnailUrl}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+                      />
+                      <img
+                        src={p.thumbnailUrl}
+                        alt={p.title}
+                        className="relative z-10 w-full h-full object-contain rounded-xl"
+                      />
+                    </div>
+                  )}
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
                       {modeBadge} • {p.targetWpm} WPM
@@ -488,13 +503,28 @@ export default function AdminStenoPassagesPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Thumbnail URL (Optional)</label>
+                  <label className="text-xs font-bold text-slate-700">Thumbnail URL (Optional - 1024x576 / 16:9 ratio)</label>
                   <Input
                     value={formData.thumbnailUrl}
                     onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                     placeholder="https://domain.com/thumb.jpg"
                     className="rounded-xl text-xs font-semibold"
                   />
+                  {formData.thumbnailUrl && (
+                    <div className="w-full aspect-[16/9] max-h-36 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 relative flex items-center justify-center p-1 mt-1">
+                      <img
+                        src={formData.thumbnailUrl}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
+                      />
+                      <img
+                        src={formData.thumbnailUrl}
+                        alt="Thumbnail Preview"
+                        className="relative z-10 w-full h-full object-contain rounded-lg"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

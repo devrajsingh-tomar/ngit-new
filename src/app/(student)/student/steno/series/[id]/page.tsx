@@ -128,13 +128,20 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
 
       {/* Series Thumbnail Banner (if uploaded) */}
       {series.thumbnailUrl && (
-        <div className="h-44 sm:h-52 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-slate-950 relative">
+        <div className="w-full aspect-[16/9] max-h-[360px] rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-slate-950 relative flex items-center justify-center p-1">
+          {/* Ambient Blur Backdrop */}
+          <img
+            src={series.thumbnailUrl}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+          />
+          {/* Full Complete Thumbnail */}
           <img
             src={series.thumbnailUrl}
             alt={series.title}
-            className="w-full h-full object-cover"
+            className="relative z-10 w-full h-full object-contain rounded-2xl"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6 z-20 pointer-events-none">
             <span className="text-white font-black text-lg drop-shadow-md">
               {series.title} • {allPassages.length} Dictations Available
             </span>
@@ -221,6 +228,21 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
               className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between group"
             >
               <div className="space-y-3">
+                {/* Dictation Test Thumbnail (16:9 ratio matching 1024x576) */}
+                {test.thumbnailUrl && (
+                  <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-950 relative flex items-center justify-center p-1 border border-slate-100 shadow-xs mb-1">
+                    <img
+                      src={test.thumbnailUrl}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+                    />
+                    <img
+                      src={test.thumbnailUrl}
+                      alt={test.title}
+                      className="relative z-10 w-full h-full object-contain rounded-xl"
+                    />
+                  </div>
+                )}
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
                     {test.targetWpm || 80} WPM • {test.language || "Hindi"}

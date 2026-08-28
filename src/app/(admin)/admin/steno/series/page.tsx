@@ -189,13 +189,20 @@ export default function AdminStenoSeriesPage() {
           {seriesList.map((s) => (
             <Card key={s._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative">
               {/* Image Preview / Banner */}
-              <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative">
+              <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative flex items-center justify-center p-1">
                 {s.thumbnailUrl ? (
-                  <img
-                    src={s.thumbnailUrl}
-                    alt={s.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    <img
+                      src={s.thumbnailUrl}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
+                    />
+                    <img
+                      src={s.thumbnailUrl}
+                      alt={s.title}
+                      className="relative z-10 w-full h-full object-contain rounded-xl"
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 to-slate-900 text-white/50 p-4 text-center">
                     <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
@@ -332,11 +339,16 @@ export default function AdminStenoSeriesPage() {
                   className="rounded-xl text-xs font-semibold"
                 />
                 {formData.thumbnailUrl && (
-                  <div className="h-28 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                  <div className="h-32 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 relative flex items-center justify-center p-1">
+                    <img
+                      src={formData.thumbnailUrl}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
+                    />
                     <img
                       src={formData.thumbnailUrl}
                       alt="Thumbnail Preview"
-                      className="w-full h-full object-cover"
+                      className="relative z-10 w-full h-full object-contain rounded-xl"
                       onError={(e) => (e.currentTarget.style.display = "none")}
                     />
                   </div>

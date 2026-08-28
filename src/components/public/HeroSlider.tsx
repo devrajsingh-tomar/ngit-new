@@ -96,14 +96,18 @@ export default function HeroSlider() {
                 >
                     {/* Background */}
                     {slide.imageUrl ? (
-                        <div
-                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform [transition-duration:10000ms] ease-out"
-                            style={{ 
-                                backgroundImage: `url(${slide.imageUrl})`,
-                                transform: index === currentSlide ? 'scale(1.05)' : 'scale(1)'
-                            }}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+                        <div className="absolute inset-0 bg-slate-950 flex items-center justify-center">
+                            <img
+                                src={slide.imageUrl}
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 pointer-events-none"
+                            />
+                            <img
+                                src={slide.imageUrl}
+                                alt={slide.title || "Hero Slide"}
+                                className="relative z-10 w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent z-20 pointer-events-none" />
                         </div>
                     ) : (
                         <div className={cn("absolute inset-0 bg-gradient-to-br", slide.bgColor || "from-primary via-primary to-emerald-950")}>

@@ -6,7 +6,8 @@ import { Menu, X, Phone, LogIn, User, LayoutDashboard, LogOut, Bell } from "luci
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { useSafeSession } from "@/lib/useSafeSession";
 import { usePathname } from "next/navigation";
 import { 
     DropdownMenu, 
@@ -36,7 +37,7 @@ interface PublicNavbarProps {
 }
 
 export default function PublicNavbar({ initialData }: PublicNavbarProps) {
-    const { data: session } = useSession();
+    const { data: session } = useSafeSession();
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);

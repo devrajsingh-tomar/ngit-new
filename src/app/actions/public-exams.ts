@@ -49,7 +49,12 @@ export async function getRecentTypingExams() {
         .lean();
 
         // Determine free exams
-        const govExamIds = Array.from(new Set(latestExams.map(e => e.govExamId?.toString()).filter(Boolean)));
+        const govExamIds = Array.from(new Set(latestExams.map(e => {
+            if (!e.govExamId) return null;
+            return typeof e.govExamId === "object" && "_id" in (e.govExamId as any) 
+                ? (e.govExamId as any)._id?.toString() 
+                : e.govExamId.toString();
+        }).filter(Boolean)));
         const freeExamIdsSet = new Set<string>();
         
         const freeNullExams = await TypingExam.find({
