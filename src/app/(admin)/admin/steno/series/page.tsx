@@ -33,6 +33,7 @@ export default function AdminStenoSeriesPage() {
     title: "",
     description: "",
     thumbnailUrl: "",
+    batch: "UPSSSC Steno",
     category: "General Series",
     language: "Hindi",
     selectedPassages: [] as string[],
@@ -69,6 +70,7 @@ export default function AdminStenoSeriesPage() {
       title: "",
       description: "",
       thumbnailUrl: "",
+      batch: "UPSSSC Steno",
       category: "General Series",
       language: "Hindi",
       selectedPassages: [],
@@ -84,6 +86,7 @@ export default function AdminStenoSeriesPage() {
       title: s.title || "",
       description: s.description || "",
       thumbnailUrl: s.thumbnailUrl || "",
+      batch: s.batch || "UPSSSC Steno",
       category: s.category || "General Series",
       language: s.language || "Hindi",
       selectedPassages: Array.isArray(s.passages) ? s.passages.map((p: any) => p._id || p) : [],
@@ -104,6 +107,7 @@ export default function AdminStenoSeriesPage() {
       title: formData.title.trim(),
       description: formData.description.trim(),
       thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
+      batch: formData.batch,
       category: formData.category.trim(),
       language: formData.language as any,
       passages: formData.selectedPassages,
@@ -275,11 +279,28 @@ export default function AdminStenoSeriesPage() {
             {/* Scrollable Form Body */}
             <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Series Title *</label>
+                <label className="text-xs font-bold text-slate-700">Target Steno Batch (Step 1 Batch) *</label>
+                <select
+                  value={formData.batch}
+                  onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                >
+                  <option value="UPSSSC Steno">UPSSSC Steno (यूपीएसएसएससी स्टेनो)</option>
+                  <option value="UPSI Steno">UPSI Steno (यूपीएसआई स्टेनो)</option>
+                  <option value="SSC Steno">SSC Steno Grade C & D (एसएससी स्टेनो)</option>
+                  <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट स्टेनो)</option>
+                  <option value="रामधारी खण्ड 1">रामधारी खण्ड 1 (Ramdhari Part 1)</option>
+                  <option value="रामधारी खण्ड 2">रामधारी खण्ड 2 (Ramdhari Part 2)</option>
+                  <option value="General Batch">General Steno Batch</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Series Topic / Title (Step 2 Topic) *</label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. UPSSSC PYQ, High Court Steno, Editorial"
+                  placeholder="e.g. संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, कुरुक्षेत्र पत्रिका"
                   className="rounded-xl text-xs font-semibold"
                   required
                 />

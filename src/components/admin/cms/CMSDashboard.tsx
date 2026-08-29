@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   Sliders, Plus, Trash2, Edit2, Check, X, Megaphone, Link as LinkIcon,
   ExternalLink, Sparkles, Layers, Bell, Layout, ArrowRight, Eye, RefreshCw,
-  PlusCircle, AlertCircle, Info, ChevronRight, Image as ImageIcon
+  PlusCircle, AlertCircle, Info, ChevronRight, Image as ImageIcon, Copy
 } from "lucide-react";
 import { getNotices, createNotice, updateNotice, deleteNotice } from "@/app/actions/notice";
 import { getMediaGallery, deleteMediaItem } from "@/app/actions/media";
@@ -40,6 +40,7 @@ export default function CMSDashboard() {
   const [loadingMedia, setLoadingMedia] = useState(false);
   const [mediaFilter, setMediaFilter] = useState("all");
   const [mediaSearch, setMediaSearch] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Modals state
   const [slideModalOpen, setSlideModalOpen] = useState(false);
@@ -167,6 +168,19 @@ export default function CMSDashboard() {
       }
     } catch {
       toast.error("Failed to delete media");
+    }
+  };
+
+  const handleCopyUrl = (id: string, url: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      navigator.clipboard.writeText(fullUrl);
+      setCopiedId(id);
+      toast.success("Image URL copied to clipboard");
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error("Failed to copy URL");
     }
   };
 
@@ -851,14 +865,41 @@ export default function CMSDashboard() {
                   <div key={m.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm group hover:shadow-md transition-all flex flex-col justify-between">
                     <div>
                       {/* Image Preview */}
-                      <div className="w-full aspect-square relative bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100">
+                      <div className="w-full aspect-square relative bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100 group/img">
                         <img 
                           src={m.url} 
                           alt={m.filename} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                         />
+
+                        {/* Hover Quick Actions Overlay */}
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-[2px]">
+                          <Button
+                            onClick={(e) => handleCopyUrl(m.id, m.url, e)}
+                            size="icon"
+                            variant="secondary"
+                            className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-slate-700 shadow-md transition-transform hover:scale-110"
+                            title="Copy Image URL"
+                          >
+                            {copiedId === m.id ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <a
+                            href={m.url.startsWith('http') ? m.url : `${window.location.origin}${m.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-slate-700 shadow-md flex items-center justify-center transition-transform hover:scale-110"
+                            title="Open full image"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+
                         {/* Usage Status Badge */}
-                        <div className="absolute top-2 right-2 z-10">
+                        <div className="absolute top-2 right-2 z-10 pointer-events-none">
                           {m.inUse ? (
                             <span className="bg-emerald-500/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm">
                               In Use
@@ -881,16 +922,34 @@ export default function CMSDashboard() {
                         </div>
                       </div>
                     </div>
-                    {/* Delete Action footer */}
-                    <div className="p-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end">
+                    {/* Action footer */}
+                    <div className="p-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                      <Button
+                        onClick={(e) => handleCopyUrl(m.id, m.url, e)}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 flex-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border-slate-200 text-[10px] font-bold rounded-xl transition-all"
+                      >
+                        {copiedId === m.id ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 mr-1" />
+                            Copy Link
+                          </>
+                        )}
+                      </Button>
                       <Button
                         onClick={() => handleDeleteMedia(m.id)}
                         variant="outline"
                         size="sm"
-                        className="h-7 w-full text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-slate-200 text-[10px] font-bold rounded-xl"
+                        className="h-7 px-2.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-slate-200 text-[10px] font-bold rounded-xl"
+                        title="Delete File"
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-1" />
-                        Delete File
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </div>

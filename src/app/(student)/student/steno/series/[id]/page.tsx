@@ -106,22 +106,25 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
+            <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
+              Step 3 of 3 • Dictation Passages
+            </span>
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
               {series.category || "Official Batch"}
             </span>
             <span className="text-xs font-bold text-slate-400">• {series.language || "Hindi"} Steno</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            {series.title}
+            {series.title} • आशुलिपि डिक्टेशन सूची
           </h1>
           {series.description && (
             <p className="text-xs text-slate-500 font-medium max-w-xl">{series.description}</p>
           )}
         </div>
 
-        <Link href="/student/steno/series">
+        <Link href={series.batch ? `/student/steno/series/batch/${encodeURIComponent(series.batch)}` : "/student/steno/series"}>
           <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-            <ArrowLeft className="w-4 h-4" /> Back to Batches
+            <ArrowLeft className="w-4 h-4" /> Back to Series
           </Button>
         </Link>
       </div>

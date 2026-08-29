@@ -67,6 +67,8 @@ export async function getStenoSeriesListAction(query?: any) {
     await seedDefaultSeriesAndPassagesAction();
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
+    if (query?.batch) filter.batch = query.batch;
+    if (query?.category) filter.category = query.category;
 
     const series = await StenoSeries.find(filter)
       .populate("passages")
@@ -389,15 +391,21 @@ export async function seedDefaultSeriesAndPassagesAction() {
     const seriesCount = await StenoSeries.countDocuments();
     if (seriesCount === 0) {
       const defaultSeries = [
-        { title: "UPSSSC PYQ", description: "Previous Year Questions for UPSSSC Steno", category: "PYQ", language: "Hindi", sortOrder: 1 },
-        { title: "SSC Steno PYQ", description: "Official SSC Grade C & D Previous Dictations", category: "PYQ", language: "Hindi", sortOrder: 2 },
-        { title: "High Court Steno", description: "Legal & Court Room Dictations", category: "Court", language: "Hindi", sortOrder: 3 },
-        { title: "Editorial", description: "Daily News & Newspaper Editorial Series", category: "Editorial", language: "Hindi", sortOrder: 4 },
-        { title: "Essay Collection", description: "Curated Essays for Speed Enhancement", category: "Essay", language: "Hindi", sortOrder: 5 },
-        { title: "Literature", description: "Hindi Sahitya & Literature Passages", category: "Literature", language: "Hindi", sortOrder: 6 },
-        { title: "Stories", description: "Narrative Stories Dictations", category: "Stories", language: "Hindi", sortOrder: 7 },
-        { title: "Magazine", description: "General Knowledge & Magazine Dictations", category: "Magazine", language: "Hindi", sortOrder: 8 },
-        { title: "Custom Series", description: "Custom User & Speed Drills Series", category: "Custom", language: "English", sortOrder: 9 },
+        // UPSSSC Steno Series Topics (as per diagram)
+        { title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
+        { title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
+        { title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
+        { title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
+        { title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
+        { title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
+        { title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
+        { title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
+        { title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
+
+        // High Court & Other Batches
+        { title: "High Court Legal Series", description: "High Court & District Court Judgments", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
+        { title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
+        { title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
       ];
 
       await StenoSeries.insertMany(defaultSeries);
