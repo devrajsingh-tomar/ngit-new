@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SecondarySlideItem {
@@ -47,44 +47,44 @@ export default function SecondaryBannerSlider({ slides = [] }: SecondaryBannerSl
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 my-10">
-      <div className="relative w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-950 group aspect-[16/6] min-h-[220px] max-h-[480px]">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 my-8">
+      <div className="relative w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-950 group aspect-[16/5.2] sm:aspect-[3.2/1] min-h-[180px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide._id || currentIndex}
-            initial={{ opacity: 0, scale: 1.02 }}
+            initial={{ opacity: 0, scale: 1.01 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative w-full h-full flex items-center justify-center"
+            exit={{ opacity: 0, scale: 0.99 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative w-full h-full flex items-center justify-center p-1 sm:p-2"
           >
             {/* Ambient Background Blur */}
             <div
-              className="absolute inset-0 bg-cover bg-center blur-2xl opacity-30 pointer-events-none scale-110"
+              className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 pointer-events-none scale-110"
               style={{ backgroundImage: `url(${currentSlide.imageUrl})` }}
             />
 
-            {/* Slide Link / Main Image */}
+            {/* Slide Link / Main Image - Uncropped Complete Display */}
             {currentSlide.link ? (
-              <Link href={currentSlide.link} className="relative z-10 w-full h-full block">
+              <Link href={currentSlide.link} className="relative z-10 w-full h-full flex items-center justify-center">
                 <img
                   src={currentSlide.imageUrl}
                   alt={currentSlide.title || "Banner Slide"}
-                  className="w-full h-full object-cover rounded-[2.5rem]"
+                  className="w-full h-full object-contain rounded-[2rem] drop-shadow-md"
                 />
               </Link>
             ) : (
               <img
                 src={currentSlide.imageUrl}
                 alt={currentSlide.title || "Banner Slide"}
-                className="relative z-10 w-full h-full object-cover rounded-[2.5rem]"
+                className="relative z-10 w-full h-full object-contain rounded-[2rem] drop-shadow-md"
               />
             )}
 
             {/* Slide Title Overlay (if provided) */}
             {currentSlide.title && (
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-6 z-20 pointer-events-none rounded-b-[2.5rem]">
-                <h3 className="text-white font-black text-lg sm:text-2xl drop-shadow-md">
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 sm:p-6 z-20 pointer-events-none rounded-b-[2.5rem]">
+                <h3 className="text-white font-black text-base sm:text-2xl drop-shadow-md">
                   {currentSlide.title}
                 </h3>
               </div>

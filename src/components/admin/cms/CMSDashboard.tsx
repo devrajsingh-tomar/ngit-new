@@ -1090,10 +1090,11 @@ export default function CMSDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {secondarySlides.map((s) => (
                   <div key={s._id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                    <div className="w-full aspect-[16/9] relative bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100">
-                      <img src={s.imageUrl} alt={s.title || "Banner"} className="w-full h-full object-cover" />
+                    <div className="w-full aspect-[16/5.2] relative bg-slate-950 overflow-hidden flex items-center justify-center border-b border-slate-100 p-1">
+                      <img src={s.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 pointer-events-none" />
+                      <img src={s.imageUrl} alt={s.title || "Banner"} className="relative z-10 w-full h-full object-contain rounded-xl" />
                       {s.title && (
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 p-2 text-white text-xs font-bold truncate">
+                        <div className="absolute bottom-0 inset-x-0 bg-black/70 p-2 text-white text-[11px] font-bold truncate z-20">
                           {s.title}
                         </div>
                       )}
@@ -1177,6 +1178,12 @@ export default function CMSDashboard() {
                 className="h-9 text-xs"
                 required
               />
+              {secondaryForm.imageUrl && (
+                <div className="w-full aspect-[16/5.2] rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 relative flex items-center justify-center p-1 mt-2">
+                  <img src={secondaryForm.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 pointer-events-none" />
+                  <img src={secondaryForm.imageUrl} alt="Live Banner Preview" className="relative z-10 w-full h-full object-contain rounded-xl" />
+                </div>
+              )}
             </div>
 
             <div className="space-y-1">
