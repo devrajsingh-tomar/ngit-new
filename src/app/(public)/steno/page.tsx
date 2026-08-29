@@ -26,68 +26,56 @@ export default function StenoMainLandingPage() {
   const isLoggedIn = status === "authenticated";
 
   return (
-    <div className="bg-slate-50 min-h-screen py-10 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-12">
-        {/* Single Informational Hero Section */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[2.5rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-5 max-w-2xl z-10">
-            <span className="bg-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-indigo-400/30">
-              India's Premier Stenography & Shorthand Portal
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-              Master Shorthand Dictations & Real-Time Transcriptions
-            </h1>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              Prepare for High Court, SSC Grade C & D, UPSSSC, and Railway Stenographer examinations with professional audio dictations, Kruti Dev & Mangal font engine, and automated error calculation.
-            </p>
+    <div className="bg-slate-50 min-h-screen py-8 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Single Top Banner Image */}
+        <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
+          <img
+            src="https://ngitedu.com/uploads/gallery/1787956222932-d84153c2-8f95-4d2e-8690-207c4d3b679f.jpg"
+            alt="NGIT Steno Shorthand Portal"
+            className="w-full h-auto object-cover rounded-[2.5rem]"
+          />
+        </div>
 
-            <div className="flex flex-wrap gap-4 pt-2">
-              {isLoggedIn ? (
-                <>
-                  <Link href="/student/steno/dashboard">
-                    <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
-                      <BarChart3 className="w-5 h-5" /> Open Student Steno Dashboard
-                    </Button>
-                  </Link>
-                  <Link href="/student">
-                    <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
-                      <GraduationCap className="w-5 h-5 text-indigo-300" /> Student Portal
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/login?callbackUrl=/student/steno/dashboard">
-                    <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
-                      <Lock className="w-5 h-5" /> Student Login for Access
-                    </Button>
-                  </Link>
-                  <Link href="/login?callbackUrl=/student/steno/dictation">
-                    <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
-                      <Headphones className="w-5 h-5 text-indigo-300" /> Access Dictation Software
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
+        {/* Quick Access Bar */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900">
+              National Genius Institute of Technology • Stenography Portal
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Explore official Steno dictation batches, speed fluctuation audio player, and government exam evaluation.
+            </p>
           </div>
 
-          {/* Engine Highlights Badge Box */}
-          <div className="w-full md:w-80 bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl space-y-4 z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center font-black">
-                <Mic className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h4 className="font-black text-sm text-white">Steno Audio Engine</h4>
-                <p className="text-[10px] text-slate-300">0.5x - 2.0x Dictation Playback</p>
-              </div>
-            </div>
-            <div className="border-t border-white/10 pt-3 space-y-2 text-xs text-slate-300">
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Remington & Inscript Layouts</p>
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Half & Full Error Breakdown</p>
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> SSC & High Court Exam Rules</p>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            {isLoggedIn ? (
+              <>
+                <Link href="/student/steno/dashboard">
+                  <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-11 px-5 rounded-2xl shadow-md gap-2 text-xs">
+                    <BarChart3 className="w-4 h-4" /> Open Student Steno Dashboard
+                  </Button>
+                </Link>
+                <Link href="/student/steno/series">
+                  <Button variant="outline" className="font-bold h-11 px-5 rounded-2xl border-slate-200 text-slate-700 text-xs gap-2">
+                    <Layers className="w-4 h-4 text-indigo-600" /> Browse Steno Batches
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login?callbackUrl=/student/steno/dashboard">
+                  <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-11 px-5 rounded-2xl shadow-md gap-2 text-xs">
+                    <Lock className="w-4 h-4" /> Student Login for Access
+                  </Button>
+                </Link>
+                <Link href="/login?callbackUrl=/student/steno/dictation">
+                  <Button variant="outline" className="font-bold h-11 px-5 rounded-2xl border-slate-200 text-slate-700 text-xs gap-2">
+                    <Headphones className="w-4 h-4 text-indigo-600" /> Access Dictation Software
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -125,7 +113,6 @@ export default function StenoMainLandingPage() {
             </Link>
           </Card>
         </div>
-
 
         {/* Informational Exam Standards & Font Support Banner */}
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
