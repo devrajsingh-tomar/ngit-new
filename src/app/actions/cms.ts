@@ -5,6 +5,7 @@ import CmsPage from "@/models/CmsPage";
 import CmsSection from "@/models/CmsSection";
 import CmsContentBlock from "@/models/CmsContentBlock";
 import HeroSlide from "@/models/HeroSlide";
+import SecondarySlide from "@/models/SecondarySlide";
 import { revalidatePath } from "next/cache";
 
 export async function getHeroSlides() {
@@ -194,6 +195,52 @@ export async function getDynamicPageData(pageName: string) {
             page: JSON.parse(JSON.stringify(page)), 
             sections: JSON.parse(JSON.stringify(sectionsData)) 
         };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ── SECONDARY BANNER SLIDES ──
+
+export async function getSecondarySlides(all = false) {
+    try {
+        await connectDB();
+        const filter = all ? {} : { isActive: true };
+        const slides = await SecondarySlide.find(filter).sort({ order: 1, createdAt: -1 }).lean();
+        return { success: true, slides: JSON.parse(JSON.stringify(slides)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function createSecondarySlideAction(data: any) {
+    try {
+        await connectDB();
+        const slide = await SecondarySlide.create(data);
+        revalidatePath("/");
+        return { success: true, slide: JSON.parse(JSON.stringify(slide)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updateSecondarySlideAction(id: string, data: any) {
+    try {
+        await connectDB();
+        const slide = await SecondarySlide.findByIdAndUpdate(id, data, { new: true }).lean();
+        revalidatePath("/");
+        return { success: true, slide: JSON.parse(JSON.stringify(slide)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteSecondarySlideAction(id: string) {
+    try {
+        await connectDB();
+        await SecondarySlide.findByIdAndDelete(id);
+        revalidatePath("/");
+        return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
     }
