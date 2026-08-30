@@ -160,22 +160,85 @@ export default function StenoMainLandingPage() {
           </Card>
         </div>
 
-        {/* 3. Steno Visual Banners & Guides Section */}
-        <div className="space-y-8">
-          <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
-            <img
-              src="/images/steno-test-guide-banner.jpg"
-              alt="ऑनलाइन स्टेनो टेस्ट कैसे दें"
-              className="w-full h-auto object-cover rounded-[2.5rem]"
-            />
-          </div>
-          <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
-            <img
-              src="/images/steno-analytics-banner.jpg"
-              alt="आपकी मेहनत, हमारा मूल्यांकन - पूरा लेखा जोखा"
-              className="w-full h-auto object-cover rounded-[2.5rem]"
-            />
-          </div>
+        {/* 3. Steno Visual Banners & Guides Grid (Side-by-side in laptop view) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          {/* Card 3: ऑनलाइन स्टेनो टेस्ट कैसे दें */}
+          <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              {/* Image Banner Above Section */}
+              <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+                <img
+                  src="/images/steno-test-guide-banner.jpg"
+                  alt="ऑनलाइन स्टेनो टेस्ट कैसे दें"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              {/* Section Details */}
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5" /> Steno Test Guide
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">ऑनलाइन स्टेनो टेस्ट कैसे दें</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  5 सरल चरणों में ऑनलाइन स्टेनो टेस्ट देना सीखें • Register, Login, Select Batch, Pick Test, and Start Practice.
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="p-6 sm:p-8 pt-0">
+              <Link
+                href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
+                className="w-full inline-block"
+              >
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
+                  {isLoggedIn ? "Start Online Steno Practice" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </Card>
+
+          {/* Card 4: मूल्यांकन करके पूरा लेखा जोखा */}
+          <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              {/* Image Banner Above Section */}
+              <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+                <img
+                  src="/images/steno-analytics-banner.jpg"
+                  alt="आपकी मेहनत, हमारा मूल्यांकन • पूरा लेखा जोखा"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              {/* Section Details */}
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5" /> Student Analytics & Record
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">मूल्यांकन करके पूरा लेखा जोखा</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  आपकी मेहनत, हमारा मूल्यांकन • Complete student record tracking with daily practice, test evaluation, progress graphs & target setting.
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="p-6 sm:p-8 pt-0">
+              <Link
+                href={isLoggedIn ? "/student/steno/dashboard" : "/login?callbackUrl=/student/steno/dashboard"}
+                className="w-full inline-block"
+              >
+                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
+                  {isLoggedIn ? "Open Student Dashboard" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </div>
 
         {/* 4. Your Doubt Solution Section */}
