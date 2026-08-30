@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function AdminStenoSeriesPage() {
   const [seriesList, setSeriesList] = useState<any[]>([]);
@@ -341,39 +342,37 @@ export default function AdminStenoSeriesPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-700">Thumbnail URL</label>
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-emerald-600" /> Series Topic / Step 2 Thumbnail Image
+                  </label>
                   <a
                     href="/admin/gallery"
                     target="_blank"
                     rel="noreferrer"
                     className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1"
                   >
-                    <ImageIcon className="w-3 h-3" /> Get URL from Gallery CMS →
+                    Gallery CMS →
                   </a>
                 </div>
-                <Input
+                <ImageUpload
                   value={formData.thumbnailUrl}
-                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="Paste image URL here (e.g. /uploads/image.jpg or https://...)"
-                  className="rounded-xl text-xs font-semibold"
+                  onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                  onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
+                  label="Upload Series Topic Thumbnail"
                 />
-                {formData.thumbnailUrl && (
-                  <div className="h-32 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 relative flex items-center justify-center p-1">
-                    <img
-                      src={formData.thumbnailUrl}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
-                    />
-                    <img
-                      src={formData.thumbnailUrl}
-                      alt="Thumbnail Preview"
-                      className="relative z-10 w-full h-full object-contain rounded-xl"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                  </div>
-                )}
+                <div className="pt-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Or Image URL Link:
+                  </label>
+                  <Input
+                    value={formData.thumbnailUrl}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                    placeholder="Paste image URL (e.g. /uploads/... or https://...)"
+                    className="rounded-xl text-xs font-semibold bg-white"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

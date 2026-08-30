@@ -231,21 +231,6 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
               className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between group"
             >
               <div className="space-y-3">
-                {/* Dictation Test Thumbnail (16:9 ratio matching 1024x576) */}
-                {test.thumbnailUrl && (
-                  <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-950 relative flex items-center justify-center p-1 border border-slate-100 shadow-xs mb-1">
-                    <img
-                      src={test.thumbnailUrl}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
-                    />
-                    <img
-                      src={test.thumbnailUrl}
-                      alt={test.title}
-                      className="relative z-10 w-full h-full object-contain rounded-xl"
-                    />
-                  </div>
-                )}
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
                     {test.targetWpm || 80} WPM • {test.language || "Hindi"}

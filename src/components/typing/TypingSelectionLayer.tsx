@@ -80,14 +80,23 @@ export default function TypingSelectionLayer() {
       });
   }, []);
 
-  const modules = [
+  const modules: Array<{
+    id: any;
+    title: string;
+    description: string;
+    icon: any;
+    color: string;
+    lightColor: string;
+    thumbnail?: string;
+  }> = [
     {
       id: 'WORD' as Module,
       title: 'Word Practice',
       description: 'Build muscle memory with A-Z and length-based drills.',
       icon: Keyboard,
       color: 'bg-blue-500',
-      lightColor: 'bg-blue-50'
+      lightColor: 'bg-blue-50',
+      thumbnail: '/images/word-practice-thumbnail.jpg'
     },
     {
       id: 'SPECIAL' as Module,
@@ -95,7 +104,8 @@ export default function TypingSelectionLayer() {
       description: 'Practice with specialized essays and stay updated with daily news passages.',
       icon: Newspaper,
       color: 'bg-emerald-500',
-      lightColor: 'bg-emerald-50'
+      lightColor: 'bg-emerald-50',
+      thumbnail: '/images/special-topic-thumbnail.jpg'
     },
     {
       id: 'BOOK' as any,
@@ -103,16 +113,18 @@ export default function TypingSelectionLayer() {
       description: 'Master specialized typing books chapter by chapter.',
       icon: BookOpen,
       color: 'bg-amber-500',
-      lightColor: 'bg-amber-50'
+      lightColor: 'bg-amber-50',
+      thumbnail: '/images/book-practice-thumbnail.jpg'
     },
     {
-        id: 'OFFICIAL' as Module,
-        title: 'Government Exams',
-        description: 'Take standard SSC, Railway, UPSSSC, and State Police exams.',
-        icon: Award,
-        color: 'bg-slate-900',
-        lightColor: 'bg-slate-100'
-      }
+      id: 'OFFICIAL' as Module,
+      title: 'Government Exams',
+      description: 'Take standard SSC, Railway, UPSSSC, and State Police exams.',
+      icon: Award,
+      color: 'bg-slate-900',
+      lightColor: 'bg-slate-100',
+      thumbnail: '/images/govt-exams-thumbnail.jpg'
+    }
   ];
 
   // Compute dynamic categories
@@ -259,12 +271,22 @@ export default function TypingSelectionLayer() {
           <Card 
             key={m.id}
             onClick={() => handleModuleSelect(m.id)}
-            className="group cursor-pointer p-6 rounded-[2rem] border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 flex flex-col relative overflow-hidden"
+            className="group cursor-pointer p-6 rounded-[2rem] border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 flex flex-col relative overflow-hidden bg-white"
           >
-            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg", m.color)}>
-              <m.icon className="w-7 h-7" />
-            </div>
-            <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors">{m.title}</h3>
+            {m.thumbnail ? (
+              <div className="w-full aspect-square rounded-2xl overflow-hidden mb-5 bg-slate-50 border border-slate-100 shadow-xs relative">
+                <img
+                  src={m.thumbnail}
+                  alt={m.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+            ) : (
+              <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg", m.color)}>
+                <m.icon className="w-7 h-7" />
+              </div>
+            )}
+            <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-primary transition-colors">{m.title}</h3>
             <p className="text-[11px] font-bold text-slate-400 leading-relaxed mb-6 line-clamp-2">{m.description}</p>
             <div className="mt-auto flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
               Get Started <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -524,9 +546,18 @@ export default function TypingSelectionLayer() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="mb-16">
-        <h2 className="text-5xl font-black text-slate-900 tracking-tight leading-none mb-4">
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12 space-y-8 sm:space-y-10">
+      {/* Banner Image */}
+      <div className="w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 shadow-md bg-white">
+        <img
+          src="/images/typing-hero-banner.png"
+          alt="NGIT Institute Online Typing Platform"
+          className="w-full h-auto object-cover"
+        />
+      </div>
+
+      <div className="mb-10 sm:mb-16">
+        <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-none mb-3 sm:mb-4">
             Selection <span className="text-primary">Center</span>
         </h2>
         <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs">

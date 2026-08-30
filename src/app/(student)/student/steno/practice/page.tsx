@@ -118,21 +118,6 @@ export default function StudentStenoPracticePage() {
           {passages.map((p) => (
             <Card key={p._id} className="p-5 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 transition-all flex flex-col justify-between">
               <div className="space-y-2">
-                {/* 16:9 Dictation Passage Thumbnail */}
-                {p.thumbnailUrl && (
-                  <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-950 relative flex items-center justify-center p-1 border border-slate-100 shadow-xs mb-2">
-                    <img
-                      src={p.thumbnailUrl}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
-                    />
-                    <img
-                      src={p.thumbnailUrl}
-                      alt={p.title}
-                      className="relative z-10 w-full h-full object-contain rounded-xl"
-                    />
-                  </div>
-                )}
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
                     {p.language} • {p.targetWpm} WPM

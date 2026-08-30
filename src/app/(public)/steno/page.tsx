@@ -79,49 +79,7 @@ export default function StenoMainLandingPage() {
           />
         </div>
 
-        {/* 2. Quick Access Bar */}
-        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="text-lg sm:text-xl font-black text-slate-900">
-              National Genius Institute of Technology • Stenography Portal
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Explore official Steno dictation batches, speed fluctuation audio player, and government exam evaluation.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {isLoggedIn ? (
-              <>
-                <Link href="/student/steno/dashboard">
-                  <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-11 px-5 rounded-2xl shadow-md gap-2 text-xs">
-                    <BarChart3 className="w-4 h-4" /> Open Student Steno Dashboard
-                  </Button>
-                </Link>
-                <Link href="/student/steno/series">
-                  <Button variant="outline" className="font-bold h-11 px-5 rounded-2xl border-slate-200 text-slate-700 text-xs gap-2">
-                    <Layers className="w-4 h-4 text-indigo-600" /> Browse Steno Batches
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/login?callbackUrl=/student/steno/dashboard">
-                  <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-11 px-5 rounded-2xl shadow-md gap-2 text-xs">
-                    <Lock className="w-4 h-4" /> Student Login for Access
-                  </Button>
-                </Link>
-                <Link href="/login?callbackUrl=/student/steno/dictation">
-                  <Button variant="outline" className="font-bold h-11 px-5 rounded-2xl border-slate-200 text-slate-700 text-xs gap-2">
-                    <Headphones className="w-4 h-4 text-indigo-600" /> Access Dictation Software
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* 3. Steno Main Cards Grid (Side-by-side in laptop view) */}
+        {/* 2. Steno Main Cards Grid (Side-by-side in laptop view) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Card 1: Steno Batches & Series Collections */}
           <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
@@ -129,7 +87,7 @@ export default function StenoMainLandingPage() {
               {/* Image Banner Above Section */}
               <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
                 <img
-                  src="https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg"
+                  src="/images/steno-test-guide-banner.jpg"
                   alt="Steno Batches & Series Collections"
                   className="w-full h-auto object-cover"
                 />
@@ -168,7 +126,7 @@ export default function StenoMainLandingPage() {
               {/* Image Banner Above Section */}
               <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
                 <img
-                  src="/images/steno-student-evaluation-dashboard.jpg"
+                  src="/images/steno-analytics-banner.jpg"
                   alt="Steno Student Evaluation & Record Dashboard"
                   className="w-full h-auto object-cover"
                 />

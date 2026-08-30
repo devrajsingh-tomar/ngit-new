@@ -45,7 +45,6 @@ export default function AdminStenoPassagesPage() {
     durationMinutes: 35,
     audioUrl: "",
     videoUrl: "",
-    thumbnailUrl: "",
     availableSpeeds: "40, 50, 60, 70, 80, 90, 100, 110, 120",
     targetWpm: 80,
     isPublished: true,
@@ -89,7 +88,6 @@ export default function AdminStenoPassagesPage() {
       durationMinutes: 35,
       audioUrl: "",
       videoUrl: "",
-      thumbnailUrl: "",
       availableSpeeds: "40, 50, 60, 70, 80, 90, 100, 110, 120",
       targetWpm: 80,
       isPublished: true,
@@ -112,7 +110,6 @@ export default function AdminStenoPassagesPage() {
       durationMinutes: p.durationMinutes || (p.durationSeconds ? Math.round(p.durationSeconds / 60) : 35),
       audioUrl: p.audioUrl || "",
       videoUrl: p.videoUrl || "",
-      thumbnailUrl: p.thumbnailUrl || "",
       availableSpeeds: Array.isArray(p.availableSpeeds)
         ? p.availableSpeeds.join(", ")
         : "40, 50, 60, 70, 80, 90, 100, 110, 120",
@@ -144,7 +141,6 @@ export default function AdminStenoPassagesPage() {
       durationSeconds: durationMins * 60,
       audioUrl: formData.audioUrl.trim(),
       videoUrl: formData.videoUrl.trim() || undefined,
-      thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
       availableSpeeds: formData.availableSpeeds
         .split(",")
         .map((s) => Number(s.trim()))
@@ -302,21 +298,6 @@ export default function AdminStenoPassagesPage() {
             return (
               <Card key={p._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative flex flex-col justify-between">
                 <div className="space-y-3">
-                  {/* 16:9 Dictation Passage Thumbnail */}
-                  {p.thumbnailUrl && (
-                    <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-950 relative flex items-center justify-center p-1 border border-slate-100 shadow-xs mb-2">
-                      <img
-                        src={p.thumbnailUrl}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
-                      />
-                      <img
-                        src={p.thumbnailUrl}
-                        alt={p.title}
-                        className="relative z-10 w-full h-full object-contain rounded-xl"
-                      />
-                    </div>
-                  )}
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
                       {modeBadge} • {p.targetWpm} WPM
@@ -491,41 +472,14 @@ export default function AdminStenoPassagesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Video URL (Optional)</label>
-                  <Input
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    placeholder="https://youtube.com/..."
-                    className="rounded-xl text-xs font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Thumbnail URL (Optional - 1024x576 / 16:9 ratio)</label>
-                  <Input
-                    value={formData.thumbnailUrl}
-                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                    placeholder="https://domain.com/thumb.jpg"
-                    className="rounded-xl text-xs font-semibold"
-                  />
-                  {formData.thumbnailUrl && (
-                    <div className="w-full aspect-[16/9] max-h-36 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 relative flex items-center justify-center p-1 mt-1">
-                      <img
-                        src={formData.thumbnailUrl}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
-                      />
-                      <img
-                        src={formData.thumbnailUrl}
-                        alt="Thumbnail Preview"
-                        className="relative z-10 w-full h-full object-contain rounded-lg"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
-                    </div>
-                  )}
-                </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Video URL (Optional)</label>
+                <Input
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  placeholder="https://youtube.com/..."
+                  className="rounded-xl text-xs font-semibold"
+                />
               </div>
 
               <div className="space-y-1">

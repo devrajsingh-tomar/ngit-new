@@ -64,7 +64,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
 
     const navLinks: NavLink[] = [
         { label: "Home", href: "/" },
-        { label: "Courses", href: "/courses" },
+        { label: "Courses", href: "https://student.ngitedu.com/" },
         { label: "Typing Tests", href: "/typing" },
         { label: "ShortHand", href: "/steno" },
         { label: "Practical Tools", href: "/tools" },
@@ -96,17 +96,35 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                     <div className="hidden lg:flex items-center gap-1">
                         <div className="flex items-center gap-0.5">
                             {navLinks.map((link, idx) => {
-                                const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href));
+                                const isExternal = link.href.startsWith("http");
+                                const isActive = !isExternal && (pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href)));
+                                const linkClass = cn(
+                                    "px-2.5 xl:px-3.5 py-2 text-[13px] xl:text-[14px] whitespace-nowrap font-bold rounded-lg transition-all relative group",
+                                    isActive 
+                                        ? "text-primary bg-primary/5" 
+                                        : "text-slate-600 hover:text-primary hover:bg-primary/5"
+                                );
+
+                                if (isExternal) {
+                                    return (
+                                        <a
+                                            key={idx}
+                                            href={link.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={linkClass}
+                                        >
+                                            {link.label}
+                                            <span className="absolute bottom-1 left-3.5 right-3.5 h-[2px] bg-primary transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100"></span>
+                                        </a>
+                                    );
+                                }
+
                                 return (
                                     <Link
                                         key={idx}
                                         href={link.href}
-                                        className={cn(
-                                            "px-2.5 xl:px-3.5 py-2 text-[13px] xl:text-[14px] whitespace-nowrap font-bold rounded-lg transition-all relative group",
-                                            isActive 
-                                                ? "text-primary bg-primary/5" 
-                                                : "text-slate-600 hover:text-primary hover:bg-primary/5"
-                                        )}
+                                        className={linkClass}
                                     >
                                         {link.label}
                                         <span className={cn(
@@ -241,17 +259,35 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                     <div className="lg:hidden mt-4 pb-4 border-t pt-4 animate-slide-up">
                         <div className="flex flex-col space-y-1">
                             {navLinks.map((link, idx) => {
-                                const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href));
+                                const isExternal = link.href.startsWith("http");
+                                const isActive = !isExternal && (pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href)));
+                                const linkClass = cn(
+                                    "text-base font-bold py-2.5 px-4 rounded-xl transition-colors",
+                                    isActive 
+                                        ? "text-primary bg-primary/5" 
+                                        : "text-slate-600 hover:bg-slate-50"
+                                );
+
+                                if (isExternal) {
+                                    return (
+                                        <a
+                                            key={idx}
+                                            href={link.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={linkClass}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            {link.label}
+                                        </a>
+                                    );
+                                }
+
                                 return (
                                     <Link
                                         key={idx}
                                         href={link.href}
-                                        className={cn(
-                                            "text-base font-bold py-2.5 px-4 rounded-xl transition-colors",
-                                            isActive 
-                                                ? "text-primary bg-primary/5" 
-                                                : "text-slate-600 hover:bg-slate-50"
-                                        )}
+                                        className={linkClass}
                                         onClick={() => setIsOpen(false)}
                                     >
                                         {link.label}

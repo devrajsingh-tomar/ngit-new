@@ -140,6 +140,9 @@ export default async function Footer() {
                                     <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
                                 </li>
                                 <li>
+                                    <a href="https://student.ngitedu.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors">Courses</a>
+                                </li>
+                                <li>
                                     <Link href="/enroll" className="text-indigo-600 font-bold hover:text-slate-900 transition-colors">Online Admission</Link>
                                 </li>
                                 <li>

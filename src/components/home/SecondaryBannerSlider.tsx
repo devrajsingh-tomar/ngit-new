@@ -48,42 +48,36 @@ export default function SecondaryBannerSlider({ slides = [] }: SecondaryBannerSl
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 my-8">
-      <div className="relative w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-950 group aspect-[16/5.2] sm:aspect-[3.2/1] min-h-[180px]">
+      <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-white group">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide._id || currentIndex}
-            initial={{ opacity: 0, scale: 1.01 }}
+            initial={{ opacity: 0, scale: 1.005 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative w-full h-full flex items-center justify-center p-1 sm:p-2"
+            exit={{ opacity: 0, scale: 0.995 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="relative w-full flex items-center justify-center overflow-hidden"
           >
-            {/* Ambient Background Blur */}
-            <div
-              className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 pointer-events-none scale-110"
-              style={{ backgroundImage: `url(${currentSlide.imageUrl})` }}
-            />
-
-            {/* Slide Link / Main Image - Uncropped Complete Display */}
+            {/* Slide Link / Main Image - Full Width Uncropped Display */}
             {currentSlide.link ? (
-              <Link href={currentSlide.link} className="relative z-10 w-full h-full flex items-center justify-center">
+              <Link href={currentSlide.link} className="relative z-10 w-full block">
                 <img
                   src={currentSlide.imageUrl}
                   alt={currentSlide.title || "Banner Slide"}
-                  className="w-full h-full object-contain rounded-[2rem] drop-shadow-md"
+                  className="w-full h-auto block object-cover rounded-2xl sm:rounded-3xl"
                 />
               </Link>
             ) : (
               <img
                 src={currentSlide.imageUrl}
                 alt={currentSlide.title || "Banner Slide"}
-                className="relative z-10 w-full h-full object-contain rounded-[2rem] drop-shadow-md"
+                className="relative z-10 w-full h-auto block object-cover rounded-2xl sm:rounded-3xl"
               />
             )}
 
             {/* Slide Title Overlay (if provided) */}
             {currentSlide.title && (
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 sm:p-6 z-20 pointer-events-none rounded-b-[2.5rem]">
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 sm:p-6 z-20 pointer-events-none rounded-b-2xl sm:rounded-b-3xl">
                 <h3 className="text-white font-black text-base sm:text-2xl drop-shadow-md">
                   {currentSlide.title}
                 </h3>
