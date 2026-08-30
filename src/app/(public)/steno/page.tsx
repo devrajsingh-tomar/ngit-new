@@ -16,6 +16,7 @@ import {
   HelpCircle,
   X,
   Play,
+  Trophy,
 } from "lucide-react";
 import {
   Dialog,
@@ -101,8 +102,8 @@ export default function StenoMainLandingPage() {
                   </span>
                 </div>
                 <h3 className="text-2xl font-black text-slate-900">Steno Batches & Series Collections</h3>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Curated Legal, Editorial, PYQ, and Speed Building passage collections categorized for targeted speed enhancement.
+                <p className="text-xs sm:text-sm text-slate-600 font-semibold leading-relaxed">
+                  <span className="text-slate-900 font-extrabold">एक कदम सफलता की ओर</span> • Curated Legal, Editorial, PYQ, and Speed Building passage collections categorized for targeted speed enhancement.
                 </p>
               </div>
             </div>
@@ -120,14 +121,14 @@ export default function StenoMainLandingPage() {
             </div>
           </Card>
 
-          {/* Card 2: Student Evaluation & Record Dashboard */}
+          {/* Card 2: Steno Free Weekly Test */}
           <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
             <div>
               {/* Image Banner Above Section */}
               <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
                 <img
-                  src="/images/steno-student-evaluation-dashboard.jpg"
-                  alt="Steno Student Evaluation & Record Dashboard"
+                  src="/images/steno-weekly-test-banner.jpg"
+                  alt="NGIT Steno Free Weekly Test"
                   className="w-full h-auto object-cover"
                 />
               </div>
@@ -136,12 +137,12 @@ export default function StenoMainLandingPage() {
               <div className="p-6 sm:p-8 space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1.5">
-                    <BarChart3 className="w-3.5 h-3.5" /> Student Analytics & Evaluation
+                    <Trophy className="w-3.5 h-3.5" /> Steno Free Weekly Test
                   </span>
                 </div>
-                <h3 className="text-2xl font-black text-slate-900">Steno Evaluation & Record Dashboard</h3>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  आपकी मेहनत, हमारा मूल्यांकन • Complete student record tracking with daily practice, test evaluation, progress graphs & target setting.
+                <h3 className="text-2xl font-black text-slate-900">Steno Free Weekly Test • फ्री साप्ताहिक टेस्ट</h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-semibold leading-relaxed">
+                  <span className="text-slate-900 font-extrabold">अपनी स्पीड और एक्यूरेसी को करें हर हफ्ते मजबूत</span> • Real Exam Pattern, Time Based Tests for UPSSSC, High Court, UP SI & Government Steno Exams.
                 </p>
               </div>
             </div>
@@ -149,11 +150,11 @@ export default function StenoMainLandingPage() {
             {/* CTA Button */}
             <div className="p-6 sm:p-8 pt-0">
               <Link
-                href={isLoggedIn ? "/student/steno/dashboard" : "/login?callbackUrl=/student/steno/dashboard"}
+                href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
                 className="w-full inline-block"
               >
                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
-                  {isLoggedIn ? "Open Student Dashboard" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
+                  {isLoggedIn ? "Join Steno Weekly Test" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
             </div>
