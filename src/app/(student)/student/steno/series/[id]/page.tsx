@@ -129,26 +129,14 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
         </Link>
       </div>
 
-      {/* Series Thumbnail Banner (if uploaded) */}
+      {/* Series Thumbnail Poster (if uploaded) */}
       {series.thumbnailUrl && (
-        <div className="w-full aspect-[16/9] max-h-[360px] rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-slate-950 relative flex items-center justify-center p-1">
-          {/* Ambient Blur Backdrop */}
-          <img
-            src={series.thumbnailUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
-          />
-          {/* Full Complete Thumbnail */}
+        <div className="w-full rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-950 flex items-center justify-center">
           <img
             src={series.thumbnailUrl}
             alt={series.title}
-            className="relative z-10 w-full h-full object-contain rounded-2xl"
+            className="w-full h-auto max-h-[380px] object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6 z-20 pointer-events-none">
-            <span className="text-white font-black text-lg drop-shadow-md">
-              {series.title} • {allPassages.length} Dictations Available
-            </span>
-          </div>
         </div>
       )}
 
