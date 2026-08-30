@@ -2,19 +2,23 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IStenoExam extends Document {
   name: string;
-  language: "Hindi" | "English";
+  authorityName?: string;
   dictationDurationMinutes: number;
   transcriptionDurationMinutes: number;
   targetWpm: number;
+  totalWords: number;
   backspaceMode: "full" | "word" | "disabled" | "upssssc";
   spellingErrorWeight: number;
   matraErrorWeight: number;
   punctuationErrorWeight: number;
   addedWordWeight: number;
   skippedWordWeight: number;
+  spacingTranspositionWeight: number;
+  mistakeExemptionCount: number;
+  ignoreChandrabindu: boolean;
+  maxErrorPercentAllowed: number;
   allowedFonts: string[];
   isActive: boolean;
-  passageId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,19 +26,23 @@ export interface IStenoExam extends Document {
 const StenoExamSchema = new Schema<IStenoExam>(
   {
     name: { type: String, required: true },
-    language: { type: String, enum: ["Hindi", "English"], default: "Hindi" },
+    authorityName: { type: String, default: "उ०प्र० अधीनस्थ सेवा चयन आयोग" },
     dictationDurationMinutes: { type: Number, default: 5 },
-    transcriptionDurationMinutes: { type: Number, default: 45 },
+    transcriptionDurationMinutes: { type: Number, default: 40 },
     targetWpm: { type: Number, default: 80 },
+    totalWords: { type: Number, default: 420 },
     backspaceMode: { type: String, enum: ["full", "word", "disabled", "upssssc"], default: "full" },
     spellingErrorWeight: { type: Number, default: 1.0 },
     matraErrorWeight: { type: Number, default: 0.5 },
     punctuationErrorWeight: { type: Number, default: 0.5 },
     addedWordWeight: { type: Number, default: 1.0 },
     skippedWordWeight: { type: Number, default: 1.0 },
-    allowedFonts: { type: [String], default: ["Kruti Dev 010", "Mangal", "Arial"] },
+    spacingTranspositionWeight: { type: Number, default: 0.5 },
+    mistakeExemptionCount: { type: Number, default: 20 },
+    ignoreChandrabindu: { type: Boolean, default: true },
+    maxErrorPercentAllowed: { type: Number, default: 5.0 },
+    allowedFonts: { type: [String], default: ["Kruti Dev 010", "Mangal"] },
     isActive: { type: Boolean, default: true },
-    passageId: { type: Schema.Types.ObjectId, ref: "StenoPassage" },
   },
   { timestamps: true }
 );

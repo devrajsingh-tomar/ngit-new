@@ -6,6 +6,7 @@ import {
   createStenoBatchAction,
   updateStenoBatchAction,
   deleteStenoBatchAction,
+  getStenoExamsAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,13 +17,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, FolderPlus, ArrowRight } from "lucide-react";
+import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, FolderPlus, ArrowRight, Award } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
 
 export default function AdminStenoBatchesPage() {
   const [batches, setBatches] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<any | null>(null);
@@ -33,13 +35,22 @@ export default function AdminStenoBatchesPage() {
     hindiName: "",
     description: "",
     thumbnailUrl: "",
+    examPresetId: "",
     isPublished: true,
     sortOrder: 0,
   });
 
   useEffect(() => {
     loadBatches();
+    loadExams();
   }, []);
+
+  const loadExams = async () => {
+    const res = await getStenoExamsAction();
+    if (res.success && res.exams) {
+      setExams(res.exams);
+    }
+  };
 
   const loadBatches = async () => {
     setLoading(true);
@@ -59,6 +70,7 @@ export default function AdminStenoBatchesPage() {
       hindiName: "",
       description: "",
       thumbnailUrl: "",
+      examPresetId: "",
       isPublished: true,
       sortOrder: batches.length + 1,
     });
@@ -72,6 +84,7 @@ export default function AdminStenoBatchesPage() {
       hindiName: b.hindiName || "",
       description: b.description || "",
       thumbnailUrl: b.thumbnailUrl || "",
+      examPresetId: b.examPresetId?._id || b.examPresetId || "",
       isPublished: b.isPublished ?? true,
       sortOrder: b.sortOrder || 0,
     });
@@ -264,6 +277,24 @@ export default function AdminStenoBatchesPage() {
                 placeholder="e.g. यूपीएसएसएससी स्टेनो बैच"
                 className="rounded-xl text-xs font-semibold"
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-amber-600" /> Assign Government Exam Rules Preset
+              </label>
+              <select
+                value={formData.examPresetId}
+                onChange={(e) => setFormData({ ...formData, examPresetId: e.target.value })}
+                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+              >
+                <option value="">-- Select Exam Rules Preset --</option>
+                {exams.map((ex) => (
+                  <option key={ex._id} value={ex._id}>
+                    {ex.name} ({ex.targetWpm} WPM • {ex.authorityName || "Official Rules"})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1">

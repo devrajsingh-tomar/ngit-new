@@ -6,6 +6,7 @@ export interface IStenoPassage extends Document {
   typingMode?: "unicode_hindi" | "krutidev_010" | "english";
   category: string;
   seriesId?: mongoose.Types.ObjectId;
+  examPresetId?: mongoose.Types.ObjectId;
   examType?: string;
   transcriptText: string;
   wordCount: number;
@@ -34,6 +35,7 @@ const StenoPassageSchema = new Schema<IStenoPassage>(
 
     category: { type: String, default: "General Dictation" },
     seriesId: { type: Schema.Types.ObjectId, ref: "StenoSeries" },
+    examPresetId: { type: Schema.Types.ObjectId, ref: "StenoExam" },
     examType: { type: String, default: "SSC Steno" },
     transcriptText: { type: String, required: true },
     wordCount: { type: Number, default: 400 },

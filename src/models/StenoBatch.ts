@@ -5,6 +5,7 @@ export interface IStenoBatch extends Document {
   hindiName?: string;
   description?: string;
   thumbnailUrl?: string;
+  examPresetId?: mongoose.Types.ObjectId;
   isPublished: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -17,6 +18,7 @@ const StenoBatchSchema = new Schema<IStenoBatch>(
     hindiName: { type: String, default: "" },
     description: { type: String, default: "" },
     thumbnailUrl: { type: String, default: "" },
+    examPresetId: { type: Schema.Types.ObjectId, ref: "StenoExam" },
     isPublished: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
   },

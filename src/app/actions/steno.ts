@@ -834,17 +834,38 @@ export async function submitStenoResultAction(data: {
 
     let examDoc: any = null;
     let examRules: Partial<ExamRules> = {};
-    if (data.examId && mongoose.Types.ObjectId.isValid(data.examId)) {
-      examDoc = await StenoExam.findById(data.examId).lean();
-      if (examDoc) {
-        examRules = {
-          spellingWeight: examDoc.spellingPenalty || "full",
-          matraWeight: examDoc.matraPenalty || "half",
-          punctuationWeight: examDoc.punctuationPenalty || "half",
-          addedWordWeight: examDoc.addedWordPenalty || "full",
-          missingWordWeight: examDoc.missingWordPenalty || "full",
-        };
+
+    const presetId = data.examId || passageDoc?.examPresetId;
+    if (presetId && mongoose.Types.ObjectId.isValid(presetId)) {
+      examDoc = await StenoExam.findById(presetId).lean();
+    }
+
+    if (!examDoc && passageDoc?.seriesId) {
+      const seriesDoc: any = await StenoSeries.findById(passageDoc.seriesId).lean();
+      if (seriesDoc?.batch) {
+        const batchDoc: any = await StenoBatch.findOne({ name: seriesDoc.batch }).lean();
+        if (batchDoc?.examPresetId) {
+          examDoc = await StenoExam.findById(batchDoc.examPresetId).lean();
+        }
       }
+    }
+
+    if (!examDoc) {
+      examDoc = await StenoExam.findOne({ isActive: true }).lean();
+    }
+
+    if (examDoc) {
+      examRules = {
+        spellingWeight: examDoc.spellingErrorWeight ?? 1.0,
+        matraWeight: examDoc.matraErrorWeight ?? 0.5,
+        punctuationWeight: examDoc.punctuationErrorWeight ?? 0.5,
+        addedWordWeight: examDoc.addedWordWeight ?? 1.0,
+        missingWordWeight: examDoc.skippedWordWeight ?? 1.0,
+        spacingTranspositionWeight: examDoc.spacingTranspositionWeight ?? 0.5,
+        mistakeExemptionCount: examDoc.mistakeExemptionCount ?? 20,
+        ignoreChandrabindu: examDoc.ignoreChandrabindu ?? true,
+        maxErrorPercentAllowed: examDoc.maxErrorPercentAllowed ?? 5.0,
+      };
     }
 
     const originalText = passageDoc?.transcriptText || passageDoc?.text || "माननीय न्यायाधीश महोदय, अभियुक्त के विरुद्ध प्रस्तुत साक्ष्य और गवाहों के बयानों से यह स्पष्ट है कि घटना के समय वह घटनास्थल पर मौजूद नहीं था।";
@@ -1220,12 +1241,12 @@ export async function getStenoBatchesAction(query?: any) {
       filter.isPublished = query.isPublished;
     }
 
-    let batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+    let batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
 
     if (batches.length === 0 && (!query || query.isPublished === undefined)) {
       // Seed default initial batches if DB is empty
       await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
-      batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+      batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
     }
 
     return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
