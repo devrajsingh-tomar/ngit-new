@@ -4,6 +4,7 @@ import connectDB from "@/lib/db";
 import mongoose from "mongoose";
 import StenoPassage from "@/models/StenoPassage";
 import StenoSeries from "@/models/StenoSeries";
+import StenoBatch from "@/models/StenoBatch";
 import StenoExam from "@/models/StenoExam";
 import StenoResult from "@/models/StenoResult";
 import StenoFont from "@/models/StenoFont";
@@ -1154,3 +1155,136 @@ export async function getAdminStenoOverviewAction() {
     return { success: false, error: err.message };
   }
 }
+
+/* ==========================================================================
+   STENO TARGET BATCHES (STEP 1 BATCH) ACTIONS
+   ========================================================================== */
+
+const DEFAULT_INITIAL_BATCHES = [
+  {
+    name: "UPSSSC Steno",
+    hindiName: "यूपीएसएसएससी स्टेनो बैच",
+    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+    sortOrder: 1,
+    isPublished: true,
+  },
+  {
+    name: "UPSI Steno",
+    hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
+    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
+    sortOrder: 2,
+    isPublished: true,
+  },
+  {
+    name: "SSC Steno Grade C & D",
+    hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
+    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
+    sortOrder: 3,
+    isPublished: true,
+  },
+  {
+    name: "Allahabad High Court Steno",
+    hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
+    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
+    sortOrder: 4,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 1",
+    hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    sortOrder: 5,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 2",
+    hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    sortOrder: 6,
+    isPublished: true,
+  },
+  {
+    name: "General Batch",
+    hindiName: "सामान्य स्टेनो बैच",
+    description: "सामान्य आशुलिपि अभ्यास संग्रह",
+    sortOrder: 7,
+    isPublished: true,
+  },
+];
+
+export async function getStenoBatchesAction(query?: any) {
+  try {
+    await connectDB();
+    const filter: any = {};
+    if (query?.isPublished !== undefined) {
+      filter.isPublished = query.isPublished;
+    }
+
+    let batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+
+    if (batches.length === 0 && (!query || query.isPublished === undefined)) {
+      // Seed default initial batches if DB is empty
+      await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
+      batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+    }
+
+    return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function createStenoBatchAction(data: {
+  name: string;
+  hindiName?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  sortOrder?: number;
+  isPublished?: boolean;
+}) {
+  try {
+    await connectDB();
+    if (!data.name || !data.name.trim()) {
+      return { success: false, error: "Batch Name is required" };
+    }
+
+    const existing = await StenoBatch.findOne({ name: data.name.trim() });
+    if (existing) {
+      return { success: true, batch: JSON.parse(JSON.stringify(existing)) };
+    }
+
+    const batch = await StenoBatch.create({
+      name: data.name.trim(),
+      hindiName: data.hindiName || "",
+      description: data.description || "",
+      thumbnailUrl: data.thumbnailUrl || "",
+      sortOrder: data.sortOrder || 0,
+      isPublished: data.isPublished ?? true,
+    });
+
+    return { success: true, batch: JSON.parse(JSON.stringify(batch)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateStenoBatchAction(id: string, data: any) {
+  try {
+    await connectDB();
+    const updated = await StenoBatch.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+    return { success: true, batch: JSON.parse(JSON.stringify(updated)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteStenoBatchAction(id: string) {
+  try {
+    await connectDB();
+    await StenoBatch.findByIdAndDelete(id);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+

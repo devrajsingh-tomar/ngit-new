@@ -7,6 +7,8 @@ import {
   updateStenoSeriesAction,
   deleteStenoSeriesAction,
   getStenoPassagesAction,
+  getStenoBatchesAction,
+  createStenoBatchAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,16 +20,24 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
+import Link from "next/link";
 
 export default function AdminStenoSeriesPage() {
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [passages, setPassages] = useState<any[]>([]);
+  const [targetBatches, setTargetBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<any | null>(null);
+
+  // Inline Create Batch State
+  const [isNewBatchDialogOpen, setIsNewBatchDialogOpen] = useState(false);
+  const [newBatchName, setNewBatchName] = useState("");
+  const [newBatchHindiName, setNewBatchHindiName] = useState("");
+  const [creatingBatch, setCreatingBatch] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -45,6 +55,7 @@ export default function AdminStenoSeriesPage() {
   useEffect(() => {
     loadSeries();
     loadPassages();
+    loadBatches();
   }, []);
 
   const loadSeries = async () => {
@@ -62,6 +73,36 @@ export default function AdminStenoSeriesPage() {
     const res = await getStenoPassagesAction({ isPublished: undefined });
     if (res.success && res.passages) {
       setPassages(res.passages);
+    }
+  };
+
+  const loadBatches = async () => {
+    const res = await getStenoBatchesAction({ isPublished: undefined });
+    if (res.success && res.batches) {
+      setTargetBatches(res.batches);
+    }
+  };
+
+  const handleCreateInlineBatch = async () => {
+    if (!newBatchName.trim()) {
+      toast.error("Target Batch Name is required");
+      return;
+    }
+    setCreatingBatch(true);
+    const res = await createStenoBatchAction({
+      name: newBatchName.trim(),
+      hindiName: newBatchHindiName.trim(),
+    });
+    setCreatingBatch(false);
+    if (res.success && res.batch) {
+      toast.success(`Target Batch "${res.batch.name}" created`);
+      setFormData((prev) => ({ ...prev, batch: res.batch.name }));
+      setNewBatchName("");
+      setNewBatchHindiName("");
+      setIsNewBatchDialogOpen(false);
+      loadBatches();
+    } else {
+      toast.error(res.error || "Failed to create Target Batch");
     }
   };
 
@@ -280,19 +321,38 @@ export default function AdminStenoSeriesPage() {
             {/* Scrollable Form Body */}
             <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Target Steno Batch (Step 1 Batch) *</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">Target Steno Batch (Step 1 Batch) *</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsNewBatchDialogOpen(true)}
+                    className="text-[11px] font-black text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+                  >
+                    + Create New Target Batch
+                  </button>
+                </div>
                 <select
                   value={formData.batch}
                   onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                 >
-                  <option value="UPSSSC Steno">UPSSSC Steno (यूपीएसएसएससी स्टेनो)</option>
-                  <option value="UPSI Steno">UPSI Steno (यूपीएसआई स्टेनो)</option>
-                  <option value="SSC Steno">SSC Steno Grade C & D (एसएससी स्टेनो)</option>
-                  <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट स्टेनो)</option>
-                  <option value="रामधारी खण्ड 1">रामधारी खण्ड 1 (Ramdhari Part 1)</option>
-                  <option value="रामधारी खण्ड 2">रामधारी खण्ड 2 (Ramdhari Part 2)</option>
-                  <option value="General Batch">General Steno Batch</option>
+                  {targetBatches.map((tb) => (
+                    <option key={tb._id || tb.name} value={tb.name}>
+                      {tb.name} {tb.hindiName ? `(${tb.hindiName})` : ""}
+                    </option>
+                  ))}
+                  {/* Fallback if list is loading */}
+                  {targetBatches.length === 0 && (
+                    <>
+                      <option value="UPSSSC Steno">UPSSSC Steno (यूपीएसएसएससी स्टेनो)</option>
+                      <option value="UPSI Steno">UPSI Steno (यूपीएसआई स्टेनो)</option>
+                      <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (एसएससी स्टेनो)</option>
+                      <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट स्टेनो)</option>
+                      <option value="रामधारी खण्ड 1">रामधारी खण्ड 1 (Ramdhari Part 1)</option>
+                      <option value="रामधारी खण्ड 2">रामधारी खण्ड 2 (Ramdhari Part 2)</option>
+                      <option value="General Batch">General Steno Batch</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -435,6 +495,60 @@ export default function AdminStenoSeriesPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inline Create Target Batch Modal */}
+      <Dialog open={isNewBatchDialogOpen} onOpenChange={setIsNewBatchDialogOpen}>
+        <DialogContent className="max-w-md p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 pb-3 border-b border-slate-100">
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <FolderPlus className="w-5 h-5 text-indigo-600" /> Create Target Steno Batch (Step 1)
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="p-5 space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Target Batch Name (Step 1) *</label>
+              <Input
+                value={newBatchName}
+                onChange={(e) => setNewBatchName(e.target.value)}
+                placeholder="e.g. UPSSSC Steno, High Court Steno, Rajasthan Steno"
+                className="rounded-xl text-xs font-semibold"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Hindi Batch Name (Optional)</label>
+              <Input
+                value={newBatchHindiName}
+                onChange={(e) => setNewBatchHindiName(e.target.value)}
+                placeholder="e.g. यूपीएसएसएससी स्टेनो बैच"
+                className="rounded-xl text-xs font-semibold"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsNewBatchDialogOpen(false)}
+                className="flex-1 font-bold rounded-2xl h-10 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCreateInlineBatch}
+                disabled={creatingBatch}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl h-10 text-xs gap-1.5"
+              >
+                {creatingBatch ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                Add Target Batch
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
