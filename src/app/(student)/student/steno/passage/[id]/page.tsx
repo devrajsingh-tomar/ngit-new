@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, use } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef, use, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getStenoPassageByIdAction, submitStenoResultAction } from "@/app/actions/steno";
 import { StenoEngineModule } from "@/modules/steno/StenoEngineModule";
 import { StenoSessionConfigModal, StenoSessionConfig } from "@/components/steno/StenoSessionConfigModal";
@@ -12,9 +12,10 @@ import { toast } from "sonner";
 
 import StenoDictationPlayer from "@/components/steno/StenoDictationPlayer";
 
-export default function StudentStenoPassagePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+function PassagePlayerContent({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryBatch = searchParams.get("batch");
 
   const [passage, setPassage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -26,17 +27,17 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
 
   useEffect(() => {
     loadPassage();
-  }, [resolvedParams.id]);
+  }, [id]);
 
   const loadPassage = async () => {
     setLoading(true);
-    const res = await getStenoPassageByIdAction(resolvedParams.id);
+    const res = await getStenoPassageByIdAction(id);
     if (res.success && res.passage) {
       setPassage(res.passage);
     } else {
       // Fallback passage for test-1 to test-5 if ID is placeholder
       setPassage({
-        _id: resolvedParams.id,
+        _id: id,
         title: "Test - 1",
         audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
         transcriptText: "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ। देश में जिस प्रकार की परिस्थितियाँ बन रही हैं, उनमें इस प्रकार के कानून की अत्यंत आवश्यकता थी। हमारे समाज में विकास के साथ-साथ कई नई चुनौतियाँ भी उत्पन्न हुई हैं...",
@@ -59,7 +60,7 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
     const toastId = toast.loading("Submitting evaluation attempt...");
     try {
       const submitRes = await submitStenoResultAction({
-        passageId: passage?._id || resolvedParams.id,
+        passageId: passage?._id || id,
         typedTranscription: evaluationResult.userTranscription || "",
         speedWpm: evaluationResult.netWpm || 0,
         accuracy: evaluationResult.accuracy || 0,
@@ -84,6 +85,13 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
     }
   };
 
+  const handleBack = () => {
+    if (queryBatch) {
+      router.push(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
+    } else {
+      router.back();
+    }
+  };
 
   if (loading) {
     return (
@@ -135,19 +143,22 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
     );
   }
 
-
-
   // Dictation Player & Instructions View
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-1 sm:p-2">
       {/* Header Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-        <h1 className="text-xl font-black text-slate-900">{passage.title || "Test - 1"}</h1>
+        <div>
+          <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">
+            {queryBatch ? `${queryBatch} Batch` : "Dictation Test"}
+          </span>
+          <h1 className="text-xl font-black text-slate-900">{passage.title || "Test - 1"}</h1>
+        </div>
         <Button
-          onClick={() => window.history.back()}
+          onClick={handleBack}
           className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-9 px-4 text-xs rounded-xl gap-2 shadow-xs"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> Back to {queryBatch ? `${queryBatch}` : "Series"}
         </Button>
       </div>
 
@@ -168,9 +179,8 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
           <li>3. यदि फिर भी समस्या बनी रहती है, तो इस नंबर पर संपर्क करें: <strong className="text-indigo-900 font-bold">+91 80049 58441</strong></li>
         </ol>
         <div className="pt-2 border-t border-indigo-100 text-[11px] font-bold text-slate-500">
-          सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v2.1.0 (26 अगस्त, 2026) — यदि यह न दिखे, तो <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।
+          सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v2.1.0 — यदि यह न दिखे, तो <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।
         </div>
-
       </div>
 
       {/* Session Configuration Modal */}
@@ -180,11 +190,25 @@ export default function StudentStenoPassagePage({ params }: { params: Promise<{ 
         onSave={handleSaveConfig}
         totalWords={passage.wordCount || 391}
         typingMode={passage.typingMode || (passage.language === "English" ? "english" : "unicode_hindi")}
-        defaultExam={passage.examType || "Allahabad High Court Steno"}
+        defaultExam={passage.examType || queryBatch || "Allahabad High Court Steno"}
         defaultDurationMinutes={passage.durationMinutes || (passage.durationSeconds ? Math.round(passage.durationSeconds / 60) : 35)}
       />
     </div>
   );
-
 }
 
+export default function StudentStenoPassagePage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 text-center text-slate-400">
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Dictation Player...
+        </div>
+      }
+    >
+      <PassagePlayerContent id={resolvedParams.id} />
+    </Suspense>
+  );
+}

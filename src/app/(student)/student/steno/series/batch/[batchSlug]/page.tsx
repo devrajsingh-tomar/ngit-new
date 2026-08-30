@@ -153,7 +153,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
                   </div>
 
                   {/* Action Button to Step 3 */}
-                  <Link href={`/student/steno/series/${series._id}`} className="block pt-2">
+                  <Link href={`/student/steno/series/${series._id}?batch=${encodeURIComponent(rawBatchName)}`} className="block pt-2">
                     <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
                       <BookOpen className="w-4 h-4" /> VIEW DICTATION PASSAGES <ArrowRight className="w-4 h-4" />
                     </Button>

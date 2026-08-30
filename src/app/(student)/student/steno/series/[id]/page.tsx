@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { getStenoSeriesByIdAction, getStenoPassagesAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Headphones, Play, Search, Clock, FileText, Keyboard, RefreshCw, Trophy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-export default function StudentStenoSeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+function SeriesDetailContent({ id }: { id: string }) {
+  const searchParams = useSearchParams();
+  const queryBatch = searchParams.get("batch");
+
   const [series, setSeries] = useState<any>(null);
   const [passages, setPassages] = useState<any[]>([]);
   const [selectedMode, setSelectedMode] = useState<"all" | "unicode_hindi" | "krutidev_010" | "english">("all");
@@ -19,13 +22,13 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
 
   useEffect(() => {
     loadSeriesData();
-  }, [resolvedParams.id]);
+  }, [id]);
 
   const loadSeriesData = async () => {
     setLoading(true);
     const [sRes, pRes] = await Promise.all([
-      getStenoSeriesByIdAction(resolvedParams.id),
-      getStenoPassagesAction({ seriesId: resolvedParams.id }),
+      getStenoSeriesByIdAction(id),
+      getStenoPassagesAction({ seriesId: id }),
     ]);
 
     if (sRes.success && sRes.series) {
@@ -51,15 +54,17 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     );
   }
 
+  const activeBatch = queryBatch || series?.batch || "";
+
   if (!series) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center space-y-4">
         <Card className="p-12 rounded-3xl border-dashed bg-white space-y-3">
           <h2 className="text-lg font-black text-slate-800">Series Not Found</h2>
           <p className="text-xs text-slate-500">This Steno series might have been unpublished or removed.</p>
-          <Link href="/student/steno/series">
+          <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
             <Button className="rounded-xl text-xs font-bold gap-1.5 mt-2">
-              <ArrowLeft className="w-4 h-4" /> Back to All Batches
+              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} Batch` : "All Batches"}
             </Button>
           </Link>
         </Card>
@@ -83,7 +88,6 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
   }
 
   const filteredTests = allPassages.filter((t) => {
-    // Mode match
     if (selectedMode === "unicode_hindi") {
       if (t.language !== "Hindi" && t.typingMode !== "unicode_hindi") return false;
       if (t.typingMode === "krutidev_010") return false;
@@ -99,7 +103,6 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     return true;
   });
 
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-1 sm:p-2">
       {/* Header Bar */}
@@ -110,7 +113,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
               Step 3 of 3 • Dictation Passages
             </span>
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
-              {series.category || "Official Batch"}
+              {series.category || activeBatch || "Official Batch"}
             </span>
             <span className="text-xs font-bold text-slate-400">• {series.language || "Hindi"} Steno</span>
           </div>
@@ -122,9 +125,10 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
           )}
         </div>
 
-        <Link href={series.batch ? `/student/steno/series/batch/${encodeURIComponent(series.batch)}` : "/student/steno/series"}>
+        {/* Back Button matching origin batch */}
+        <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
           <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-            <ArrowLeft className="w-4 h-4" /> Back to Series
+            <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch}` : "Series"}
           </Button>
         </Link>
       </div>
@@ -147,56 +151,55 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
             onClick={() => setSelectedMode("all")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "all"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            🌐 All Dictations ({allPassages.length})
+            All Dictations ({allPassages.length})
           </button>
           <button
             onClick={() => setSelectedMode("unicode_hindi")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "unicode_hindi"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            🇮🇳 Hindi - Mangal
+            Hindi Unicode (मंगल / Inscript)
           </button>
           <button
             onClick={() => setSelectedMode("krutidev_010")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "krutidev_010"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            ⌨️ Hindi - Kruti Dev 010
+            Kruti Dev 010 (कृतिदेव)
           </button>
           <button
             onClick={() => setSelectedMode("english")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "english"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            🔤 English
+            English Steno
           </button>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Input */}
         <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search dictations..."
-            className="pl-9 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold h-9 shadow-xs"
+            placeholder="Search dictation..."
+            className="pl-9 h-9 rounded-xl text-xs font-semibold bg-white"
           />
         </div>
       </div>
-
 
       {/* Tests Grid */}
       {filteredTests.length === 0 ? (
@@ -263,7 +266,7 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
                 </Link>
               </div>
 
-              <Link href={`/student/steno/passage/${test._id}`} className="block pt-2">
+              <Link href={`/student/steno/passage/${test._id}${activeBatch ? `?batch=${encodeURIComponent(activeBatch)}` : ""}`} className="block pt-2">
                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl shadow-md gap-2">
                   <Play className="w-4 h-4 fill-white" /> Play Dictation / Start Test
                 </Button>
@@ -276,3 +279,21 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
   );
 }
 
+export default function StudentStenoSeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+
+  return (
+    <Suspense
+      fallback={
+        <div className="py-24 text-center text-slate-400 space-y-3">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500">
+            Loading Series Tests...
+          </p>
+        </div>
+      }
+    >
+      <SeriesDetailContent id={resolvedParams.id} />
+    </Suspense>
+  );
+}
