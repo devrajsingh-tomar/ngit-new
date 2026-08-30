@@ -36,6 +36,9 @@ export default function AdminStenoBatchesPage() {
     description: "",
     thumbnailUrl: "",
     examPresetId: "",
+    coachingName: "",
+    instituteCode: "",
+    managedByEmail: "",
     isPublished: true,
     sortOrder: 0,
   });
@@ -71,6 +74,9 @@ export default function AdminStenoBatchesPage() {
       description: "",
       thumbnailUrl: "",
       examPresetId: "",
+      coachingName: "",
+      instituteCode: "",
+      managedByEmail: "",
       isPublished: true,
       sortOrder: batches.length + 1,
     });
@@ -85,6 +91,9 @@ export default function AdminStenoBatchesPage() {
       description: b.description || "",
       thumbnailUrl: b.thumbnailUrl || "",
       examPresetId: b.examPresetId?._id || b.examPresetId || "",
+      coachingName: b.coachingName || "",
+      instituteCode: b.instituteCode || "",
+      managedByEmail: b.managedByEmail || "",
       isPublished: b.isPublished ?? true,
       sortOrder: b.sortOrder || 0,
     });
@@ -306,6 +315,33 @@ export default function AdminStenoBatchesPage() {
                 rows={2}
                 className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
               />
+            </div>
+
+            {/* Coaching Partner Access Settings */}
+            <div className="space-y-2.5 bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100">
+              <span className="text-[11px] font-black uppercase text-indigo-900 tracking-wider">
+                Partner Coaching / Institute Access
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-700">Coaching / Institute Name</label>
+                  <Input
+                    value={formData.coachingName}
+                    onChange={(e) => setFormData({ ...formData, coachingName: e.target.value })}
+                    placeholder="e.g. Dilbahar Sir Steno Institute"
+                    className="rounded-xl text-xs font-semibold bg-white"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-700">Institute Code</label>
+                  <Input
+                    value={formData.instituteCode}
+                    onChange={(e) => setFormData({ ...formData, instituteCode: e.target.value })}
+                    placeholder="e.g. THAKURDWARA_STENO"
+                    className="rounded-xl text-xs font-semibold bg-white uppercase"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">

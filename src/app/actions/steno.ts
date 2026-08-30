@@ -1183,6 +1183,16 @@ export async function getAdminStenoOverviewAction() {
 
 const DEFAULT_INITIAL_BATCHES = [
   {
+    name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+    hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+    description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+    thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+    coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+    instituteCode: "THAKURDWARA_STENO",
+    sortOrder: 0,
+    isPublished: true,
+  },
+  {
     name: "UPSSSC Steno",
     hindiName: "यूपीएसएसएससी स्टेनो बैच",
     description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
@@ -1249,6 +1259,22 @@ export async function getStenoBatchesAction(query?: any) {
       batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
     }
 
+    // Ensure Thakurdwara batch exists with banner
+    const thakurdwaraBatch = batches.find((b: any) => b.name.includes("ठाकुरद्वारा"));
+    if (!thakurdwaraBatch && (!query || query.isPublished === undefined)) {
+      await StenoBatch.create({
+        name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+        hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+        description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+        thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+        coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+        instituteCode: "THAKURDWARA_STENO",
+        sortOrder: 0,
+        isPublished: true,
+      });
+      batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+    }
+
     return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1260,6 +1286,10 @@ export async function createStenoBatchAction(data: {
   hindiName?: string;
   description?: string;
   thumbnailUrl?: string;
+  examPresetId?: string;
+  coachingName?: string;
+  instituteCode?: string;
+  managedByEmail?: string;
   sortOrder?: number;
   isPublished?: boolean;
 }) {
@@ -1279,6 +1309,10 @@ export async function createStenoBatchAction(data: {
       hindiName: data.hindiName || "",
       description: data.description || "",
       thumbnailUrl: data.thumbnailUrl || "",
+      examPresetId: data.examPresetId || undefined,
+      coachingName: data.coachingName || "",
+      instituteCode: data.instituteCode || "",
+      managedByEmail: data.managedByEmail || "",
       sortOrder: data.sortOrder || 0,
       isPublished: data.isPublished ?? true,
     });
