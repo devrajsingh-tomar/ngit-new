@@ -87,7 +87,7 @@ export default function StenoMainLandingPage() {
               {/* Image Banner Above Section */}
               <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
                 <img
-                  src="/images/steno-test-guide-banner.jpg"
+                  src="https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg"
                   alt="Steno Batches & Series Collections"
                   className="w-full h-auto object-cover"
                 />
@@ -126,7 +126,7 @@ export default function StenoMainLandingPage() {
               {/* Image Banner Above Section */}
               <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
                 <img
-                  src="/images/steno-analytics-banner.jpg"
+                  src="/images/steno-student-evaluation-dashboard.jpg"
                   alt="Steno Student Evaluation & Record Dashboard"
                   className="w-full h-auto object-cover"
                 />
@@ -158,6 +158,24 @@ export default function StenoMainLandingPage() {
               </Link>
             </div>
           </Card>
+        </div>
+
+        {/* 3. Steno Visual Banners & Guides Section */}
+        <div className="space-y-8">
+          <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
+            <img
+              src="/images/steno-test-guide-banner.jpg"
+              alt="ऑनलाइन स्टेनो टेस्ट कैसे दें"
+              className="w-full h-auto object-cover rounded-[2.5rem]"
+            />
+          </div>
+          <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
+            <img
+              src="/images/steno-analytics-banner.jpg"
+              alt="आपकी मेहनत, हमारा मूल्यांकन - पूरा लेखा जोखा"
+              className="w-full h-auto object-cover rounded-[2.5rem]"
+            />
+          </div>
         </div>
 
         {/* 4. Your Doubt Solution Section */}
