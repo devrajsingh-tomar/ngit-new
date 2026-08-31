@@ -87,9 +87,9 @@ function PassagePlayerContent({ id }: { id: string }) {
 
   const handleBack = () => {
     if (queryBatch) {
-      router.push(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
+      router.replace(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
     } else {
-      router.back();
+      router.replace("/steno");
     }
   };
 
@@ -154,12 +154,19 @@ function PassagePlayerContent({ id }: { id: string }) {
           </span>
           <h1 className="text-xl font-black text-slate-900">{passage.title || "Test - 1"}</h1>
         </div>
-        <Button
-          onClick={handleBack}
-          className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-9 px-4 text-xs rounded-xl gap-2 shadow-xs"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to {queryBatch ? `${queryBatch}` : "Series"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/steno">
+            <Button variant="outline" className="h-9 px-3.5 text-xs font-bold rounded-xl gap-1 border-slate-300">
+              <ArrowLeft className="w-3.5 h-3.5" /> /steno
+            </Button>
+          </Link>
+          <Button
+            onClick={handleBack}
+            className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-9 px-4 text-xs rounded-xl gap-2 shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to {queryBatch ? `${queryBatch}` : "Series"}
+          </Button>
+        </div>
       </div>
 
       {/* Main Dictation Player Component */}

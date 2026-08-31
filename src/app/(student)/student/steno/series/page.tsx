@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
+import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
 import { toast } from "sonner";
 
 // Default fallback configuration for standard batches
@@ -48,9 +49,25 @@ const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[];
 };
 
 export default function StudentStenoSeriesPage() {
+  const router = useRouter();
   const [batches, setBatches] = useState<any[]>([]);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
+  useEffect(() => {
+    window.history.pushState({ page: "steno-step1" }, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      router.replace("/steno");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router]);
 
   useEffect(() => {
     loadData();
@@ -73,11 +90,14 @@ export default function StudentStenoSeriesPage() {
   };
 
   const getBatchSeriesCount = (batchName: string) => {
-    return seriesList.filter(
+    const searchVal = batchName.toLowerCase().trim();
+    const matches = seriesList.filter(
       (s) =>
-        (s.batch || "").toLowerCase().includes(batchName.toLowerCase()) ||
-        (s.title || "").toLowerCase().includes(batchName.toLowerCase())
-    ).length;
+        (s.batch || "").toLowerCase().includes(searchVal) ||
+        (s.title || "").toLowerCase().includes(searchVal)
+    );
+    const uniqueTitles = new Set(matches.map((s) => (s.title || "").toLowerCase().trim()).filter(Boolean));
+    return uniqueTitles.size;
   };
 
   return (
@@ -85,9 +105,16 @@ export default function StudentStenoSeriesPage() {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-2xl z-10">
-          <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30">
-            Step 1 of 3 • Select Target Steno Batch
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30">
+              Step 1 of 3 • Select Target Steno Batch
+            </span>
+            <Link href="/steno">
+              <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white font-bold h-7 px-3 text-[11px] rounded-full border border-white/20 gap-1 transition-all">
+                <ArrowLeft className="w-3 h-3" /> Back to Steno Portal (/steno)
+              </Button>
+            </Link>
+          </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
             STENO BATCHES & EXAM PORTAL
           </h1>

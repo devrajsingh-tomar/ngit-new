@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getStenoSeriesListAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,11 +10,27 @@ import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpe
 import { toast } from "sonner";
 
 export default function StudentStenoBatchSeriesPage({ params }: { params: Promise<{ batchSlug: string }> }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const rawBatchName = decodeURIComponent(resolvedParams.batchSlug || "");
 
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
+  useEffect(() => {
+    window.history.pushState({ page: "steno-batch-step2" }, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      router.replace("/steno");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router]);
 
   useEffect(() => {
     loadSeriesForBatch();
@@ -23,18 +40,58 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
     setLoading(true);
     const res = await getStenoSeriesListAction({ isPublished: true });
     if (res.success && res.series) {
-      // Filter series matching the selected batch
-      const filtered = res.series.filter((s: any) => {
-        const batchVal = (s.batch || "").toLowerCase();
-        const searchVal = rawBatchName.toLowerCase();
-        return (
-          batchVal.includes(searchVal) ||
-          searchVal.includes(batchVal) ||
-          (s.title || "").toLowerCase().includes(searchVal) ||
-          searchVal.includes((s.category || "").toLowerCase())
-        );
+      const searchVal = rawBatchName.toLowerCase().trim();
+
+      // 1. Filter series matching the selected batch
+      let matched = res.series.filter((s: any) => {
+        const batchVal = (s.batch || "").toLowerCase().trim();
+
+        if (batchVal && searchVal) {
+          if (batchVal === searchVal || batchVal.includes(searchVal) || searchVal.includes(batchVal)) {
+            return true;
+          }
+          // Match keywords (e.g. "ssc" in "ssc steno")
+          const searchKeywords = searchVal.split(/\s+/).filter((w) => w.length > 2);
+          if (searchKeywords.length > 0 && searchKeywords.some((kw) => batchVal.includes(kw))) {
+            return true;
+          }
+        }
+        return false;
       });
-      setSeriesList(filtered.length > 0 ? filtered : res.series);
+
+      // If no explicit batch match found, search by title/category or fallback to all published series
+      if (matched.length === 0) {
+        matched = res.series.filter((s: any) => {
+          const titleVal = (s.title || "").toLowerCase().trim();
+          const catVal = (s.category || "").toLowerCase().trim();
+          return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
+        });
+      }
+
+      if (matched.length === 0) {
+        matched = res.series;
+      }
+
+      // 2. DEDUPLICATE by normalized title to prevent showing duplicate topics in the same batch
+      const uniqueMap = new Map<string, any>();
+      for (const s of matched) {
+        const titleKey = (s.title || "").toLowerCase().trim();
+        if (!titleKey) continue;
+
+        if (!uniqueMap.has(titleKey)) {
+          uniqueMap.set(titleKey, s);
+        } else {
+          // If duplicate topic exists, prefer the one that has passages or newer ID
+          const existing = uniqueMap.get(titleKey);
+          const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
+          const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
+          if (currentPassageCount > existingPassageCount) {
+            uniqueMap.set(titleKey, s);
+          }
+        }
+      }
+
+      setSeriesList(Array.from(uniqueMap.values()));
     } else {
       toast.error(res.error || "Failed to load batch series");
     }
@@ -60,11 +117,13 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
           </p>
         </div>
 
-        <Link href="/student/steno/series">
-          <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-            <ArrowLeft className="w-4 h-4" /> Back to All Batches
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/steno">
+            <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
+              <ArrowLeft className="w-4 h-4" /> Back to Steno Portal (/steno)
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {loading ? (
@@ -79,9 +138,9 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             New series collections for this batch are currently being configured by instructors.
           </p>
-          <Link href="/student/steno/series">
+          <Link href="/steno">
             <Button variant="outline" className="mt-2 text-xs font-bold rounded-xl gap-1.5">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Batches
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Steno Portal (/steno)
             </Button>
           </Link>
         </Card>

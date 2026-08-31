@@ -125,12 +125,19 @@ function SeriesDetailContent({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Back Button matching origin batch */}
-        <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
-          <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-            <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch}` : "Series"}
-          </Button>
-        </Link>
+        {/* Back Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/steno">
+            <Button variant="outline" className="h-10 px-4 text-xs font-bold rounded-xl gap-1.5 border-slate-300">
+              <ArrowLeft className="w-4 h-4" /> /steno
+            </Button>
+          </Link>
+          <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
+            <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
+              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch}` : "Series"}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Series Thumbnail Poster (if uploaded) */}
