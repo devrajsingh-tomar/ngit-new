@@ -460,7 +460,26 @@ export default function AdminStenoSeriesPage() {
 
               {/* Passages Selection */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700">Assign Passages to Series</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-700">Assign Dictation Passages to Series</label>
+                  {passages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (formData.selectedPassages.length === passages.length) {
+                          setFormData({ ...formData, selectedPassages: [] });
+                        } else {
+                          setFormData({ ...formData, selectedPassages: passages.map((p) => p._id) });
+                        }
+                      }}
+                      className="text-[11px] font-black text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      {formData.selectedPassages.length === passages.length
+                        ? "Deselect All (सभी हटाएं)"
+                        : `Select All Dictations (सभी ${passages.length} चुनें)`}
+                    </button>
+                  )}
+                </div>
                 <div className="max-h-36 overflow-y-auto p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
                   {passages.length === 0 ? (
                     <p className="text-xs text-slate-400">No passages available to assign.</p>

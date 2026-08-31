@@ -249,11 +249,26 @@ export default function AdminStenoPassagesPage() {
     filteredPassages.length > 0 &&
     filteredPassages.every((p) => selectedIds.includes(p._id));
 
+  const isAllDatabaseSelected =
+    passages.length > 0 &&
+    passages.every((p) => selectedIds.includes(p._id));
+
   const handleToggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedIds([]);
     } else {
       setSelectedIds(filteredPassages.map((p) => p._id));
+    }
+  };
+
+  const handleSelectAllEntireDatabase = () => {
+    if (isAllDatabaseSelected) {
+      setSelectedIds([]);
+      toast.info("Cleared all dictation selections.");
+    } else {
+      const allIds = passages.map((p) => p._id);
+      setSelectedIds(allIds);
+      toast.success(`Selected ALL ${allIds.length} dictation passages across ALL series!`);
     }
   };
 
@@ -421,23 +436,39 @@ export default function AdminStenoPassagesPage() {
 
       {/* Filter & Selection Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        {/* Select All Checkbox */}
-        <div className="flex items-center gap-2">
+        {/* Select All Checkbox Options */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Select All in Entire Database */}
+          <button
+            type="button"
+            onClick={handleSelectAllEntireDatabase}
+            className={`flex items-center gap-2 text-xs font-black px-4 py-2 rounded-xl border transition-all cursor-pointer shadow-xs ${
+              isAllDatabaseSelected
+                ? "bg-amber-400 text-slate-950 border-amber-500 ring-2 ring-amber-300"
+                : "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600"
+            }`}
+          >
+            <CheckSquare className="w-4 h-4" />
+            <span>
+              {isAllDatabaseSelected
+                ? `Unselect All (${passages.length} Dictations)`
+                : `SELECT ALL IN ALL SERIES (सभी ${passages.length} डिक्टेशन चुनें)`}
+            </span>
+          </button>
+
+          {/* Select Filtered Only */}
           <button
             type="button"
             onClick={handleToggleSelectAll}
-            className="flex items-center gap-2 text-xs font-extrabold text-slate-800 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl border border-slate-200 transition-all cursor-pointer"
+            className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl border border-slate-200 transition-all cursor-pointer"
           >
             {isAllSelected ? (
               <CheckSquare className="w-4 h-4 text-indigo-600 fill-indigo-100" />
             ) : (
               <Square className="w-4 h-4 text-slate-400" />
             )}
-            <span>{isAllSelected ? "Unselect All (सभी हटाएं)" : "Select All Passages (सभी डिक्टेशन चुनें)"}</span>
+            <span>{isAllSelected ? "Unselect Filtered" : `Select Filtered (${filteredPassages.length})`}</span>
           </button>
-          <span className="text-xs text-slate-400 font-bold">
-            ({filteredPassages.length} Dictations)
-          </span>
         </div>
 
         {/* Filter Dropdowns & Search */}
