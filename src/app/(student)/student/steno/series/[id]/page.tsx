@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getStenoSeriesByIdAction, getStenoPassagesAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { ArrowLeft, Headphones, Play, Search, Clock, FileText, Keyboard, Refresh
 import { toast } from "sonner";
 
 function SeriesDetailContent({ id }: { id: string }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryBatch = searchParams.get("batch");
 
@@ -19,6 +20,26 @@ function SeriesDetailContent({ id }: { id: string }) {
   const [selectedMode, setSelectedMode] = useState<"all" | "unicode_hindi" | "krutidev_010" | "english">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const activeBatch = queryBatch || series?.batch || "";
+
+  // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
+  useEffect(() => {
+    window.history.pushState({ page: "steno-step3" }, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      const targetUrl = activeBatch
+        ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}`
+        : "/student/steno/series";
+      router.replace(targetUrl);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router, activeBatch]);
 
   useEffect(() => {
     loadSeriesData();
@@ -125,16 +146,11 @@ function SeriesDetailContent({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Back Buttons */}
+        {/* Back Button to Step 2 */}
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/steno">
-            <Button variant="outline" className="h-10 px-4 text-xs font-bold rounded-xl gap-1.5 border-slate-300">
-              <ArrowLeft className="w-4 h-4" /> /steno
-            </Button>
-          </Link>
           <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
             <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch}` : "Series"}
+              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (Step 2)` : "All Batches"}
             </Button>
           </Link>
         </div>

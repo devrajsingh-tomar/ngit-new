@@ -23,7 +23,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
 
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
-      router.replace("/steno");
+      router.replace("/student/steno/series");
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -118,9 +118,9 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/steno">
+          <Link href="/student/steno/series">
             <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
-              <ArrowLeft className="w-4 h-4" /> Back to Steno Portal (/steno)
+              <ArrowLeft className="w-4 h-4" /> Back to All Batches (Step 1)
             </Button>
           </Link>
         </div>
@@ -138,9 +138,9 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             New series collections for this batch are currently being configured by instructors.
           </p>
-          <Link href="/steno">
+          <Link href="/student/steno/series">
             <Button variant="outline" className="mt-2 text-xs font-bold rounded-xl gap-1.5">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Steno Portal (/steno)
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to All Batches (Step 1)
             </Button>
           </Link>
         </Card>

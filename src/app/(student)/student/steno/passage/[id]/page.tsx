@@ -85,11 +85,30 @@ function PassagePlayerContent({ id }: { id: string }) {
     }
   };
 
+  // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
+  useEffect(() => {
+    window.history.pushState({ page: "steno-passage" }, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      if (queryBatch) {
+        router.replace(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
+      } else {
+        router.replace("/student/steno/series");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router, queryBatch]);
+
   const handleBack = () => {
     if (queryBatch) {
       router.replace(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
     } else {
-      router.replace("/steno");
+      router.replace("/student/steno/series");
     }
   };
 
@@ -155,16 +174,11 @@ function PassagePlayerContent({ id }: { id: string }) {
           <h1 className="text-xl font-black text-slate-900">{passage.title || "Test - 1"}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/steno">
-            <Button variant="outline" className="h-9 px-3.5 text-xs font-bold rounded-xl gap-1 border-slate-300">
-              <ArrowLeft className="w-3.5 h-3.5" /> /steno
-            </Button>
-          </Link>
           <Button
             onClick={handleBack}
             className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-9 px-4 text-xs rounded-xl gap-2 shadow-xs"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to {queryBatch ? `${queryBatch}` : "Series"}
+            <ArrowLeft className="w-4 h-4" /> Back to {queryBatch ? `${queryBatch}` : "All Batches"}
           </Button>
         </div>
       </div>
