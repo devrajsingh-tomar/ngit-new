@@ -113,7 +113,7 @@ function SeriesDetailContent({ id }: { id: string }) {
               Step 3 of 3 • Dictation Passages
             </span>
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
-              {series.category || activeBatch || "Official Batch"}
+              {activeBatch || "Official Batch"}
             </span>
             <span className="text-xs font-bold text-slate-400">• {series.language || "Hindi"} Steno</span>
           </div>

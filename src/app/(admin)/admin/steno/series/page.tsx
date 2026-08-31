@@ -367,28 +367,16 @@ export default function AdminStenoSeriesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Language</label>
-                  <select
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
-                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                  >
-                    <option value="Hindi">Hindi</option>
-                    <option value="English">English</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Category</label>
-                  <Input
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="e.g. PYQ, Legal, Editorial, Essay"
-                    className="rounded-xl text-xs font-semibold"
-                  />
-                </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Language</label>
+                <select
+                  value={formData.language}
+                  onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                >
+                  <option value="Hindi">Hindi</option>
+                  <option value="English">English</option>
+                </select>
               </div>
 
               <div className="space-y-1">

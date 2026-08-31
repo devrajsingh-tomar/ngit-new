@@ -109,9 +109,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
                   /* Fallback Gradient if poster is not uploaded */
                   <div className={`w-full h-44 bg-gradient-to-br ${gradient} text-white p-5 flex flex-col justify-between relative overflow-hidden`}>
                     <div className="flex justify-between items-start z-10">
-                      <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        {series.category || "Series Topic"}
-                      </span>
+                      <div />
                       <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
                     </div>
 
@@ -133,9 +131,6 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
                       <h4 className="text-lg font-black text-slate-900">{series.title}</h4>
-                      <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100 shrink-0">
-                        {series.category || "General"}
-                      </span>
                     </div>
 
                     <p className="text-xs text-slate-500 font-medium line-clamp-2">
