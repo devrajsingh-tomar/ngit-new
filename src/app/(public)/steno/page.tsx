@@ -35,19 +35,44 @@ interface DoubtVideo {
   isActive: boolean;
 }
 
-function getEmbedUrl(url: string): string {
-  if (!url) return "";
-  if (url.includes("youtube.com/embed/")) return url;
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  if (url.includes("youtube.com/embed/")) {
+    return url.split("youtube.com/embed/")[1]?.split("?")[0] || null;
+  }
   if (url.includes("watch?v=")) {
-    return (
-      url.replace("watch?v=", "embed/").split("&")[0] + "?autoplay=1&rel=0"
-    );
+    return url.split("watch?v=")[1]?.split("&")[0] || null;
   }
   if (url.includes("youtu.be/")) {
-    const id = url.split("youtu.be/")[1]?.split("?")[0];
-    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+    return url.split("youtu.be/")[1]?.split("?")[0] || null;
   }
-  return url;
+  return null;
+}
+
+function getThumbnailUrl(video: { thumbnailUrl?: string; videoUrl: string }): string {
+  if (video.thumbnailUrl && video.thumbnailUrl.trim() !== "") {
+    return video.thumbnailUrl.trim();
+  }
+  const videoId = getYouTubeVideoId(video.videoUrl);
+  if (videoId) {
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  }
+  return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80";
+}
+
+function getEmbedUrl(url: string): string {
+  if (!url) return "";
+  const videoId = getYouTubeVideoId(url);
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  }
+  if (url.includes("youtube.com/embed/")) {
+    return url.includes("?") ? `${url}&autoplay=1` : `${url}?autoplay=1`;
+  }
+  if (url.includes("watch?v=")) {
+    return url.replace("watch?v=", "embed/").split("&")[0] + "?autoplay=1&rel=0";
+  }
+  return url.includes("?") ? `${url}&autoplay=1` : `${url}?autoplay=1`;
 }
 
 export default function StenoMainLandingPage() {
@@ -277,11 +302,18 @@ export default function StenoMainLandingPage() {
                   {/* Video Thumbnail Box */}
                   <div className="relative aspect-video bg-slate-900 overflow-hidden">
                     <img
-                      src={
-                        video.thumbnailUrl ||
-                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80"
-                      }
+                      src={getThumbnailUrl(video)}
                       alt={video.title}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const videoId = getYouTubeVideoId(video.videoUrl);
+                        const fallbackSrc = videoId
+                          ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                          : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80";
+                        if (target.src !== fallbackSrc) {
+                          target.src = fallbackSrc;
+                        }
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
 
