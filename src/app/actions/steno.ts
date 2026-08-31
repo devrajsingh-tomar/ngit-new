@@ -216,6 +216,7 @@ export async function createStenoPassageAction(data: {
   typingMode?: "unicode_hindi" | "krutidev_010" | "english";
   category: string;
   seriesId?: string;
+  examPresetId?: string;
   examType?: string;
   transcriptText: string;
   wordCount: number;
@@ -244,9 +245,9 @@ export async function createStenoPassageAction(data: {
       ...data,
       durationMinutes: durationMins,
       durationSeconds: durationSecs,
-      seriesId: data.seriesId || null,
+      seriesId: data.seriesId ? data.seriesId : null,
+      examPresetId: data.examPresetId ? data.examPresetId : null,
     });
-
 
     if (data.seriesId) {
       await StenoSeries.findByIdAndUpdate(data.seriesId, {
@@ -277,6 +278,13 @@ export async function updateStenoPassageAction(id: string, data: any) {
       payload.durationSeconds = payload.durationMinutes * 60;
     } else if (payload.durationSeconds !== undefined) {
       payload.durationMinutes = Math.round(Number(payload.durationSeconds) / 60);
+    }
+
+    if (payload.seriesId === "" || payload.seriesId === undefined) {
+      payload.seriesId = null;
+    }
+    if (payload.examPresetId === "" || payload.examPresetId === undefined) {
+      payload.examPresetId = null;
     }
 
     const updated = await StenoPassage.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
@@ -1358,7 +1366,7 @@ export async function createStenoBatchAction(data: {
       hindiName: data.hindiName || "",
       description: data.description || "",
       thumbnailUrl: data.thumbnailUrl || "",
-      examPresetId: data.examPresetId || undefined,
+      examPresetId: data.examPresetId ? data.examPresetId : null,
       coachingName: data.coachingName || "",
       instituteCode: data.instituteCode || "",
       managedByEmail: data.managedByEmail || "",
@@ -1375,7 +1383,11 @@ export async function createStenoBatchAction(data: {
 export async function updateStenoBatchAction(id: string, data: any) {
   try {
     await connectDB();
-    const updated = await StenoBatch.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+    const payload = { ...data };
+    if (payload.examPresetId === "" || payload.examPresetId === undefined) {
+      payload.examPresetId = null;
+    }
+    const updated = await StenoBatch.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
     return { success: true, batch: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
