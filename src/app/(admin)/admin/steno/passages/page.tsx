@@ -354,15 +354,15 @@ export default function AdminStenoPassagesPage() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0">
+        <DialogContent className="max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-xl font-black text-slate-900">
               {editingPassage ? "Edit Dictation Passage" : "Add Dictation Passage"}
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-            <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Passage Title *</label>
                 <Input

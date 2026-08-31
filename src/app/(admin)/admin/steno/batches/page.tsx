@@ -259,139 +259,142 @@ export default function AdminStenoBatchesPage() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-          <DialogHeader className="p-5 pb-3 border-b border-slate-100">
+        <DialogContent className="max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 pb-3.5 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-lg font-black text-slate-900">
               {editingBatch ? "Edit Target Steno Batch (Step 1)" : "Create Target Steno Batch (Step 1)"}
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="p-5 space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Target Batch Name (Step 1) *</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. UPSSSC Steno, High Court Steno, SSC Steno"
-                className="rounded-xl text-xs font-semibold"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Hindi Batch Name (Optional)</label>
-              <Input
-                value={formData.hindiName}
-                onChange={(e) => setFormData({ ...formData, hindiName: e.target.value })}
-                placeholder="e.g. यूपीएसएसएससी स्टेनो बैच"
-                className="rounded-xl text-xs font-semibold"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-amber-600" /> Assign Government Exam Rules Preset
-              </label>
-              <select
-                value={formData.examPresetId}
-                onChange={(e) => setFormData({ ...formData, examPresetId: e.target.value })}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-              >
-                <option value="">-- Select Exam Rules Preset --</option>
-                {exams.map((ex) => (
-                  <option key={ex._id} value={ex._id}>
-                    {ex.name} ({ex.targetWpm} WPM • {ex.authorityName || "Official Rules"})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Brief description of this target batch..."
-                rows={2}
-                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
-              />
-            </div>
-
-            {/* Coaching Partner Access Settings */}
-            <div className="space-y-2.5 bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100">
-              <span className="text-[11px] font-black uppercase text-indigo-900 tracking-wider">
-                Partner Coaching / Institute Access
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-700">Coaching / Institute Name</label>
-                  <Input
-                    value={formData.coachingName}
-                    onChange={(e) => setFormData({ ...formData, coachingName: e.target.value })}
-                    placeholder="e.g. Dilbahar Sir Steno Institute"
-                    className="rounded-xl text-xs font-semibold bg-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-700">Institute Code</label>
-                  <Input
-                    value={formData.instituteCode}
-                    onChange={(e) => setFormData({ ...formData, instituteCode: e.target.value })}
-                    placeholder="e.g. THAKURDWARA_STENO"
-                    className="rounded-xl text-xs font-semibold bg-white uppercase"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-indigo-600" /> Batch Thumbnail Image
-              </label>
-              <ImageUpload
-                value={formData.thumbnailUrl}
-                onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
-                onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
-                label="Upload Batch Thumbnail"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Sort Order</label>
+                <label className="text-xs font-bold text-slate-700">Target Batch Name (Step 1) *</label>
                 <Input
-                  type="number"
-                  value={formData.sortOrder}
-                  onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. UPSSSC Steno, High Court Steno, SSC Steno"
+                  className="rounded-xl text-xs font-semibold"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Hindi Batch Name (Optional)</label>
+                <Input
+                  value={formData.hindiName}
+                  onChange={(e) => setFormData({ ...formData, hindiName: e.target.value })}
+                  placeholder="e.g. यूपीएसएसएससी स्टेनो बैच"
                   className="rounded-xl text-xs font-semibold"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Status</label>
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-amber-600" /> Assign Government Exam Rules Preset
+                </label>
                 <select
-                  value={formData.isPublished ? "true" : "false"}
-                  onChange={(e) => setFormData({ ...formData, isPublished: e.target.value === "true" })}
+                  value={formData.examPresetId}
+                  onChange={(e) => setFormData({ ...formData, examPresetId: e.target.value })}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                 >
-                  <option value="true font-bold">Active / Published</option>
-                  <option value="false">Disabled / Draft</option>
+                  <option value="">-- Select Exam Rules Preset --</option>
+                  {exams.map((ex) => (
+                    <option key={ex._id} value={ex._id}>
+                      {ex.name} ({ex.targetWpm} WPM • {ex.authorityName || "Official Rules"})
+                    </option>
+                  ))}
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Brief description of this target batch..."
+                  rows={2}
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
+                />
+              </div>
+
+              {/* Coaching Partner Access Settings */}
+              <div className="space-y-2.5 bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100">
+                <span className="text-[11px] font-black uppercase text-indigo-900 tracking-wider">
+                  Partner Coaching / Institute Access
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700">Coaching / Institute Name</label>
+                    <Input
+                      value={formData.coachingName}
+                      onChange={(e) => setFormData({ ...formData, coachingName: e.target.value })}
+                      placeholder="e.g. Dilbahar Sir Steno Institute"
+                      className="rounded-xl text-xs font-semibold bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700">Institute Code</label>
+                    <Input
+                      value={formData.instituteCode}
+                      onChange={(e) => setFormData({ ...formData, instituteCode: e.target.value })}
+                      placeholder="e.g. THAKURDWARA_STENO"
+                      className="rounded-xl text-xs font-semibold bg-white uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-indigo-600" /> Batch Thumbnail Image
+                </label>
+                <ImageUpload
+                  value={formData.thumbnailUrl}
+                  onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                  onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
+                  label="Upload Batch Thumbnail"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Sort Order</label>
+                  <Input
+                    type="number"
+                    value={formData.sortOrder}
+                    onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
+                    className="rounded-xl text-xs font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Status</label>
+                  <select
+                    value={formData.isPublished ? "true" : "false"}
+                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.value === "true" })}
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                  >
+                    <option value="true font-bold">Active / Published</option>
+                    <option value="false">Disabled / Draft</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            {/* Sticky Footer */}
+            <div className="p-4 px-6 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-end gap-3 z-10">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
-                className="flex-1 font-bold rounded-2xl h-11 text-xs"
+                className="font-bold rounded-2xl h-10 text-xs px-5"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl h-11 text-xs"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl h-10 text-xs px-6"
               >
                 {editingBatch ? "Save Changes" : "Create Batch"}
               </Button>

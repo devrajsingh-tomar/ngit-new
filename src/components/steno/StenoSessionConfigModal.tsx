@@ -144,8 +144,8 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   return (
 
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-        <DialogHeader className="p-6 pb-4 border-b border-slate-100 shrink-0 text-center space-y-1">
+      <DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b border-slate-100 shrink-0 text-center space-y-1 bg-white z-10">
           <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight text-center">
             Configure Your Transcription Session
           </DialogTitle>
@@ -155,7 +155,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
         </DialogHeader>
 
         {/* Scrollable Modal Body */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
           {/* Tab Toggle Bar */}
           <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
             <button
