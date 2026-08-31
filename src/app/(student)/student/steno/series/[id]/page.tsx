@@ -75,8 +75,6 @@ function SeriesDetailContent({ id }: { id: string }) {
     );
   }
 
-  const activeBatch = queryBatch || series?.batch || "";
-
   if (!series) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center space-y-4">
