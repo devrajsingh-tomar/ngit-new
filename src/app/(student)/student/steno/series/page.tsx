@@ -48,11 +48,73 @@ const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[];
   },
 };
 
+const DEFAULT_STATIC_BATCHES = [
+  {
+    name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+    hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+    description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+    thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+    coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+    instituteCode: "THAKURDWARA_STENO",
+    sortOrder: 0,
+    isPublished: true,
+  },
+  {
+    name: "UPSSSC Steno",
+    hindiName: "यूपीएसएसएससी स्टेनो बैच",
+    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+    sortOrder: 1,
+    isPublished: true,
+  },
+  {
+    name: "UPSI Steno",
+    hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
+    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
+    sortOrder: 2,
+    isPublished: true,
+  },
+  {
+    name: "SSC Steno Grade C & D",
+    hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
+    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
+    sortOrder: 3,
+    isPublished: true,
+  },
+  {
+    name: "Allahabad High Court Steno",
+    hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
+    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
+    sortOrder: 4,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 1",
+    hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    sortOrder: 5,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 2",
+    hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    sortOrder: 6,
+    isPublished: true,
+  },
+  {
+    name: "General Batch",
+    hindiName: "सामान्य स्टेनो बैच",
+    description: "सामान्य आशुलिपि अभ्यास संग्रह",
+    sortOrder: 7,
+    isPublished: true,
+  },
+];
+
 export default function StudentStenoSeriesPage() {
   const router = useRouter();
-  const [batches, setBatches] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
   const [seriesList, setSeriesList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
   useEffect(() => {
@@ -74,19 +136,21 @@ export default function StudentStenoSeriesPage() {
   }, []);
 
   const loadData = async () => {
-    setLoading(true);
-    const [batchRes, seriesRes] = await Promise.all([
-      getStenoBatchesAction({ isPublished: true }),
-      getStenoSeriesListAction({ isPublished: true }),
-    ]);
+    try {
+      const [batchRes, seriesRes] = await Promise.all([
+        getStenoBatchesAction({ isPublished: true }),
+        getStenoSeriesListAction({ isPublished: true }),
+      ]);
 
-    if (batchRes.success && batchRes.batches) {
-      setBatches(batchRes.batches);
+      if (batchRes.success && batchRes.batches && batchRes.batches.length > 0) {
+        setBatches(batchRes.batches);
+      }
+      if (seriesRes.success && seriesRes.series) {
+        setSeriesList(seriesRes.series);
+      }
+    } catch (e) {
+      console.error("Error loading steno data:", e);
     }
-    if (seriesRes.success && seriesRes.series) {
-      setSeriesList(seriesRes.series);
-    }
-    setLoading(false);
   };
 
   const getBatchSeriesCount = (batchName: string) => {

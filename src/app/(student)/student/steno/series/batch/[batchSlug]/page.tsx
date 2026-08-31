@@ -9,13 +9,80 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpen, Headphones } from "lucide-react";
 import { toast } from "sonner";
 
+const DEFAULT_STATIC_SERIES = [
+  { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
+  { _id: "s2", title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
+  { _id: "s3", title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
+  { _id: "s4", title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
+  { _id: "s5", title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
+  { _id: "s6", title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
+  { _id: "s7", title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
+  { _id: "s8", title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
+  { _id: "s9", title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
+  { _id: "s10", title: "High Court Legal Series", description: "High Court & District Court Judgments", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
+  { _id: "s11", title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
+  { _id: "s12", title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
+];
+
+function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
+  const searchVal = batchName.toLowerCase().trim();
+
+  let matched = allSeries.filter((s: any) => {
+    const batchVal = (s.batch || "").toLowerCase().trim();
+
+    if (batchVal && searchVal) {
+      if (batchVal === searchVal || batchVal.includes(searchVal) || searchVal.includes(batchVal)) {
+        return true;
+      }
+      const searchKeywords = searchVal.split(/\s+/).filter((w) => w.length > 2);
+      if (searchKeywords.length > 0 && searchKeywords.some((kw) => batchVal.includes(kw))) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (matched.length === 0) {
+    matched = allSeries.filter((s: any) => {
+      const titleVal = (s.title || "").toLowerCase().trim();
+      const catVal = (s.category || "").toLowerCase().trim();
+      return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
+    });
+  }
+
+  if (matched.length === 0) {
+    matched = allSeries;
+  }
+
+  const uniqueMap = new Map<string, any>();
+  for (const s of matched) {
+    const titleKey = (s.title || "").toLowerCase().trim();
+    if (!titleKey) continue;
+
+    if (!uniqueMap.has(titleKey)) {
+      uniqueMap.set(titleKey, s);
+    } else {
+      const existing = uniqueMap.get(titleKey);
+      const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
+      const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
+      if (currentPassageCount > existingPassageCount) {
+        uniqueMap.set(titleKey, s);
+      }
+    }
+  }
+
+  return Array.from(uniqueMap.values());
+}
+
 export default function StudentStenoBatchSeriesPage({ params }: { params: Promise<{ batchSlug: string }> }) {
   const router = useRouter();
   const resolvedParams = use(params);
   const rawBatchName = decodeURIComponent(resolvedParams.batchSlug || "");
 
-  const [seriesList, setSeriesList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [seriesList, setSeriesList] = useState<any[]>(() => {
+    return getFilteredDeduplicatedSeries(DEFAULT_STATIC_SERIES, rawBatchName);
+  });
+  const [loading, setLoading] = useState(false);
 
   // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
   useEffect(() => {
@@ -37,65 +104,17 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
   }, [rawBatchName]);
 
   const loadSeriesForBatch = async () => {
-    setLoading(true);
-    const res = await getStenoSeriesListAction({ isPublished: true });
-    if (res.success && res.series) {
-      const searchVal = rawBatchName.toLowerCase().trim();
-
-      // 1. Filter series matching the selected batch
-      let matched = res.series.filter((s: any) => {
-        const batchVal = (s.batch || "").toLowerCase().trim();
-
-        if (batchVal && searchVal) {
-          if (batchVal === searchVal || batchVal.includes(searchVal) || searchVal.includes(batchVal)) {
-            return true;
-          }
-          // Match keywords (e.g. "ssc" in "ssc steno")
-          const searchKeywords = searchVal.split(/\s+/).filter((w) => w.length > 2);
-          if (searchKeywords.length > 0 && searchKeywords.some((kw) => batchVal.includes(kw))) {
-            return true;
-          }
-        }
-        return false;
-      });
-
-      // If no explicit batch match found, search by title/category or fallback to all published series
-      if (matched.length === 0) {
-        matched = res.series.filter((s: any) => {
-          const titleVal = (s.title || "").toLowerCase().trim();
-          const catVal = (s.category || "").toLowerCase().trim();
-          return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
-        });
-      }
-
-      if (matched.length === 0) {
-        matched = res.series;
-      }
-
-      // 2. DEDUPLICATE by normalized title to prevent showing duplicate topics in the same batch
-      const uniqueMap = new Map<string, any>();
-      for (const s of matched) {
-        const titleKey = (s.title || "").toLowerCase().trim();
-        if (!titleKey) continue;
-
-        if (!uniqueMap.has(titleKey)) {
-          uniqueMap.set(titleKey, s);
-        } else {
-          // If duplicate topic exists, prefer the one that has passages or newer ID
-          const existing = uniqueMap.get(titleKey);
-          const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
-          const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
-          if (currentPassageCount > existingPassageCount) {
-            uniqueMap.set(titleKey, s);
-          }
+    try {
+      const res = await getStenoSeriesListAction({ isPublished: true });
+      if (res.success && res.series && res.series.length > 0) {
+        const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName);
+        if (deduplicated.length > 0) {
+          setSeriesList(deduplicated);
         }
       }
-
-      setSeriesList(Array.from(uniqueMap.values()));
-    } else {
-      toast.error(res.error || "Failed to load batch series");
+    } catch (e) {
+      console.error("Error loading batch series:", e);
     }
-    setLoading(false);
   };
 
   return (
