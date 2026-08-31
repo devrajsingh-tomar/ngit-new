@@ -359,14 +359,13 @@ export default function AdminStenoPassagesPage() {
               </p>
             </div>
 
-            <Button
+            <button
+              type="button"
               onClick={() => setSelectedIds([])}
-              variant="outline"
-              size="sm"
-              className="text-white border-white/20 hover:bg-white/10 text-xs font-bold rounded-xl shrink-0 self-end lg:self-auto"
+              className="bg-slate-800 hover:bg-rose-600 text-white font-black text-xs px-4 py-1.5 rounded-xl border border-slate-700 transition-all shrink-0 self-end lg:self-auto flex items-center gap-1 cursor-pointer shadow-sm"
             >
-              Clear Selection
-            </Button>
+              Clear Selection (सिलेक्शन हटाएं)
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1 border-t border-indigo-800/60">
