@@ -310,6 +310,55 @@ export async function deleteStenoPassageAction(id: string) {
   }
 }
 
+export async function bulkAssignStenoPassagesAction(data: {
+  passageIds: string[];
+  seriesId?: string;
+  examPresetId?: string;
+  examType?: string;
+  category?: string;
+}) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    if (!data.passageIds || !data.passageIds.length) {
+      return { success: false, error: "No dictation passages selected" };
+    }
+
+    const updatePayload: any = {};
+    if (data.seriesId) updatePayload.seriesId = data.seriesId;
+    if (data.examPresetId) updatePayload.examPresetId = data.examPresetId;
+    if (data.examType) updatePayload.examType = data.examType;
+    if (data.category) updatePayload.category = data.category;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return { success: false, error: "Please select a Series, Exam Rules Preset, or Category to assign" };
+    }
+
+    await StenoPassage.updateMany(
+      { _id: { $in: data.passageIds } },
+      { $set: updatePayload }
+    );
+
+    if (data.seriesId) {
+      await StenoSeries.findByIdAndUpdate(data.seriesId, {
+        $addToSet: { passages: { $each: data.passageIds } },
+      });
+    }
+
+    revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/steno/dictation");
+    return { success: true, count: data.passageIds.length };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 // ── ADMIN STENO SERIES CRUD (STEP 10) ──
 
 export async function createStenoSeriesAction(data: {
