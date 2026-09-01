@@ -142,8 +142,24 @@ export default function StudentStenoSeriesPage() {
         getStenoSeriesListAction({ isPublished: true }),
       ]);
 
-      if (batchRes.success && batchRes.batches && batchRes.batches.length > 0) {
-        setBatches(batchRes.batches);
+      if (batchRes.success && batchRes.batches) {
+        const dbBatches = batchRes.batches;
+        const mergedMap = new Map<string, any>();
+
+        DEFAULT_STATIC_BATCHES.forEach((def) => {
+          mergedMap.set(def.name.toLowerCase().trim(), { ...def });
+        });
+
+        dbBatches.forEach((dbB: any) => {
+          const key = (dbB.name || "").toLowerCase().trim();
+          if (!key) return;
+          const existing = mergedMap.get(key) || {};
+          mergedMap.set(key, { ...existing, ...dbB });
+        });
+
+        const merged = Array.from(mergedMap.values());
+        merged.sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
+        setBatches(merged);
       }
       if (seriesRes.success && seriesRes.series) {
         setSeriesList(seriesRes.series);

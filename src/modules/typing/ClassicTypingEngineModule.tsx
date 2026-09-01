@@ -565,7 +565,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                   className="border border-gray-400 px-2 py-1 bg-white outline-none min-w-[120px] focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   disabled={isActive && !isFinished && typedText.length > 0}
                 >
-                  {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
+                  {[1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 60].map(min => (
                     <option key={min} value={min}>{min} Minutes</option>
                   ))}
                 </select>

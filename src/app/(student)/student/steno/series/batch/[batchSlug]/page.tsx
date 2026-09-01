@@ -63,10 +63,17 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
       uniqueMap.set(titleKey, s);
     } else {
       const existing = uniqueMap.get(titleKey);
-      const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
-      const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
-      if (currentPassageCount > existingPassageCount) {
+      const sHasPoster = Boolean(s.thumbnailUrl && s.thumbnailUrl.trim() !== "");
+      const existingHasPoster = Boolean(existing.thumbnailUrl && existing.thumbnailUrl.trim() !== "");
+
+      if (sHasPoster && !existingHasPoster) {
         uniqueMap.set(titleKey, s);
+      } else if (sHasPoster === existingHasPoster) {
+        const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
+        const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
+        if (currentPassageCount >= existingPassageCount) {
+          uniqueMap.set(titleKey, s);
+        }
       }
     }
   }
@@ -106,11 +113,10 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
   const loadSeriesForBatch = async () => {
     try {
       const res = await getStenoSeriesListAction({ isPublished: true });
-      if (res.success && res.series && res.series.length > 0) {
-        const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName);
-        if (deduplicated.length > 0) {
-          setSeriesList(deduplicated);
-        }
+      if (res.success && res.series) {
+        const combined = [...res.series, ...DEFAULT_STATIC_SERIES];
+        const deduplicated = getFilteredDeduplicatedSeries(combined, rawBatchName);
+        setSeriesList(deduplicated);
       }
     } catch (e) {
       console.error("Error loading batch series:", e);

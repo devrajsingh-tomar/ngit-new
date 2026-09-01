@@ -396,7 +396,11 @@ export async function createStenoSeriesAction(data: {
     });
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
     revalidatePath("/steno/series");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    revalidatePath("/student/steno/series/[id]", "page");
     return { success: true, series: JSON.parse(JSON.stringify(series)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -415,7 +419,11 @@ export async function updateStenoSeriesAction(id: string, data: any) {
     const updated = await StenoSeries.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
     revalidatePath("/steno/series");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    revalidatePath("/student/steno/series/[id]", "page");
     return { success: true, series: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -434,7 +442,11 @@ export async function deleteStenoSeriesAction(id: string) {
     await StenoSeries.findByIdAndDelete(id);
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
     revalidatePath("/steno/series");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    revalidatePath("/student/steno/series/[id]", "page");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1378,6 +1390,10 @@ export async function createStenoBatchAction(data: {
       isPublished: data.isPublished ?? true,
     });
 
+    revalidatePath("/admin/steno/batches");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     return { success: true, batch: JSON.parse(JSON.stringify(batch)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1392,6 +1408,10 @@ export async function updateStenoBatchAction(id: string, data: any) {
       payload.examPresetId = null;
     }
     const updated = await StenoBatch.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
+    revalidatePath("/admin/steno/batches");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     return { success: true, batch: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1402,6 +1422,10 @@ export async function deleteStenoBatchAction(id: string) {
   try {
     await connectDB();
     await StenoBatch.findByIdAndDelete(id);
+    revalidatePath("/admin/steno/batches");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };

@@ -97,8 +97,8 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
     },
     "UPSSSC Steno": {
       backspace: "Enabled",
-      transcriptionDuration: 45,
-      dictationDuration: 10,
+      transcriptionDuration: 40,
+      dictationDuration: 5,
       spelling: "Full",
       capitalization: "Ignore",
       punctuation: "Half",
@@ -328,6 +328,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
                   <option value={15}>15 Minutes</option>
                   <option value={20}>20 Minutes</option>
                   <option value={35}>35 Minutes</option>
+                  <option value={40}>40 Minutes</option>
                   <option value={45}>45 Minutes</option>
                   <option value={60}>60 Minutes</option>
                 </select>
