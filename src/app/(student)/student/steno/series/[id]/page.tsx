@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Headphones, Play, Search, Clock, FileText, Keyboard, RefreshCw, Trophy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { isRealPoster } from "@/lib/steno/stenoUtils";
 
 function SeriesDetailContent({ id }: { id: string }) {
   const router = useRouter();

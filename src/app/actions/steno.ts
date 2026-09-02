@@ -15,7 +15,7 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
+import { isRealPoster } from "@/lib/steno/stenoUtils";
 
 // ── PUBLIC & STUDENT STENO DATA ──
 
@@ -62,16 +62,7 @@ export async function getStenoPassagesAction(query?: any) {
   }
 }
 
-export function isRealPoster(url?: string | null): boolean {
-  if (!url || typeof url !== "string") return false;
-  const trimmed = url.trim();
-  if (!trimmed) return false;
-  if (trimmed.includes("unsplash.com")) return false;
-  if (trimmed.includes("steno-weekly-test-banner.jpg")) return false;
-  if (trimmed.includes("steno-test-guide-banner.jpg")) return false;
-  if (trimmed.includes("steno-analytics-banner.jpg")) return false;
-  return true;
-}
+
 
 export async function getStenoSeriesListAction(query?: any) {
   try {

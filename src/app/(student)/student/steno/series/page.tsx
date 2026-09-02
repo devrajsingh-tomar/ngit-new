@@ -7,10 +7,7 @@ import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/s
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
-import { toast } from "sonner";
-
-import { isRealPoster } from "@/app/actions/steno";
-import { matchBatch } from "./batch/[batchSlug]/page";
+import { isRealPoster, matchBatch } from "@/lib/steno/stenoUtils";
 
 // Default fallback configuration for standard batches
 const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[]; description: string }> = {

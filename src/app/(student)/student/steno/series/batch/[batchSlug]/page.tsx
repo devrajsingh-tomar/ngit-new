@@ -7,9 +7,7 @@ import { getStenoSeriesListAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpen, Headphones } from "lucide-react";
-import { toast } from "sonner";
-
-import { isRealPoster } from "@/app/actions/steno";
+import { isRealPoster, matchBatch } from "@/lib/steno/stenoUtils";
 
 const DEFAULT_STATIC_SERIES = [
   { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
