@@ -76,6 +76,10 @@ export async function getStenoSeriesListAction(query?: any) {
         { thumbnailUrl: { $regex: /unsplash\.com|steno-weekly-test|steno-test-guide|steno-analytics/i } },
         { $unset: { thumbnailUrl: "" } }
       );
+      // Clean up fake series entries that were seeded with batch names
+      await StenoSeries.deleteMany({
+        title: { $in: ["SSC Grade C & D Series", "UPSI Steno Series"] }
+      });
     }
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
@@ -485,8 +489,6 @@ export async function seedDefaultSeriesAndPassagesAction() {
 
         // High Court & Other Batches
         { title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-        { title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
-        { title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
       ];
 
       await StenoSeries.insertMany(defaultSeries);

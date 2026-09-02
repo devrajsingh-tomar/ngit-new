@@ -9,21 +9,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpen, Headphones } from "lucide-react";
 import { isRealPoster, matchBatch } from "@/lib/steno/stenoUtils";
 
-const DEFAULT_STATIC_SERIES = [
-  { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
-  { _id: "s2", title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
-  { _id: "s3", title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
-  { _id: "s4", title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
-  { _id: "s5", title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
-  { _id: "s6", title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
-  { _id: "s7", title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
-  { _id: "s8", title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
-  { _id: "s9", title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
-  { _id: "s10", title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-  { _id: "s11", title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
-  { _id: "s12", title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
-];
-
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
   let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
 
@@ -36,10 +21,6 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
     });
   }
 
-  if (matched.length === 0) {
-    matched = allSeries;
-  }
-
   const uniqueMap = new Map<string, any>();
   for (const s of matched) {
     const titleKey = (s.title || "").toLowerCase().trim();
@@ -49,9 +30,6 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
       uniqueMap.set(titleKey, s);
     } else {
       const existing = uniqueMap.get(titleKey);
-      const isDbSeries = Boolean(s._id && !String(s._id).startsWith("s"));
-      const isExistingDbSeries = Boolean(existing._id && !String(existing._id).startsWith("s"));
-
       const sHasRealPoster = isRealPoster(s.thumbnailUrl);
       const existingHasRealPoster = isRealPoster(existing.thumbnailUrl);
 
@@ -59,9 +37,7 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
         uniqueMap.set(titleKey, s);
       } else if (!sHasRealPoster && existingHasRealPoster) {
         // Keep existing item with real poster
-      } else if (isDbSeries && !isExistingDbSeries) {
-        uniqueMap.set(titleKey, s);
-      } else if (isDbSeries && isExistingDbSeries) {
+      } else {
         const existingTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
         const currentTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
         if (currentTime > existingTime) {
@@ -85,9 +61,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
   const resolvedParams = use(params);
   const rawBatchName = decodeURIComponent(resolvedParams.batchSlug || "");
 
-  const [seriesList, setSeriesList] = useState<any[]>(() => {
-    return getFilteredDeduplicatedSeries(DEFAULT_STATIC_SERIES, rawBatchName);
-  });
+  const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
@@ -114,8 +88,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
     try {
       const res = await getStenoSeriesListAction({ isPublished: true });
       if (res.success && res.series) {
-        const combined = [...res.series, ...DEFAULT_STATIC_SERIES];
-        const deduplicated = getFilteredDeduplicatedSeries(combined, rawBatchName);
+        const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName);
         setSeriesList(deduplicated);
       }
     } catch (e) {
