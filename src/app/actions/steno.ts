@@ -62,10 +62,30 @@ export async function getStenoPassagesAction(query?: any) {
   }
 }
 
+export function isRealPoster(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  if (trimmed.includes("unsplash.com")) return false;
+  if (trimmed.includes("steno-weekly-test-banner.jpg")) return false;
+  if (trimmed.includes("steno-test-guide-banner.jpg")) return false;
+  if (trimmed.includes("steno-analytics-banner.jpg")) return false;
+  return true;
+}
+
 export async function getStenoSeriesListAction(query?: any) {
   try {
     await connectDB();
-    await seedDefaultSeriesAndPassagesAction();
+    const seriesCount = await StenoSeries.countDocuments();
+    if (seriesCount === 0) {
+      await seedDefaultSeriesAndPassagesAction();
+    } else {
+      // Clean up any old dummy Unsplash or promo banner URLs from StenoSeries collection in DB
+      await StenoSeries.updateMany(
+        { thumbnailUrl: { $regex: /unsplash\.com|steno-weekly-test|steno-test-guide|steno-analytics/i } },
+        { $unset: { thumbnailUrl: "" } }
+      );
+    }
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
     if (query?.batch) filter.batch = query.batch;
@@ -462,20 +482,20 @@ export async function seedDefaultSeriesAndPassagesAction() {
     if (seriesCount === 0) {
       const defaultSeries = [
         // UPSSSC Steno Series Topics (as per diagram)
-        { title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
-        { title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
-        { title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
-        { title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
-        { title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
-        { title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
-        { title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
-        { title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
-        { title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
+        { title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
+        { title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
+        { title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
+        { title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
+        { title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
+        { title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
+        { title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
+        { title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
+        { title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
 
         // High Court & Other Batches
-        { title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-        { title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "/images/steno-weekly-test-banner.jpg", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
-        { title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "/images/steno-test-guide-banner.jpg", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
+        { title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
+        { title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
+        { title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
       ];
 
       await StenoSeries.insertMany(defaultSeries);
@@ -1273,7 +1293,7 @@ const DEFAULT_INITIAL_BATCHES = [
     name: "UPSI Steno",
     hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
     description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-    thumbnailUrl: "/images/steno-test-guide-banner.jpg",
+    thumbnailUrl: "",
     sortOrder: 2,
     isPublished: true,
   },
@@ -1281,7 +1301,7 @@ const DEFAULT_INITIAL_BATCHES = [
     name: "SSC Steno Grade C & D",
     hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
     description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-    thumbnailUrl: "/images/steno-weekly-test-banner.jpg",
+    thumbnailUrl: "",
     sortOrder: 3,
     isPublished: true,
   },
@@ -1289,7 +1309,7 @@ const DEFAULT_INITIAL_BATCHES = [
     name: "Allahabad High Court Steno",
     hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
     description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-    thumbnailUrl: "/images/steno-analytics-banner.jpg",
+    thumbnailUrl: "",
     sortOrder: 4,
     isPublished: true,
   },
@@ -1297,7 +1317,7 @@ const DEFAULT_INITIAL_BATCHES = [
     name: "रामधारी खण्ड 1",
     hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
     description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80",
+    thumbnailUrl: "",
     sortOrder: 5,
     isPublished: true,
   },
@@ -1305,7 +1325,7 @@ const DEFAULT_INITIAL_BATCHES = [
     name: "रामधारी खण्ड 2",
     hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
     description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80",
+    thumbnailUrl: "",
     sortOrder: 6,
     isPublished: true,
   },
@@ -1313,7 +1333,7 @@ const DEFAULT_INITIAL_BATCHES = [
     name: "General Batch",
     hindiName: "सामान्य स्टेनो बैच",
     description: "सामान्य आशुलिपि अभ्यास संग्रह",
-    thumbnailUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80",
+    thumbnailUrl: "",
     sortOrder: 7,
     isPublished: true,
   },
@@ -1322,6 +1342,12 @@ const DEFAULT_INITIAL_BATCHES = [
 export async function getStenoBatchesAction(query?: any) {
   try {
     await connectDB();
+    // Clean up any old dummy Unsplash or promo banner URLs from StenoBatch collection in DB
+    await StenoBatch.updateMany(
+      { thumbnailUrl: { $regex: /unsplash\.com|steno-weekly-test|steno-test-guide|steno-analytics/i } },
+      { $unset: { thumbnailUrl: "" } }
+    );
+
     const filter: any = {};
     if (query?.isPublished !== undefined) {
       filter.isPublished = query.isPublished;

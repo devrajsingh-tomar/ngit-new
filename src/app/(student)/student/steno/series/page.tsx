@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
 import { toast } from "sonner";
 
+import { isRealPoster } from "@/app/actions/steno";
+import { matchBatch } from "./batch/[batchSlug]/page";
+
 // Default fallback configuration for standard batches
 const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[]; description: string }> = {
   "UPSSSC Steno": {
@@ -71,7 +74,7 @@ const DEFAULT_STATIC_BATCHES = [
     name: "UPSI Steno",
     hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
     description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-    thumbnailUrl: "/images/steno-test-guide-banner.jpg",
+    thumbnailUrl: "",
     sortOrder: 2,
     isPublished: true,
   },
@@ -79,7 +82,7 @@ const DEFAULT_STATIC_BATCHES = [
     name: "SSC Steno Grade C & D",
     hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
     description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-    thumbnailUrl: "/images/steno-weekly-test-banner.jpg",
+    thumbnailUrl: "",
     sortOrder: 3,
     isPublished: true,
   },
@@ -87,7 +90,7 @@ const DEFAULT_STATIC_BATCHES = [
     name: "Allahabad High Court Steno",
     hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
     description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-    thumbnailUrl: "/images/steno-analytics-banner.jpg",
+    thumbnailUrl: "",
     sortOrder: 4,
     isPublished: true,
   },
@@ -95,7 +98,7 @@ const DEFAULT_STATIC_BATCHES = [
     name: "रामधारी खण्ड 1",
     hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
     description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80",
+    thumbnailUrl: "",
     sortOrder: 5,
     isPublished: true,
   },
@@ -103,7 +106,7 @@ const DEFAULT_STATIC_BATCHES = [
     name: "रामधारी खण्ड 2",
     hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
     description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80",
+    thumbnailUrl: "",
     sortOrder: 6,
     isPublished: true,
   },
@@ -111,7 +114,7 @@ const DEFAULT_STATIC_BATCHES = [
     name: "General Batch",
     hindiName: "सामान्य स्टेनो बैच",
     description: "सामान्य आशुलिपि अभ्यास संग्रह",
-    thumbnailUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80",
+    thumbnailUrl: "",
     sortOrder: 7,
     isPublished: true,
   },
@@ -121,7 +124,7 @@ export default function StudentStenoSeriesPage() {
   const router = useRouter();
   const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
   const [seriesList, setSeriesList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
   useEffect(() => {
@@ -143,6 +146,7 @@ export default function StudentStenoSeriesPage() {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const [batchRes, seriesRes] = await Promise.all([
         getStenoBatchesAction({ isPublished: true }),
@@ -173,6 +177,8 @@ export default function StudentStenoSeriesPage() {
       }
     } catch (e) {
       console.error("Error loading steno data:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -251,13 +257,12 @@ export default function StudentStenoSeriesPage() {
                 topics: ["संपादकीय", "लीगल", "संसदीय"],
                 description: batch.description || "Steno Exam Dictation Practice Batch",
               };
+              const batchPoster = isRealPoster(batch.thumbnailUrl) ? batch.thumbnailUrl : null;
               const seriesForBatch = seriesList.find(
-                (s) =>
-                  s.thumbnailUrl &&
-                  ((s.batch || "").toLowerCase().trim() === batch.name.toLowerCase().trim() ||
-                   batch.name.toLowerCase().includes((s.batch || "").toLowerCase().trim()))
+                (s) => isRealPoster(s.thumbnailUrl) && matchBatch(s.batch, batch.name)
               );
-              const effectiveThumbnailUrl = batch.thumbnailUrl || seriesForBatch?.thumbnailUrl;
+              const effectiveThumbnailUrl = batchPoster || seriesForBatch?.thumbnailUrl;
+              const hasRealPoster = isRealPoster(effectiveThumbnailUrl);
 
               return (
                 <Card
@@ -265,7 +270,7 @@ export default function StudentStenoSeriesPage() {
                   className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border hover:border-indigo-300"
                 >
                   {/* Step 1 Poster Image Rendering */}
-                  {effectiveThumbnailUrl ? (
+                  {hasRealPoster ? (
                     <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
                       <img
                         src={effectiveThumbnailUrl}

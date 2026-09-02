@@ -155,7 +155,7 @@ function SeriesDetailContent({ id }: { id: string }) {
       </div>
 
       {/* Series Thumbnail Poster (if uploaded) */}
-      {series.thumbnailUrl && (
+      {isRealPoster(series.thumbnailUrl) && (
         <div className="w-full rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-950 flex items-center justify-center">
           <img
             src={series.thumbnailUrl}

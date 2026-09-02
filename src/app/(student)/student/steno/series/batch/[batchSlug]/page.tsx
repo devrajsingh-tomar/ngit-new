@@ -9,43 +9,61 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpen, Headphones } from "lucide-react";
 import { toast } from "sonner";
 
+import { isRealPoster } from "@/app/actions/steno";
+
 const DEFAULT_STATIC_SERIES = [
-  { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
-  { _id: "s2", title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
-  { _id: "s3", title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
-  { _id: "s4", title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
-  { _id: "s5", title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
-  { _id: "s6", title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
-  { _id: "s7", title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
-  { _id: "s8", title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
-  { _id: "s9", title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
-  { _id: "s10", title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-  { _id: "s11", title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "/images/steno-weekly-test-banner.jpg", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
-  { _id: "s12", title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "/images/steno-test-guide-banner.jpg", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
+  { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
+  { _id: "s2", title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
+  { _id: "s3", title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
+  { _id: "s4", title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
+  { _id: "s5", title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
+  { _id: "s6", title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
+  { _id: "s7", title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
+  { _id: "s8", title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
+  { _id: "s9", title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
+  { _id: "s10", title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
+  { _id: "s11", title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
+  { _id: "s12", title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
 ];
 
+export function matchBatch(seriesBatch?: string | null, targetBatch?: string | null): boolean {
+  if (!targetBatch) return true;
+  const tBatch = targetBatch.toLowerCase().trim();
+
+  if (tBatch.includes("ठाकुरद्वारा") || tBatch.includes("thakurdwara") || tBatch.includes("general")) {
+    return true; // All series available in main Thakurdwara / General batch
+  }
+
+  if (!seriesBatch) return true;
+  const sBatch = seriesBatch.toLowerCase().trim();
+
+  if (sBatch === tBatch) return true;
+
+  if (tBatch.includes("upsssc") && sBatch.includes("upsssc")) return true;
+  if (tBatch.includes("ssc") && !tBatch.includes("upsssc") && sBatch.includes("ssc") && !sBatch.includes("upsssc")) return true;
+  if (tBatch.includes("upsi") && sBatch.includes("upsi")) return true;
+  if ((tBatch.includes("high court") || tBatch.includes("highcourt")) && (sBatch.includes("high court") || sBatch.includes("highcourt"))) return true;
+  if (tBatch.includes("रामधारी खण्ड 1") && sBatch.includes("रामधारी खण्ड 1")) return true;
+  if (tBatch.includes("रामधारी खण्ड 2") && sBatch.includes("रामधारी खण्ड 2")) return true;
+
+  const cleanS = sBatch.replace(/steno|batch|बैच|स्पेशल|special/gi, "").trim();
+  const cleanT = tBatch.replace(/steno|batch|बैच|स्पेशल|special/gi, "").trim();
+
+  if (cleanS && cleanT && (cleanS === cleanT || cleanS.includes(cleanT) || cleanT.includes(cleanS))) {
+    return true;
+  }
+
+  return false;
+}
+
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
-  const searchVal = batchName.toLowerCase().trim();
-
-  let matched = allSeries.filter((s: any) => {
-    const batchVal = (s.batch || "").toLowerCase().trim();
-
-    if (batchVal && searchVal) {
-      if (batchVal === searchVal || batchVal.includes(searchVal) || searchVal.includes(batchVal)) {
-        return true;
-      }
-      const searchKeywords = searchVal.split(/\s+/).filter((w) => w.length > 2);
-      if (searchKeywords.length > 0 && searchKeywords.some((kw) => batchVal.includes(kw))) {
-        return true;
-      }
-    }
-    return false;
-  });
+  let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
 
   if (matched.length === 0) {
     matched = allSeries.filter((s: any) => {
       const titleVal = (s.title || "").toLowerCase().trim();
       const catVal = (s.category || "").toLowerCase().trim();
+      const searchVal = batchName.toLowerCase().trim();
       return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
     });
   }
@@ -66,20 +84,26 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
       const isDbSeries = Boolean(s._id && !String(s._id).startsWith("s"));
       const isExistingDbSeries = Boolean(existing._id && !String(existing._id).startsWith("s"));
 
-      const sHasPoster = Boolean(s.thumbnailUrl && s.thumbnailUrl.trim() !== "");
-      const existingHasPoster = Boolean(existing.thumbnailUrl && existing.thumbnailUrl.trim() !== "");
+      const sHasRealPoster = isRealPoster(s.thumbnailUrl);
+      const existingHasRealPoster = isRealPoster(existing.thumbnailUrl);
 
-      if (isDbSeries && !isExistingDbSeries) {
+      if (sHasRealPoster && !existingHasRealPoster) {
         uniqueMap.set(titleKey, s);
-      } else if (!isDbSeries && isExistingDbSeries) {
-        // Keep existing real DB series
-      } else if (sHasPoster && !existingHasPoster) {
+      } else if (!sHasRealPoster && existingHasRealPoster) {
+        // Keep existing item with real poster
+      } else if (isDbSeries && !isExistingDbSeries) {
         uniqueMap.set(titleKey, s);
-      } else if (sHasPoster === existingHasPoster) {
-        const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
-        const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
-        if (currentPassageCount > existingPassageCount) {
+      } else if (isDbSeries && isExistingDbSeries) {
+        const existingTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+        const currentTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+        if (currentTime > existingTime) {
           uniqueMap.set(titleKey, s);
+        } else {
+          const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
+          const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
+          if (currentPassageCount > existingPassageCount) {
+            uniqueMap.set(titleKey, s);
+          }
         }
       }
     }
@@ -96,7 +120,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
   const [seriesList, setSeriesList] = useState<any[]>(() => {
     return getFilteredDeduplicatedSeries(DEFAULT_STATIC_SERIES, rawBatchName);
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
   useEffect(() => {
@@ -118,6 +142,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
   }, [rawBatchName]);
 
   const loadSeriesForBatch = async () => {
+    setLoading(true);
     try {
       const res = await getStenoSeriesListAction({ isPublished: true });
       if (res.success && res.series) {
@@ -127,6 +152,8 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
       }
     } catch (e) {
       console.error("Error loading batch series:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,6 +208,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
           {seriesList.map((series, index) => {
             const passageCount = Array.isArray(series.passages) ? series.passages.length : 0;
             const gradient = index % 3 === 0 ? "from-indigo-600 to-purple-800" : index % 3 === 1 ? "from-emerald-700 to-teal-900" : "from-amber-600 to-rose-700";
+            const hasRealPoster = isRealPoster(series.thumbnailUrl);
 
             return (
               <Card
@@ -188,7 +216,7 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
                 className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border hover:border-indigo-300"
               >
                 {/* Step 2 Poster Image Rendering */}
-                {series.thumbnailUrl ? (
+                {hasRealPoster ? (
                   <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
                     <img
                       src={series.thumbnailUrl}
