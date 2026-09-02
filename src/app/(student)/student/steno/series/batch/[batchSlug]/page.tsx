@@ -10,18 +10,18 @@ import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpe
 import { toast } from "sonner";
 
 const DEFAULT_STATIC_SERIES = [
-  { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
-  { _id: "s2", title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
-  { _id: "s3", title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
-  { _id: "s4", title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
-  { _id: "s5", title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
-  { _id: "s6", title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
-  { _id: "s7", title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
-  { _id: "s8", title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
-  { _id: "s9", title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
-  { _id: "s10", title: "High Court Legal Series", description: "High Court & District Court Judgments", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-  { _id: "s11", title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
-  { _id: "s12", title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
+  { _id: "s1", title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
+  { _id: "s2", title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
+  { _id: "s3", title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
+  { _id: "s4", title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
+  { _id: "s5", title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
+  { _id: "s6", title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
+  { _id: "s7", title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
+  { _id: "s8", title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
+  { _id: "s9", title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop&q=80", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
+  { _id: "s10", title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
+  { _id: "s11", title: "SSC Grade C & D Series", description: "Official SSC Dictations & PYQ Papers", thumbnailUrl: "/images/steno-weekly-test-banner.jpg", batch: "SSC Steno", category: "PYQ", language: "Hindi", sortOrder: 11 },
+  { _id: "s12", title: "UPSI Steno Series", description: "UPSI Police Dictations & Transcriptions", thumbnailUrl: "/images/steno-test-guide-banner.jpg", batch: "UPSI Steno", category: "Police", language: "Hindi", sortOrder: 12 },
 ];
 
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
@@ -63,15 +63,22 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
       uniqueMap.set(titleKey, s);
     } else {
       const existing = uniqueMap.get(titleKey);
+      const isDbSeries = Boolean(s._id && !String(s._id).startsWith("s"));
+      const isExistingDbSeries = Boolean(existing._id && !String(existing._id).startsWith("s"));
+
       const sHasPoster = Boolean(s.thumbnailUrl && s.thumbnailUrl.trim() !== "");
       const existingHasPoster = Boolean(existing.thumbnailUrl && existing.thumbnailUrl.trim() !== "");
 
-      if (sHasPoster && !existingHasPoster) {
+      if (isDbSeries && !isExistingDbSeries) {
+        uniqueMap.set(titleKey, s);
+      } else if (!isDbSeries && isExistingDbSeries) {
+        // Keep existing real DB series
+      } else if (sHasPoster && !existingHasPoster) {
         uniqueMap.set(titleKey, s);
       } else if (sHasPoster === existingHasPoster) {
         const existingPassageCount = Array.isArray(existing?.passages) ? existing.passages.length : 0;
         const currentPassageCount = Array.isArray(s?.passages) ? s.passages.length : 0;
-        if (currentPassageCount >= existingPassageCount) {
+        if (currentPassageCount > existingPassageCount) {
           uniqueMap.set(titleKey, s);
         }
       }

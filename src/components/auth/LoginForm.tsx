@@ -67,7 +67,7 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
             
             <div className="flex flex-col items-center mb-10 relative z-10">
                 {role !== 'ADMIN' && (
-                    <div className={`w-16 h-16 ${role === 'ADMIN' ? 'bg-rose-500' : 'bg-primary'} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg transform group-hover:scale-110 transition-all duration-500`}>
+                    <div className={`w-16 h-16 ${role === 'STUDENT' ? 'bg-primary' : 'bg-rose-500'} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg transform group-hover:scale-110 transition-all duration-500`}>
                         <Icon className="w-8 h-8" />
                     </div>
                 )}
@@ -132,7 +132,7 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
 
                     <button
                         type="button"
-                        onClick={() => signIn("google", { callbackUrl: "/student" })}
+                        onClick={() => signIn("google", { callbackUrl: "/" })}
                         className="w-full h-14 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-3 shadow-xs transition-all relative z-10"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">

@@ -64,7 +64,7 @@ export default function StudentLoginForm() {
                 } else if (session?.user?.role === "ADMIN") {
                     router.push("/admin");
                 } else {
-                    router.push("/student");
+                    router.push("/");
                 }
             }
         } catch {
@@ -186,7 +186,7 @@ export default function StudentLoginForm() {
                         {/* Google Sign-In Button */}
                         <button
                             type="button"
-                            onClick={() => signIn("google", { callbackUrl: callbackUrl || "/student" })}
+                            onClick={() => signIn("google", { callbackUrl: callbackUrl || "/" })}
                             className="w-full h-14 rounded-xl border-2 border-slate-100 bg-white hover:bg-slate-50 text-slate-700 font-black text-xs flex items-center justify-center gap-3 shadow-sm transition-all mb-8"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -250,7 +250,7 @@ export default function StudentLoginForm() {
                                 type="button"
                                 onClick={() => {
                                     setIsForgotModalOpen(false);
-                                    signIn("google", { callbackUrl: callbackUrl || "/student" });
+                                    signIn("google", { callbackUrl: callbackUrl || "/" });
                                 }}
                                 className="w-full h-12 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 font-black text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
                             >
