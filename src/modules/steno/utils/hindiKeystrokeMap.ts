@@ -7,6 +7,7 @@ export interface StenoTypingModeConfig {
   label: string;
   inputMode: "unicode" | "krutidev" | "english";
   displayFont: string;
+  fontFamily: string;
 }
 
 export const STENO_TYPING_MODES: StenoTypingModeConfig[] = [
@@ -15,18 +16,21 @@ export const STENO_TYPING_MODES: StenoTypingModeConfig[] = [
     label: "Hindi - Unicode / Mangal",
     inputMode: "unicode",
     displayFont: "Mangal",
+    fontFamily: "Mangal, sans-serif",
   },
   {
     type: "krutidev_010",
     label: "Hindi - Kruti Dev 010",
     inputMode: "krutidev",
     displayFont: "Kruti Dev 010",
+    fontFamily: "'Kruti Dev 010', 'Kruti Dev', sans-serif",
   },
   {
     type: "english",
     label: "English",
     inputMode: "english",
     displayFont: "English",
+    fontFamily: "Arial, sans-serif",
   },
 ];
 
@@ -597,7 +601,7 @@ export function handleHindiTextareaKeyDown(
     e.key === "Enter" ||
     e.key === "Tab" ||
     e.key.startsWith("Arrow") ||
-    e.key.startsWith("F") ||
+    /^F[1-9]$|^F1[0-2]$/.test(e.key) ||
     e.key === "Escape"
   ) {
     return false;
