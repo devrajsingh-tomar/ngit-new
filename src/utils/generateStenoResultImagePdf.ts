@@ -133,7 +133,10 @@ export async function generateStenoResultImagePdf({
           })
       )
     );
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // Scroll window to (0,0) so html2canvas computes perfect top-left origin
+    const origScrollX = window.scrollX;
+    const origScrollY = window.scrollY;
+    window.scrollTo(0, 0);
 
     const cloneHeight = Math.max(clone.scrollHeight, clone.offsetHeight, 600);
 

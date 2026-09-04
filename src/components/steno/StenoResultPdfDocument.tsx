@@ -3,7 +3,8 @@ import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/rendere
 import path from "path";
 import fs from "fs";
 
-// Register Mukta font for Devanagari Hindi PDF rendering
+// Safe Mukta font registration with Helvetica fallback for production environments
+let isMuktaRegistered = false;
 try {
   const regularPath = path.join(process.cwd(), "public", "fonts", "Mukta-Regular.ttf");
   const boldPath = path.join(process.cwd(), "public", "fonts", "Mukta-Bold.ttf");
@@ -16,17 +17,20 @@ try {
         { src: boldPath, fontWeight: "bold" },
       ],
     });
+    isMuktaRegistered = true;
   }
 } catch (e) {
   console.warn("Local PDF font registration note:", e);
 }
+
+const chosenFont = isMuktaRegistered ? "MuktaHindi" : "Helvetica";
 
 const styles = StyleSheet.create({
   page: {
     padding: 24,
     paddingBottom: 36,
     backgroundColor: "#ffffff",
-    fontFamily: "MuktaHindi",
+    fontFamily: chosenFont,
     fontSize: 9,
     color: "#0f172a",
   },
@@ -132,9 +136,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: "#e2e8f0",
-    padding: 8,
+    padding: 6,
     borderRadius: 6,
-    marginBottom: 12,
+    marginBottom: 10,
     flexDirection: "row",
     flexWrap: "wrap",
   },
@@ -144,7 +148,6 @@ const styles = StyleSheet.create({
     marginRight: 3,
     marginBottom: 3,
     borderRadius: 3,
-    fontSize: 7.5,
   },
   table: {
     width: "100%",
@@ -224,8 +227,8 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
   const displayErrorLog = errorLog.slice(0, 35);
   const hasMoreErrors = errorLog.length > 35;
 
-  // Word token preview (up to 80 words)
-  const previewTokens = wordTokens.slice(0, 80);
+  // Word token preview (up to 40 words)
+  const previewTokens = wordTokens.slice(0, 40);
 
   return (
     <Document title={`NGIT_Steno_Result_${result.passageTitle || "Test"}`}>
@@ -324,7 +327,7 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
 
         {/* Word-by-Word Evaluation Tokens Summary */}
         {previewTokens.length > 0 && (
-          <View>
+          <View style={{ marginTop: 4, marginBottom: 8 }}>
             <Text style={styles.sectionTitle}>Word-by-Word Transcription Alignment (Preview)</Text>
             <View style={styles.tokensBox}>
               {previewTokens.map((token: any, idx: number) => {
@@ -336,11 +339,13 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
                 if (token.type === "matra") { bgColor = "#f3e8ff"; textColor = "#6b21a8"; }
                 if (token.type === "punctuation") { bgColor = "#ccfbf1"; textColor = "#115e59"; }
 
-                const wordText = token.typed && token.typed !== "—" ? token.typed : token.original;
+                const wordText = token.typed && token.typed !== "—" ? String(token.typed) : String(token.original || "");
+                if (!wordText.trim()) return null;
+
                 return (
-                  <Text key={idx} style={[styles.tokenTag, { backgroundColor: bgColor, color: textColor }]}>
-                    {wordText}
-                  </Text>
+                  <View key={idx} style={[styles.tokenTag, { backgroundColor: bgColor }]}>
+                    <Text style={{ color: textColor, fontSize: 7 }}>{wordText}</Text>
+                  </View>
                 );
               })}
             </View>
