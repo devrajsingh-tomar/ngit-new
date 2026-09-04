@@ -137,6 +137,9 @@ export default function StudentStenoSeriesPage() {
         getStenoSeriesListAction({ isPublished: true }),
       ]);
 
+      const fetchedSeries = (seriesRes.success && seriesRes.series) ? seriesRes.series : [];
+      setSeriesList(fetchedSeries);
+
       if (batchRes.success && batchRes.batches) {
         const dbBatches = batchRes.batches;
         const mergedMap = new Map<string, any>();
@@ -153,11 +156,35 @@ export default function StudentStenoSeriesPage() {
         });
 
         const merged = Array.from(mergedMap.values());
-        merged.sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
+
+        // Sort Batches by newest uploaded content timestamp descending (Step 1 Priority)
+        const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
+          let maxTime = 0;
+          for (const s of sList) {
+            if (matchBatch(s.batch, batchName)) {
+              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+              if (sTime > maxTime) maxTime = sTime;
+              if (Array.isArray(s.passages)) {
+                for (const p of s.passages) {
+                  const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
+                  if (pTime > maxTime) maxTime = pTime;
+                }
+              }
+            }
+          }
+          return maxTime;
+        };
+
+        merged.sort((a, b) => {
+          const timeA = getBatchLatestTimestamp(a.name, fetchedSeries);
+          const timeB = getBatchLatestTimestamp(b.name, fetchedSeries);
+          if (timeA !== timeB) {
+            return timeB - timeA;
+          }
+          return (a.sortOrder ?? 99) - (b.sortOrder ?? 99);
+        });
+
         setBatches(merged);
-      }
-      if (seriesRes.success && seriesRes.series) {
-        setSeriesList(seriesRes.series);
       }
     } catch (e) {
       console.error("Error loading steno data:", e);
