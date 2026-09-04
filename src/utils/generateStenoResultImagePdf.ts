@@ -20,7 +20,7 @@ export async function generateStenoResultImagePdf({
     throw new Error("Result report printable area not found!");
   }
 
-  // 1. Diagnostics logging before capture
+  // 1. Pre-capture Diagnostics Logging
   const rect = targetElement.getBoundingClientRect();
   const computedStyle = window.getComputedStyle(targetElement);
 
@@ -60,23 +60,23 @@ export async function generateStenoResultImagePdf({
   const origScrollX = window.scrollX;
   const origScrollY = window.scrollY;
 
-  // 2. Off-Screen Isolated Container Approach
-  // This bypasses parent scroll containers (e.g. StudentLayout's overflow-y-auto / h-screen)
+  // 2. Dedicated Isolated Printable Container
+  // Positioned at absolute top-left (0,0) in top-layer stacking context to prevent offset/z-index canvas blanking
   const offscreenContainer = document.createElement("div");
   offscreenContainer.id = "steno-pdf-offscreen-container";
-  offscreenContainer.style.position = "fixed";
+  offscreenContainer.style.position = "absolute";
   offscreenContainer.style.left = "0";
   offscreenContainer.style.top = "0";
-  offscreenContainer.style.width = "850px"; // Controlled A4-suitable width (approx 850px at 96 DPI)
+  offscreenContainer.style.width = "850px"; // Fixed A4-friendly pixel width (approx 850px at 96 DPI)
   offscreenContainer.style.backgroundColor = "#ffffff";
-  offscreenContainer.style.zIndex = "-99999";
-  offscreenContainer.style.pointerEvents = "none";
+  offscreenContainer.style.zIndex = "999999";
   offscreenContainer.style.overflow = "visible";
+  offscreenContainer.style.boxSizing = "border-box";
 
   // Clone target element
   const clone = targetElement.cloneNode(true) as HTMLElement;
   clone.id = `${elementId}-pdf-clone`;
-  clone.style.width = "100%";
+  clone.style.width = "850px";
   clone.style.height = "auto";
   clone.style.maxHeight = "none";
   clone.style.overflow = "visible";
@@ -118,25 +118,43 @@ export async function generateStenoResultImagePdf({
   let canvas: HTMLCanvasElement;
 
   try {
-    // Wait for fonts and layout stabilization
+    // Wait for fonts and image assets to finish loading
     await document.fonts.ready;
+    const images = Array.from(clone.querySelectorAll("img"));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) resolve(true);
+            else {
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(true);
+            }
+          })
+      )
+    );
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // Capture offscreen clone with html2canvas
+    const cloneHeight = Math.max(clone.scrollHeight, clone.offsetHeight, 600);
+
+    // Capture offscreen clone with html2canvas strictly anchored at (0,0)
     canvas = await html2canvas(clone, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: "#ffffff",
-      width: clone.offsetWidth || 850,
-      height: clone.scrollHeight || clone.offsetHeight,
-      windowWidth: 850,
+      x: 0,
+      y: 0,
       scrollX: 0,
       scrollY: 0,
+      width: 850,
+      height: cloneHeight,
+      windowWidth: 850,
+      windowHeight: cloneHeight + 200,
     });
   } finally {
-    // Clean up offscreen container
+    // Clean up offscreen container from DOM immediately
     if (offscreenContainer.parentNode) {
       offscreenContainer.parentNode.removeChild(offscreenContainer);
     }
