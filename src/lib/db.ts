@@ -13,6 +13,14 @@ import "@/models/StudentProfile";
 import "@/models/TypingResult";
 import "@/models/MockTestResult";
 import "@/models/Quiz";
+import "@/models/StenoPassage";
+import "@/models/StenoSeries";
+import "@/models/StenoBatch";
+import "@/models/StenoExam";
+import "@/models/StenoResult";
+import "@/models/StenoFont";
+import "@/models/StenoErrorRule";
+import "@/models/StenoCustomTest";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 

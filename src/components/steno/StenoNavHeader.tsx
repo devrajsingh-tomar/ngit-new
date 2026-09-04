@@ -15,13 +15,13 @@ import {
 } from "lucide-react";
 
 const stenoNavTabs = [
-  { label: "Steno Dashboard", href: "/steno/dashboard", icon: LayoutDashboard },
-  { label: "Practice", href: "/steno/practice", icon: Zap },
-  { label: "Dictation Player", href: "/steno/dictation", icon: Headphones },
-  { label: "Mock Tests", href: "/steno/mock-tests", icon: Award },
-  { label: "Steno Series", href: "/steno/series", icon: Layers },
-  { label: "My Tests", href: "/steno/my-tests", icon: Clock },
-  { label: "Leaderboard", href: "/steno/leaderboard", icon: Trophy },
+  { label: "Steno Dashboard", href: "/student/steno/dashboard", icon: LayoutDashboard },
+  { label: "Practice", href: "/student/steno/practice", icon: Zap },
+  { label: "Dictation Player", href: "/student/steno/dictation", icon: Headphones },
+  { label: "Mock Tests", href: "/student/steno/mock-tests", icon: Award },
+  { label: "Steno Series", href: "/student/steno/series", icon: Layers },
+  { label: "My Tests", href: "/student/steno/my-tests", icon: Clock },
+  { label: "Leaderboard", href: "/student/steno/leaderboard", icon: Trophy },
 ];
 
 export default function StenoNavHeader() {

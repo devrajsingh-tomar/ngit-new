@@ -85,24 +85,7 @@ function PassagePlayerContent({ id }: { id: string }) {
     }
   };
 
-  // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
-  useEffect(() => {
-    window.history.pushState({ page: "steno-passage" }, "", window.location.href);
 
-    const handlePopState = (event: PopStateEvent) => {
-      event.preventDefault();
-      if (queryBatch) {
-        router.replace(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
-      } else {
-        router.replace("/student/steno/series");
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [router, queryBatch]);
 
   const handleBack = () => {
     if (queryBatch) {

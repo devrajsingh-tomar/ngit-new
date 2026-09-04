@@ -16,6 +16,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { isRealPoster } from "@/lib/steno/stenoUtils";
+import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
 
 // ── PUBLIC & STUDENT STENO DATA ──
 
@@ -70,16 +71,6 @@ export async function getStenoSeriesListAction(query?: any) {
     const seriesCount = await StenoSeries.countDocuments();
     if (seriesCount === 0) {
       await seedDefaultSeriesAndPassagesAction();
-    } else {
-      // Clean up any old dummy Unsplash or promo banner URLs from StenoSeries collection in DB
-      await StenoSeries.updateMany(
-        { thumbnailUrl: { $regex: /unsplash\.com|steno-weekly-test|steno-test-guide|steno-analytics/i } },
-        { $unset: { thumbnailUrl: "" } }
-      );
-      // Clean up fake series entries that were seeded with batch names
-      await StenoSeries.deleteMany({
-        title: { $in: ["SSC Grade C & D Series", "UPSI Steno Series"] }
-      });
     }
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
@@ -1335,12 +1326,6 @@ const DEFAULT_INITIAL_BATCHES = [
 export async function getStenoBatchesAction(query?: any) {
   try {
     await connectDB();
-    // Clean up any old dummy Unsplash or promo banner URLs from StenoBatch collection in DB
-    await StenoBatch.updateMany(
-      { thumbnailUrl: { $regex: /unsplash\.com|steno-weekly-test|steno-test-guide|steno-analytics/i } },
-      { $unset: { thumbnailUrl: "" } }
-    );
-
     const filter: any = {};
     if (query?.isPublished !== undefined) {
       filter.isPublished = query.isPublished;
