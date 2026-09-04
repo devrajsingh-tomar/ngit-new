@@ -6,8 +6,9 @@ import { getStenoPassagesAction, getStenoSeriesByIdAction } from "@/app/actions/
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, Play, Trophy, Clock, FileText, Keyboard, RefreshCw } from "lucide-react";
+import { ArrowLeft, Search, Play, Trophy, Clock, FileText, Keyboard, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 export default function StudentCategoryDictationsPage({
   params,
@@ -62,10 +63,17 @@ export default function StudentCategoryDictationsPage({
 
   const seriesName = series?.title || "Steno Course Series";
 
-  const rawList = passages.map((p, idx) => ({
+  const sortedPassages = [...passages].sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+    const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+    return timeB - timeA;
+  });
+
+  const rawList = sortedPassages.map((p, idx) => ({
     _id: p._id,
     title: p.title || `Test - ${idx + 1}`,
     wordCount: p.wordCount || 390,
+    createdAt: p.createdAt,
     status: "Not Attempted yet",
   }));
 
@@ -114,10 +122,25 @@ export default function StudentCategoryDictationsPage({
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredTests.map((test) => (
-            <Card key={test._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-slate-300 transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <h3 className="text-xl font-black text-slate-900">{test.title}</h3>
+          {filteredTests.map((test, idx) => {
+            const isNew = isNewlyUploaded(test.createdAt) || idx === 0;
+
+            return (
+              <Card
+                key={test._id}
+                className={`p-6 rounded-3xl bg-white shadow-xs space-y-4 transition-all flex flex-col justify-between ${
+                  isNew ? "border-2 border-rose-200 hover:border-rose-300" : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-black text-slate-900">{test.title}</h3>
+                    {isNew && (
+                      <span className="text-[9px] font-black uppercase bg-rose-600 text-white px-2 py-0.5 rounded shadow-xs flex items-center gap-1 shrink-0 animate-pulse">
+                        <Sparkles className="w-2.5 h-2.5 fill-white" /> NEW
+                      </span>
+                    )}
+                  </div>
 
                 <div className="space-y-2 text-xs font-medium text-slate-600">
                   <p className="flex items-center gap-2">
@@ -147,7 +170,8 @@ export default function StudentCategoryDictationsPage({
                 </Button>
               </Link>
             </Card>
-          ))}
+          );
+        })}
         </div>
       )}
     </div>

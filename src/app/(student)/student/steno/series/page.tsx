@@ -7,7 +7,7 @@ import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/s
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
-import { isRealPoster, matchBatch } from "@/lib/steno/stenoUtils";
+import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 // Default fallback configuration for standard batches
 const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[]; description: string }> = {
@@ -233,7 +233,7 @@ export default function StudentStenoSeriesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {batches.map((batch) => {
+            {batches.map((batch, index) => {
               const seriesCount = getBatchSeriesCount(batch.name);
               const encodeBatch = encodeURIComponent(batch.name);
               const fallback = DEFAULT_BATCH_FALLBACKS[batch.name] || {
@@ -247,11 +247,16 @@ export default function StudentStenoSeriesPage() {
               );
               const effectiveThumbnailUrl = batchPoster || seriesForBatch?.thumbnailUrl;
               const hasRealPoster = isRealPoster(effectiveThumbnailUrl);
+              const hasRecentDictations = seriesList.some(
+                (s) => matchBatch(s.batch, batch.name) && (isNewlyUploaded(s.updatedAt || s.createdAt) || (Array.isArray(s.passages) && s.passages.some((p: any) => isNewlyUploaded(p.createdAt))))
+              ) || index === 0;
 
               return (
                 <Card
                   key={batch._id || batch.name}
-                  className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border hover:border-indigo-300"
+                  className={`p-0 rounded-3xl bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border ${
+                    hasRecentDictations ? "border-2 border-indigo-300 hover:border-indigo-400" : "border-slate-200 hover:border-indigo-300"
+                  }`}
                 >
                   {/* Step 1 Poster Image Rendering */}
                   {hasRealPoster ? (
@@ -261,6 +266,13 @@ export default function StudentStenoSeriesPage() {
                         alt={batch.name}
                         className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                       />
+                      {hasRecentDictations && (
+                        <div className="absolute top-3 left-3 z-10">
+                          <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 animate-pulse">
+                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT AVAILABLE
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     /* Fallback Styled Banner if poster is not uploaded */
@@ -269,7 +281,11 @@ export default function StudentStenoSeriesPage() {
                         <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                           {batch.name}
                         </span>
-                        <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                        {hasRecentDictations && (
+                          <span className="bg-rose-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs animate-pulse flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT
+                          </span>
+                        )}
                       </div>
 
                       <div className="z-10 space-y-1">

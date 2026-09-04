@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Headphones, Play, Search, Clock, FileText, Keyboard, RefreshCw, Trophy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { isRealPoster } from "@/lib/steno/stenoUtils";
+import { isRealPoster, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 function SeriesDetailContent({ id }: { id: string }) {
   const router = useRouter();
@@ -106,6 +106,13 @@ function SeriesDetailContent({ id }: { id: string }) {
       }
     }
   }
+
+  // Sort ALL passages by createdAt / updatedAt descending (NEWEST UPLOADED FIRST)
+  allPassages.sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+    const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+    return timeB - timeA;
+  });
 
   const filteredTests = allPassages.filter((t) => {
     if (selectedMode === "unicode_hindi") {
@@ -238,20 +245,32 @@ function SeriesDetailContent({ id }: { id: string }) {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTests.map((test) => (
-            <Card
-              key={test._id}
-              className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between group"
-            >
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
-                    {test.targetWpm || 80} WPM • {test.language || "Hindi"}
-                  </span>
-                  <span className="text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
-                    {test.category || "General"}
-                  </span>
-                </div>
+          {filteredTests.map((test, idx) => {
+            const isNew = isNewlyUploaded(test.createdAt) || idx === 0;
+
+            return (
+              <Card
+                key={test._id}
+                className={`p-6 rounded-3xl bg-white shadow-xs space-y-4 transition-all flex flex-col justify-between group ${
+                  isNew ? "border-2 border-rose-200 hover:border-rose-300 shadow-sm" : "border border-slate-200 hover:border-indigo-300 hover:shadow-md"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                        {test.targetWpm || 80} WPM • {test.language || "Hindi"}
+                      </span>
+                      {isNew && (
+                        <span className="text-[10px] font-black uppercase bg-rose-600 text-white px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
+                          <Sparkles className="w-3 h-3 fill-white" /> NEW
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded shrink-0">
+                      {test.category || "General"}
+                    </span>
+                  </div>
 
                 <div>
                   <h3 className="text-base font-black text-slate-900 line-clamp-2 group-hover:text-indigo-600 transition-colors leading-snug">
@@ -294,7 +313,8 @@ function SeriesDetailContent({ id }: { id: string }) {
                 </Button>
               </Link>
             </Card>
-          ))}
+          );
+        })}
         </div>
       )}
     </div>

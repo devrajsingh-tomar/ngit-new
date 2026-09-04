@@ -38,3 +38,11 @@ export function matchBatch(seriesBatch?: string | null, targetBatch?: string | n
 
   return false;
 }
+
+export function isNewlyUploaded(createdAt?: string | Date | null, maxDays = 14): boolean {
+  if (!createdAt) return false;
+  const createdTime = new Date(createdAt).getTime();
+  if (isNaN(createdTime) || createdTime === 0) return false;
+  const diffDays = (Date.now() - createdTime) / (1000 * 60 * 60 * 24);
+  return diffDays <= maxDays && diffDays >= 0;
+}

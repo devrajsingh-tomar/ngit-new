@@ -55,7 +55,7 @@ export async function getStenoPassagesAction(query?: any) {
 
     const passages = await StenoPassage.find(filter)
       .populate("seriesId")
-      .sort({ sortOrder: 1, createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .lean();
     return { success: true, passages: JSON.parse(JSON.stringify(passages)) };
   } catch (err: any) {
@@ -79,7 +79,7 @@ export async function getStenoSeriesListAction(query?: any) {
 
     const series = await StenoSeries.find(filter)
       .populate("passages")
-      .sort({ sortOrder: 1, createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
     return { success: true, series: JSON.parse(JSON.stringify(series)) };
   } catch (err: any) {

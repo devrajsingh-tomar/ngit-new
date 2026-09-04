@@ -7,7 +7,7 @@ import { getStenoSeriesListAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpen, Headphones } from "lucide-react";
-import { isRealPoster, matchBatch } from "@/lib/steno/stenoUtils";
+import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
   let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
@@ -53,7 +53,24 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
     }
   }
 
-  return Array.from(uniqueMap.values());
+  const list = Array.from(uniqueMap.values());
+
+  // Priority 1: Sort Series by newest uploaded dictation or update timestamp descending
+  list.sort((a: any, b: any) => {
+    const getLatestTime = (item: any) => {
+      let maxTime = new Date(item.updatedAt || item.createdAt || 0).getTime();
+      if (Array.isArray(item.passages)) {
+        for (const p of item.passages) {
+          const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
+          if (pTime > maxTime) maxTime = pTime;
+        }
+      }
+      return maxTime;
+    };
+    return getLatestTime(b) - getLatestTime(a);
+  });
+
+  return list;
 }
 
 export default function StudentStenoBatchSeriesPage({ params }: { params: Promise<{ batchSlug: string }> }) {
@@ -137,11 +154,14 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
             const passageCount = Array.isArray(series.passages) ? series.passages.length : 0;
             const gradient = index % 3 === 0 ? "from-indigo-600 to-purple-800" : index % 3 === 1 ? "from-emerald-700 to-teal-900" : "from-amber-600 to-rose-700";
             const hasRealPoster = isRealPoster(series.thumbnailUrl);
+            const hasRecentContent = isNewlyUploaded(series.updatedAt || series.createdAt) || (Array.isArray(series.passages) && series.passages.some((p: any) => isNewlyUploaded(p.createdAt))) || index === 0;
 
             return (
               <Card
                 key={series._id}
-                className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border hover:border-indigo-300"
+                className={`p-0 rounded-3xl bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border ${
+                  hasRecentContent ? "border-2 border-rose-200 hover:border-rose-300" : "border-slate-200 hover:border-indigo-300"
+                }`}
               >
                 {/* Step 2 Poster Image Rendering */}
                 {hasRealPoster ? (
@@ -151,12 +171,25 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
                       alt={series.title}
                       className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                     />
+                    {hasRecentContent && (
+                      <div className="absolute top-3 left-3 z-10">
+                        <span className="text-[10px] font-black uppercase bg-rose-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 animate-pulse">
+                          <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   /* Fallback Gradient if poster is not uploaded */
                   <div className={`w-full h-44 bg-gradient-to-br ${gradient} text-white p-5 flex flex-col justify-between relative overflow-hidden`}>
                     <div className="flex justify-between items-start z-10">
-                      <div />
+                      <div>
+                        {hasRecentContent && (
+                          <span className="text-[10px] font-black uppercase bg-rose-600 text-white px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 animate-pulse">
+                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT
+                          </span>
+                        )}
+                      </div>
                       <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
                     </div>
 
@@ -178,6 +211,11 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
                       <h4 className="text-lg font-black text-slate-900">{series.title}</h4>
+                      {hasRecentContent && (
+                        <span className="text-[9px] font-black uppercase bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded shrink-0">
+                          NEW
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-xs text-slate-500 font-medium line-clamp-2">
