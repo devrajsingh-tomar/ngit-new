@@ -194,7 +194,7 @@ function PassagePlayerContent({ id }: { id: string }) {
         onSave={handleSaveConfig}
         totalWords={passage.wordCount || 391}
         typingMode={passage.typingMode || (passage.language === "English" ? "english" : "unicode_hindi")}
-        defaultExam={passage.examType || queryBatch || "UPSSSC Steno"}
+        defaultExam={passage?.examType || "UPSSSC Steno"}
         defaultDurationMinutes={passage.durationMinutes || (passage.durationSeconds ? Math.round(passage.durationSeconds / 60) : 35)}
       />
     </div>

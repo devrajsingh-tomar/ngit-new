@@ -60,7 +60,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
   React.useEffect(() => {
     if (typingMode) setSelectedMode(typingMode);
-    if (defaultExam) setSelectedExam(defaultExam);
+    setSelectedExam(defaultExam || "UPSSSC Steno");
     if (defaultDurationMinutes) setDurationMinutes(defaultDurationMinutes);
   }, [typingMode, defaultExam, defaultDurationMinutes]);
 

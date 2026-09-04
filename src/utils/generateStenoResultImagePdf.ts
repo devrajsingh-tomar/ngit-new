@@ -36,25 +36,26 @@ export async function generateStenoResultImagePdf({
   `;
   document.head.appendChild(styleEl);
 
+  // Save current scroll position and scroll window to (0,0) so html2canvas captures top of document accurately
+  const origScrollX = window.scrollX;
+  const origScrollY = window.scrollY;
+  window.scrollTo(0, 0);
+
+  // Allow DOM to settle at (0,0)
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   let canvas: HTMLCanvasElement;
   try {
-    // Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
-    // Explicitly reset scrollX, scrollY, x, y to 0 so current window scroll position doesn't offset or blank out the capture
     canvas = await html2canvas(targetElement, {
       scale: 2,
       useCORS: true,
       logging: false,
       allowTaint: true,
       backgroundColor: "#ffffff",
-      scrollX: 0,
-      scrollY: 0,
-      x: 0,
-      y: 0,
       windowWidth: targetElement.offsetWidth || 1280,
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.getElementById(elementId);
         if (clonedElement) {
-          // Force opacity 1 and disable any CSS animations/transitions on clone to prevent blank white captures
           clonedElement.style.animation = "none";
           clonedElement.style.transition = "none";
           clonedElement.style.transform = "none";
@@ -71,6 +72,8 @@ export async function generateStenoResultImagePdf({
       },
     });
   } finally {
+    // Restore user scroll position
+    window.scrollTo(origScrollX, origScrollY);
     if (styleEl.parentNode) {
       styleEl.parentNode.removeChild(styleEl);
     }

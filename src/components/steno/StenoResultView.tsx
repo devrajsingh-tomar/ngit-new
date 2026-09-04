@@ -419,7 +419,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
           </div>
         </div>
 
-        <div className={`flex flex-wrap gap-2 text-sm leading-relaxed p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[160px] ${isExportingPdf ? "max-h-none overflow-visible" : "max-h-[350px] overflow-y-auto"}`}>
+        <div className={`flex flex-wrap gap-2 text-sm leading-relaxed p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[160px] ${isExportingPdf ? "" : "max-h-[350px] overflow-y-auto"}`}>
           {filteredTokens.length === 0 ? (
             <div className="w-full py-10 text-center text-slate-400 space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
@@ -552,7 +552,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <Mic className="w-5 h-5" />
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Original Dictation Transcript</h3>
           </div>
-          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "max-h-none overflow-visible" : "max-h-[300px] overflow-y-auto"}`}>
+          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "" : "max-h-[300px] overflow-y-auto"}`}>
             {result.originalText || result.passageId?.transcriptText || result.passageId?.text || "Original passage text unavailable."}
           </div>
         </Card>
@@ -563,7 +563,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <Keyboard className="w-5 h-5" />
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Your Typed Student Transcript</h3>
           </div>
-          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "max-h-none overflow-visible" : "max-h-[300px] overflow-y-auto"}`}>
+          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "" : "max-h-[300px] overflow-y-auto"}`}>
             {result.typedTranscription || "Typed transcription text unavailable."}
           </div>
         </Card>
