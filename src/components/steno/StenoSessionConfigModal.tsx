@@ -45,7 +45,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   defaultDurationMinutes,
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
-  const [selectedExam, setSelectedExam] = useState(defaultExam || "Allahabad High Court Steno");
+  const [selectedExam, setSelectedExam] = useState(defaultExam || "UPSSSC Steno");
   const [selectedMode, setSelectedMode] = useState<string>(typingMode || "unicode_hindi");
 
   // Manual configuration state
@@ -110,7 +110,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   const handleSaveAndContinue = () => {
     const resolvedMode = resolveStenoTypingMode(selectedMode);
     if (activeTab === "exam") {
-      const preset = examPresetsRules[selectedExam] || examPresetsRules["Allahabad High Court Steno"];
+      const preset = examPresetsRules[selectedExam] || examPresetsRules["UPSSSC Steno"];
       const effectiveDuration = defaultDurationMinutes || preset.transcriptionDuration;
       onSave({
         mode: "exam",

@@ -31,6 +31,7 @@ interface StenoResultViewProps {
 export default function StenoResultView({ result }: StenoResultViewProps) {
   const [logPage, setLogPage] = useState(1);
   const [downloading, setDownloading] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const pageSize = 20;
 
@@ -79,11 +80,16 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
 
   const totalLogPages = Math.max(1, Math.ceil(filteredErrorLog.length / pageSize));
   const paginatedErrorLog = filteredErrorLog.slice((logPage - 1) * pageSize, logPage * pageSize);
+  const displayedErrorLog = isExportingPdf ? filteredErrorLog : paginatedErrorLog;
 
   const handleDownloadPdf = async () => {
     try {
       setDownloading(true);
+      setIsExportingPdf(true);
       toast.loading("Generating High-Resolution Steno Result PDF...", { id: "pdf-download" });
+
+      // Give browser React state cycle time to render expanded DOM
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       await generateStenoResultImagePdf({
         elementId: "steno-result-printable-area",
@@ -96,6 +102,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
       console.error("PDF Download Error:", err);
       toast.error(err.message || "Failed to download result PDF.", { id: "pdf-download" });
     } finally {
+      setIsExportingPdf(false);
       setDownloading(false);
     }
   };
@@ -124,7 +131,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             </div>
           </div>
 
-          <div className="shrink-0 flex items-center gap-3">
+          <div className="shrink-0 flex items-center gap-3" data-html2canvas-ignore="true">
             <Button
               onClick={handleDownloadPdf}
               disabled={downloading}
@@ -412,7 +419,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-sm leading-relaxed p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[160px] max-h-[350px] overflow-y-auto">
+        <div className={`flex flex-wrap gap-2 text-sm leading-relaxed p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[160px] ${isExportingPdf ? "max-h-none overflow-visible" : "max-h-[350px] overflow-y-auto"}`}>
           {filteredTokens.length === 0 ? (
             <div className="w-full py-10 text-center text-slate-400 space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
@@ -482,16 +489,16 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedErrorLog.length === 0 ? (
+              {displayedErrorLog.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-12 text-center text-slate-400 font-bold">
                     Clean transcript! Zero mistakes recorded for this attempt.
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedErrorLog.map((err: any, idx: number) => (
+                displayedErrorLog.map((err: any, idx: number) => (
                   <TableRow key={idx} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="font-bold text-slate-400 pl-6">{err.index || (logPage - 1) * pageSize + idx + 1}</TableCell>
+                    <TableCell className="font-bold text-slate-400 pl-6">{err.index || (isExportingPdf ? idx + 1 : (logPage - 1) * pageSize + idx + 1)}</TableCell>
                     <TableCell className="font-bold text-slate-900">{err.errorType}</TableCell>
                     <TableCell className="font-bold text-rose-600">{err.typedWord || "—"}</TableCell>
                     <TableCell className="font-bold text-slate-700">{err.originalWord || "—"}</TableCell>
@@ -506,7 +513,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             </TableBody>
           </Table>
 
-          {totalLogPages > 1 && (
+          {!isExportingPdf && totalLogPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Showing {paginatedErrorLog.length} of {errorLog.length} errors
@@ -545,7 +552,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <Mic className="w-5 h-5" />
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Original Dictation Transcript</h3>
           </div>
-          <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "max-h-none overflow-visible" : "max-h-[300px] overflow-y-auto"}`}>
             {result.originalText || result.passageId?.transcriptText || result.passageId?.text || "Original passage text unavailable."}
           </div>
         </Card>
@@ -556,7 +563,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <Keyboard className="w-5 h-5" />
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Your Typed Student Transcript</h3>
           </div>
-          <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "max-h-none overflow-visible" : "max-h-[300px] overflow-y-auto"}`}>
             {result.typedTranscription || "Typed transcription text unavailable."}
           </div>
         </Card>

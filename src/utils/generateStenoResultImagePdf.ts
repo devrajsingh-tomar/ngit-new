@@ -23,15 +23,38 @@ export async function generateStenoResultImagePdf({
   const html2canvas = html2canvasModule.default || html2canvasModule;
   const { jsPDF } = await import("jspdf");
 
-  // 1. Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
-  const canvas = await html2canvas(targetElement, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    allowTaint: true,
-    backgroundColor: "#ffffff",
-    windowWidth: 1280, // standardized desktop width for consistent layout
-  });
+  // Inject temporary print/capture styles to strip all max-height limits and scrollbars
+  const styleEl = document.createElement("style");
+  styleEl.setAttribute("data-steno-pdf-style", "true");
+  styleEl.innerHTML = `
+    #${elementId}, #${elementId} * {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    #${elementId} ::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+  `;
+  document.head.appendChild(styleEl);
+
+  let canvas: HTMLCanvasElement;
+  try {
+    // 1. Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
+    canvas = await html2canvas(targetElement, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      windowWidth: 1280, // standardized desktop width for consistent layout
+    });
+  } finally {
+    if (styleEl.parentNode) {
+      styleEl.parentNode.removeChild(styleEl);
+    }
+  }
 
   // 2. Initialize A4 PDF (210mm x 297mm)
   const pdf = new jsPDF("p", "mm", "a4");
