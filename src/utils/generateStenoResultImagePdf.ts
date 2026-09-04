@@ -23,15 +23,12 @@ export async function generateStenoResultImagePdf({
   const html2canvas = html2canvasModule.default || html2canvasModule;
   const { jsPDF } = await import("jspdf");
 
-  // Inject temporary print/capture styles to strip all max-height limits and scrollbars
+  // Inject style to hide scrollbars during canvas capture
   const styleEl = document.createElement("style");
   styleEl.setAttribute("data-steno-pdf-style", "true");
   styleEl.innerHTML = `
-    #${elementId}, #${elementId} * {
-      max-height: none !important;
-      overflow: visible !important;
-    }
-    #${elementId} ::-webkit-scrollbar {
+    #${elementId} ::-webkit-scrollbar,
+    #${elementId} *::-webkit-scrollbar {
       display: none !important;
       width: 0 !important;
       height: 0 !important;
@@ -41,7 +38,7 @@ export async function generateStenoResultImagePdf({
 
   let canvas: HTMLCanvasElement;
   try {
-    // 1. Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
+    // Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
     canvas = await html2canvas(targetElement, {
       scale: 2,
       useCORS: true,
@@ -56,7 +53,7 @@ export async function generateStenoResultImagePdf({
     }
   }
 
-  // 2. Initialize A4 PDF (210mm x 297mm)
+  // Initialize A4 PDF (210mm x 297mm)
   const pdf = new jsPDF("p", "mm", "a4");
 
   const pdfWidth = 210;
@@ -66,16 +63,12 @@ export async function generateStenoResultImagePdf({
   const marginTop = 22; // space for header
   const marginBottom = 15; // space for footer
   const marginX = 8;
-  const printableWidth = pdfWidth - marginX * 2;
-  const printableHeight = pdfHeight - marginTop - marginBottom;
+  const printableWidth = pdfWidth - marginX * 2; // 194 mm
+  const printableHeight = pdfHeight - marginTop - marginBottom; // 260 mm
 
-  const imgWidth = printableWidth;
-  const imgHeight = (canvas.height * printableWidth) / canvas.width;
-
-  let heightLeft = imgHeight;
-  let position = 0;
-  let pageNum = 1;
-  const totalPages = Math.ceil(imgHeight / printableHeight) || 1;
+  const imgHeightMm = (canvas.height * printableWidth) / canvas.width;
+  // Threshold subtract 2mm to prevent trailing blank page caused by tiny sub-pixel rounding
+  const totalPages = Math.max(1, Math.ceil((imgHeightMm - 2) / printableHeight));
 
   // Helper to draw Header & Footer on each page
   const drawHeaderFooter = (page: number) => {
@@ -115,8 +108,12 @@ export async function generateStenoResultImagePdf({
     pdf.text(`Page ${page} of ${totalPages}`, pdfWidth - marginX, pdfHeight - 6, { align: "right" });
   };
 
-  // 3. Slice and Render Canvas into Pages
-  while (heightLeft > 0) {
+  // Slice and Render Canvas into Pages
+  let heightLeftMm = imgHeightMm;
+  let positionPx = 0;
+  let pageNum = 1;
+
+  while (heightLeftMm > 2) {
     if (pageNum > 1) {
       pdf.addPage();
     }
@@ -128,7 +125,7 @@ export async function generateStenoResultImagePdf({
     const sliceCanvas = document.createElement("canvas");
     sliceCanvas.width = canvas.width;
     const sliceHeightPx = (printableHeight / printableWidth) * canvas.width;
-    sliceCanvas.height = Math.min(sliceHeightPx, canvas.height - position);
+    sliceCanvas.height = Math.min(sliceHeightPx, canvas.height - positionPx);
 
     const ctx = sliceCanvas.getContext("2d");
     if (ctx) {
@@ -137,7 +134,7 @@ export async function generateStenoResultImagePdf({
       ctx.drawImage(
         canvas,
         0,
-        position,
+        positionPx,
         canvas.width,
         sliceCanvas.height,
         0,
@@ -151,12 +148,12 @@ export async function generateStenoResultImagePdf({
       pdf.addImage(sliceImgData, "PNG", marginX, marginTop, printableWidth, sliceImgHeightMm, undefined, "FAST");
     }
 
-    position += sliceHeightPx;
-    heightLeft -= printableHeight;
+    positionPx += sliceHeightPx;
+    heightLeftMm -= printableHeight;
     pageNum++;
   }
 
-  // 4. Trigger Direct Browser Download
+  // Trigger Direct Browser Download
   const cleanFilename =
     filename ||
     `NGIT_Steno_Result_${testTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${candidateName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
