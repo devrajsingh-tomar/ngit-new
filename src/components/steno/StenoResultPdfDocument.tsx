@@ -3,7 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/rendere
 import path from "path";
 import fs from "fs";
 
-// Register Mukta font for 100% stable, flawless Devanagari Hindi PDF rendering without fontkit crashes
+// Register Mukta font for Devanagari Hindi PDF rendering
 try {
   const regularPath = path.join(process.cwd(), "public", "fonts", "Mukta-Regular.ttf");
   const boldPath = path.join(process.cwd(), "public", "fonts", "Mukta-Bold.ttf");
@@ -23,35 +23,35 @@ try {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
+    padding: 24,
+    paddingBottom: 36,
     backgroundColor: "#ffffff",
     fontFamily: "MuktaHindi",
     fontSize: 9,
     color: "#0f172a",
   },
-
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 2,
     borderBottomColor: "#4f46e5",
-    paddingBottom: 10,
-    marginBottom: 15,
+    paddingBottom: 8,
+    marginBottom: 12,
   },
   brandName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#1e1b4b",
   },
   brandSub: {
-    fontSize: 8,
+    fontSize: 7.5,
     color: "#4f46e5",
     textTransform: "uppercase",
-    marginTop: 2,
+    marginTop: 1,
   },
   reportTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
     color: "#0f172a",
     textAlign: "right",
@@ -60,21 +60,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     backgroundColor: "#f8fafc",
-    padding: 10,
+    padding: 8,
     borderRadius: 6,
-    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 12,
   },
   metaCol: {
     width: "50%",
     marginBottom: 4,
   },
   metaLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: "#64748b",
     textTransform: "uppercase",
   },
   metaVal: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: "bold",
     color: "#0f172a",
     marginTop: 1,
@@ -82,35 +84,35 @@ const styles = StyleSheet.create({
   cardsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 15,
+    marginBottom: 12,
   },
   card: {
     width: "18%",
     backgroundColor: "#f1f5f9",
-    padding: 8,
+    padding: 6,
     borderRadius: 6,
     alignItems: "center",
   },
   cardValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "bold",
     color: "#4f46e5",
   },
   cardLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: "#475569",
     marginTop: 2,
     textTransform: "uppercase",
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
     color: "#0f172a",
-    marginBottom: 8,
-    marginTop: 10,
+    marginBottom: 6,
+    marginTop: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
-    paddingBottom: 4,
+    paddingBottom: 3,
   },
   breakdownRow: {
     flexDirection: "row",
@@ -118,31 +120,51 @@ const styles = StyleSheet.create({
     backgroundColor: "#faf5ff",
     padding: 8,
     borderRadius: 6,
-    marginBottom: 15,
+    borderColor: "#f3e8ff",
+    borderWidth: 1,
+    marginBottom: 12,
   },
   breakdownItem: {
     alignItems: "center",
     width: "19%",
   },
+  tokensBox: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  tokenTag: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    marginRight: 3,
+    marginBottom: 3,
+    borderRadius: 3,
+    fontSize: 7.5,
+  },
   table: {
     width: "100%",
-    marginTop: 8,
-    marginBottom: 15,
+    marginTop: 6,
+    marginBottom: 10,
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#0f172a",
     color: "#ffffff",
-    padding: 6,
+    padding: 5,
     fontWeight: "bold",
-    fontSize: 8,
+    fontSize: 7.5,
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
-    padding: 6,
-    fontSize: 8,
+    padding: 4,
+    fontSize: 7.5,
   },
   colNum: { width: "6%" },
   colType: { width: "22%" },
@@ -155,24 +177,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: "#e2e8f0",
-    padding: 10,
+    padding: 8,
     borderRadius: 6,
-    marginTop: 6,
-    marginBottom: 15,
-    fontSize: 9,
+    marginTop: 4,
+    marginBottom: 10,
+    fontSize: 8.5,
     lineHeight: 1.4,
   },
   footer: {
     position: "absolute",
-    bottom: 20,
-    left: 30,
-    right: 30,
+    bottom: 12,
+    left: 24,
+    right: 24,
     flexDirection: "row",
     justifyContent: "space-between",
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
-    paddingTop: 8,
-    fontSize: 7,
+    paddingTop: 4,
+    fontSize: 6.5,
     color: "#94a3b8",
   },
 });
@@ -187,13 +209,27 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
   const seconds = (result.timeSpentSeconds || 0) % 60;
   const timeTakenStr = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 
-  const errorLog = result.errorLog || [];
+  const errorLog: any[] = result.errorLog || [];
   const breakdown = result.mistakeBreakdown || { spelling: 0, missing: 0, added: 0, matra: 0, punctuation: 0 };
-  const weights = result.frozenWeights || { spellingWeight: "full", matraWeight: "half", punctuationWeight: "half", addedWordWeight: "full", missingWordWeight: "full" };
+  const weights = result.frozenWeights || {
+    spellingWeight: "full",
+    matraWeight: "half",
+    punctuationWeight: "half",
+    addedWordWeight: "full",
+    missingWordWeight: "full",
+  };
+  const wordTokens: any[] = result.wordBreakdown || [];
+
+  // Limit error log table in PDF to top 35 items so PDF report is maximum 2-3 pages
+  const displayErrorLog = errorLog.slice(0, 35);
+  const hasMoreErrors = errorLog.length > 35;
+
+  // Word token preview (up to 80 words)
+  const previewTokens = wordTokens.slice(0, 80);
 
   return (
     <Document title={`NGIT_Steno_Result_${result.passageTitle || "Test"}`}>
-      {/* PAGE 1: Summary & Performance */}
+      {/* PAGE 1: Summary, Performance & Word Evaluation */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View>
@@ -202,7 +238,7 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
           </View>
           <View>
             <Text style={styles.reportTitle}>STENO TEST RESULT</Text>
-            <Text style={{ fontSize: 8, color: "#64748b", marginTop: 2 }}>Date: {dateStr}</Text>
+            <Text style={{ fontSize: 7.5, color: "#64748b", marginTop: 2 }}>Date: {dateStr}</Text>
           </View>
         </View>
 
@@ -234,7 +270,7 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
           </View>
         </View>
 
-        {/* Performance Cards */}
+        {/* Performance Summary Cards */}
         <Text style={styles.sectionTitle}>Performance Summary</Text>
         <View style={styles.cardsRow}>
           <View style={styles.card}>
@@ -265,32 +301,57 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
         <Text style={styles.sectionTitle}>Mistake Category Breakdown</Text>
         <View style={styles.breakdownRow}>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 12, fontWeight: "bold", color: "#e11d48" }}>{breakdown.spelling}</Text>
-            <Text style={{ fontSize: 7, color: "#64748b", marginTop: 2 }}>Spelling ({weights.spellingWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#e11d48" }}>{breakdown.spelling}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Spelling ({weights.spellingWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 12, fontWeight: "bold", color: "#d97706" }}>{breakdown.missing}</Text>
-            <Text style={{ fontSize: 7, color: "#64748b", marginTop: 2 }}>Missing ({weights.missingWordWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#d97706" }}>{breakdown.missing}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Missing ({weights.missingWordWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 12, fontWeight: "bold", color: "#2563eb" }}>{breakdown.added}</Text>
-            <Text style={{ fontSize: 7, color: "#64748b", marginTop: 2 }}>Added ({weights.addedWordWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#2563eb" }}>{breakdown.added}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Added ({weights.addedWordWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 12, fontWeight: "bold", color: "#7c3aed" }}>{breakdown.matra}</Text>
-            <Text style={{ fontSize: 7, color: "#64748b", marginTop: 2 }}>Matra ({weights.matraWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#7c3aed" }}>{breakdown.matra}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Matra ({weights.matraWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 12, fontWeight: "bold", color: "#059669" }}>{breakdown.punctuation}</Text>
-            <Text style={{ fontSize: 7, color: "#64748b", marginTop: 2 }}>Punctuation ({weights.punctuationWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#059669" }}>{breakdown.punctuation}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Punctuation ({weights.punctuationWeight})</Text>
           </View>
         </View>
+
+        {/* Word-by-Word Evaluation Tokens Summary */}
+        {previewTokens.length > 0 && (
+          <View>
+            <Text style={styles.sectionTitle}>Word-by-Word Transcription Alignment (Preview)</Text>
+            <View style={styles.tokensBox}>
+              {previewTokens.map((token: any, idx: number) => {
+                let bgColor = "#ecfdf5";
+                let textColor = "#065f46";
+                if (token.type === "spelling") { bgColor = "#ffe4e6"; textColor = "#9f1239"; }
+                if (token.type === "missing") { bgColor = "#fef3c7"; textColor = "#92400e"; }
+                if (token.type === "added") { bgColor = "#dbeafe"; textColor = "#1e40af"; }
+                if (token.type === "matra") { bgColor = "#f3e8ff"; textColor = "#6b21a8"; }
+                if (token.type === "punctuation") { bgColor = "#ccfbf1"; textColor = "#115e59"; }
+
+                const wordText = token.typed && token.typed !== "—" ? token.typed : token.original;
+                return (
+                  <Text key={idx} style={[styles.tokenTag, { backgroundColor: bgColor, color: textColor }]}>
+                    {wordText}
+                  </Text>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         <Footer dateStr={dateStr} />
       </Page>
 
-      {/* PAGE 2+: Detailed Mistake Log */}
-      {errorLog.length > 0 && (
+      {/* PAGE 2: Detailed Mistake Log */}
+      {displayErrorLog.length > 0 && (
         <Page size="A4" style={styles.page}>
           <View style={styles.header}>
             <Text style={styles.brandName}>NGIT Steno</Text>
@@ -308,7 +369,7 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
               <Text style={styles.colPen}>Penalty</Text>
             </View>
 
-            {errorLog.map((err: any, idx: number) => (
+            {displayErrorLog.map((err: any, idx: number) => (
               <View key={idx} style={[styles.tableRow, { backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8fafc" }]}>
                 <Text style={styles.colNum}>{err.index || idx + 1}</Text>
                 <Text style={styles.colType}>{err.errorType}</Text>
@@ -321,11 +382,17 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
             ))}
           </View>
 
+          {hasMoreErrors && (
+            <Text style={{ fontSize: 7, color: "#64748b", fontStyle: "italic", marginTop: 4 }}>
+              * Showing top 35 of {errorLog.length} mistakes recorded. Full itemized mistake log available online on NGIT Steno Portal.
+            </Text>
+          )}
+
           <Footer dateStr={dateStr} />
         </Page>
       )}
 
-      {/* FINAL PAGE: Transcripts */}
+      {/* PAGE 3: Transcripts */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.brandName}>NGIT Steno</Text>

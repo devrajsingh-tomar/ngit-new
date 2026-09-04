@@ -85,12 +85,30 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
   const handleDownloadPdf = async () => {
     try {
       setDownloading(true);
+      toast.loading("Generating Official Steno Result PDF...", { id: "pdf-download" });
+
+      if (result._id) {
+        const response = await fetch(`/api/steno/result/${result._id}/pdf`, { credentials: "include" });
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const cleanTitle = (result.passageTitle || "Steno_Result").replace(/[^a-zA-Z0-9]/g, "_");
+          const cleanName = (result.userId?.name || "Student").replace(/[^a-zA-Z0-9]/g, "_");
+          link.download = `NGIT_Steno_Result_${cleanTitle}_${cleanName}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+          toast.success("Result PDF downloaded successfully!", { id: "pdf-download" });
+          return;
+        }
+      }
+
+      // Client-side fallback if result ID is absent
       setIsExportingPdf(true);
-      toast.loading("Generating High-Resolution Steno Result PDF...", { id: "pdf-download" });
-
-      // Give browser React state cycle time to render expanded DOM
       await new Promise((resolve) => setTimeout(resolve, 300));
-
       await generateStenoResultImagePdf({
         elementId: "steno-result-printable-area",
         candidateName: result.userId?.name || "Student",
