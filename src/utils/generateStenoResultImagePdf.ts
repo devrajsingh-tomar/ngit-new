@@ -23,7 +23,7 @@ export async function generateStenoResultImagePdf({
   const html2canvas = html2canvasModule.default || html2canvasModule;
   const { jsPDF } = await import("jspdf");
 
-  // Inject style to hide scrollbars during canvas capture
+  // Inject temporary style to hide scrollbars during canvas capture
   const styleEl = document.createElement("style");
   styleEl.setAttribute("data-steno-pdf-style", "true");
   styleEl.innerHTML = `
@@ -39,18 +39,45 @@ export async function generateStenoResultImagePdf({
   let canvas: HTMLCanvasElement;
   try {
     // Capture HTML into high-res canvas (scale: 2 for retina-crisp Hindi text & icons)
+    // Explicitly reset scrollX, scrollY, x, y to 0 so current window scroll position doesn't offset or blank out the capture
     canvas = await html2canvas(targetElement, {
       scale: 2,
       useCORS: true,
       logging: false,
       allowTaint: true,
       backgroundColor: "#ffffff",
-      windowWidth: 1280, // standardized desktop width for consistent layout
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0,
+      windowWidth: targetElement.offsetWidth || 1280,
+      onclone: (clonedDoc) => {
+        const clonedElement = clonedDoc.getElementById(elementId);
+        if (clonedElement) {
+          // Force opacity 1 and disable any CSS animations/transitions on clone to prevent blank white captures
+          clonedElement.style.animation = "none";
+          clonedElement.style.transition = "none";
+          clonedElement.style.transform = "none";
+          clonedElement.style.opacity = "1";
+
+          const animNodes = clonedElement.querySelectorAll(".animate-in, .fade-in, [class*='duration-']");
+          animNodes.forEach((node: any) => {
+            node.classList.remove("animate-in", "fade-in");
+            node.style.animation = "none";
+            node.style.transition = "none";
+            node.style.opacity = "1";
+          });
+        }
+      },
     });
   } finally {
     if (styleEl.parentNode) {
       styleEl.parentNode.removeChild(styleEl);
     }
+  }
+
+  if (!canvas || canvas.width === 0 || canvas.height === 0) {
+    throw new Error("Canvas rendering failed or produced empty image.");
   }
 
   // Initialize A4 PDF (210mm x 297mm)
@@ -66,9 +93,10 @@ export async function generateStenoResultImagePdf({
   const printableWidth = pdfWidth - marginX * 2; // 194 mm
   const printableHeight = pdfHeight - marginTop - marginBottom; // 260 mm
 
-  const imgHeightMm = (canvas.height * printableWidth) / canvas.width;
-  // Threshold subtract 2mm to prevent trailing blank page caused by tiny sub-pixel rounding
-  const totalPages = Math.max(1, Math.ceil((imgHeightMm - 2) / printableHeight));
+  // Height of one full page slice in canvas pixels
+  const sliceHeightPx = (printableHeight / printableWidth) * canvas.width;
+  // Total pages strictly based on exact content height
+  const totalPages = Math.max(1, Math.ceil(canvas.height / sliceHeightPx));
 
   // Helper to draw Header & Footer on each page
   const drawHeaderFooter = (page: number) => {
@@ -109,11 +137,10 @@ export async function generateStenoResultImagePdf({
   };
 
   // Slice and Render Canvas into Pages
-  let heightLeftMm = imgHeightMm;
   let positionPx = 0;
   let pageNum = 1;
 
-  while (heightLeftMm > 2) {
+  while (positionPx < canvas.height - 5) {
     if (pageNum > 1) {
       pdf.addPage();
     }
@@ -121,11 +148,11 @@ export async function generateStenoResultImagePdf({
     // Draw header and footer
     drawHeaderFooter(pageNum);
 
-    // Calculate source slice from canvas
+    const currentSliceHeightPx = Math.min(sliceHeightPx, canvas.height - positionPx);
+
     const sliceCanvas = document.createElement("canvas");
     sliceCanvas.width = canvas.width;
-    const sliceHeightPx = (printableHeight / printableWidth) * canvas.width;
-    sliceCanvas.height = Math.min(sliceHeightPx, canvas.height - positionPx);
+    sliceCanvas.height = currentSliceHeightPx;
 
     const ctx = sliceCanvas.getContext("2d");
     if (ctx) {
@@ -136,20 +163,19 @@ export async function generateStenoResultImagePdf({
         0,
         positionPx,
         canvas.width,
-        sliceCanvas.height,
+        currentSliceHeightPx,
         0,
         0,
         sliceCanvas.width,
-        sliceCanvas.height
+        currentSliceHeightPx
       );
 
-      const sliceImgHeightMm = (sliceCanvas.height * printableWidth) / canvas.width;
+      const sliceImgHeightMm = (currentSliceHeightPx * printableWidth) / canvas.width;
       const sliceImgData = sliceCanvas.toDataURL("image/png");
       pdf.addImage(sliceImgData, "PNG", marginX, marginTop, printableWidth, sliceImgHeightMm, undefined, "FAST");
     }
 
     positionPx += sliceHeightPx;
-    heightLeftMm -= printableHeight;
     pageNum++;
   }
 

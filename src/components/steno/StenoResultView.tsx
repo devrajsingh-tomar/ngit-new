@@ -108,7 +108,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
   };
 
   return (
-    <div id="steno-result-printable-area" className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500 bg-[#f8fafc]">
+    <div id="steno-result-printable-area" className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto bg-[#f8fafc]">
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
