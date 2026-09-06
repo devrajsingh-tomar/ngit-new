@@ -64,12 +64,14 @@ export async function generateStenoResultImagePdf({
   // Positioned at absolute top-left (0,0) in top-layer stacking context to prevent offset/z-index canvas blanking
   const offscreenContainer = document.createElement("div");
   offscreenContainer.id = "steno-pdf-offscreen-container";
-  offscreenContainer.style.position = "absolute";
-  offscreenContainer.style.left = "0";
-  offscreenContainer.style.top = "0";
+  offscreenContainer.style.position = "fixed";
+  offscreenContainer.style.left = "-9999px";
+  offscreenContainer.style.top = "-9999px";
   offscreenContainer.style.width = "850px"; // Fixed A4-friendly pixel width (approx 850px at 96 DPI)
   offscreenContainer.style.backgroundColor = "#ffffff";
-  offscreenContainer.style.zIndex = "999999";
+  offscreenContainer.style.zIndex = "-999999";
+  offscreenContainer.style.opacity = "0";
+  offscreenContainer.style.pointerEvents = "none";
   offscreenContainer.style.overflow = "visible";
   offscreenContainer.style.boxSizing = "border-box";
 
