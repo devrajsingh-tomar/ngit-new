@@ -93,10 +93,22 @@ export const authOptions: NextAuthOptions = {
         },
         async jwt({ token, user, trigger, session }) {
             if (user) {
-                token.id = user.id;
-                token.role = (user as any).role || "STUDENT";
+                token.id = (user as any).id || user.id;
+                token.role = (user as any).role || UserRole.STUDENT;
                 token.name = user.name;
-                token.image = (user as any).image;
+                token.image = (user as any).image || user.image;
+            }
+            if (!token.id && token.email) {
+                try {
+                    await connectDB();
+                    const dbUser = await User.findOne({ email: (token.email as string).toLowerCase() }).select("_id role name image").lean();
+                    if (dbUser) {
+                        token.id = dbUser._id.toString();
+                        token.role = dbUser.role || UserRole.STUDENT;
+                        if (!token.name) token.name = dbUser.name;
+                        if (!token.image) token.image = dbUser.image;
+                    }
+                } catch (e) {}
             }
             if (trigger === "update") {
                 if (session?.name) token.name = session.name;
