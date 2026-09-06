@@ -115,20 +115,36 @@ export default function StudentStenoMyProfilePage() {
     try {
       toast.loading("Preparing Steno Result PDF...", { id: `pdf-${id}` });
       const response = await fetch(`/api/steno/result/${id}/pdf`, { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to generate PDF");
-      const blob = await response.blob();
-      if (!blob.type.includes("pdf")) throw new Error("Invalid PDF response");
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `NGIT_Steno_Result_${(title || "Test").replace(/\s+/g, "_")}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("Result PDF downloaded successfully!", { id: `pdf-${id}` });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.type.includes("pdf") || blob.size > 0) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const sanitizedTitle = (title || "Steno_Result").replace(/[^a-zA-Z0-9]/g, "_");
+          link.download = `NGIT_Steno_Result_${sanitizedTitle}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+          toast.success("Result PDF downloaded successfully!", { id: `pdf-${id}` });
+          return;
+        }
+      }
+
+      // If server API response was not OK, try extracting error or opening direct download URL
+      const errData = await response.json().catch(() => ({}));
+      if (errData.error) {
+        toast.error(errData.error, { id: `pdf-${id}` });
+      } else {
+        window.open(`/api/steno/result/${id}/pdf`, "_blank");
+        toast.dismiss(`pdf-${id}`);
+      }
     } catch (err: any) {
-      toast.error(err.message || "Failed to download PDF", { id: `pdf-${id}` });
+      console.error("Download PDF Error:", err);
+      window.open(`/api/steno/result/${id}/pdf`, "_blank");
+      toast.dismiss(`pdf-${id}`);
     }
   };
 
