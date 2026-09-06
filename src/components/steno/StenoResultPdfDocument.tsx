@@ -207,31 +207,59 @@ export interface StenoPdfProps {
 }
 
 export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
-  const dateStr = result.createdAt ? new Date(result.createdAt).toLocaleString() : new Date().toLocaleString();
-  const minutes = Math.floor((result.timeSpentSeconds || 0) / 60);
-  const seconds = (result.timeSpentSeconds || 0) % 60;
+  const safeResult = result || {};
+  const dateStr = safeResult.createdAt ? new Date(safeResult.createdAt).toLocaleString("en-IN") : new Date().toLocaleString("en-IN");
+  const timeSpentSecs = Number(safeResult.timeSpentSeconds || 0);
+  const minutes = Math.floor(timeSpentSecs / 60);
+  const seconds = timeSpentSecs % 60;
   const timeTakenStr = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 
-  const errorLog: any[] = result.errorLog || [];
-  const breakdown = result.mistakeBreakdown || { spelling: 0, missing: 0, added: 0, matra: 0, punctuation: 0 };
-  const weights = result.frozenWeights || {
-    spellingWeight: "full",
-    matraWeight: "half",
-    punctuationWeight: "half",
-    addedWordWeight: "full",
-    missingWordWeight: "full",
-  };
-  const wordTokens: any[] = result.wordBreakdown || [];
+  const studentName = String((safeResult.userId && typeof safeResult.userId === "object" && safeResult.userId.name) || "Student Candidate");
+  const studentEmail = String((safeResult.userId && typeof safeResult.userId === "object" && safeResult.userId.email) || "N/A");
+  const passageTitle = String(safeResult.passageTitle || (safeResult.passageId && typeof safeResult.passageId === "object" && safeResult.passageId.title) || "Steno Dictation Test");
+  const examTitle = String(safeResult.examTitle || "Standard");
+  const language = String(safeResult.language || "Hindi");
+  const fontUsed = String(safeResult.fontUsed || "Mangal");
+  const targetWpm = String(safeResult.targetWpm || 80);
+  const typedWordCount = String(safeResult.typedWordCount || 0);
+  const originalWordCount = String(safeResult.originalWordCount || 0);
 
-  // Limit error log table in PDF to top 35 items so PDF report is maximum 2-3 pages
+  const accuracy = String(safeResult.accuracy ?? 0);
+  const grossWpm = String(safeResult.grossWpm ?? 0);
+  const netWpm = String(safeResult.netWpm ?? 0);
+  const totalMistakes = String(safeResult.totalMistakes ?? 0);
+  const statusStr = String(safeResult.status === "Passed" ? "QUALIFIED" : "DISQUALIFIED");
+
+  const breakdown = safeResult.mistakeBreakdown || {};
+  const spellingCount = String(breakdown.spelling ?? 0);
+  const missingCount = String(breakdown.missing ?? 0);
+  const addedCount = String(breakdown.added ?? 0);
+  const matraCount = String(breakdown.matra ?? 0);
+  const punctuationCount = String(breakdown.punctuation ?? 0);
+
+  const weights = safeResult.frozenWeights || {};
+  const spellingWeight = String(weights.spellingWeight || "full");
+  const missingWeight = String(weights.missingWordWeight || "full");
+  const addedWeight = String(weights.addedWordWeight || "full");
+  const matraWeight = String(weights.matraWeight || "half");
+  const punctuationWeight = String(weights.punctuationWeight || "half");
+
+  const errorLog: any[] = Array.isArray(safeResult.errorLog) ? safeResult.errorLog : [];
   const displayErrorLog = errorLog.slice(0, 35);
   const hasMoreErrors = errorLog.length > 35;
 
-  // Word token preview (up to 40 words)
+  const wordTokens: any[] = Array.isArray(safeResult.wordBreakdown) ? safeResult.wordBreakdown : [];
   const previewTokens = wordTokens.slice(0, 40);
 
+  const originalTextStr = String(
+    safeResult.originalText ||
+    (safeResult.passageId && typeof safeResult.passageId === "object" && (safeResult.passageId.transcriptText || safeResult.passageId.text)) ||
+    "Original dictation text unavailable."
+  );
+  const typedTextStr = String(safeResult.typedTranscription || "Typed student transcription text unavailable.");
+
   return (
-    <Document title={`NGIT_Steno_Result_${result.passageTitle || "Test"}`}>
+    <Document title={`NGIT_Steno_Result_${passageTitle}`}>
       {/* PAGE 1: Summary, Performance & Word Evaluation */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
@@ -249,27 +277,27 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
         <View style={styles.metaGrid}>
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Candidate Name</Text>
-            <Text style={styles.metaVal}>{result.userId?.name || "Student Candidate"}</Text>
+            <Text style={styles.metaVal}>{studentName}</Text>
           </View>
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Candidate Email</Text>
-            <Text style={styles.metaVal}>{result.userId?.email || "N/A"}</Text>
+            <Text style={styles.metaVal}>{studentEmail}</Text>
           </View>
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Dictation Passage</Text>
-            <Text style={styles.metaVal}>{result.passageTitle || "Steno Dictation Test"}</Text>
+            <Text style={styles.metaVal}>{passageTitle}</Text>
           </View>
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Exam Preset / Language</Text>
-            <Text style={styles.metaVal}>{result.examTitle || "Standard"} ({result.language || "Hindi"})</Text>
+            <Text style={styles.metaVal}>{examTitle} ({language})</Text>
           </View>
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Font Layout / Target Speed</Text>
-            <Text style={styles.metaVal}>{result.fontUsed || "Mangal"} | {result.targetWpm || 80} WPM Target</Text>
+            <Text style={styles.metaVal}>{fontUsed} | {targetWpm} WPM Target</Text>
           </View>
           <View style={styles.metaCol}>
             <Text style={styles.metaLabel}>Time Taken / Words Typed</Text>
-            <Text style={styles.metaVal}>{timeTakenStr} | {result.typedWordCount || 0} / {result.originalWordCount || 0} Words</Text>
+            <Text style={styles.metaVal}>{timeTakenStr} | {typedWordCount} / {originalWordCount} Words</Text>
           </View>
         </View>
 
@@ -277,24 +305,24 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
         <Text style={styles.sectionTitle}>Performance Summary</Text>
         <View style={styles.cardsRow}>
           <View style={styles.card}>
-            <Text style={styles.cardValue}>{result.accuracy || 0}%</Text>
+            <Text style={styles.cardValue}>{accuracy}%</Text>
             <Text style={styles.cardLabel}>Accuracy</Text>
           </View>
           <View style={styles.card}>
-            <Text style={styles.cardValue}>{result.grossWpm || 0}</Text>
+            <Text style={styles.cardValue}>{grossWpm}</Text>
             <Text style={styles.cardLabel}>Gross WPM</Text>
           </View>
           <View style={styles.card}>
-            <Text style={styles.cardValue}>{result.netWpm || 0}</Text>
+            <Text style={styles.cardValue}>{netWpm}</Text>
             <Text style={styles.cardLabel}>Net WPM</Text>
           </View>
           <View style={styles.card}>
-            <Text style={styles.cardValue}>{result.totalMistakes || 0}</Text>
+            <Text style={styles.cardValue}>{totalMistakes}</Text>
             <Text style={styles.cardLabel}>Mistakes</Text>
           </View>
           <View style={styles.card}>
-            <Text style={[styles.cardValue, { color: result.status === "Passed" ? "#059669" : "#dc2626" }]}>
-              {result.status === "Passed" ? "QUALIFIED" : "DISQUALIFIED"}
+            <Text style={[styles.cardValue, { color: safeResult.status === "Passed" ? "#059669" : "#dc2626" }]}>
+              {statusStr}
             </Text>
             <Text style={styles.cardLabel}>Status</Text>
           </View>
@@ -304,24 +332,24 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
         <Text style={styles.sectionTitle}>Mistake Category Breakdown</Text>
         <View style={styles.breakdownRow}>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#e11d48" }}>{breakdown.spelling}</Text>
-            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Spelling ({weights.spellingWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#e11d48" }}>{spellingCount}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Spelling ({spellingWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#d97706" }}>{breakdown.missing}</Text>
-            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Missing ({weights.missingWordWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#d97706" }}>{missingCount}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Missing ({missingWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#2563eb" }}>{breakdown.added}</Text>
-            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Added ({weights.addedWordWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#2563eb" }}>{addedCount}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Added ({addedWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#7c3aed" }}>{breakdown.matra}</Text>
-            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Matra ({weights.matraWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#7c3aed" }}>{matraCount}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Matra ({matraWeight})</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#059669" }}>{breakdown.punctuation}</Text>
-            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Punctuation ({weights.punctuationWeight})</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold", color: "#059669" }}>{punctuationCount}</Text>
+            <Text style={{ fontSize: 6.5, color: "#64748b", marginTop: 1 }}>Punctuation ({punctuationWeight})</Text>
           </View>
         </View>
 
@@ -374,17 +402,27 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
               <Text style={styles.colPen}>Penalty</Text>
             </View>
 
-            {displayErrorLog.map((err: any, idx: number) => (
-              <View key={idx} style={[styles.tableRow, { backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8fafc" }]}>
-                <Text style={styles.colNum}>{err.index || idx + 1}</Text>
-                <Text style={styles.colType}>{err.errorType}</Text>
-                <Text style={styles.colTyped}>{err.typedWord || "—"}</Text>
-                <Text style={styles.colOrig}>{err.originalWord || "—"}</Text>
-                <Text style={styles.colCat}>{err.category}</Text>
-                <Text style={styles.colWeight}>{err.weight}</Text>
-                <Text style={styles.colPen}>{err.penalty}</Text>
-              </View>
-            ))}
+            {displayErrorLog.map((err: any, idx: number) => {
+              const errIndex = String(err?.index ?? idx + 1);
+              const errType = String(err?.errorType || err?.type || "Mistake");
+              const errTyped = String(err?.typedWord || err?.typed || "—");
+              const errOrig = String(err?.originalWord || err?.original || "—");
+              const errCat = String(err?.category || err?.errorType || "General");
+              const errWeight = String(err?.weight || "1");
+              const errPenalty = String(err?.penalty ?? 0);
+
+              return (
+                <View key={idx} style={[styles.tableRow, { backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8fafc" }]}>
+                  <Text style={styles.colNum}>{errIndex}</Text>
+                  <Text style={styles.colType}>{errType}</Text>
+                  <Text style={styles.colTyped}>{errTyped}</Text>
+                  <Text style={styles.colOrig}>{errOrig}</Text>
+                  <Text style={styles.colCat}>{errCat}</Text>
+                  <Text style={styles.colWeight}>{errWeight}</Text>
+                  <Text style={styles.colPen}>{errPenalty}</Text>
+                </View>
+              );
+            })}
           </View>
 
           {hasMoreErrors && (
@@ -406,12 +444,12 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
 
         <Text style={styles.sectionTitle}>Original Dictation Transcript</Text>
         <View style={styles.transcriptBox}>
-          <Text>{result.originalText || result.passageId?.transcriptText || result.passageId?.text || "Original text unavailable."}</Text>
+          <Text>{originalTextStr}</Text>
         </View>
 
         <Text style={styles.sectionTitle}>Your Typed Student Transcript</Text>
         <View style={styles.transcriptBox}>
-          <Text>{result.typedTranscription || "Typed text unavailable."}</Text>
+          <Text>{typedTextStr}</Text>
         </View>
 
         <Footer dateStr={dateStr} />
