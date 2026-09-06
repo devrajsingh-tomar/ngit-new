@@ -36,13 +36,23 @@ export async function GET(
       return NextResponse.json({ error: "Result record not found" }, { status: 404 });
     }
 
-    const userRole = (session.user as any).role;
-    const sessionUserId = session.user.id || (session.user as any)?._id;
-    const resultUserId = resultDoc.userId?._id ? resultDoc.userId._id.toString() : resultDoc.userId?.toString();
+    const userRole = (session.user as any)?.role || "STUDENT";
+    const sessionUserId = session.user.id || (session.user as any)?._id || (session.user as any)?.sub;
+    const sessionEmail = (session.user.email || "").toLowerCase().trim();
+
+    const resultUserId = resultDoc.userId?._id
+      ? resultDoc.userId._id.toString()
+      : typeof resultDoc.userId === "string"
+      ? resultDoc.userId
+      : null;
+    const resultUserEmail = (
+      typeof resultDoc.userId === "object" ? resultDoc.userId?.email : ""
+    )?.toLowerCase().trim();
+
     const isOwner =
-      resultUserId === sessionUserId?.toString() ||
-      (resultDoc.userId as any)?.email === session.user.email ||
-      !resultUserId; // Fallback if no owner attached
+      !resultUserId ||
+      (sessionUserId && resultUserId === sessionUserId.toString()) ||
+      (sessionEmail && resultUserEmail && sessionEmail === resultUserEmail);
     const isStaff = ["ADMIN", "STENO_ADMIN", "CONTENT_MANAGER", "TYPING_ADMIN"].includes(userRole);
 
     if (!isOwner && !isStaff) {
