@@ -426,7 +426,7 @@ export const StenoResultPdfDocument = ({ result }: StenoPdfProps) => {
           </View>
 
           {hasMoreErrors && (
-            <Text style={{ fontSize: 7, color: "#64748b", fontStyle: "italic", marginTop: 4 }}>
+            <Text style={{ fontSize: 7, color: "#64748b", marginTop: 4 }}>
               * Showing top 35 of {errorLog.length} mistakes recorded. Full itemized mistake log available online on NGIT Steno Portal.
             </Text>
           )}
