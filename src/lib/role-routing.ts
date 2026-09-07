@@ -40,9 +40,9 @@ export function getDashboardRoute(role?: string | UserRole | null): string {
             
         case UserRole.STUDENT:
         case "STUDENT":
-            return "/";
+            return "/student";
             
         default:
-            return "/";
+            return "/student";
     }
 }

@@ -157,9 +157,6 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                     ) : (
                                         <Link href={getDashboardRoute(session.user.role)}>
                                             <Button 
-                                                onClick={() => {
-                                                    window.location.href = getDashboardRoute(session.user.role);
-                                                }}
                                                 variant="outline" 
                                                 className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 rounded-xl transition-all duration-300 shadow-sm shadow-primary/5 cursor-pointer"
                                             >
@@ -318,10 +315,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                         </div>
                                         <Link href={getDashboardRoute(session.user.role)} onClick={() => setIsOpen(false)}>
                                             <Button 
-                                                onClick={() => {
-                                                    window.location.href = getDashboardRoute(session.user.role);
-                                                }}
-                                                className="w-full gap-2 rounded-xl h-12 font-bold"
+                                                className="w-full gap-2 rounded-xl h-12 font-bold bg-primary hover:bg-primary/90 text-white"
                                             >
                                                 Go to Dashboard
                                             </Button>
