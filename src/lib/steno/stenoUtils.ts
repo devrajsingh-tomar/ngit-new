@@ -13,8 +13,8 @@ export function matchBatch(seriesBatch?: string | null, targetBatch?: string | n
   if (!targetBatch) return true;
   const tBatch = targetBatch.toLowerCase().trim();
 
-  if (tBatch.includes("ठाकुरद्वारा") || tBatch.includes("thakurdwara") || tBatch.includes("general")) {
-    return true; // All series available in main Thakurdwara / General batch
+  if (tBatch.includes("ठाकुरद्वारा") || tBatch.includes("thakurdwara")) {
+    return true; // All series available in main Thakurdwara batch
   }
 
   if (!seriesBatch) return true;

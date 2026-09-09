@@ -41,11 +41,6 @@ const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[];
     topics: ["अभ्यास 1-20", "अभ्यास 21-40", "अभ्यास 41-60"],
     description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के उन्नत स्तर डिक्टेशन ऑडियो",
   },
-  "General Batch": {
-    color: "from-slate-700 to-slate-900",
-    topics: ["सामान्य अभ्यास"],
-    description: "सामान्य आशुलिपि अभ्यास संग्रह",
-  },
 };
 
 const DEFAULT_STATIC_BATCHES = [
@@ -105,14 +100,6 @@ const DEFAULT_STATIC_BATCHES = [
     description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
     thumbnailUrl: "",
     sortOrder: 6,
-    isPublished: true,
-  },
-  {
-    name: "General Batch",
-    hindiName: "सामान्य स्टेनो बैच",
-    description: "सामान्य आशुलिपि अभ्यास संग्रह",
-    thumbnailUrl: "",
-    sortOrder: 7,
     isPublished: true,
   },
 ];

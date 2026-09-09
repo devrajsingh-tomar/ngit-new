@@ -9,6 +9,9 @@ import {
   getStenoSeriesListAction,
   getStenoExamsAction,
   bulkAssignStenoPassagesAction,
+  getStenoBatchesAction,
+  createStenoSeriesAction,
+  createStenoBatchAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,16 +39,24 @@ import {
   Zap,
   CheckCircle2,
   FileText,
+  FolderPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminStenoPassagesPage() {
   const [passages, setPassages] = useState<any[]>([]);
   const [seriesList, setSeriesList] = useState<any[]>([]);
+  const [targetBatches, setTargetBatches] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPassage, setEditingPassage] = useState<any | null>(null);
+
+  // Quick Series Topic Creation Modal State
+  const [isQuickSeriesDialogOpen, setIsQuickSeriesDialogOpen] = useState(false);
+  const [quickSeriesTitle, setQuickSeriesTitle] = useState("");
+  const [quickSeriesBatch, setQuickSeriesBatch] = useState("");
+  const [isCreatingQuickSeries, setIsCreatingQuickSeries] = useState(false);
 
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -83,6 +94,7 @@ export default function AdminStenoPassagesPage() {
   useEffect(() => {
     loadPassages();
     loadSeries();
+    loadBatches();
     loadExams();
   }, []);
 
@@ -104,10 +116,48 @@ export default function AdminStenoPassagesPage() {
     }
   };
 
+  const loadBatches = async () => {
+    const res = await getStenoBatchesAction({ isPublished: undefined });
+    if (res.success && res.batches) {
+      setTargetBatches(res.batches);
+      if (res.batches.length > 0 && !quickSeriesBatch) {
+        setQuickSeriesBatch(res.batches[0].name);
+      }
+    }
+  };
+
   const loadExams = async () => {
     const res = await getStenoExamsAction();
     if (res.success && res.exams) {
       setExams(res.exams);
+    }
+  };
+
+  const handleCreateQuickSeries = async () => {
+    if (!quickSeriesTitle.trim() || !quickSeriesBatch.trim()) {
+      toast.error("Series Title and Target Batch are required!");
+      return;
+    }
+
+    setIsCreatingQuickSeries(true);
+    const res = await createStenoSeriesAction({
+      title: quickSeriesTitle.trim(),
+      batch: quickSeriesBatch.trim(),
+      description: `${quickSeriesBatch.trim()} - ${quickSeriesTitle.trim()}`,
+      category: "General Series",
+      language: "Hindi",
+      isPublished: true,
+    });
+    setIsCreatingQuickSeries(false);
+
+    if (res.success && res.series) {
+      toast.success(`Series Topic "${res.series.title}" created for ${quickSeriesBatch}`);
+      setQuickSeriesTitle("");
+      setIsQuickSeriesDialogOpen(false);
+      await loadSeries();
+      setFormData((prev) => ({ ...prev, seriesId: res.series._id }));
+    } else {
+      toast.error(res.error || "Failed to create series topic");
     }
   };
 
@@ -663,7 +713,16 @@ export default function AdminStenoPassagesPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Assign Series Topic (Step 2)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700">Assign Series Topic (Step 2)</label>
+                      <button
+                        type="button"
+                        onClick={() => setIsQuickSeriesDialogOpen(true)}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <FolderPlus className="w-3.5 h-3.5" /> + New Series Topic
+                      </button>
+                    </div>
                     <select
                       value={formData.seriesId}
                       onChange={(e) => setFormData({ ...formData, seriesId: e.target.value })}
@@ -831,6 +890,64 @@ export default function AdminStenoPassagesPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Series Topic Creation Modal */}
+      <Dialog open={isQuickSeriesDialogOpen} onOpenChange={setIsQuickSeriesDialogOpen}>
+        <DialogContent className="max-w-md rounded-3xl bg-white p-6 space-y-4">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <FolderPlus className="w-5 h-5 text-indigo-600" /> Create Series Topic for Batch
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Target Steno Batch *</label>
+              <select
+                value={quickSeriesBatch}
+                onChange={(e) => setQuickSeriesBatch(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold"
+              >
+                {targetBatches.map((b) => (
+                  <option key={b._id} value={b.name}>
+                    {b.name} {b.hindiName ? `(${b.hindiName})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Series Topic Title *</label>
+              <Input
+                value={quickSeriesTitle}
+                onChange={(e) => setQuickSeriesTitle(e.target.value)}
+                placeholder="e.g. साहित्य, संपादकीय, विशेष अभ्यास 1"
+                className="rounded-xl text-xs font-semibold"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsQuickSeriesDialogOpen(false)}
+                className="rounded-xl text-xs font-bold"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCreateQuickSeries}
+                disabled={isCreatingQuickSeries}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold gap-1.5"
+              >
+                {isCreatingQuickSeries ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                Create & Select Series
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

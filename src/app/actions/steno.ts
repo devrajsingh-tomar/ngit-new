@@ -72,6 +72,25 @@ export async function getStenoSeriesListAction(query?: any) {
     if (seriesCount === 0) {
       await seedDefaultSeriesAndPassagesAction();
     }
+
+    // Ensure all published batches have at least one Series Topic so they appear in dictation assignment dropdowns
+    const allBatches = await StenoBatch.find({ isPublished: true }).lean();
+    for (const b of allBatches) {
+      if (b.name === "General Batch") continue;
+      const bSeries = await StenoSeries.findOne({ batch: b.name });
+      if (!bSeries) {
+        await StenoSeries.create({
+          title: "सामान्य अभ्यास",
+          description: `${b.name} आशुलिपि अभ्यास संग्रह`,
+          batch: b.name,
+          category: "General Series",
+          language: "Hindi",
+          isPublished: true,
+          sortOrder: 1,
+        });
+      }
+    }
+
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
     if (query?.batch) filter.batch = query.batch;
@@ -379,6 +398,7 @@ export async function createStenoSeriesAction(data: {
   title: string;
   description: string;
   thumbnailUrl?: string;
+  batch?: string;
   category: string;
   language: "Hindi" | "English";
   passages?: string[];
@@ -1313,19 +1333,16 @@ const DEFAULT_INITIAL_BATCHES = [
     sortOrder: 6,
     isPublished: true,
   },
-  {
-    name: "General Batch",
-    hindiName: "सामान्य स्टेनो बैच",
-    description: "सामान्य आशुलिपि अभ्यास संग्रह",
-    thumbnailUrl: "",
-    sortOrder: 7,
-    isPublished: true,
-  },
 ];
 
 export async function getStenoBatchesAction(query?: any) {
   try {
     await connectDB();
+
+    // Purge unwanted auto-generated General Batch from database if it exists
+    await StenoBatch.deleteMany({ name: "General Batch" });
+    await StenoSeries.deleteMany({ batch: "General Batch" });
+
     const filter: any = {};
     if (query?.isPublished !== undefined) {
       filter.isPublished = query.isPublished;
@@ -1383,25 +1400,41 @@ export async function createStenoBatchAction(data: {
       return { success: false, error: "Batch Name is required" };
     }
 
-    const existing = await StenoBatch.findOne({ name: data.name.trim() });
-    if (existing) {
-      return { success: true, batch: JSON.parse(JSON.stringify(existing)) };
+    const batchName = data.name.trim();
+
+    let batch = await StenoBatch.findOne({ name: batchName });
+    if (!batch) {
+      batch = await StenoBatch.create({
+        name: batchName,
+        hindiName: data.hindiName || "",
+        description: data.description || "",
+        thumbnailUrl: data.thumbnailUrl || "",
+        examPresetId: data.examPresetId ? data.examPresetId : null,
+        coachingName: data.coachingName || "",
+        instituteCode: data.instituteCode || "",
+        managedByEmail: data.managedByEmail || "",
+        sortOrder: data.sortOrder || 0,
+        isPublished: data.isPublished ?? true,
+      });
     }
 
-    const batch = await StenoBatch.create({
-      name: data.name.trim(),
-      hindiName: data.hindiName || "",
-      description: data.description || "",
-      thumbnailUrl: data.thumbnailUrl || "",
-      examPresetId: data.examPresetId ? data.examPresetId : null,
-      coachingName: data.coachingName || "",
-      instituteCode: data.instituteCode || "",
-      managedByEmail: data.managedByEmail || "",
-      sortOrder: data.sortOrder || 0,
-      isPublished: data.isPublished ?? true,
-    });
+    // Auto-create a default Series Topic for this new Batch if none exists
+    const existingSeries = await StenoSeries.findOne({ batch: batchName });
+    if (!existingSeries) {
+      await StenoSeries.create({
+        title: "सामान्य अभ्यास",
+        description: `${batchName} आशुलिपि अभ्यास संग्रह`,
+        batch: batchName,
+        category: "General Series",
+        language: "Hindi",
+        isPublished: true,
+        sortOrder: 1,
+      });
+    }
 
     revalidatePath("/admin/steno/batches");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/admin/steno/passages");
     revalidatePath("/steno");
     revalidatePath("/student/steno/series");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
