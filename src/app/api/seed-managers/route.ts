@@ -6,7 +6,7 @@ export async function GET() {
     await seedStenoInstituteAccountAction();
     return NextResponse.json({
       success: true,
-      message: "Seeded all module manager accounts (manager@ngitedu.com, stenoinstitute@ngitedu.com, stenomanager@ngitedu.com, typingmanager@ngitedu.com)",
+      message: "Seeded all module manager accounts (manager@ngitedu.com, stenoinstitute@ngitedu.com, stenomanager@ngitedu.com)",
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

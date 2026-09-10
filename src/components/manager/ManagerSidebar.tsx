@@ -13,6 +13,7 @@ import {
     Type,
     Sliders,
     Trophy,
+    Video,
     BarChart3,
     Clock,
     X,
@@ -37,15 +38,11 @@ const managerMenuGroups = [
         groupLabel: "Steno Management",
         items: [
             { label: "Steno Control Center", href: "/manager/steno", icon: Mic },
-            { label: "Dictation Passages CMS", href: "/manager/steno/passages", icon: Headphones },
-            { label: "Steno Series Collections", href: "/manager/steno/series", icon: Layers },
-            { label: "Exam Presets", href: "/manager/steno/exams", icon: Award },
-            { label: "Official Mock Tests", href: "/manager/steno/mock-tests", icon: FileText },
-            { label: "Custom Tests", href: "/manager/steno/custom-tests", icon: Clock },
-            { label: "Fonts Manager", href: "/manager/steno/fonts", icon: Type },
-            { label: "Mistake Penalty Rules", href: "/manager/steno/error-rules", icon: Sliders },
-            { label: "Attempts & Results", href: "/manager/steno/results", icon: BarChart3 },
-            { label: "Global Leaderboard", href: "/manager/steno/leaderboard", icon: Trophy },
+            { label: "Target Steno Batches (Step 1)", href: "/manager/steno/batches", icon: Layers },
+            { label: "Series Topics (Step 2)", href: "/manager/steno/series", icon: FileText },
+            { label: "Dictation Passages (Step 3)", href: "/manager/steno/passages", icon: Headphones },
+            { label: "Exam Presets & Rules", href: "/manager/steno/exams", icon: Award },
+            { label: "Student Results", href: "/manager/steno/results", icon: BarChart3 },
         ]
     }
 ];

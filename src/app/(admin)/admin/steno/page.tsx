@@ -23,7 +23,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { usePathname } from "next/navigation";
+
 export default function AdminStenoDashboardPage() {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({
     stats: {
@@ -56,16 +59,23 @@ export default function AdminStenoDashboardPage() {
 
   const { stats, recentAttempts, highestScores, popularPassages } = data;
 
+  const basePath = pathname.startsWith("/manager/steno")
+    ? "/manager/steno"
+    : pathname.startsWith("/steno/admin")
+    ? "/steno/admin"
+    : "/admin/steno";
+
+  const isAdminWorkspace = !pathname.startsWith("/manager/steno") && !pathname.startsWith("/steno/admin");
+
   const adminNavCards = [
-    { title: "Dictation Passages", href: "/admin/steno/passages", icon: Headphones, desc: "Audio/video dictations & transcripts" },
-    { title: "Steno Series", href: "/admin/steno/series", icon: Layers, desc: "Dictation course collections" },
-    { title: "Exam Presets", href: "/admin/steno/exams", icon: Award, desc: "SSC, High Court & UPSSSC presets" },
-    { title: "Mock Tests", href: "/admin/steno/mock-tests", icon: FileText, desc: "Official pattern test papers" },
-    { title: "Custom Tests", href: "/admin/steno/custom-tests", icon: Clock, desc: "Student practice test overviews" },
-    { title: "Attempts / Results", href: "/admin/steno/results", icon: BarChart3, desc: "Student transcriptions & error reports" },
-    { title: "Fonts Manager", href: "/admin/steno/fonts", icon: Type, desc: "Kruti Dev, Mangal, Remington GAIL" },
-    { title: "Error Rules", href: "/admin/steno/error-rules", icon: Sliders, desc: "Full & half mistake rules" },
-    { title: "Leaderboard", href: "/admin/steno/leaderboard", icon: Trophy, desc: "Global ranking & scoreboards" },
+    { title: "Target Steno Batches (Step 1)", href: `${basePath}/batches`, icon: Layers, desc: "Manage exam categories (UPSSSC, High Court, SSC)" },
+    { title: "Series Topics (Step 2)", href: `${basePath}/series`, icon: FileText, desc: "Manage dictation course series collections" },
+    { title: "Dictation Passages (Step 3)", href: `${basePath}/passages`, icon: Headphones, desc: "Audio/video dictation audio & transcripts" },
+    ...(isAdminWorkspace
+      ? [{ title: "Doubt Solution Videos", href: `${basePath}/doubt-videos`, icon: Video, desc: "Manage video tutorials & doubt clearance sessions" }]
+      : []),
+    { title: "Exam Presets & Rules", href: `${basePath}/exams`, icon: Award, desc: "SSC, High Court & UPSSSC rules presets" },
+    { title: "Student Results", href: `${basePath}/results`, icon: BarChart3, desc: "Student transcriptions & error reports" },
   ];
 
   return (

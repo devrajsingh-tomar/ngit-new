@@ -12,6 +12,7 @@ import {
     Type,
     Sliders,
     Trophy,
+    Video,
     BarChart3,
     Clock,
     X,
@@ -36,7 +37,6 @@ const stenoAdminMenuGroups = [
             { label: "Student Results", href: "/steno/admin/results", icon: BarChart3 },
         ]
     }
-
 ];
 
 interface StenoAdminSidebarProps {

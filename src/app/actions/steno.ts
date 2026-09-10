@@ -581,21 +581,7 @@ export async function seedStenoInstituteAccountAction() {
       { upsert: true, new: true }
     );
 
-    // 4. Dedicated Typing Module Manager Account
-    const typingMgrPassHash = await bcrypt.hash("TypingManager@2026", 10);
-    await User.findOneAndUpdate(
-      { email: "typingmanager@ngitedu.com" },
-      {
-        $set: {
-          name: "NGIT Typing Module Manager",
-          email: "typingmanager@ngitedu.com",
-          password: typingMgrPassHash,
-          role: UserRole.TYPING_ADMIN,
-          isActive: true,
-        },
-      },
-      { upsert: true, new: true }
-    );
+
   } catch (err) {
     console.error("seedStenoInstituteAccountAction error:", err);
   }
