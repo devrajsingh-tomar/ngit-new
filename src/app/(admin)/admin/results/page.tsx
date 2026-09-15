@@ -400,6 +400,7 @@ export default function MockTestResultsAdminPage() {
                         </TableBody>
                     </Table>
                 </div>
+            </div>
         </div>
     );
 }

@@ -25,6 +25,7 @@ export default function StudentSettingsPage() {
     const [profileLoading, setProfileLoading] = useState(true);
     const [name, setName] = useState(session?.user?.name || "");
     const [image, setImage] = useState(session?.user?.image || "");
+    const [instituteCode, setInstituteCode] = useState((session?.user as any)?.instituteCode || "");
     const [notifications, setNotifications] = useState(true);
     const [isPassOpen, setIsPassOpen] = useState(false);
     const [passData, setPassData] = useState({ current: "", new: "", confirm: "" });
@@ -52,6 +53,7 @@ export default function StudentSettingsPage() {
     useEffect(() => {
         if (session?.user?.name) setName(session.user.name);
         if (session?.user?.image) setImage(session.user.image);
+        if ((session?.user as any)?.instituteCode) setInstituteCode((session.user as any).instituteCode);
     }, [session]);
 
     // Load student profile details on mount
@@ -118,11 +120,11 @@ export default function StudentSettingsPage() {
         setLoading(true);
         try {
             // 1. Update basic User account details
-            const resUser = await updateUserDetails({ name, image });
+            const resUser = await updateUserDetails({ name, image, instituteCode });
             if (!resUser.success) {
                 throw new Error(resUser.error || "Failed to update account details");
             }
-            await update({ name, image });
+            await update({ name, image, instituteCode });
 
             // 2. Update Student Profile details
             const resProfile = await updateStudentProfile(profileForm);
@@ -228,6 +230,19 @@ export default function StudentSettingsPage() {
                                     disabled
                                     className="w-full h-12 px-5 rounded-2xl bg-slate-100 border-2 border-transparent text-slate-400 font-medium cursor-not-allowed text-xs"
                                 />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-xs font-bold text-slate-700 ml-1">Institute Code (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={instituteCode}
+                                    onChange={(e) => setInstituteCode(e.target.value.toUpperCase())}
+                                    className="w-full h-12 px-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all outline-none font-mono font-bold text-slate-900 text-xs uppercase tracking-wider"
+                                    placeholder="e.g. NGIT-STENO"
+                                />
+                                <p className="text-[11px] text-slate-400 font-medium ml-1">
+                                    Enter your Steno Institute code to share performance records with your institute trainer.
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -11,6 +11,7 @@ export interface IUser extends Document {
     image?: string;
     bio?: string;
     role: UserRole;
+    instituteCode?: string;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -29,6 +30,7 @@ const UserSchema = new Schema<IUser>(
             enum: Object.values(UserRole),
             default: UserRole.STUDENT,
         },
+        instituteCode: { type: String, index: true },
         isActive: { type: Boolean, default: true },
     },
     { timestamps: true }

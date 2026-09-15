@@ -26,6 +26,7 @@ export default function RegisterPage() {
         email: "",
         password: "",
         mobile: "",
+        instituteCode: "",
     });
 
     const set = (field: string, value: string) =>
@@ -51,6 +52,7 @@ export default function RegisterPage() {
                 email: form.email,
                 password: form.password,
                 mobile: form.mobile,
+                instituteCode: form.instituteCode || undefined,
             });
             if (result.success) {
                 toast.success("Identity Created. Welcome to the ecosystem.");
@@ -185,6 +187,19 @@ export default function RegisterPage() {
                                         {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <ShieldCheck className="w-3 h-3 text-indigo-600" /> Institute Code (Optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. NGIT-STENO"
+                                    value={form.instituteCode}
+                                    onChange={(e) => set("instituteCode", e.target.value.toUpperCase())}
+                                    className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-400 rounded-xl px-4 text-xs font-bold uppercase focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
+                                />
                             </div>
 
                             <div className="md:col-span-2 pt-2">

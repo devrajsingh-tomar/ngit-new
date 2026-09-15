@@ -559,6 +559,7 @@ export async function seedStenoInstituteAccountAction() {
           email: "stenoinstitute@ngitedu.com",
           password: instPassHash,
           role: UserRole.STENO_ADMIN,
+          instituteCode: "NGIT-STENO",
           isActive: true,
         },
       },
@@ -1457,6 +1458,110 @@ export async function deleteStenoBatchAction(id: string) {
     revalidatePath("/student/steno/series");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
+  try {
+    await connectDB();
+    const targetCode = instCode.trim().toUpperCase();
+
+    // 1. Find users with matching instituteCode or whose StudentProfile has this code
+    const users = await User.find({
+      $or: [
+        { instituteCode: targetCode },
+        { email: "stenoinstitute@ngitedu.com" }
+      ]
+    }).select("name email mobile instituteCode createdAt isActive role").lean();
+
+    const userIds = users.filter((u: any) => u.role === UserRole.STUDENT).map((u: any) => u._id);
+
+    // 2. Fetch results for these students
+    const StenoResult = (await import("@/models/StenoResult")).default;
+    const results = await StenoResult.find({ userId: { $in: userIds } })
+      .select("userId speedWpm netWpm accuracy createdAt score")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 3. Aggregate per student stats
+    const studentDataMap: Record<string, any> = {};
+    for (const u of users) {
+      if (u.role !== UserRole.STUDENT) continue;
+      const uidStr = u._id.toString();
+      studentDataMap[uidStr] = {
+        _id: uidStr,
+        name: u.name,
+        email: u.email,
+        mobile: u.mobile || "N/A",
+        instituteCode: u.instituteCode || targetCode,
+        createdAt: u.createdAt,
+        totalAttempts: 0,
+        bestWpm: 0,
+        avgAccuracy: 0,
+        results: [],
+      };
+    }
+
+    let accSumMap: Record<string, number> = {};
+
+    for (const r of results) {
+      const uidStr = r.userId?.toString();
+      if (studentDataMap[uidStr]) {
+        studentDataMap[uidStr].totalAttempts += 1;
+        const wpm = r.netWpm || r.speedWpm || 0;
+        if (wpm > studentDataMap[uidStr].bestWpm) {
+          studentDataMap[uidStr].bestWpm = wpm;
+        }
+        accSumMap[uidStr] = (accSumMap[uidStr] || 0) + (r.accuracy || 0);
+        studentDataMap[uidStr].results.push(r);
+      }
+    }
+
+    const studentList = Object.values(studentDataMap).map((s: any) => {
+      if (s.totalAttempts > 0) {
+        s.avgAccuracy = Math.round((accSumMap[s._id] / s.totalAttempts) * 10) / 10;
+      }
+      return s;
+    });
+
+    return {
+      success: true,
+      instituteCode: targetCode,
+      totalStudents: studentList.length,
+      students: JSON.parse(JSON.stringify(studentList)),
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function seedStenoInstituteAccountAction() {
+  try {
+    await connectDB();
+    let instUser = await User.findOne({ email: "stenoinstitute@ngitedu.com" });
+    const hashedPassword = await bcrypt.hash("StenoInst@2026", 10);
+
+    if (!instUser) {
+      instUser = await User.create({
+        name: "Steno Institute Admin",
+        email: "stenoinstitute@ngitedu.com",
+        password: hashedPassword,
+        role: UserRole.STENO_ADMIN,
+        instituteCode: "NGIT-STENO",
+        isActive: true,
+      });
+    } else {
+      instUser.role = UserRole.STENO_ADMIN;
+      instUser.instituteCode = "NGIT-STENO";
+      if (!instUser.password) {
+        instUser.password = hashedPassword;
+      }
+      await instUser.save();
+    }
+
+    return { success: true, user: JSON.parse(JSON.stringify(instUser)) };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

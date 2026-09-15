@@ -68,6 +68,7 @@ export default function AdminStenoDashboardPage() {
   const isAdminWorkspace = !pathname.startsWith("/manager/steno") && !pathname.startsWith("/steno/admin");
 
   const adminNavCards = [
+    { title: "Institute Students", href: `${basePath}/students`, icon: Users, desc: "Manage students registered under your Institute Code" },
     { title: "Target Steno Batches (Step 1)", href: `${basePath}/batches`, icon: Layers, desc: "Manage exam categories (UPSSSC, High Court, SSC)" },
     { title: "Series Topics (Step 2)", href: `${basePath}/series`, icon: FileText, desc: "Manage dictation course series collections" },
     { title: "Dictation Passages (Step 3)", href: `${basePath}/passages`, icon: Headphones, desc: "Audio/video dictation audio & transcripts" },

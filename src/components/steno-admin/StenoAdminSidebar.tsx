@@ -16,6 +16,7 @@ import {
     BarChart3,
     Clock,
     X,
+    Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const stenoAdminMenuGroups = [
         groupLabel: "Steno Management",
         items: [
             { label: "Steno Control Center", href: "/steno/admin/dashboard", icon: Mic },
+            { label: "Institute Students", href: "/steno/admin/students", icon: Users },
             { label: "Target Steno Batches (Step 1)", href: "/steno/admin/batches", icon: Layers },
             { label: "Series Topics (Step 2)", href: "/steno/admin/series", icon: FileText },
             { label: "Dictation Passages (Step 3)", href: "/steno/admin/passages", icon: Headphones },

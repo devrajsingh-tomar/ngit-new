@@ -27,6 +27,7 @@ export interface IStudentProfile extends Document {
     abcId?: string;
     guardianPhone?: string;
     whatsappNo?: string;
+    instituteCode?: string;
 
     createdAt: Date;
     updatedAt: Date;
@@ -63,6 +64,7 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
         abcId: { type: String },
         guardianPhone: { type: String },
         whatsappNo: { type: String },
+        instituteCode: { type: String, index: true },
     },
     { timestamps: true }
 );

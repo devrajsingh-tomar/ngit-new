@@ -38,6 +38,7 @@ const menuGroups = [
         groupLabel: "Steno Management",
         items: [
             { label: "Steno Overview", href: "/admin/steno", icon: Mic },
+            { label: "Institute Students", href: "/admin/steno/students", icon: Users },
             { label: "Target Steno Batches (Step 1)", href: "/admin/steno/batches", icon: Layers },
             { label: "Series Topics (Step 2)", href: "/admin/steno/series", icon: FileText },
             { label: "Dictation Passages (Step 3)", href: "/admin/steno/passages", icon: Headphones },
