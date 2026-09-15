@@ -583,8 +583,10 @@ export async function seedStenoInstituteAccountAction() {
     );
 
 
-  } catch (err) {
+    return { success: true };
+  } catch (err: any) {
     console.error("seedStenoInstituteAccountAction error:", err);
+    return { success: false, error: err.message };
   }
 }
 
@@ -1532,36 +1534,6 @@ export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
       totalStudents: studentList.length,
       students: JSON.parse(JSON.stringify(studentList)),
     };
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
-}
-
-export async function seedStenoInstituteAccountAction() {
-  try {
-    await connectDB();
-    let instUser = await User.findOne({ email: "stenoinstitute@ngitedu.com" });
-    const hashedPassword = await bcrypt.hash("StenoInst@2026", 10);
-
-    if (!instUser) {
-      instUser = await User.create({
-        name: "Steno Institute Admin",
-        email: "stenoinstitute@ngitedu.com",
-        password: hashedPassword,
-        role: UserRole.STENO_ADMIN,
-        instituteCode: "NGIT-STENO",
-        isActive: true,
-      });
-    } else {
-      instUser.role = UserRole.STENO_ADMIN;
-      instUser.instituteCode = "NGIT-STENO";
-      if (!instUser.password) {
-        instUser.password = hashedPassword;
-      }
-      await instUser.save();
-    }
-
-    return { success: true, user: JSON.parse(JSON.stringify(instUser)) };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
