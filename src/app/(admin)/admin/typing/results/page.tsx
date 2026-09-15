@@ -162,26 +162,26 @@ export default function TypingResultsAdminPage() {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader className="bg-slate-900">
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
+                <div className="max-h-[calc(100vh-280px)] min-h-[450px] overflow-auto relative">
+                    <Table className="min-w-[1100px] border-separate border-spacing-0">
+                        <TableHeader className="bg-slate-900 sticky top-0 z-30 shadow-md">
                             <TableRow className="hover:bg-transparent border-none">
-                                <TableHead className="w-12 py-8 pl-10">
+                                <TableHead className="w-12 py-5 pl-8 whitespace-nowrap bg-slate-900 sticky top-0 z-30">
                                     <Checkbox 
                                         className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-slate-900" 
                                         checked={selectedIds.length === results.length && results.length > 0}
                                         onCheckedChange={toggleSelectAll}
                                     />
                                 </TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Candidate</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Typing Exam</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Net Speed</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Accuracy</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Mistakes</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Backspaces</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Status</TableHead>
-                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-right pr-10">Report</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Candidate</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Typing Exam</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Net Speed</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Accuracy</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Mistakes</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Backspaces</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Status</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-right pr-8 whitespace-nowrap bg-slate-900 sticky top-0 right-0 z-40 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]">Report</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -204,25 +204,25 @@ export default function TypingResultsAdminPage() {
                                 </TableRow>
                             ) : (
                                 filteredResults.map((res) => (
-                                    <TableRow key={res._id} className={`group hover:bg-slate-50/50 transition-all border-slate-50 ${selectedIds.includes(res._id) ? 'bg-indigo-50/30' : ''}`}>
-                                        <TableCell className="py-8 pl-10">
+                                    <TableRow key={res._id} className={`group hover:bg-slate-50/80 transition-all border-slate-50 ${selectedIds.includes(res._id) ? 'bg-indigo-50/30' : ''}`}>
+                                        <TableCell className="py-5 pl-8 whitespace-nowrap border-b border-slate-100">
                                             <Checkbox 
                                                 checked={selectedIds.includes(res._id)}
                                                 onCheckedChange={() => toggleSelect(res._id)}
                                             />
                                         </TableCell>
-                                        <TableCell className="py-8">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-12 h-12 rounded-[1.25rem] bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-base shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                        <TableCell className="py-5 whitespace-nowrap border-b border-slate-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-colors">
                                                     {res.userId?.name?.[0]}
                                                 </div>
                                                 <div>
                                                     <p className="font-black text-slate-900 uppercase tracking-tight">{res.userId?.name || "Deleted User"}</p>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{res.userId?.email}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{res.userId?.email}</p>
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-8">
+                                        <TableCell className="py-5 whitespace-nowrap border-b border-slate-100">
                                             <div className="flex flex-col">
                                                 <p className="font-black text-slate-800">{res.examId?.title || "Deleted Exam"}</p>
                                                 <div className="flex items-center gap-2 mt-1">
@@ -233,48 +233,48 @@ export default function TypingResultsAdminPage() {
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-8 text-center">
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
                                             <div className="flex flex-col items-center">
-                                                <p className="font-black text-xl text-indigo-600 leading-none">{res.wpm}</p>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">WPM</p>
+                                                <p className="font-black text-lg text-indigo-600 leading-none">{res.wpm}</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1">WPM</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-8 text-center">
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
                                             <div className="flex flex-col items-center">
-                                                <p className="font-black text-xl text-emerald-600 leading-none">{res.accuracy}%</p>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">Accuracy</p>
+                                                <p className="font-black text-lg text-emerald-600 leading-none">{res.accuracy}%</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1">Accuracy</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-8 text-center">
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
                                             <div className="flex flex-col items-center">
-                                                <p className="font-black text-xl text-rose-600 leading-none">{res.errorCount || 0}</p>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">Mistakes</p>
+                                                <p className="font-black text-lg text-rose-600 leading-none">{res.errorCount || 0}</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1">Mistakes</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-8 text-center">
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
                                             <div className="flex flex-col items-center">
-                                                <p className="font-black text-xl text-amber-600 leading-none">{res.backspaces || 0}</p>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">Backspaces</p>
+                                                <p className="font-black text-lg text-amber-600 leading-none">{res.backspaces || 0}</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1">Backspaces</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-8">
+                                        <TableCell className="py-5 whitespace-nowrap border-b border-slate-100">
                                             {(() => {
                                                 const lang = res.examId?.language?.toLowerCase() || "";
                                                 const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
                                                 const passingWpm = isHindi ? 25 : 30;
                                                 const isQualified = res.wpm >= passingWpm;
                                                 return (
-                                                    <Badge className={isQualified ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"}>
+                                                    <Badge className={isQualified ? "bg-emerald-50 text-emerald-600 border-none font-bold" : "bg-slate-100 text-slate-500 border-none font-bold"}>
                                                         {isQualified ? "QUALIFIED" : "DISQUALIFIED"}
                                                     </Badge>
                                                 );
                                             })()}
                                         </TableCell>
-                                        <TableCell className="py-8 text-right pr-10">
+                                        <TableCell className="py-5 text-right pr-8 whitespace-nowrap border-b border-slate-100 sticky right-0 bg-white group-hover:bg-slate-50 z-20 shadow-[-4px_0_12px_rgba(0,0,0,0.05)]">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-12 w-12 p-0 rounded-2xl hover:bg-slate-100 transition-colors">
-                                                        <MoreVertical className="h-6 w-6 text-slate-400" />
+                                                    <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-slate-100 transition-colors">
+                                                        <MoreVertical className="h-5 w-5 text-slate-400" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="rounded-[1.5rem] p-3 border-none shadow-2xl w-56">

@@ -66,21 +66,21 @@ export default function AdminStenoResultsPage() {
         </div>
       </div>
 
-      <Card className="rounded-[3rem] border-slate-100 shadow-xl overflow-hidden bg-white">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-900">
+      <Card className="rounded-[2.5rem] border-slate-100 shadow-xl overflow-hidden bg-white">
+        <div className="max-h-[calc(100vh-280px)] min-h-[450px] overflow-auto relative">
+          <Table className="min-w-[1100px] border-separate border-spacing-0">
+            <TableHeader className="bg-slate-900 sticky top-0 z-30 shadow-md">
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 pl-8">Student</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6">Exam Preset</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6">Test Title</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6">Date</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 text-center">Gross WPM</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 text-center">Net WPM</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 text-center">Accuracy</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 text-center">Errors</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 text-center">Score</TableHead>
-                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-6 text-right pr-8">Actions</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 pl-8 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Student</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Exam Preset</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Test Title</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Date</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Gross WPM</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Net WPM</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Accuracy</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Errors</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Score</TableHead>
+                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-right pr-8 whitespace-nowrap bg-slate-900 sticky top-0 right-0 z-40 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,40 +98,40 @@ export default function AdminStenoResultsPage() {
                 </TableRow>
               ) : (
                 filteredResults.map((r) => (
-                  <TableRow key={r._id} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="py-6 pl-8">
+                  <TableRow key={r._id} className="hover:bg-slate-50/80 transition-colors group">
+                    <TableCell className="py-5 pl-8 whitespace-nowrap border-b border-slate-100">
                       <div>
                         <p className="font-black text-slate-900">{r.userId?.name || "Candidate User"}</p>
                         <p className="text-[10px] text-slate-400 font-bold">{r.userId?.email || "N/A"}</p>
                       </div>
                     </TableCell>
-                    <TableCell className="py-6">
+                    <TableCell className="py-5 whitespace-nowrap border-b border-slate-100">
                       <Badge className="bg-slate-100 text-slate-700 font-bold text-[9px] uppercase">
                         {r.examTitle || "Standard"} ({r.language || "Hindi"})
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-6 font-bold text-slate-800">
+                    <TableCell className="py-5 font-bold text-slate-800 whitespace-nowrap border-b border-slate-100">
                       {r.passageTitle || r.passageId?.title || "Steno Dictation"}
                     </TableCell>
-                    <TableCell className="py-6 font-bold text-xs text-slate-500">
+                    <TableCell className="py-5 font-bold text-xs text-slate-500 whitespace-nowrap border-b border-slate-100">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="py-6 text-center font-black text-indigo-600 text-base">
+                    <TableCell className="py-5 text-center font-black text-indigo-600 text-base whitespace-nowrap border-b border-slate-100">
                       {r.grossWpm || 0}
                     </TableCell>
-                    <TableCell className="py-6 text-center font-black text-purple-600 text-base">
+                    <TableCell className="py-5 text-center font-black text-purple-600 text-base whitespace-nowrap border-b border-slate-100">
                       {r.netWpm || r.speedWpm || 0}
                     </TableCell>
-                    <TableCell className="py-6 text-center font-black text-emerald-600 text-base">
+                    <TableCell className="py-5 text-center font-black text-emerald-600 text-base whitespace-nowrap border-b border-slate-100">
                       {r.accuracy || 0}%
                     </TableCell>
-                    <TableCell className="py-6 text-center font-black text-rose-600 text-base">
+                    <TableCell className="py-5 text-center font-black text-rose-600 text-base whitespace-nowrap border-b border-slate-100">
                       {r.totalMistakes || r.totalErrors || 0}
                     </TableCell>
-                    <TableCell className="py-6 text-center font-black text-slate-900 text-base">
+                    <TableCell className="py-5 text-center font-black text-slate-900 text-base whitespace-nowrap border-b border-slate-100">
                       {r.score || 0}
                     </TableCell>
-                    <TableCell className="py-6 text-right pr-8">
+                    <TableCell className="py-5 text-right pr-8 whitespace-nowrap border-b border-slate-100 sticky right-0 bg-white group-hover:bg-slate-50 z-20 shadow-[-4px_0_12px_rgba(0,0,0,0.05)]">
                       <div className="flex items-center justify-end gap-2">
                         <Link href={`/steno/result/${r._id}`}>
                           <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs">

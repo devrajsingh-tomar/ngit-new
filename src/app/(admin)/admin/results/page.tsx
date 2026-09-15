@@ -260,145 +260,146 @@ export default function MockTestResultsAdminPage() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
-                <Table className="min-w-[1100px]">
-                    <TableHeader className="bg-slate-900">
-                        <TableRow className="hover:bg-transparent border-none">
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 pl-10">Candidate</TableHead>
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Assessment / Course</TableHead>
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Batch</TableHead>
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">Score Portfolio</TableHead>
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-center">A.I. Rank</TableHead>
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8">Release Status</TableHead>
-                            <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-8 text-right pr-10">Control</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <TableRow key={i} className="animate-pulse">
-                                    <TableCell colSpan={7} className="h-24 bg-slate-50/20" />
-                                </TableRow>
-                            ))
-                        ) : filteredResults.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="py-32 text-center">
-                                    <div className="flex flex-col items-center justify-center space-y-4">
-                                        <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center">
-                                            <Clock className="w-10 h-10 text-slate-200" />
-                                        </div>
-                                        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No analytics records found</p>
-                                    </div>
-                                </TableCell>
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
+                <div className="max-h-[calc(100vh-280px)] min-h-[450px] overflow-auto relative">
+                    <Table className="min-w-[1100px] border-separate border-spacing-0">
+                        <TableHeader className="bg-slate-900 sticky top-0 z-30 shadow-md">
+                            <TableRow className="hover:bg-transparent border-none">
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 pl-8 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Candidate</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Assessment / Course</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Batch</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">Score Portfolio</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-center whitespace-nowrap bg-slate-900 sticky top-0 z-30">A.I. Rank</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 whitespace-nowrap bg-slate-900 sticky top-0 z-30">Release Status</TableHead>
+                                <TableHead className="font-black text-white text-[10px] uppercase tracking-widest py-5 text-right pr-8 whitespace-nowrap bg-slate-900 sticky top-0 right-0 z-40 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]">Control</TableHead>
                             </TableRow>
-                        ) : (
-                            filteredResults.map((res) => (
-                                <TableRow key={res._id} className="group hover:bg-slate-50/50 transition-all border-slate-50">
-                                    <TableCell className="py-8 pl-10">
-                                        <div className="flex items-center gap-5">
-                                            <div className="w-12 h-12 rounded-[1.25rem] bg-slate-100 text-slate-600 flex items-center justify-center font-black text-base shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                                                {res.studentId?.name?.[0]}
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <TableRow key={i} className="animate-pulse">
+                                        <TableCell colSpan={7} className="h-24 bg-slate-50/20" />
+                                    </TableRow>
+                                ))
+                            ) : filteredResults.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="py-32 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-4">
+                                            <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center">
+                                                <Clock className="w-10 h-10 text-slate-200" />
                                             </div>
-                                            <div>
-                                                <p className="font-black text-slate-900 uppercase tracking-tight">{res.studentId?.name}</p>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{res.studentId?.email}</p>
+                                            <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No analytics records found</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                filteredResults.map((res) => (
+                                    <TableRow key={res._id} className="group hover:bg-slate-50/80 transition-all border-slate-50">
+                                        <TableCell className="py-5 pl-8 whitespace-nowrap border-b border-slate-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-sm shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                                    {res.studentId?.name?.[0]}
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-slate-900 uppercase tracking-tight">{res.studentId?.name}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{res.studentId?.email}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-8">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <p className="font-black text-slate-800">{res.mockTestId?.title}</p>
-                                            {res.mockTestId?.examCode && (
-                                                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0">
-                                                    {res.mockTestId.examCode}
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{res.course || "General Course"}</p>
-                                    </TableCell>
-                                    <TableCell className="py-8 text-center">
-                                        <Badge variant="outline" className="rounded-lg bg-white border-slate-200 text-slate-600 font-black text-[10px] uppercase px-2 py-0.5">
-                                            {res.batch || "Regular"}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="py-8 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <p className="font-black text-xl text-slate-900 leading-none">{res.score}</p>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-1">Total {res.totalMarks}</p>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-8 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-xl font-black text-blue-600">#{res.rank || "-"}</span>
-                                            <span className="text-[10px] font-black text-blue-300 uppercase mt-1">{res.percentile}%ile</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-8">
-                                        {res.publishStatus === "PUBLISHED" ? (
-                                            <div className="flex flex-col gap-1.5">
-                                                <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px] uppercase tracking-widest w-fit">
-                                                    <CheckCircle2 className="w-3 h-3 mr-1" /> Live
-                                                </Badge>
-                                                {res.publicVisibility && (
-                                                    <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[10px] uppercase tracking-widest w-fit">
-                                                        <Eye className="w-3 h-3 mr-1" /> Publicly Visible
+                                        </TableCell>
+                                        <TableCell className="py-5 whitespace-nowrap border-b border-slate-100">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <p className="font-black text-slate-800">{res.mockTestId?.title}</p>
+                                                {res.mockTestId?.examCode && (
+                                                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0">
+                                                        {res.mockTestId.examCode}
                                                     </Badge>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <Badge className="bg-amber-50 text-amber-600 border-none font-black text-[10px] uppercase tracking-widest">
-                                                <Clock className="w-3 h-3 mr-1" /> Draft Mode
+                                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{res.course || "General Course"}</p>
+                                        </TableCell>
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
+                                            <Badge variant="outline" className="rounded-lg bg-white border-slate-200 text-slate-600 font-black text-[10px] uppercase px-2 py-0.5">
+                                                {res.batch || "Regular"}
                                             </Badge>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="py-8 text-right pr-10">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-12 w-12 p-0 rounded-2xl hover:bg-slate-100 transition-colors">
-                                                    <MoreVertical className="h-6 w-6 text-slate-400" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="rounded-[1.5rem] p-3 border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-56">
-                                                <DropdownMenuItem 
-                                                    className="rounded-xl font-bold py-3 cursor-pointer gap-3 mb-1"
-                                                    onClick={() => setIsPublishDialogOpen(true)}
-                                                >
-                                                    <SettingsIcon className="w-4 h-4 text-slate-400" /> Re-publish Settings
-                                                </DropdownMenuItem>
-                                                {res.publishStatus === "PUBLISHED" ? (
+                                        </TableCell>
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
+                                            <div className="flex flex-col items-center">
+                                                <p className="font-black text-lg text-slate-900 leading-none">{res.score}</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1">Total {res.totalMarks}</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-5 text-center whitespace-nowrap border-b border-slate-100">
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-lg font-black text-blue-600">#{res.rank || "-"}</span>
+                                                <span className="text-[9px] font-black text-blue-300 uppercase mt-1">{res.percentile}%ile</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-5 whitespace-nowrap border-b border-slate-100">
+                                            {res.publishStatus === "PUBLISHED" ? (
+                                                <div className="flex flex-col gap-1.5">
+                                                    <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px] uppercase tracking-widest w-fit">
+                                                        <CheckCircle2 className="w-3 h-3 mr-1" /> Live
+                                                    </Badge>
+                                                    {res.publicVisibility && (
+                                                        <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[10px] uppercase tracking-widest w-fit">
+                                                            <Eye className="w-3 h-3 mr-1" /> Publicly Visible
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <Badge className="bg-amber-50 text-amber-600 border-none font-black text-[10px] uppercase tracking-widest">
+                                                    <Clock className="w-3 h-3 mr-1" /> Draft Mode
+                                                </Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="py-5 text-right pr-8 whitespace-nowrap border-b border-slate-100 sticky right-0 bg-white group-hover:bg-slate-50 z-20 shadow-[-4px_0_12px_rgba(0,0,0,0.05)]">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-slate-100 transition-colors">
+                                                        <MoreVertical className="h-5 w-5 text-slate-400" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="rounded-[1.5rem] p-3 border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-56">
                                                     <DropdownMenuItem 
-                                                        className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-amber-600 focus:bg-amber-50 focus:text-amber-600 mb-1"
-                                                        onClick={() => handleUnpublish(res.mockTestId?._id)}
+                                                        className="rounded-xl font-bold py-3 cursor-pointer gap-3 mb-1"
+                                                        onClick={() => setIsPublishDialogOpen(true)}
                                                     >
-                                                        <XCircle className="w-4 h-4" /> Unpublish Results
+                                                        <SettingsIcon className="w-4 h-4 text-slate-400" /> Re-publish Settings
                                                     </DropdownMenuItem>
-                                                ) : (
+                                                    {res.publishStatus === "PUBLISHED" ? (
+                                                        <DropdownMenuItem 
+                                                            className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-amber-600 focus:bg-amber-50 focus:text-amber-600 mb-1"
+                                                            onClick={() => handleUnpublish(res.mockTestId?._id)}
+                                                        >
+                                                            <XCircle className="w-4 h-4" /> Unpublish Results
+                                                        </DropdownMenuItem>
+                                                    ) : (
+                                                        <DropdownMenuItem 
+                                                            className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600 mb-1"
+                                                            onClick={() => {
+                                                                setSelectedQuizId(res.mockTestId?._id);
+                                                                setIsPublishDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <Send className="w-4 h-4" /> Publish Now
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    <div className="h-px bg-slate-100 my-1 mx-2" />
                                                     <DropdownMenuItem 
-                                                        className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600 mb-1"
-                                                        onClick={() => {
-                                                            setSelectedQuizId(res.mockTestId?._id);
-                                                            setIsPublishDialogOpen(true);
-                                                        }}
+                                                        className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                                                        onClick={() => handleDelete(res._id)}
                                                     >
-                                                        <Send className="w-4 h-4" /> Publish Now
+                                                        <Trash2 className="w-4 h-4" /> Delete Permanently
                                                     </DropdownMenuItem>
-                                                )}
-                                                <div className="h-px bg-slate-100 my-1 mx-2" />
-                                                <DropdownMenuItem 
-                                                    className="rounded-xl font-bold py-3 cursor-pointer gap-3 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
-                                                    onClick={() => handleDelete(res._id)}
-                                                >
-                                                    <Trash2 className="w-4 h-4" /> Delete Permanently
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
         </div>
     );
 }
