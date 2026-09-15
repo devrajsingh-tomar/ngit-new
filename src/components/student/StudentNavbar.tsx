@@ -146,7 +146,11 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                 </DropdownMenuLabel>
                                 
                                 <div className="space-y-1 px-1">
-                                    <DropdownMenuItem className="rounded-2xl p-4 font-black text-sm text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer flex items-center gap-4 transition-all" asChild>
+                                    <DropdownMenuItem 
+                                        className="rounded-2xl p-4 font-black text-sm text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer flex items-center gap-4 transition-all" 
+                                        onSelect={() => router.push("/student/settings")}
+                                        asChild
+                                    >
                                         <Link href="/student/settings">
                                             <div className="w-10 h-10 rounded-xl bg-blue-50/50 flex items-center justify-center text-blue-600 border border-blue-100/50">
                                                 <User className="h-5 w-5" />
@@ -155,7 +159,11 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                         </Link>
                                     </DropdownMenuItem>
     
-                                    <DropdownMenuItem className="rounded-2xl p-4 font-black text-sm text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer flex items-center gap-4 transition-all" asChild>
+                                    <DropdownMenuItem 
+                                        className="rounded-2xl p-4 font-black text-sm text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer flex items-center gap-4 transition-all" 
+                                        onSelect={() => router.push("/student/attendance")}
+                                        asChild
+                                    >
                                         <Link href="/student/attendance">
                                             <div className="w-10 h-10 rounded-xl bg-purple-50/50 flex items-center justify-center text-purple-600 border border-purple-100/50">
                                                 <Shield className="h-5 w-5" />
