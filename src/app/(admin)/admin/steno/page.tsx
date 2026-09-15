@@ -20,6 +20,7 @@ import {
   Flame,
   CheckCircle2,
   RefreshCw,
+  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 
