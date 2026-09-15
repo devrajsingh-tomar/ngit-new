@@ -18,7 +18,7 @@ export async function getHeaderFooterData() {
 
         const requiredNavigation = [
             { label: "Home", href: "/" },
-            { label: "Courses", href: "/courses" },
+            { label: "Courses", href: "https://student.ngitedu.com/" },
             { label: "Typing Tests", href: "/typing" },
             { label: "ShortHand", href: "/steno" },
             { label: "Practical Tools", href: "/tools" },

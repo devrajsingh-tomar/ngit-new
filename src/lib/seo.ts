@@ -134,9 +134,47 @@ export function getWebSiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: SITE_CONFIG.fullName,
+    name: "NGIT | Computer Courses, Typing & Shorthand Software",
     alternateName: "NGIT",
     url: SITE_CONFIG.domain,
+  };
+}
+
+export function getSiteNavigationSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SiteNavigationElement",
+        "name": "Typing Tests & Software",
+        "url": `${SITE_CONFIG.domain}/typing`,
+        "description": "Online Hindi & English Typing Tests and Practice Software"
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "name": "Shorthand & Steno Practice",
+        "url": `${SITE_CONFIG.domain}/steno`,
+        "description": "Steno Shorthand Audio Dictations & Online Practice Portal"
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "name": "Computer Courses",
+        "url": "https://student.ngitedu.com/",
+        "description": "CCC, O Level, and Professional IT Computer Courses"
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "name": "Informative Tools & Notices",
+        "url": `${SITE_CONFIG.domain}/tools`,
+        "description": "Practical Computer Tools, Official Notices, and Exam Information"
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "name": "Contact & Support",
+        "url": `${SITE_CONFIG.domain}/contact`,
+        "description": "Contact NGIT Institute Prayagraj for Inquiries & Support"
+      }
+    ]
   };
 }
 

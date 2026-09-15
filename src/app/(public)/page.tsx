@@ -13,7 +13,7 @@ import { listBlogPosts } from "@/app/actions/blog";
 import { constructMetadata } from "@/lib/seo";
 
 export const metadata = constructMetadata({
-  title: "NGIT | Computer Courses, Typing & Government Exam Preparation in Prayagraj",
+  title: "NGIT | Computer Courses, Typing & Shorthand Software",
   description: "Join NGIT Prayagraj for online Hindi & English typing tests, Steno shorthand dictations, UPSSSC & SSC exam preparation, CCC, O Level & IT computer courses.",
   path: "/",
 });

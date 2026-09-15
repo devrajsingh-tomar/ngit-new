@@ -4,21 +4,23 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
 import JsonLd from "@/components/seo/JsonLd";
-import { getOrganizationSchema, getWebSiteSchema, SITE_CONFIG } from "@/lib/seo";
+import { getOrganizationSchema, getWebSiteSchema, getSiteNavigationSchema, SITE_CONFIG } from "@/lib/seo";
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_CONFIG.domain),
     title: {
-        default: "NGIT | Computer Courses, Typing & Government Exam Institute in Prayagraj",
+        default: "NGIT | Computer Courses, Typing & Shorthand Software",
         template: "%s | NGIT",
     },
-    description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and government exam preparation.",
+    description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and IT computer courses & learning software.",
     keywords: [
       "NGIT",
       "Computer Institute in Prayagraj",
       "Hindi Typing Test Online",
       "English Typing Test Online",
       "Steno Practice Online",
+      "Typing Software",
+      "Shorthand Software",
       "UPSSSC Steno Practice",
       "SSC Steno Mock Test",
       "Computer Courses in Prayagraj",
@@ -32,8 +34,8 @@ export const metadata: Metadata = {
       telephone: false,
     },
     openGraph: {
-      title: "NGIT | Computer Courses, Typing & Government Exam Institute in Prayagraj",
-      description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and government exam preparation.",
+      title: "NGIT | Computer Courses, Typing & Shorthand Software",
+      description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and IT computer courses & learning software.",
       url: SITE_CONFIG.domain,
       siteName: SITE_CONFIG.fullName,
       locale: "en_IN",
@@ -49,8 +51,8 @@ export const metadata: Metadata = {
     },
     twitter: {
       card: "summary_large_image",
-      title: "NGIT | Computer Courses, Typing & Government Exam Institute in Prayagraj",
-      description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and government exam preparation.",
+      title: "NGIT | Computer Courses, Typing & Shorthand Software",
+      description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and IT computer courses & learning software.",
       images: [SITE_CONFIG.ogImage],
     },
 };
@@ -62,11 +64,12 @@ export default function RootLayout({
 }>) {
     const orgSchema = getOrganizationSchema();
     const websiteSchema = getWebSiteSchema();
+    const siteNavSchema = getSiteNavigationSchema();
 
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <JsonLd data={[orgSchema, websiteSchema]} />
+                <JsonLd data={[orgSchema, websiteSchema, siteNavSchema]} />
             </head>
             <body className="font-sans" suppressHydrationWarning>
                 <Providers>
