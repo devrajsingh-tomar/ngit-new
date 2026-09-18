@@ -73,23 +73,8 @@ export async function getStenoSeriesListAction(query?: any) {
       await seedDefaultSeriesAndPassagesAction();
     }
 
-    // Ensure all published batches have at least one Series Topic so they appear in dictation assignment dropdowns
-    const allBatches = await StenoBatch.find({ isPublished: true }).lean();
-    for (const b of allBatches) {
-      if (b.name === "General Batch") continue;
-      const bSeries = await StenoSeries.findOne({ batch: b.name });
-      if (!bSeries) {
-        await StenoSeries.create({
-          title: "सामान्य अभ्यास",
-          description: `${b.name} आशुलिपि अभ्यास संग्रह`,
-          batch: b.name,
-          category: "General Series",
-          language: "Hindi",
-          isPublished: true,
-          sortOrder: 1,
-        });
-      }
-    }
+    // Clean up any previously auto-created "सामान्य अभ्यास" series
+    await StenoSeries.deleteMany({ title: "सामान्य अभ्यास" });
 
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
@@ -1407,19 +1392,7 @@ export async function createStenoBatchAction(data: {
       });
     }
 
-    // Auto-create a default Series Topic for this new Batch if none exists
-    const existingSeries = await StenoSeries.findOne({ batch: batchName });
-    if (!existingSeries) {
-      await StenoSeries.create({
-        title: "सामान्य अभ्यास",
-        description: `${batchName} आशुलिपि अभ्यास संग्रह`,
-        batch: batchName,
-        category: "General Series",
-        language: "Hindi",
-        isPublished: true,
-        sortOrder: 1,
-      });
-    }
+
 
     revalidatePath("/admin/steno/batches");
     revalidatePath("/admin/steno/series");
@@ -1538,4 +1511,18 @@ export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
     return { success: false, error: err.message };
   }
 }
+
+export async function cleanupAutoCreatedSeriesAction() {
+  try {
+    await connectDB();
+    const res = await StenoSeries.deleteMany({ title: "सामान्य अभ्यास" });
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    return { success: true, deletedCount: res.deletedCount };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 
