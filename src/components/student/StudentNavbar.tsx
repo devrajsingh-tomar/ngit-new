@@ -1,7 +1,7 @@
 "use client";
 
 import NotificationBell from "../shared/NotificationBell";
-import { Search, LogOut, User, Settings, Shield, Menu, PlayCircle, Trophy, Home } from "lucide-react";
+import { Search, LogOut, User, Settings, Shield, Menu, PlayCircle, Trophy, Home, LayoutDashboard, Layers, Award, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -28,11 +28,20 @@ const quickLinks = [
     { label: "Back to Website", href: "/", icon: Home, color: "text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" },
 ];
 
+const stenoNavLinks = [
+    { label: "Dashboard", href: "/student/steno/dashboard", icon: LayoutDashboard },
+    { label: "Steno Batches", href: "/student/steno/series", icon: Layers },
+    { label: "My Tests", href: "/student/steno/my-tests", icon: Award },
+    { label: "Leaderboard", href: "/student/steno/leaderboard", icon: Trophy },
+];
+
 export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
     const { data: session } = useSession();
     const pathname = usePathname();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
+
+    const isStenoRoute = pathname ? (pathname.startsWith("/student/steno") || pathname.includes("/steno")) : false;
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -45,51 +54,86 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
         <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 shrink-0 sticky top-0">
             {/* Main row */}
             <div className="flex items-center justify-between px-6 md:px-10 h-20 gap-6">
-                {/* Left — Hamburger + Search */}
+                {/* Left — Hamburger / Steno Logo + Search */}
                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                    {/* Hamburger — mobile only */}
-                    <button
-                        onClick={onMenuToggle}
-                        className="lg:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors shrink-0 border border-slate-200"
-                        aria-label="Open menu"
-                    >
-                        <Menu className="w-5 h-5" />
-                    </button>
+                    {isStenoRoute ? (
+                        <Link href="/student/steno/dashboard" className="flex items-center gap-3 shrink-0 group">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-white font-black text-sm shadow-md group-hover:scale-105 transition-transform">
+                                S
+                            </div>
+                            <div className="leading-none hidden sm:block">
+                                <span className="font-black text-slate-900 text-sm tracking-tight block">NGIT STENO</span>
+                                <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-0.5 block">Full Screen Portal</span>
+                            </div>
+                        </Link>
+                    ) : (
+                        <button
+                            onClick={onMenuToggle}
+                            className="lg:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors shrink-0 border border-slate-200"
+                            aria-label="Open menu"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    )}
 
-                    {/* Search */}
-                    <form onSubmit={handleSearch} className="relative flex-1 max-w-md hidden md:block group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Find lessons, assessments, or materials..."
-                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-11 pr-4 h-11 text-sm focus:ring-4 focus:ring-primary/5 focus:border-primary/20 focus:bg-white transition-all font-bold outline-none placeholder:text-slate-400 placeholder:font-medium"
-                        />
-                    </form>
+                    {/* Steno Navigation Links */}
+                    {isStenoRoute ? (
+                        <div className="hidden md:flex items-center gap-2 ml-4">
+                            {stenoNavLinks.map((link) => {
+                                const isActive = pathname === link.href || (link.href !== "/student/steno/dashboard" && pathname.startsWith(link.href));
+                                return (
+                                    <Link key={link.href} href={link.href}>
+                                        <span className={cn(
+                                            "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all",
+                                            isActive
+                                                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
+                                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                        )}>
+                                            <link.icon className="w-4 h-4" />
+                                            {link.label}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        /* Search */
+                        <form onSubmit={handleSearch} className="relative flex-1 max-w-md hidden md:block group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Find lessons, assessments, or materials..."
+                                className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-11 pr-4 h-11 text-sm focus:ring-4 focus:ring-primary/5 focus:border-primary/20 focus:bg-white transition-all font-bold outline-none placeholder:text-slate-400 placeholder:font-medium"
+                            />
+                        </form>
+                    )}
                 </div>
 
                 {/* Right — Quick Links + Bell + Profile */}
                 <div className="flex items-center gap-4 shrink-0">
                     {/* Quick access pills — hidden on very small screens */}
-                    <div className="hidden sm:flex items-center gap-3">
-                        {quickLinks.map(link => {
-                            const isActive = pathname.startsWith(link.href);
-                            return (
-                                <Link key={link.href} href={link.href}>
-                                    <span className={cn(
-                                        "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                        isActive
-                                            ? "bg-primary text-white shadow-lg shadow-primary/20 border-2 border-primary"
-                                            : cn("border-2 border-transparent", link.color.split(' ')[0], link.color.split(' ')[1], "hover:scale-105")
-                                    )}>
-                                        <link.icon className="w-3.5 h-3.5" />
-                                        <span className="hidden lg:inline">{link.label}</span>
-                                    </span>
-                                </Link>
-                            );
-                        })}
-                    </div>
+                    {!isStenoRoute && (
+                        <div className="hidden sm:flex items-center gap-3">
+                            {quickLinks.map(link => {
+                                const isActive = pathname.startsWith(link.href);
+                                return (
+                                    <Link key={link.href} href={link.href}>
+                                        <span className={cn(
+                                            "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                            isActive
+                                                ? "bg-primary text-white shadow-lg shadow-primary/20 border-2 border-primary"
+                                                : cn("border-2 border-transparent", link.color.split(' ')[0], link.color.split(' ')[1], "hover:scale-105")
+                                        )}>
+                                            <link.icon className="w-3.5 h-3.5" />
+                                            <span className="hidden lg:inline">{link.label}</span>
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     <div className="w-px h-8 bg-slate-100 hidden sm:block mx-2" />
 
