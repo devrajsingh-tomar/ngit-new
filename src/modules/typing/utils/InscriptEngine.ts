@@ -59,7 +59,7 @@ export const INSCRIPT_CODE_MAP: Record<string, { normal: string; shift: string }
   KeyM: { normal: 'स', shift: 'श' },
   Comma: { normal: ',', shift: 'ष' },
   Period: { normal: '।', shift: '।' },
-  Slash: { normal: 'य', shift: 'य' },
+  Slash: { normal: 'य', shift: '?' },
   Space: { normal: ' ', shift: ' ' },
 };
 

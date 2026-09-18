@@ -267,7 +267,7 @@ export const INSCRIPT_MAP: Record<string, string> = {
   ".": "।",
   ">": "।",
   "/": "य",
-  "?": "य",
+  "?": "?",
 };
 
 // 3. Physical Code Map for Kruti Dev 010 (Caps-Lock Immune)
@@ -337,6 +337,12 @@ export interface KrutiDevAltCode {
 }
 
 export const KRUTI_DEV_ALT_CODES: Record<string, KrutiDevAltCode> = {
+  "063": { code: "063", char: "?", desc: "प्रश्नवाचक चिह्न", example: "क्या?" },
+  "63": { code: "63", char: "?", desc: "प्रश्नवाचक चिह्न", example: "क्या?" },
+  "033": { code: "033", char: "!", desc: "विस्मयादिबोधक चिह्न", example: "अरे!" },
+  "33": { code: "33", char: "!", desc: "विस्मयादिबोधक चिह्न", example: "अरे!" },
+  "034": { code: "034", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
+  "039": { code: "039", char: "'", desc: "एकल उद्धरण चिह्न", example: "'राम'" },
   "0161": { code: "0161", char: "कँ", desc: "चंद्रबिंदु", example: "हूँ, नहीं" },
   "0165": { code: "0165", char: "ञ", desc: "ञ अक्षर", example: "पञ्चायत" },
   "0179": { code: "0179", char: "ङ", desc: "ङ अक्षर", example: "शङ्का, गङ्गा" },
@@ -653,6 +659,98 @@ export function handleHindiTextareaKeyDown(
 
   return false;
 }
+
+export function resolveAltCodeChar(codeStr: string): string | null {
+  const cleanCode = codeStr.trim();
+  if (!cleanCode) return null;
+
+  if (KRUTI_DEV_ALT_CODES[cleanCode]) {
+    return KRUTI_DEV_ALT_CODES[cleanCode].char;
+  }
+
+  const numVal = parseInt(cleanCode, 10);
+  if (isNaN(numVal)) return null;
+
+  const strippedStr = numVal.toString();
+  if (KRUTI_DEV_ALT_CODES[strippedStr]) {
+    return KRUTI_DEV_ALT_CODES[strippedStr].char;
+  }
+
+  if (numVal > 0 && numVal <= 255) {
+    return String.fromCharCode(numVal);
+  }
+
+  return null;
+}
+
+let globalAltCodeDigits = "";
+let isGlobalAltActive = false;
+
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+        isGlobalAltActive = true;
+        globalAltCodeDigits = "";
+      } else if (isGlobalAltActive || e.altKey) {
+        if (e.code.startsWith("Numpad") || e.code.startsWith("Digit") || (e.key >= "0" && e.key <= "9")) {
+          const digit = e.key.replace(/\D/g, "");
+          if (digit) {
+            globalAltCodeDigits += digit;
+          }
+        }
+      }
+    },
+    true
+  );
+
+  window.addEventListener(
+    "keyup",
+    (e) => {
+      if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+        isGlobalAltActive = false;
+        if (globalAltCodeDigits) {
+          const activeElem = document.activeElement as HTMLTextAreaElement | HTMLInputElement;
+          if (activeElem && (activeElem.tagName === "TEXTAREA" || activeElem.tagName === "INPUT")) {
+            const char = resolveAltCodeChar(globalAltCodeDigits);
+            if (char) {
+              const start = activeElem.selectionStart || 0;
+              const end = activeElem.selectionEnd || 0;
+              const val = activeElem.value || "";
+              const before = val.substring(0, start);
+              const after = val.substring(end);
+              const newVal = before + char + after;
+
+              const prototype = activeElem instanceof HTMLTextAreaElement
+                ? window.HTMLTextAreaElement.prototype
+                : window.HTMLInputElement.prototype;
+              const nativeSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+
+              if (nativeSetter) {
+                nativeSetter.call(activeElem, newVal);
+              } else {
+                activeElem.value = newVal;
+              }
+
+              const inputEvent = new Event("input", { bubbles: true });
+              activeElem.dispatchEvent(inputEvent);
+
+              setTimeout(() => {
+                activeElem.focus();
+                const newPos = start + char.length;
+                activeElem.setSelectionRange(newPos, newPos);
+              }, 0);
+            }
+          }
+          globalAltCodeDigits = "";
+        }
+      }
+    },
+    true
+  );
+}
+
 
 
 
