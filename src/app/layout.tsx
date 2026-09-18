@@ -33,6 +33,15 @@ export const metadata: Metadata = {
       address: false,
       telephone: false,
     },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon.png", type: "image/png" },
+        { url: "/icon.png", type: "image/png" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/apple-touch-icon.png",
+    },
     openGraph: {
       title: "NGIT | Computer Courses, Typing & Shorthand Software",
       description: "NGIT (National Genius Institute of Technology) is Prayagraj's premier computer institute offering Hindi & English typing test practice, Steno shorthand coaching, CCC, O Level, and IT computer courses & learning software.",
@@ -69,6 +78,9 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
+                <link rel="icon" href="/favicon.ico" sizes="any" />
+                <link rel="icon" href="/favicon.png" type="image/png" />
+                <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
                 <JsonLd data={[orgSchema, websiteSchema, siteNavSchema]} />
             </head>
             <body className="font-sans" suppressHydrationWarning>
