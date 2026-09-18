@@ -267,7 +267,7 @@ export const INSCRIPT_MAP: Record<string, string> = {
   ".": "।",
   ">": "।",
   "/": "य",
-  "?": "?",
+  "?": "य",
 };
 
 // 3. Physical Code Map for Kruti Dev 010 (Caps-Lock Immune)
