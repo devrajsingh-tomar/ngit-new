@@ -105,6 +105,18 @@ export default function StenoMainLandingPage() {
           />
         </div>
 
+        {/* Single Main Login Button directly under Hero Image */}
+        <div className="flex justify-center">
+          <Link
+            href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
+            className="w-full max-w-md inline-block"
+          >
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-14 sm:h-16 px-8 rounded-2xl shadow-lg hover:shadow-xl text-sm sm:text-base gap-3 transition-all">
+              {isLoggedIn ? "Browse Steno Batches & Series" : "Login Required to Access"} <ArrowRight className="w-5 h-5" />
+            </Button>
+          </Link>
+        </div>
+
         {/* 2. Steno Main Cards Grid (Side-by-side in laptop view) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Card 1: Steno Batches & Series Collections */}
@@ -132,18 +144,6 @@ export default function StenoMainLandingPage() {
                 </p>
               </div>
             </div>
-
-            {/* CTA Button */}
-            <div className="p-6 sm:p-8 pt-0">
-              <Link
-                href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
-                className="w-full inline-block"
-              >
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
-                  {isLoggedIn ? "Browse Steno Batches & Series" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
           </Card>
 
           {/* Card 2: Steno Free Weekly Test */}
@@ -170,18 +170,6 @@ export default function StenoMainLandingPage() {
                   <span className="text-slate-900 font-extrabold">अपनी स्पीड और एक्यूरेसी को करें हर हफ्ते मजबूत</span> • Real Exam Pattern, Time Based Tests for UPSSSC, High Court, UP SI & Government Steno Exams.
                 </p>
               </div>
-            </div>
-
-            {/* CTA Button */}
-            <div className="p-6 sm:p-8 pt-0">
-              <Link
-                href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
-                className="w-full inline-block"
-              >
-                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
-                  {isLoggedIn ? "Join Steno Weekly Test" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
             </div>
           </Card>
         </div>
@@ -213,18 +201,6 @@ export default function StenoMainLandingPage() {
                 </p>
               </div>
             </div>
-
-            {/* CTA Button */}
-            <div className="p-6 sm:p-8 pt-0">
-              <Link
-                href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
-                className="w-full inline-block"
-              >
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
-                  {isLoggedIn ? "Start Online Steno Practice" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
           </Card>
 
           {/* Card 4: मूल्यांकन करके पूरा लेखा जोखा */}
@@ -251,18 +227,6 @@ export default function StenoMainLandingPage() {
                   आपकी मेहनत, हमारा मूल्यांकन • Complete student record tracking with daily practice, test evaluation, progress graphs & target setting.
                 </p>
               </div>
-            </div>
-
-            {/* CTA Button */}
-            <div className="p-6 sm:p-8 pt-0">
-              <Link
-                href={isLoggedIn ? "/student/steno/dashboard" : "/login?callbackUrl=/student/steno/dashboard"}
-                className="w-full inline-block"
-              >
-                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-12 px-6 rounded-2xl shadow-md text-xs gap-2">
-                  {isLoggedIn ? "Open Student Dashboard" : "Login Required to Access"} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
             </div>
           </Card>
         </div>
