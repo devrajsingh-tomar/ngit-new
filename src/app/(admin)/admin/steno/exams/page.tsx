@@ -17,8 +17,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Award, Plus, RefreshCw, Trash2, Edit, CheckCircle2, ShieldCheck, FileText } from "lucide-react";
+import { Award, Plus, RefreshCw, Trash2, Edit, CheckCircle2, ShieldCheck, FileText, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function AdminStenoExamsPage() {
   const [exams, setExams] = useState<any[]>([]);
@@ -116,7 +117,7 @@ export default function AdminStenoExamsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error("Exam preset name is required!");
+      toast.error("Exam name is required!");
       return;
     }
 
@@ -179,23 +180,30 @@ export default function AdminStenoExamsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200">
-              Official Government Exam Rules
+            <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-amber-600" /> Step 2: Exam Selection & Rules
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
-            <Award className="w-6 h-6 text-amber-600" /> Admin Steno Exam Presets & Rules
+            Admin Steno Exam Selection & Rules (Step 2)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Configure official government steno exam rules (UPSSSC, High Court, SSC, UP SI) including error weights, mistake exemption, Chandrabindu rules, backspace status, and qualifying speed.
+            Configure target government steno exam rules (UPSSSC, High Court, SSC, UP SI) including error weights, mistake exemption, Chandrabindu rules, backspace status, and qualifying speed.
           </p>
         </div>
-        <Button
-          onClick={handleOpenCreateModal}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
-        >
-          <Plus className="w-4 h-4" /> Create Exam Preset Rules
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleOpenCreateModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
+          >
+            <Plus className="w-4 h-4" /> Create Exam Preset Rules
+          </Button>
+          <Link href="/admin/steno/series">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+              <FileText className="w-4 h-4" /> Go to Step 3: Series Topics <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Presets List / Official Exam Rule Cards */}

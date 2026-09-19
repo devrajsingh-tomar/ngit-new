@@ -107,9 +107,12 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
       {/* Top Navigation Bar */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
-              Step 2 of 3 • Series Topics & Collections
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
+              Step 3 of 4 • Series Topics & Collections
+            </span>
+            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-200">
+              Step 2 Exam Selected
             </span>
             <span className="text-xs font-bold text-slate-400">• Official Steno Batch</span>
           </div>

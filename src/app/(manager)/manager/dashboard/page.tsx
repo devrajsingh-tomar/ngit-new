@@ -94,8 +94,9 @@ export default function ManagerDashboardPage() {
 
               <div className="flex flex-wrap gap-2 pt-2">
                 <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 1: Batches</span>
-                <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 2: Series</span>
-                <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 3: Dictations</span>
+                <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 2: Exam Rules</span>
+                <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 3: Series</span>
+                <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 4: Dictations</span>
               </div>
             </div>
 
@@ -129,6 +130,18 @@ export default function ManagerDashboardPage() {
             </Card>
           </Link>
 
+          <Link href="/manager/steno/exams">
+            <Card className="p-5 rounded-3xl border-slate-200 bg-white hover:border-amber-300 hover:shadow-md transition-all flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black shrink-0">
+                <Award className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-slate-900">Exam Selection & Rules</h4>
+                <p className="text-[10px] text-slate-400 font-medium">Step 2 Rules</p>
+              </div>
+            </Card>
+          </Link>
+
           <Link href="/manager/steno/series">
             <Card className="p-5 rounded-3xl border-slate-200 bg-white hover:border-purple-300 hover:shadow-md transition-all flex items-center gap-4">
               <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-black shrink-0">
@@ -136,31 +149,19 @@ export default function ManagerDashboardPage() {
               </div>
               <div>
                 <h4 className="text-xs font-black text-slate-900">Series Topics</h4>
-                <p className="text-[10px] text-slate-400 font-medium">Step 2 Collections</p>
+                <p className="text-[10px] text-slate-400 font-medium">Step 3 Collections</p>
               </div>
             </Card>
           </Link>
 
           <Link href="/manager/steno/passages">
-            <Card className="p-5 rounded-3xl border-slate-200 bg-white hover:border-amber-300 hover:shadow-md transition-all flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black shrink-0">
+            <Card className="p-5 rounded-3xl border-slate-200 bg-white hover:border-emerald-300 hover:shadow-md transition-all flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black shrink-0">
                 <Headphones className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-xs font-black text-slate-900">Dictations CMS</h4>
-                <p className="text-[10px] text-slate-400 font-medium">Step 3 Audio/Video</p>
-              </div>
-            </Card>
-          </Link>
-
-          <Link href="/manager/steno/exams">
-            <Card className="p-5 rounded-3xl border-slate-200 bg-white hover:border-emerald-300 hover:shadow-md transition-all flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black shrink-0">
-                <Award className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-slate-900">Exam Presets</h4>
-                <p className="text-[10px] text-slate-400 font-medium">SSC / HC / UP Rules</p>
+                <p className="text-[10px] text-slate-400 font-medium">Step 4 Audio/Video</p>
               </div>
             </Card>
           </Link>

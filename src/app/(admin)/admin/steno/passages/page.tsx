@@ -374,7 +374,7 @@ export default function AdminStenoPassagesPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md">
-              Step 3 of 3 • Dictations
+              Step 4 of 4 • Dictations
             </span>
             <span className="text-xs font-bold text-slate-400">• Passages Management</span>
           </div>

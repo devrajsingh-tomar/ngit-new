@@ -40,10 +40,10 @@ const menuGroups = [
             { label: "Steno Overview", href: "/admin/steno", icon: Mic },
             { label: "Institute Students", href: "/admin/steno/students", icon: Users },
             { label: "Target Steno Batches (Step 1)", href: "/admin/steno/batches", icon: Layers },
-            { label: "Series Topics (Step 2)", href: "/admin/steno/series", icon: FileText },
-            { label: "Dictation Passages (Step 3)", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Exam Selection & Rules (Step 2)", href: "/admin/steno/exams", icon: Award },
+            { label: "Series Topics (Step 3)", href: "/admin/steno/series", icon: FileText },
+            { label: "Dictation Passages (Step 4)", href: "/admin/steno/passages", icon: Headphones },
             { label: "Doubt Solution Videos", href: "/admin/steno/doubt-videos", icon: Video },
-            { label: "Exam Presets & Rules", href: "/admin/steno/exams", icon: Award },
             { label: "Student Results", href: "/admin/steno/results", icon: BarChart3 },
         ]
     },

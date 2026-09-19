@@ -137,7 +137,7 @@ function SeriesDetailContent({ id }: { id: string }) {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
-              Step 3 of 3 • Dictation Passages
+              Step 4 of 4 • Dictation Passages
             </span>
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
               {activeBatch || "Official Batch"}
@@ -152,11 +152,11 @@ function SeriesDetailContent({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Back Button to Step 2 */}
+        {/* Back Button to Step 3 */}
         <div className="flex items-center gap-2 shrink-0">
           <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
             <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (Step 2)` : "All Batches"}
+              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (Step 3)` : "All Batches"}
             </Button>
           </Link>
         </div>

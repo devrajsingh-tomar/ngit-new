@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus } from "lucide-react";
+import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus, ArrowRight, Headphones, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
@@ -102,7 +102,7 @@ export default function AdminStenoSeriesPage() {
       setIsNewBatchDialogOpen(false);
       loadBatches();
     } else {
-      toast.error(res.error || "Failed to create Target Batch");
+      toast.error(res.error || "Failed to create target batch");
     }
   };
 
@@ -112,12 +112,12 @@ export default function AdminStenoSeriesPage() {
       title: "",
       description: "",
       thumbnailUrl: "",
-      batch: "UPSSSC Steno",
+      batch: targetBatches[0]?.name || "UPSSSC Steno",
       category: "General Series",
       language: "Hindi",
       selectedPassages: [],
       isPublished: true,
-      sortOrder: 0,
+      sortOrder: seriesList.length + 1,
     });
     setIsDialogOpen(true);
   };
@@ -206,19 +206,31 @@ export default function AdminStenoSeriesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Layers className="w-6 h-6 text-emerald-600" /> CMS Steno Series & Collections
+          <div className="flex items-center gap-2">
+            <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-emerald-600" /> Step 3: Series Topics & Collections
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
+            Series Topics & Dictation Collections (Step 3)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
             Organize dictation passages into series (UPSSSC PYQ, SSC PYQ, Court, Editorial, Essay, Literature, Stories, Magazine).
           </p>
         </div>
-        <Button
-          onClick={handleOpenCreateModal}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-4 text-xs rounded-xl gap-1.5"
-        >
-          <Plus className="w-4 h-4" /> Create Series
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleOpenCreateModal}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
+          >
+            <Plus className="w-4 h-4" /> Create Series (Step 3)
+          </Button>
+          <Link href="/admin/steno/passages">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Headphones className="w-4 h-4" /> Go to Step 4: Dictation Passages <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Grid */}

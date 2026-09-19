@@ -198,7 +198,7 @@ export default function StudentStenoSeriesPage() {
         <div className="space-y-3 max-w-2xl z-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30">
-              Step 1 of 3 • Select Target Steno Batch
+              Step 1 of 4 • Select Target Steno Batch
             </span>
             <Link href="/steno">
               <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white font-bold h-7 px-3 text-[11px] rounded-full border border-white/20 gap-1 transition-all">

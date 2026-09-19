@@ -164,9 +164,9 @@ export default function AdminStenoBatchesPage() {
           >
             <Plus className="w-4 h-4" /> Create Target Batch (Step 1)
           </Button>
-          <Link href="/admin/steno/series">
-            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5">
-              Go to Step 2: Series Topics <ArrowRight className="w-3.5 h-3.5" />
+          <Link href="/admin/steno/exams">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Award className="w-4 h-4" /> Go to Step 2: Exam Selection & Rules <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
@@ -228,17 +228,30 @@ export default function AdminStenoBatchesPage() {
               </div>
 
               <div className="space-y-3 pt-2 border-t border-slate-100">
-                <div className="flex justify-between text-xs text-slate-500 font-semibold">
-                  <span>Sort Order:</span>
-                  <strong className="text-indigo-600 font-bold">#{b.sortOrder || 0}</strong>
+                <div className="flex justify-between items-center text-xs text-slate-500 font-semibold">
+                  <span>Sort Order: <strong className="text-indigo-600 font-bold">#{b.sortOrder || 0}</strong></span>
+                  {b.examPresetId && (
+                    <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Award className="w-3 h-3" /> Preset Assigned
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/admin/steno/exams" className="col-span-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full h-9 text-xs font-black rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 gap-1.5"
+                    >
+                      <Award className="w-3.5 h-3.5 text-amber-600" /> Exam Selection (Step 2)
+                    </Button>
+                  </Link>
                   <Button
                     onClick={() => handleOpenEditModal(b)}
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-9 text-xs font-bold rounded-xl gap-1"
+                    className="h-9 text-xs font-bold rounded-xl gap-1"
                   >
                     <Edit className="w-3.5 h-3.5" /> Edit Batch
                   </Button>

@@ -39,9 +39,9 @@ const managerMenuGroups = [
         items: [
             { label: "Steno Control Center", href: "/manager/steno", icon: Mic },
             { label: "Target Steno Batches (Step 1)", href: "/manager/steno/batches", icon: Layers },
-            { label: "Series Topics (Step 2)", href: "/manager/steno/series", icon: FileText },
-            { label: "Dictation Passages (Step 3)", href: "/manager/steno/passages", icon: Headphones },
-            { label: "Exam Presets & Rules", href: "/manager/steno/exams", icon: Award },
+            { label: "Exam Selection & Rules (Step 2)", href: "/manager/steno/exams", icon: Award },
+            { label: "Series Topics (Step 3)", href: "/manager/steno/series", icon: FileText },
+            { label: "Dictation Passages (Step 4)", href: "/manager/steno/passages", icon: Headphones },
             { label: "Student Results", href: "/manager/steno/results", icon: BarChart3 },
         ]
     }
