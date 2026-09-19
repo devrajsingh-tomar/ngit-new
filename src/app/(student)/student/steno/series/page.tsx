@@ -348,11 +348,19 @@ export default function StudentStenoSeriesPage() {
                     </div>
 
                     {/* Action Button */}
-                    <Link href={`/student/steno/series/batch/${encodeBatch}`} className="block pt-2">
-                      <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                        <BookOpen className="w-4 h-4" /> EXPLORE SERIES & TOPICS <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
+                    {(() => {
+                      const isThakurdwara = (batch.name || "").toLowerCase().includes("thakurdwara") || (batch.name || "").includes("ठाकुरद्वारा") || (batch.name || "").toLowerCase().includes("stenoinstitute");
+                      const targetHref = isThakurdwara
+                        ? `/student/steno/exams?batch=${encodeBatch}`
+                        : `/student/steno/series/batch/${encodeBatch}`;
+                      return (
+                        <Link href={targetHref} className="block pt-2">
+                          <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
+                            <BookOpen className="w-4 h-4" /> {isThakurdwara ? "SELECT EXAM & EXPLORE SERIES" : "EXPLORE SERIES & TOPICS"} <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      );
+                    })()}
                   </div>
                 </Card>
               );

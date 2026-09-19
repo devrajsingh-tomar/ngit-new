@@ -125,11 +125,22 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/student/steno/series">
-            <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
-              <ArrowLeft className="w-4 h-4" /> Back to All Batches (Step 1)
-            </Button>
-          </Link>
+          {(() => {
+            const isThakurdwara = (rawBatchName || "").toLowerCase().includes("thakurdwara") || (rawBatchName || "").includes("ठाकुरद्वारा") || (rawBatchName || "").toLowerCase().includes("stenoinstitute");
+            const backHref = isThakurdwara
+              ? `/student/steno/exams?batch=${encodeURIComponent(rawBatchName)}`
+              : `/student/steno/series`;
+            const backText = isThakurdwara
+              ? "Back to Step 2 (Exam Selection)"
+              : "Back to All Batches (Step 1)";
+            return (
+              <Link href={backHref}>
+                <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
+                  <ArrowLeft className="w-4 h-4" /> {backText}
+                </Button>
+              </Link>
+            );
+          })()}
         </div>
       </div>
 

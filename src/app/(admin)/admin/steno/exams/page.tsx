@@ -31,6 +31,7 @@ export default function AdminStenoExamsPage() {
   const [formData, setFormData] = useState({
     name: "UPSSSC STENO 1224/333 — Official Exam Rules",
     authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
+    thumbnailUrl: "",
     dictationDurationMinutes: 5,
     transcriptionDurationMinutes: 40,
     targetWpm: 80,
@@ -69,6 +70,7 @@ export default function AdminStenoExamsPage() {
     setFormData({
       name: "UPSSSC STENO 1224/333 — Official Exam Rules",
       authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
+      thumbnailUrl: "",
       dictationDurationMinutes: 5,
       transcriptionDurationMinutes: 40,
       targetWpm: 80,
@@ -94,6 +96,7 @@ export default function AdminStenoExamsPage() {
     setFormData({
       name: exam.name || "",
       authorityName: exam.authorityName || "उ०प्र० अधीनस्थ सेवा चयन आयोग",
+      thumbnailUrl: exam.thumbnailUrl || "",
       dictationDurationMinutes: exam.dictationDurationMinutes || 5,
       transcriptionDurationMinutes: exam.transcriptionDurationMinutes || 40,
       targetWpm: exam.targetWpm || 80,
@@ -124,6 +127,7 @@ export default function AdminStenoExamsPage() {
     const payload = {
       name: formData.name.trim(),
       authorityName: formData.authorityName.trim(),
+      thumbnailUrl: formData.thumbnailUrl.trim(),
       dictationDurationMinutes: Number(formData.dictationDurationMinutes),
       transcriptionDurationMinutes: Number(formData.transcriptionDurationMinutes),
       targetWpm: Number(formData.targetWpm),
@@ -222,6 +226,17 @@ export default function AdminStenoExamsPage() {
               key={exam._id}
               className="p-6 rounded-[2rem] border-indigo-100 bg-gradient-to-br from-indigo-50/40 via-white to-slate-50/50 shadow-md hover:shadow-xl transition-all space-y-4 relative border"
             >
+              {/* Exam Card Poster Thumbnail if present */}
+              {exam.thumbnailUrl && exam.thumbnailUrl.trim() !== "" && (
+                <div className="w-full h-44 bg-slate-900 rounded-2xl overflow-hidden mb-3 border border-slate-200 shadow-xs relative">
+                  <img
+                    src={exam.thumbnailUrl}
+                    alt={exam.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
               {/* Card Header matching Screenshot 2 */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-100 pb-4">
                 <div className="flex items-center gap-2">
@@ -364,6 +379,17 @@ export default function AdminStenoExamsPage() {
                   placeholder="e.g. उ०प्र० अधीनस्थ सेवा चयन आयोग"
                   className="rounded-xl text-xs font-semibold"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Government Exam Card Poster / Thumbnail URL (Step 2 Thumbnail Image)</label>
+                <Input
+                  value={formData.thumbnailUrl}
+                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                  placeholder="https://ngitedu.com/uploads/gallery/my-exam-poster.jpg"
+                  className="rounded-xl text-xs font-semibold"
+                />
+                <p className="text-[10px] text-slate-400 font-medium">Upload or paste poster image URL to show on Step 2 Government Exam Card.</p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

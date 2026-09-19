@@ -43,6 +43,16 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [headerData, setHeaderData] = useState<HeaderData | null>(initialData || null);
 
+    const getLoginHref = () => {
+        if (pathname === '/steno' || pathname?.startsWith('/steno')) {
+            return '/student/login?callbackUrl=' + encodeURIComponent('/student/steno/series');
+        }
+        if (pathname && pathname !== '/' && pathname !== '/student/login' && pathname !== '/login') {
+            return `/student/login?callbackUrl=${encodeURIComponent(pathname)}`;
+        }
+        return '/student/login';
+    };
+
     useEffect(() => {
         let isMounted = true;
         const handleScroll = () => {

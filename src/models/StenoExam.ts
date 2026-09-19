@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IStenoExam extends Document {
   name: string;
   authorityName?: string;
+  thumbnailUrl?: string;
   dictationDurationMinutes: number;
   transcriptionDurationMinutes: number;
   targetWpm: number;
@@ -27,6 +28,7 @@ const StenoExamSchema = new Schema<IStenoExam>(
   {
     name: { type: String, required: true },
     authorityName: { type: String, default: "उ०प्र० अधीनस्थ सेवा चयन आयोग" },
+    thumbnailUrl: { type: String, default: "" },
     dictationDurationMinutes: { type: Number, default: 5 },
     transcriptionDurationMinutes: { type: Number, default: 40 },
     targetWpm: { type: Number, default: 80 },
