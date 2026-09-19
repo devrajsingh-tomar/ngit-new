@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getStenoSeriesListAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpen, Headphones } from "lucide-react";
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
-function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
+function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string, examName?: string | null) {
   let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
 
   if (matched.length === 0) {
@@ -19,6 +19,19 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
       const searchVal = batchName.toLowerCase().trim();
       return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
     });
+  }
+
+  if (examName) {
+    const examLower = examName.toLowerCase().trim();
+    const filteredByExam = matched.filter((s: any) => {
+      const sBatch = (s.batch || "").toLowerCase().trim();
+      const sCategory = (s.category || "").toLowerCase().trim();
+      const sTitle = (s.title || "").toLowerCase().trim();
+      return sBatch.includes(examLower) || sCategory.includes(examLower) || sTitle.includes(examLower);
+    });
+    if (filteredByExam.length > 0) {
+      matched = filteredByExam;
+    }
   }
 
   const uniqueMap = new Map<string, any>();
@@ -73,26 +86,26 @@ function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string) {
   return list;
 }
 
-export default function StudentStenoBatchSeriesPage({ params }: { params: Promise<{ batchSlug: string }> }) {
+function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlug: string }> }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const examParam = searchParams?.get("exam");
   const resolvedParams = use(params);
   const rawBatchName = decodeURIComponent(resolvedParams.batchSlug || "");
 
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-
-
   useEffect(() => {
     loadSeriesForBatch();
-  }, [rawBatchName]);
+  }, [rawBatchName, examParam]);
 
   const loadSeriesForBatch = async () => {
     setLoading(true);
     try {
       const res = await getStenoSeriesListAction({ isPublished: true });
       if (res.success && res.series) {
-        const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName);
+        const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName, examParam);
         setSeriesList(deduplicated);
       }
     } catch (e) {
@@ -111,13 +124,15 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
             <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
               Step 3 of 4 • Series Topics & Collections
             </span>
-            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-200">
-              Step 2 Exam Selected
-            </span>
+            {examParam && (
+              <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-200">
+                Exam: {examParam}
+              </span>
+            )}
             <span className="text-xs font-bold text-slate-400">• Official Steno Batch</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            {rawBatchName} • सीरीज एवं टॉपिक्स
+            {rawBatchName} {examParam ? `(${examParam})` : ""} • सीरीज एवं टॉपिक्स
           </h1>
           <p className="text-xs text-slate-500 font-medium max-w-xl">
             Select a series topic below to practice audio dictations with speed fluctuation & transcription evaluation.
@@ -259,5 +274,13 @@ export default function StudentStenoBatchSeriesPage({ params }: { params: Promis
         </div>
       )}
     </div>
+  );
+}
+
+export default function StudentStenoBatchSeriesPage({ params }: { params: Promise<{ batchSlug: string }> }) {
+  return (
+    <Suspense fallback={<div className="py-20 text-center font-bold text-slate-400">Loading Series Topics...</div>}>
+      <StudentStenoBatchSeriesContent params={params} />
+    </Suspense>
   );
 }
