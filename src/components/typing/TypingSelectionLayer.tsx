@@ -16,7 +16,7 @@ import {
   Target,
   Flame
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 export default function TypingSelectionLayer() {
@@ -34,6 +34,31 @@ export default function TypingSelectionLayer() {
   const [bookChapters, setBookChapters] = useState<any[]>([]);
   const [loadingContent, setLoadingContent] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const moduleParam = searchParams.get('module') as Module | null;
+  const langParam = searchParams.get('lang');
+
+  useEffect(() => {
+    if (langParam === 'Hindi' || langParam === 'English') {
+      setSelectedLanguage(langParam);
+    }
+    if (moduleParam) {
+      if (moduleParam === 'OFFICIAL') {
+        router.push(`/typing/official?lang=${langParam || selectedLanguage}`);
+        return;
+      }
+      setSelectedModule(moduleParam);
+      if (moduleParam === 'SPECIAL') {
+        setSelectedCategory('SPECIAL');
+        setSelectedDifficulty(null);
+        setStep(2);
+      } else if (moduleParam === 'BOOK') {
+        setStep(2);
+      } else if (moduleParam === 'WORD') {
+        setStep(2);
+      }
+    }
+  }, [moduleParam, langParam]);
 
   useEffect(() => {
     if (selectedModule === 'SPECIAL') {
@@ -160,7 +185,10 @@ export default function TypingSelectionLayer() {
   const handleModuleSelect = (moduleId: Module) => {
     // Require login for all exam modules
     if (!session) {
-      router.push(`/student/login?callbackUrl=${encodeURIComponent('/typing')}`);
+      const targetUrl = moduleId === 'OFFICIAL'
+        ? `/typing/official?lang=${selectedLanguage}`
+        : `/typing?module=${moduleId}&lang=${selectedLanguage}`;
+      router.push(`/student/login?callbackUrl=${encodeURIComponent(targetUrl)}`);
       return;
     }
 
