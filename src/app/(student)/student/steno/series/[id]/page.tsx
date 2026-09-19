@@ -136,9 +136,14 @@ function SeriesDetailContent({ id }: { id: string }) {
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
-              Step 4 of 4 • Dictation Passages
-            </span>
+            {(() => {
+              const isThakurdwara = (activeBatch || "").toLowerCase().includes("thakurdwara") || (activeBatch || "").includes("ठाकुरद्वारा") || (activeBatch || "").toLowerCase().includes("stenoinstitute");
+              return (
+                <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
+                  {isThakurdwara ? "Step 4 of 4 • Dictation Passages" : "Step 3 of 3 • Dictation Passages"}
+                </span>
+              );
+            })()}
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
               {activeBatch || "Official Batch"}
             </span>

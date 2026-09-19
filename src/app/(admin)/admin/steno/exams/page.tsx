@@ -185,11 +185,11 @@ export default function AdminStenoExamsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-amber-600" /> Step 2: Exam Selection & Rules
+              <Award className="w-3.5 h-3.5 text-amber-600" /> Steno Exam Selection & Rules Presets
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
-            Admin Steno Exam Selection & Rules (Step 2)
+            Admin Steno Exam Selection & Rules Presets
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
             Configure target government steno exam rules (UPSSSC, High Court, SSC, UP SI) including error weights, mistake exemption, Chandrabindu rules, backspace status, and qualifying speed.
@@ -204,7 +204,7 @@ export default function AdminStenoExamsPage() {
           </Button>
           <Link href="/admin/steno/series">
             <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
-              <FileText className="w-4 h-4" /> Go to Step 3: Series Topics <ArrowRight className="w-3.5 h-3.5" />
+              <FileText className="w-4 h-4" /> Go to Series Topics <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
