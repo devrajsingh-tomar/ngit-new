@@ -1,10 +1,19 @@
-/**
- * Legacy /login route — kept only for backward compatibility.
- * Middleware already redirects this to /student/login.
- * This redirect is a safety net for direct server-side navigation.
- */
 import { redirect } from "next/navigation";
 
-export default function LegacyLoginPage() {
-    redirect("/student/login");
+export default async function LegacyLoginPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const params = await searchParams;
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params || {})) {
+        if (typeof value === "string") {
+            query.set(key, value);
+        } else if (Array.isArray(value) && value.length > 0) {
+            query.set(key, value[0]);
+        }
+    }
+    const queryString = query.toString();
+    redirect(`/student/login${queryString ? `?${queryString}` : ""}`);
 }

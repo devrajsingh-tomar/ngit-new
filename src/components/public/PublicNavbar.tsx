@@ -225,7 +225,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                             Online Admission
                                         </Button>
                                     </Link>
-                                    <Link href="/student/login">
+                                    <Link href={getLoginHref()}>
                                         <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 transition-all duration-300 rounded-xl text-xs">
                                             <LogIn className="w-4 h-4" />
                                             Login
@@ -329,12 +329,12 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                         </Button>
                                     </>
                                 ) : (
-                                    <Link href="/student/login" onClick={() => setIsOpen(false)}>
-                                        <Button className="w-full gap-2 justify-center border-primary text-primary hover:bg-primary hover:text-white font-bold h-12 rounded-xl transition-all duration-300" variant="outline">
-                                            <LogIn className="w-4 h-4" />
-                                            Student Portal Login
-                                        </Button>
-                                    </Link>
+                                     <Link href={getLoginHref()} onClick={() => setIsOpen(false)}>
+                                         <Button className="w-full gap-2 justify-center border-primary text-primary hover:bg-primary hover:text-white font-bold h-12 rounded-xl transition-all duration-300" variant="outline">
+                                             <LogIn className="w-4 h-4" />
+                                             Student Portal Login
+                                         </Button>
+                                     </Link>
                                 )}
                             </div>
                         </div>

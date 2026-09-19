@@ -108,7 +108,7 @@ export default function StenoMainLandingPage() {
         {/* Single Main Login Button directly under Hero Image */}
         <div className="flex justify-center">
           <Link
-            href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
+            href={isLoggedIn ? "/student/steno/series" : "/student/login?callbackUrl=/student/steno/series"}
             className="w-full max-w-md inline-block"
           >
             <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-14 sm:h-16 px-8 rounded-2xl shadow-lg hover:shadow-xl text-sm sm:text-base gap-3 transition-all">
