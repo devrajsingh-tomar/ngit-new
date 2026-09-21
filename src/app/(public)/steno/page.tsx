@@ -99,7 +99,7 @@ export default function StenoMainLandingPage() {
         {/* 1. Single Top Banner Image */}
         <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
           <img
-            src="https://ngitedu.com/uploads/gallery/1787956222932-d84153c2-8f95-4d2e-8690-207c4d3b679f.jpg"
+            src="/images/steno-hero-banner.jpg"
             alt="NGIT Steno Shorthand Portal"
             className="w-full h-auto object-cover rounded-[2.5rem]"
           />
