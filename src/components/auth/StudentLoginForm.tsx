@@ -208,11 +208,17 @@ export default function StudentLoginForm() {
                         </form>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500">
+                <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold text-slate-500">
                     <span>Don't have an account?</span>
-                    <Link href="/enroll" className="text-indigo-600 font-bold hover:underline">
-                        Register / Enroll Now →
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link href="/register" className="text-emerald-600 font-extrabold hover:underline flex items-center gap-1">
+                            Create Account →
+                        </Link>
+                        <span className="text-slate-300">|</span>
+                        <Link href="/enroll" className="text-indigo-600 font-bold hover:underline">
+                            Online Admission →
+                        </Link>
+                    </div>
                 </div>
             </div>
         </main>
