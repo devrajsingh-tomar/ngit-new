@@ -157,13 +157,19 @@ function SeriesDetailContent({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Back Button to Step 3 */}
+        {/* Back Button to Step 3 / Step 2 */}
         <div className="flex items-center gap-2 shrink-0">
-          <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
-            <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (Step 3)` : "All Batches"}
-            </Button>
-          </Link>
+          {(() => {
+            const isThakurdwara = (activeBatch || "").toLowerCase().includes("thakurdwara") || (activeBatch || "").includes("ठाकुरद्वारा") || (activeBatch || "").toLowerCase().includes("stenoinstitute");
+            const stepText = isThakurdwara ? "Step 3" : "Step 2";
+            return (
+              <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
+                <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
+                  <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (${stepText})` : "All Batches"}
+                </Button>
+              </Link>
+            );
+          })()}
         </div>
       </div>
 

@@ -121,9 +121,14 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
-              Step 3 of 4 • Series Topics & Collections
-            </span>
+            {(() => {
+              const isThakurdwara = (rawBatchName || "").toLowerCase().includes("thakurdwara") || (rawBatchName || "").includes("ठाकुरद्वारा") || (rawBatchName || "").toLowerCase().includes("stenoinstitute");
+              return (
+                <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
+                  {isThakurdwara ? "Step 3 of 4 • Series Topics & Collections" : "Step 2 of 3 • Series Topics & Collections"}
+                </span>
+              );
+            })()}
             {examParam && (
               <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-200">
                 Exam: {examParam}
