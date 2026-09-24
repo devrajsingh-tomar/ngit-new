@@ -369,6 +369,23 @@ export default function AdminStenoSeriesPage() {
               </div>
 
               <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Target Government Exam / Category (Step 2 Exam Filter)</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                >
+                  <option value="General Series">General Series (All Exams)</option>
+                  <option value="UPSSSC Steno">UPSSSC Steno (उ०प्र० अधीनस्थ सेवा चयन आयोग)</option>
+                  <option value="UPSI Steno">UPSI Steno (उ०प्र० पुलिस सब-इंस्पेक्टर)</option>
+                  <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (Staff Selection Commission)</option>
+                  <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट)</option>
+                  <option value="रामधारी खण्ड 1">रामधारी खण्ड 1</option>
+                  <option value="रामधारी खण्ड 2">रामधारी खण्ड 2</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Series Topic / Title (Step 2 Topic) *</label>
                 <Input
                   value={formData.title}
