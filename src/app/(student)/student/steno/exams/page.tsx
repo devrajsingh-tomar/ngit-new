@@ -6,46 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getStenoExamsAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, ArrowLeft, ArrowRight, RefreshCw, Sparkles, Layers, BookOpen } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, RefreshCw, Sparkles, BookOpen } from "lucide-react";
 import { isRealPoster } from "@/lib/steno/stenoUtils";
-
-const DEFAULT_GOV_EXAMS = [
-  {
-    _id: "upsssc_steno",
-    name: "UPSSSC Steno",
-    authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
-    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
-    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
-  },
-  {
-    _id: "upsi_steno",
-    name: "UPSI Steno",
-    authorityName: "उत्तर प्रदेश पुलिस भर्ती एवं प्रोन्नति बोर्ड",
-    thumbnailUrl: "/images/steno-weekly-test-banner.jpg",
-    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-  },
-  {
-    _id: "ssc_steno",
-    name: "SSC Steno Grade C & D",
-    authorityName: "Staff Selection Commission",
-    thumbnailUrl: "/images/steno-test-guide-banner.jpg",
-    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-  },
-  {
-    _id: "hc_steno",
-    name: "Allahabad High Court Steno",
-    authorityName: "High Court of Judicature at Allahabad",
-    thumbnailUrl: "/images/steno-analytics-banner.jpg",
-    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-  },
-];
 
 function StudentStenoExamsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawBatch = searchParams.get("batch") || "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)";
 
-  const [exams, setExams] = useState<any[]>(DEFAULT_GOV_EXAMS);
+  const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,32 +25,18 @@ function StudentStenoExamsContent() {
     setLoading(true);
     try {
       const res = await getStenoExamsAction();
-      if (res.success && res.exams && res.exams.length > 0) {
+      if (res.success && Array.isArray(res.exams)) {
         const dbExams = res.exams.filter((e: any) => e.isActive !== false);
-        const mergedMap = new Map<string, any>();
-
-        DEFAULT_GOV_EXAMS.forEach((def) => {
-          mergedMap.set(def.name.toLowerCase().trim(), { ...def });
-        });
-
-        dbExams.forEach((dbE: any) => {
-          const key = (dbE.name || "").toLowerCase().trim();
-          if (!key) return;
-          const existing = mergedMap.get(key) || {};
-          mergedMap.set(key, { ...existing, ...dbE });
-        });
-
-        setExams(Array.from(mergedMap.values()));
+        setExams(dbExams);
+      } else {
+        setExams([]);
       }
     } catch (err) {
       console.error("Error loading steno exams:", err);
+      setExams([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSelectExam = (examName: string) => {
-    router.push(`/student/student/steno/series/batch/${encodeURIComponent(rawBatch)}?exam=${encodeURIComponent(examName)}`);
   };
 
   return (
@@ -101,7 +56,7 @@ function StudentStenoExamsContent() {
             GOVERNMENT STENO EXAMS (Step 2)
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-            Select your target government steno exam (UPSSSC Steno, SSC Steno, High Court Steno, UP SI Steno, etc.) to view its Series Topics.
+            Select your target government steno exam to view its Series Topics.
           </p>
         </div>
 
@@ -120,6 +75,19 @@ function StudentStenoExamsContent() {
           <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Loading Government Steno Exams...</p>
         </div>
+      ) : exams.length === 0 ? (
+        <Card className="p-16 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+          <Award className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="text-base font-black text-slate-700">No Target Government Exams Created Yet</h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Please create target government steno exams in the Admin Panel (/admin/steno/exams) to populate Step 2.
+          </p>
+          <Link href="/student/steno/series">
+            <Button variant="outline" className="mt-2 text-xs font-bold rounded-xl gap-1.5">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to All Batches (Step 1)
+            </Button>
+          </Link>
+        </Card>
       ) : (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -128,7 +96,7 @@ function StudentStenoExamsContent() {
                 SELECT GOVERNMENT EXAM (सरकारी आशुलिपिक परीक्षाएं)
               </h2>
               <p className="text-xs font-bold text-slate-500">
-                Click on any exam below to view its Series Topics & Dictation Collections.
+                Click on any created exam below to view its Series Topics & Dictation Collections.
               </p>
             </div>
             <Button onClick={loadExams} variant="outline" size="sm" className="text-xs font-bold rounded-xl gap-1.5">
