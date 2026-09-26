@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { useTimer } from './hooks/useTimer';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { mapKeyToHindi, mapEventToKrutiDev, transformKrutiDevInput, KRUTI_DEV_ALT_CODES } from './utils/hindiMapping';
+import { mapKeyToHindi, mapEventToKrutiDev, transformKrutiDevInput, KRUTI_DEV_ALT_CODES, resolveAltCodeChar } from './utils/hindiMapping';
 import { mapEventToInscript } from './utils/InscriptEngine';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
-import { normalizeChar } from './utils/calculations';
+import { normalizeChar, alignWords } from './utils/calculations';
 
 
 
@@ -31,6 +31,7 @@ interface ClassicTypingEngineModuleProps {
     sourcePosition?: 'top' | 'left' | 'right' | 'bottom';
     disableCopyPaste?: boolean;
     disableRightClick?: boolean;
+    examMode?: string;
   };
   onComplete: (results: any) => void;
   userName?: string;
@@ -84,6 +85,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
 
   const passageContainerRef = useRef<HTMLDivElement>(null);
   const lockedLengthRef = useRef(0);
+  const isAltDownRef = useRef(false);
+  const altDigitsRef = useRef("");
 
   const [passagesList, setPassagesList] = useState<any[]>([]);
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
@@ -253,9 +256,15 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [currentExam, isActive, isFinished]);
 
-  // Calculate current word based on spaces typed
+  const passageWords = useMemo(
+    () => (internalPassage || "").trim().split(/\s+/).filter((w) => w.length > 0),
+    [internalPassage]
+  );
   const typedWordsArray = typedText.split(/\s+/);
-  const activeWordIndex = typedText === '' ? 0 : typedWordsArray.length - 1;
+  const alignment = useMemo(() => {
+    return alignWords(passageWords, typedText);
+  }, [passageWords, typedText]);
+  const activeWordIndex = alignment.activeOriginalIndex;
 
   // Auto-scroll passage area and textarea
   useEffect(() => {
@@ -379,6 +388,38 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     }
     resetIdleTimer();
 
+    // 0. Alt-Code Handling (Alt 039 / Alt 39 -> Single Inverted Comma ', etc.)
+    if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+      isAltDownRef.current = true;
+      altDigitsRef.current = "";
+      return;
+    }
+
+    if (isAltDownRef.current || e.altKey) {
+      let digit = "";
+      const numpadMatch = e.code ? e.code.match(/^Numpad(\d)$/) : null;
+      const digitMatch = e.code ? e.code.match(/^Digit(\d)$/) : null;
+      if (numpadMatch) digit = numpadMatch[1];
+      else if (digitMatch) digit = digitMatch[1];
+      else if (e.key >= "0" && e.key <= "9") digit = e.key;
+
+      if (digit) {
+        e.preventDefault();
+        altDigitsRef.current += digit;
+        return;
+      }
+    }
+
+    // Accidental Extra Space Protection:
+    // If typed text already ends with a space (user accidentally double-taps space) or is empty,
+    // prevent inserting redundant trailing space to prevent cascading errors on subsequent words.
+    if (e.key === ' ') {
+      if (typedText.endsWith(' ') || typedText === '') {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Block disabled keys: Delete, Enter, Tab, Escape, Ctrl, F1-F12, Home, End, Insert on AHC / Court exam modes
     if (isOfficialExam && settings.examMode === "AHC") {
       const blockedKeys = ["Delete", "Tab", "Escape", "Home", "End", "Insert", "Enter", "Control"];
@@ -465,6 +506,31 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     }
   };
 
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+      isAltDownRef.current = false;
+      if (altDigitsRef.current) {
+        const char = resolveAltCodeChar(altDigitsRef.current);
+        if (char) {
+          const textarea = e.currentTarget;
+          const start = textarea.selectionStart || 0;
+          const end = textarea.selectionEnd || 0;
+          const before = typedText.substring(0, start);
+          const after = typedText.substring(end);
+          const newVal = before + char + after;
+          setTypedText(newVal);
+          setTimeout(() => {
+            if (inputRef.current) {
+              const newPos = start + char.length;
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+            }
+          }, 0);
+        }
+        altDigitsRef.current = "";
+      }
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -480,8 +546,6 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const typingFont = isUnicodeHindi 
     ? "'Mangal', 'Nirmala UI', 'Arial Unicode MS', sans-serif" 
     : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
-
-  const passageWords = (internalPassage || "").trim().split(/\s+/);
 
   return (
     <div ref={containerRef} className={`flex flex-col bg-[#f0f0f0] font-sans ${isFullScreen ? 'h-screen' : 'min-h-screen'}`}>
@@ -645,24 +709,22 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
           {settings.highlightMode !== 'none' ? (
             passageWords.map((word, index) => {
               let className = "transition-all duration-200 ";
+              const status = alignment.alignedOriginalStatuses[index] || 'pending';
               
               if (settings.highlightMode === 'word') {
                 if (index === activeWordIndex) {
                     className += "text-blue-600 font-bold active-word underline decoration-blue-300 decoration-2 underline-offset-4";
                 } else if (index < activeWordIndex) {
-                    const typedWord = typedWordsArray[index];
-                    const normTypedWord = typedWord.split('').map(normalizeChar).join('');
-                    const normOriginalWord = word.split('').map(normalizeChar).join('');
-                    if (normTypedWord !== normOriginalWord) {
+                    if (status === 'error') {
                         className += "text-red-600 font-bold underline decoration-red-400";
                     }
                 }
               } 
               else if (settings.highlightMode === 'word_error') {
                  if (index < activeWordIndex) {
-                    className += typedWordsArray[index] === word ? "text-emerald-600 font-bold" : "text-rose-600 font-bold underline decoration-rose-400";
+                    className += status === 'correct' ? "text-emerald-600 font-bold" : "text-rose-600 font-bold underline decoration-rose-400";
                  } else if (index === activeWordIndex) {
-                    const currentTyped = typedWordsArray[index] || "";
+                    const currentTyped = alignment.currentTypedWord;
                     return (
                         <span key={index} className="active-word text-blue-600 underline decoration-blue-300 decoration-4 underline-offset-8 font-bold">
                             {word.split('').map((char, charIdx) => {
@@ -679,9 +741,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
               }
               else if (settings.highlightMode === 'letter') {
                   if (index < activeWordIndex) {
-                    className += "opacity-40 ";
+                    className += status === 'correct' ? "opacity-40 text-emerald-700 " : "opacity-60 text-rose-600 underline ";
                   } else if (index === activeWordIndex) {
-                    const currentTyped = typedWordsArray[index] || "";
+                    const currentTyped = alignment.currentTypedWord;
                     return (
                         <span key={index} className="active-word font-bold">
                             {word.split('').map((char, charIdx) => {
@@ -716,6 +778,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             value={typedText}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
+            onKeyUp={handleKeyUp}
             onPaste={(e) => config.disableCopyPaste !== false && e.preventDefault()}
             disabled={isFinished}
             spellCheck={false}

@@ -342,7 +342,15 @@ export const KRUTI_DEV_ALT_CODES: Record<string, KrutiDevAltCode> = {
   "033": { code: "033", char: "!", desc: "विस्मयादिबोधक चिह्न", example: "अरे!" },
   "33": { code: "33", char: "!", desc: "विस्मयादिबोधक चिह्न", example: "अरे!" },
   "034": { code: "034", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
-  "039": { code: "039", char: "'", desc: "एकल उद्धरण चिह्न", example: "'राम'" },
+  "34": { code: "34", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
+  "0034": { code: "0034", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
+  "0147": { code: "0147", char: '"', desc: "उद्धरण चिह्न (बायाँ)", example: '"कहा"' },
+  "0148": { code: "0148", char: '"', desc: "उद्धरण चिह्न (दायाँ)", example: '"कहा"' },
+  "039": { code: "039", char: "'", desc: "एकल उद्धरण चिह्न (सिंगल इनवर्टेड कॉमा)", example: "'राम'" },
+  "39": { code: "39", char: "'", desc: "एकल उद्धरण चिह्न (सिंगल इनवर्टेड कॉमा)", example: "'राम'" },
+  "0039": { code: "0039", char: "'", desc: "एकल उद्धरण चिह्न (सिंगल इनवर्टेड कॉमा)", example: "'राम'" },
+  "0145": { code: "0145", char: "'", desc: "एकल उद्धरण चिह्न (बायाँ)", example: "'राम'" },
+  "0146": { code: "0146", char: "'", desc: "एकल उद्धरण चिह्न (दायाँ)", example: "'राम'" },
   "0161": { code: "0161", char: "कँ", desc: "चंद्रबिंदु", example: "हूँ, नहीं" },
   "0165": { code: "0165", char: "ञ", desc: "ञ अक्षर", example: "पञ्चायत" },
   "0179": { code: "0179", char: "ङ", desc: "ङ अक्षर", example: "शङ्का, गङ्गा" },
@@ -671,6 +679,15 @@ export function resolveAltCodeChar(codeStr: string): string | null {
   const numVal = parseInt(cleanCode, 10);
   if (isNaN(numVal)) return null;
 
+  // Explicit handling for single inverted comma (Alt 039 / Alt 39 / Alt 0039)
+  if (numVal === 39) {
+    return "'";
+  }
+  // Explicit handling for double quotes (Alt 034 / Alt 34)
+  if (numVal === 34) {
+    return '"';
+  }
+
   const strippedStr = numVal.toString();
   if (KRUTI_DEV_ALT_CODES[strippedStr]) {
     return KRUTI_DEV_ALT_CODES[strippedStr].char;
@@ -694,11 +711,18 @@ if (typeof window !== "undefined") {
         isGlobalAltActive = true;
         globalAltCodeDigits = "";
       } else if (isGlobalAltActive || e.altKey) {
-        if (e.code.startsWith("Numpad") || e.code.startsWith("Digit") || (e.key >= "0" && e.key <= "9")) {
-          const digit = e.key.replace(/\D/g, "");
-          if (digit) {
-            globalAltCodeDigits += digit;
-          }
+        let digit = "";
+        const numpadMatch = e.code ? e.code.match(/^Numpad(\d)$/) : null;
+        const digitMatch = e.code ? e.code.match(/^Digit(\d)$/) : null;
+        if (numpadMatch) {
+          digit = numpadMatch[1];
+        } else if (digitMatch) {
+          digit = digitMatch[1];
+        } else if (e.key >= "0" && e.key <= "9") {
+          digit = e.key;
+        }
+        if (digit) {
+          globalAltCodeDigits += digit;
         }
       }
     },
@@ -731,6 +755,12 @@ if (typeof window !== "undefined") {
                 nativeSetter.call(activeElem, newVal);
               } else {
                 activeElem.value = newVal;
+              }
+
+              // Update React's internal value tracker so synthetic onChange fires reliably
+              const tracker = (activeElem as any)._valueTracker;
+              if (tracker) {
+                tracker.setValue(val);
               }
 
               const inputEvent = new Event("input", { bubbles: true });

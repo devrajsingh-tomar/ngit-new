@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { useTimer } from './hooks/useTimer';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { mapKeyToHindi, mapEventToKrutiDev, transformKrutiDevInput, KRUTI_DEV_ALT_CODES } from './utils/hindiMapping';
+import { mapKeyToHindi, mapEventToKrutiDev, transformKrutiDevInput, KRUTI_DEV_ALT_CODES, resolveAltCodeChar } from './utils/hindiMapping';
 import { mapEventToInscript } from './utils/InscriptEngine';
 import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { cn } from '@/lib/utils';
 import { Keyboard } from 'lucide-react';
-import { normalizeChar } from './utils/calculations';
+import { normalizeChar, alignWords } from './utils/calculations';
 
 
 
@@ -32,6 +32,7 @@ interface ModernTypingEngineModuleProps {
     sourcePosition?: 'top' | 'left' | 'right' | 'bottom';
     disableCopyPaste?: boolean;
     disableRightClick?: boolean;
+    examMode?: string;
   };
   onComplete: (results: any) => void;
   userName?: string;
@@ -81,6 +82,8 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
 
   const passageContainerRef = useRef<HTMLDivElement>(null);
   const lockedLengthRef = useRef(0);
+  const isAltDownRef = useRef(false);
+  const altDigitsRef = useRef("");
 
   const [passagesList, setPassagesList] = useState<any[]>([]);
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
@@ -243,8 +246,15 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [exam, isActive, isFinished]);
 
+  const passageWords = useMemo(
+    () => (internalPassage || "").trim().split(/\s+/).filter((w) => w.length > 0),
+    [internalPassage]
+  );
   const typedWordsArray = typedText.split(/\s+/);
-  const activeWordIndex = typedText === '' ? 0 : (typedText.endsWith(' ') ? typedWordsArray.length - 1 : typedWordsArray.length - 1);
+  const alignment = useMemo(() => {
+    return alignWords(passageWords, typedText);
+  }, [passageWords, typedText]);
+  const activeWordIndex = alignment.activeOriginalIndex;
 
   useEffect(() => {
     if (settings.autoScroll && passageContainerRef.current) {
@@ -365,6 +375,38 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     }
     resetIdleTimer();
 
+    // 0. Alt-Code Handling (Alt 039 / Alt 39 -> Single Inverted Comma ', etc.)
+    if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+      isAltDownRef.current = true;
+      altDigitsRef.current = "";
+      return;
+    }
+
+    if (isAltDownRef.current || e.altKey) {
+      let digit = "";
+      const numpadMatch = e.code ? e.code.match(/^Numpad(\d)$/) : null;
+      const digitMatch = e.code ? e.code.match(/^Digit(\d)$/) : null;
+      if (numpadMatch) digit = numpadMatch[1];
+      else if (digitMatch) digit = digitMatch[1];
+      else if (e.key >= "0" && e.key <= "9") digit = e.key;
+
+      if (digit) {
+        e.preventDefault();
+        altDigitsRef.current += digit;
+        return;
+      }
+    }
+
+    // Accidental Extra Space Protection:
+    // If typed text already ends with a space (user accidentally double-taps space) or is empty,
+    // prevent inserting redundant trailing space to prevent cascading errors on subsequent words.
+    if (e.key === ' ') {
+      if (typedText.endsWith(' ') || typedText === '') {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Block disabled keys: Delete, Enter, Tab, Escape, Ctrl, F1-F12, Home, End, Insert on AHC / Court exam modes
     if (isOfficialExam && settings.examMode === "AHC") {
       const blockedKeys = ["Delete", "Tab", "Escape", "Home", "End", "Insert", "Enter", "Control"];
@@ -450,6 +492,31 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     }
   };
 
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+      isAltDownRef.current = false;
+      if (altDigitsRef.current) {
+        const char = resolveAltCodeChar(altDigitsRef.current);
+        if (char) {
+          const textarea = e.currentTarget;
+          const start = textarea.selectionStart || 0;
+          const end = textarea.selectionEnd || 0;
+          const before = typedText.substring(0, start);
+          const after = typedText.substring(end);
+          const newVal = before + char + after;
+          setTypedText(newVal);
+          setTimeout(() => {
+            if (inputRef.current) {
+              const newPos = start + char.length;
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+            }
+          }, 0);
+        }
+        altDigitsRef.current = "";
+      }
+    }
+  };
+
   const [fontSize, setFontSize] = useState(16);
   const [bgColor, setBgColor] = useState('#ffffff');
 
@@ -458,8 +525,6 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   const typingFont = isUnicodeHindi 
     ? "'Mangal', 'Nirmala UI', 'Arial Unicode MS', sans-serif" 
     : (isKrutidev ? "'Kruti Dev 010', 'Krutidev', sans-serif" : "inherit");
-
-  const passageWords = (internalPassage || "").trim().split(/\s+/);
 
   const [instituteLogo, setInstituteLogo] = useState<string | null>(null);
 
@@ -648,23 +713,24 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
             {settings.highlightMode !== 'none' ? (
               passageWords.map((word, index) => {
                 let className = "transition-all duration-200 inline-block ";
+                const status = alignment.alignedOriginalStatuses[index] || 'pending';
                 
                 if (settings.highlightMode === 'word') {
                   if (index === activeWordIndex) {
                       className += "text-indigo-600 font-bold active-word underline decoration-indigo-300 decoration-4 underline-offset-8";
                   } else if (index < activeWordIndex) {
-                      const normTypedWord = typedWordsArray[index].split('').map(normalizeChar).join('');
-                      const normOriginalWord = word.split('').map(normalizeChar).join('');
-                      if (normTypedWord !== normOriginalWord) {
+                      if (status === 'error') {
                           className += "text-rose-600 font-bold underline decoration-rose-400";
+                      } else if (status === 'correct') {
+                          className += "text-slate-800";
                       }
                   }
                 } 
                 else if (settings.highlightMode === 'word_error') {
                    if (index < activeWordIndex) {
-                      className += typedWordsArray[index] === word ? "text-emerald-600 font-bold" : "text-rose-600 font-bold underline decoration-rose-400";
+                      className += status === 'correct' ? "text-emerald-600 font-bold" : "text-rose-600 font-bold underline decoration-rose-400";
                    } else if (index === activeWordIndex) {
-                      const currentTyped = typedWordsArray[index] || "";
+                      const currentTyped = alignment.currentTypedWord;
                       return (
                           <span key={index} className="active-word text-indigo-600 underline decoration-indigo-300 decoration-4 underline-offset-8 font-bold">
                               {word.split('').map((char, charIdx) => {
@@ -681,9 +747,9 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                 }
                 else if (settings.highlightMode === 'letter') {
                     if (index < activeWordIndex) {
-                      className += "opacity-40 ";
+                      className += status === 'correct' ? "opacity-40 text-emerald-700 " : "opacity-60 text-rose-600 underline ";
                     } else if (index === activeWordIndex) {
-                      const currentTyped = typedWordsArray[index] || "";
+                      const currentTyped = alignment.currentTypedWord;
                       return (
                           <span key={index} className="active-word font-bold">
                               {word.split('').map((char, charIdx) => {
@@ -721,6 +787,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
                 value={typedText}
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
+                onKeyUp={handleKeyUp}
                 onPaste={(e) => config.disableCopyPaste !== false && e.preventDefault()}
                 disabled={isFinished}
                 spellCheck={false}

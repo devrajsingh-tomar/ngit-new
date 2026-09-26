@@ -8,6 +8,7 @@ export {
   mapEventToKrutiDev,
   transformKrutiDevInput,
   handleHindiTextareaKeyDown,
+  resolveAltCodeChar,
 } from "@/modules/steno/utils/hindiKeystrokeMap";
 
 
