@@ -1,161 +1,358 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  Mic,
   Headphones,
-  PlayCircle,
-  Trophy,
   BarChart3,
-  Award,
   ArrowRight,
   Layers,
-  FileText,
-  CheckCircle2,
   Lock,
-  GraduationCap,
-  ShieldCheck,
-  Zap,
+  PlayCircle,
+  Video,
+  HelpCircle,
+  X,
+  Play,
+  Trophy,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface DoubtVideo {
+  _id: string;
+  title: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  description?: string;
+  order: number;
+  isActive: boolean;
+}
+
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  if (url.includes("youtube.com/embed/")) {
+    return url.split("youtube.com/embed/")[1]?.split("?")[0] || null;
+  }
+  if (url.includes("watch?v=")) {
+    return url.split("watch?v=")[1]?.split("&")[0] || null;
+  }
+  if (url.includes("youtu.be/")) {
+    return url.split("youtu.be/")[1]?.split("?")[0] || null;
+  }
+  return null;
+}
+
+function getThumbnailUrl(video: { thumbnailUrl?: string; videoUrl: string }): string {
+  if (video.thumbnailUrl && video.thumbnailUrl.trim() !== "") {
+    return video.thumbnailUrl.trim();
+  }
+  const videoId = getYouTubeVideoId(video.videoUrl);
+  if (videoId) {
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  }
+  return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80";
+}
+
+function getEmbedUrl(url: string): string {
+  if (!url) return "";
+  const videoId = getYouTubeVideoId(url);
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  }
+  if (url.includes("youtube.com/embed/")) {
+    return url.includes("?") ? `${url}&autoplay=1` : `${url}?autoplay=1`;
+  }
+  if (url.includes("watch?v=")) {
+    return url.replace("watch?v=", "embed/").split("&")[0] + "?autoplay=1&rel=0";
+  }
+  return url.includes("?") ? `${url}&autoplay=1` : `${url}?autoplay=1`;
+}
 
 export default function StenoMainLandingPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isLoggedIn = status === "authenticated";
 
+  const [doubtVideos, setDoubtVideos] = useState<DoubtVideo[]>([]);
+  const [activeVideo, setActiveVideo] = useState<DoubtVideo | null>(null);
+
+  useEffect(() => {
+    fetch("/api/steno/doubt-videos")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setDoubtVideos(data);
+        }
+      })
+      .catch((err) => console.error("Error loading doubt videos:", err));
+  }, []);
+
   return (
-    <div className="bg-slate-50 min-h-screen py-10 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-12">
-        {/* Single Informational Hero Section */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[2.5rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-5 max-w-2xl z-10">
-            <span className="bg-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-indigo-400/30">
-              India's Premier Stenography & Shorthand Portal
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-              Master Shorthand Dictations & Real-Time Transcriptions
-            </h1>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              Prepare for High Court, SSC Grade C & D, UPSSSC, and Railway Stenographer examinations with professional audio dictations, Kruti Dev & Mangal font engine, and automated error calculation.
-            </p>
-
-            <div className="flex flex-wrap gap-4 pt-2">
-              {isLoggedIn ? (
-                <>
-                  <Link href="/student/steno/dashboard">
-                    <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
-                      <BarChart3 className="w-5 h-5" /> Open Student Steno Dashboard
-                    </Button>
-                  </Link>
-                  <Link href="/student">
-                    <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
-                      <GraduationCap className="w-5 h-5 text-indigo-300" /> Student Portal
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/login?callbackUrl=/student/steno/dashboard">
-                    <Button className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-12 px-6 rounded-2xl shadow-lg gap-2">
-                      <Lock className="w-5 h-5" /> Student Login for Access
-                    </Button>
-                  </Link>
-                  <Link href="/login?callbackUrl=/student/steno/dictation">
-                    <Button className="bg-white/10 hover:bg-white/20 text-white font-bold h-12 px-6 rounded-2xl border border-white/20 shadow-xs gap-2 transition-all">
-                      <Headphones className="w-5 h-5 text-indigo-300" /> Access Dictation Software
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Engine Highlights Badge Box */}
-          <div className="w-full md:w-80 bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl space-y-4 z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center font-black">
-                <Mic className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h4 className="font-black text-sm text-white">Steno Audio Engine</h4>
-                <p className="text-[10px] text-slate-300">0.5x - 2.0x Dictation Playback</p>
-              </div>
-            </div>
-            <div className="border-t border-white/10 pt-3 space-y-2 text-xs text-slate-300">
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Remington & Inscript Layouts</p>
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Half & Full Error Breakdown</p>
-              <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> SSC & High Court Exam Rules</p>
-            </div>
-          </div>
+    <div className="bg-slate-50 min-h-screen py-8 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto space-y-10">
+        {/* 1. Single Top Banner Image */}
+        <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
+          <img
+            src="/images/steno-hero-banner.jpg"
+            alt="NGIT Steno Shorthand Portal"
+            className="w-full h-auto object-cover rounded-[2.5rem]"
+          />
         </div>
 
-        {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6 sm:p-8 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
-              <Layers className="w-6 h-6" />
+        {/* Single Main Login Button directly under Hero Image */}
+        <div className="flex justify-center">
+          <Link
+            href={isLoggedIn ? "/student/steno/series" : "/student/login?callbackUrl=/student/steno/series"}
+            className="w-full max-w-md inline-block"
+          >
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-14 sm:h-16 px-8 rounded-2xl shadow-lg hover:shadow-xl text-sm sm:text-base gap-3 transition-all">
+              {isLoggedIn ? "Browse Steno Batches & Series" : "Login Required to Access"} <ArrowRight className="w-5 h-5" />
+            </Button>
+          </Link>
+        </div>
+
+        {/* 2. Steno Main Cards Grid (Side-by-side in laptop view) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          {/* Card 1: Steno Batches & Series Collections */}
+          <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              {/* Image Banner Above Section */}
+              <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+                <img
+                  src="https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg"
+                  alt="Steno Batches & Series Collections"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              {/* Section Details */}
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5" /> Official Steno Portal
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">Steno Batches & Series Collections</h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-semibold leading-relaxed">
+                  <span className="text-slate-900 font-extrabold">एक कदम सफलता की ओर</span> • Curated Legal, Editorial, PYQ, and Speed Building passage collections categorized for targeted speed enhancement.
+                </p>
+              </div>
             </div>
-            <h3 className="text-xl font-black text-slate-900">Steno Batches & Series Collections</h3>
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-              Curated Legal, Editorial, PYQ, and Speed Building passage collections categorized for targeted speed enhancement.
-            </p>
-            <Link
-              href={isLoggedIn ? "/student/steno/series" : "/login?callbackUrl=/student/steno/series"}
-              className="inline-flex items-center text-xs font-bold text-emerald-600 hover:gap-2 transition-all"
-            >
-              {isLoggedIn ? "Browse Steno Batches & Series" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
           </Card>
 
-          <Card className="p-6 sm:p-8 rounded-3xl border-slate-200 bg-white shadow-xs hover:shadow-md transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
-              <Award className="w-6 h-6" />
+          {/* Card 2: Steno Free Weekly Test */}
+          <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              {/* Image Banner Above Section */}
+              <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+                <img
+                  src="/images/steno-weekly-test-banner.jpg"
+                  alt="NGIT Steno Free Weekly Test"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              {/* Section Details */}
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5" /> Steno Free Weekly Test
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">Steno Free Weekly Test • फ्री साप्ताहिक टेस्ट</h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-semibold leading-relaxed">
+                  <span className="text-slate-900 font-extrabold">अपनी स्पीड और एक्यूरेसी को करें हर हफ्ते मजबूत</span> • Real Exam Pattern, Time Based Tests for UPSSSC, High Court, UP SI & Government Steno Exams.
+                </p>
+              </div>
             </div>
-            <h3 className="text-xl font-black text-slate-900">Official Exam Presets & Evaluation</h3>
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-              SSC Steno Grade C & D, Allahabad High Court, UPSSSC, and HSSC pattern shorthand exams with automated mistake calculations.
-            </p>
-            <Link
-              href={isLoggedIn ? "/student/steno/dashboard" : "/login?callbackUrl=/student/steno/dashboard"}
-              className="inline-flex items-center text-xs font-bold text-amber-600 hover:gap-2 transition-all"
-            >
-              {isLoggedIn ? "Open Student Dashboard" : "Login Required to Access"} <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
           </Card>
         </div>
 
+        {/* 3. Steno Visual Banners & Guides Grid (Side-by-side in laptop view) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          {/* Card 3: ऑनलाइन स्टेनो टेस्ट कैसे दें */}
+          <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              {/* Image Banner Above Section */}
+              <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+                <img
+                  src="/images/steno-test-guide-banner.jpg"
+                  alt="ऑनलाइन स्टेनो टेस्ट कैसे दें"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
 
-        {/* Informational Exam Standards & Font Support Banner */}
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <h2 className="text-xl font-black text-slate-900">Supported Stenography Exam Patterns</h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Evaluated strictly according to official government board parameters and guidelines.
-            </p>
+              {/* Section Details */}
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5" /> Steno Test Guide
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">ऑनलाइन स्टेनो टेस्ट कैसे दें</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  5 सरल चरणों में ऑनलाइन स्टेनो टेस्ट देना सीखें • Register, Login, Select Batch, Pick Test, and Start Practice.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 4: मूल्यांकन करके पूरा लेखा जोखा */}
+          <Card className="p-0 rounded-[2.5rem] border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              {/* Image Banner Above Section */}
+              <div className="w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+                <img
+                  src="/images/steno-analytics-banner.jpg"
+                  alt="आपकी मेहनत, हमारा मूल्यांकन • पूरा लेखा जोखा"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              {/* Section Details */}
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5" /> Student Analytics & Record
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">मूल्यांकन करके पूरा लेखा जोखा</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  आपकी मेहनत, हमारा मूल्यांकन • Complete student record tracking with daily practice, test evaluation, progress graphs & target setting.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* 4. Your Doubt Solution Section */}
+        <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 shadow-md space-y-8">
+          {/* Section Title Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5" /> Video Help & Doubt Clearance
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                Your Doubt Solution • शंका समाधान
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-3xl">
+                Watch expert shorthand speed building techniques, legal passage outlines, dictation tips, and exam rule doubt clearance videos.
+              </p>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-200">
+              <Video className="w-4 h-4 text-indigo-600" /> 3 Videos Per Row Format
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-              <span className="text-xs font-black text-indigo-600">SSC Grade C & D</span>
-              <p className="text-[11px] text-slate-500">80 WPM & 100 WPM • Full & Half mistake rules</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-              <span className="text-xs font-black text-indigo-600">Allahabad High Court</span>
-              <p className="text-[11px] text-slate-500">Legal Dictations • Kruti Dev / Mangal support</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-              <span className="text-xs font-black text-indigo-600">UPSSSC Steno</span>
-              <p className="text-[11px] text-slate-500">Remington GAIL & Inscript layout support</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-              <span className="text-xs font-black text-indigo-600">Custom Practice</span>
-              <p className="text-[11px] text-slate-500">Student custom speed drills & tests</p>
-            </div>
+          {/* 3 Videos Per Row Grid (6 total: Row 1 = 3 videos, Row 2 = 3 videos) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {doubtVideos.map((video, idx) => (
+              <Card
+                key={video._id || idx}
+                onClick={() => setActiveVideo(video)}
+                className="p-0 rounded-3xl border-slate-200 bg-white shadow-sm hover:shadow-xl transition-all cursor-pointer group overflow-hidden flex flex-col justify-between border hover:border-indigo-200"
+              >
+                <div>
+                  {/* Video Thumbnail Box */}
+                  <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                    <img
+                      src={getThumbnailUrl(video)}
+                      alt={video.title}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const videoId = getYouTubeVideoId(video.videoUrl);
+                        const fallbackSrc = videoId
+                          ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                          : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80";
+                        if (target.src !== fallbackSrc) {
+                          target.src = fallbackSrc;
+                        }
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+
+                    {/* Dark gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent group-hover:opacity-90 transition-opacity" />
+
+                    {/* Play icon overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-indigo-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-indigo-500 transition-all">
+                        <Play className="w-6 h-6 fill-white ml-0.5" />
+                      </div>
+                    </div>
+
+                    {/* Badge */}
+                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-1 rounded-full border border-white/10">
+                      Solution #{idx + 1}
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="p-5 space-y-2">
+                    <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2 leading-snug">
+                      {video.title}
+                    </h3>
+                    {video.description && (
+                      <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">
+                        {video.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Action */}
+                <div className="p-5 pt-0">
+                  <div className="w-full flex items-center justify-between pt-3 border-t border-slate-100 text-xs font-bold text-indigo-600 group-hover:text-indigo-700">
+                    <span className="flex items-center gap-1.5">
+                      <PlayCircle className="w-4 h-4" /> Watch Solution Video
+                    </span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Video Player Popup Dialog */}
+      <Dialog
+        open={!!activeVideo}
+        onOpenChange={(open) => {
+          if (!open) setActiveVideo(null);
+        }}
+      >
+        <DialogContent className="max-w-4xl p-0 rounded-3xl overflow-hidden bg-black border-slate-800 shadow-2xl">
+          <DialogHeader className="p-4 sm:p-5 bg-slate-900 border-b border-slate-800 flex flex-row items-center justify-between">
+            <DialogTitle className="text-white text-sm sm:text-base font-black line-clamp-1 pr-6 flex items-center gap-2">
+              <PlayCircle className="w-5 h-5 text-indigo-400 shrink-0" />
+              {activeVideo?.title}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="w-full aspect-video bg-black relative">
+            {activeVideo && (
+              <iframe
+                title={activeVideo.title}
+                src={getEmbedUrl(activeVideo.videoUrl)}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

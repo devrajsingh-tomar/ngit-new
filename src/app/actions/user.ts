@@ -12,6 +12,7 @@ import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 const UpdateUserSchema = z.object({
     name: z.string().min(2).max(100).optional(),
     image: z.string().optional(),
+    instituteCode: z.string().optional(),
 });
 
 export const updateUserDetails = createSafeAction(
@@ -24,6 +25,9 @@ export const updateUserDetails = createSafeAction(
         const updateData: any = {};
         if (data.name) updateData.name = data.name;
         if (data.image) updateData.image = data.image;
+        if (data.instituteCode !== undefined) {
+            updateData.instituteCode = data.instituteCode.trim().toUpperCase() || "";
+        }
 
         const updated = await User.findByIdAndUpdate(
             userId,
@@ -37,7 +41,8 @@ export const updateUserDetails = createSafeAction(
         
         return { 
             name: updated.name, 
-            image: updated.image 
+            image: updated.image,
+            instituteCode: updated.instituteCode
         };
     }
 );

@@ -6,7 +6,8 @@ import { Menu, X, Phone, LogIn, User, LayoutDashboard, LogOut, Bell } from "luci
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { useSafeSession } from "@/lib/useSafeSession";
 import { usePathname } from "next/navigation";
 import { 
     DropdownMenu, 
@@ -36,11 +37,21 @@ interface PublicNavbarProps {
 }
 
 export default function PublicNavbar({ initialData }: PublicNavbarProps) {
-    const { data: session } = useSession();
+    const { data: session } = useSafeSession();
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [headerData, setHeaderData] = useState<HeaderData | null>(initialData || null);
+
+    const getLoginHref = () => {
+        if (pathname === '/steno' || pathname?.startsWith('/steno')) {
+            return '/student/login?callbackUrl=' + encodeURIComponent('/student/steno/series');
+        }
+        if (pathname && pathname !== '/' && pathname !== '/student/login' && pathname !== '/login') {
+            return `/student/login?callbackUrl=${encodeURIComponent(pathname)}`;
+        }
+        return '/student/login';
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -63,7 +74,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
 
     const navLinks: NavLink[] = [
         { label: "Home", href: "/" },
-        { label: "Courses", href: "/courses" },
+        { label: "Courses", href: "https://student.ngitedu.com/" },
         { label: "Typing Tests", href: "/typing" },
         { label: "ShortHand", href: "/steno" },
         { label: "Practical Tools", href: "/tools" },
@@ -95,17 +106,35 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                     <div className="hidden lg:flex items-center gap-1">
                         <div className="flex items-center gap-0.5">
                             {navLinks.map((link, idx) => {
-                                const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href));
+                                const isExternal = link.href.startsWith("http");
+                                const isActive = !isExternal && (pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href)));
+                                const linkClass = cn(
+                                    "px-2.5 xl:px-3.5 py-2 text-[13px] xl:text-[14px] whitespace-nowrap font-bold rounded-lg transition-all relative group",
+                                    isActive 
+                                        ? "text-primary bg-primary/5" 
+                                        : "text-slate-600 hover:text-primary hover:bg-primary/5"
+                                );
+
+                                if (isExternal) {
+                                    return (
+                                        <a
+                                            key={idx}
+                                            href={link.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={linkClass}
+                                        >
+                                            {link.label}
+                                            <span className="absolute bottom-1 left-3.5 right-3.5 h-[2px] bg-primary transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100"></span>
+                                        </a>
+                                    );
+                                }
+
                                 return (
                                     <Link
                                         key={idx}
                                         href={link.href}
-                                        className={cn(
-                                            "px-2.5 xl:px-3.5 py-2 text-[13px] xl:text-[14px] whitespace-nowrap font-bold rounded-lg transition-all relative group",
-                                            isActive 
-                                                ? "text-primary bg-primary/5" 
-                                                : "text-slate-600 hover:text-primary hover:bg-primary/5"
-                                        )}
+                                        className={linkClass}
                                     >
                                         {link.label}
                                         <span className={cn(
@@ -138,9 +167,6 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                     ) : (
                                         <Link href={getDashboardRoute(session.user.role)}>
                                             <Button 
-                                                onClick={() => {
-                                                    window.location.href = getDashboardRoute(session.user.role);
-                                                }}
                                                 variant="outline" 
                                                 className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 rounded-xl transition-all duration-300 shadow-sm shadow-primary/5 cursor-pointer"
                                             >
@@ -186,7 +212,11 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                                 </div>
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer" asChild>
+                                            <DropdownMenuItem 
+                                                className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer" 
+                                                onSelect={() => router.push(session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings')}
+                                                asChild
+                                            >
                                                 <Link href={session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings'}>
                                                     <User className="mr-3 h-4 w-4" /> Profile Details
                                                 </Link>
@@ -205,7 +235,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                             Online Admission
                                         </Button>
                                     </Link>
-                                    <Link href="/student/login">
+                                    <Link href={getLoginHref()}>
                                         <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-4 py-2 transition-all duration-300 rounded-xl text-xs">
                                             <LogIn className="w-4 h-4" />
                                             Login
@@ -240,17 +270,35 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                     <div className="lg:hidden mt-4 pb-4 border-t pt-4 animate-slide-up">
                         <div className="flex flex-col space-y-1">
                             {navLinks.map((link, idx) => {
-                                const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href));
+                                const isExternal = link.href.startsWith("http");
+                                const isActive = !isExternal && (pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href)));
+                                const linkClass = cn(
+                                    "text-base font-bold py-2.5 px-4 rounded-xl transition-colors",
+                                    isActive 
+                                        ? "text-primary bg-primary/5" 
+                                        : "text-slate-600 hover:bg-slate-50"
+                                );
+
+                                if (isExternal) {
+                                    return (
+                                        <a
+                                            key={idx}
+                                            href={link.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={linkClass}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            {link.label}
+                                        </a>
+                                    );
+                                }
+
                                 return (
                                     <Link
                                         key={idx}
                                         href={link.href}
-                                        className={cn(
-                                            "text-base font-bold py-2.5 px-4 rounded-xl transition-colors",
-                                            isActive 
-                                                ? "text-primary bg-primary/5" 
-                                                : "text-slate-600 hover:bg-slate-50"
-                                        )}
+                                        className={linkClass}
                                         onClick={() => setIsOpen(false)}
                                     >
                                         {link.label}
@@ -281,10 +329,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                         </div>
                                         <Link href={getDashboardRoute(session.user.role)} onClick={() => setIsOpen(false)}>
                                             <Button 
-                                                onClick={() => {
-                                                    window.location.href = getDashboardRoute(session.user.role);
-                                                }}
-                                                className="w-full gap-2 rounded-xl h-12 font-bold"
+                                                className="w-full gap-2 rounded-xl h-12 font-bold bg-primary hover:bg-primary/90 text-white"
                                             >
                                                 Go to Dashboard
                                             </Button>
@@ -294,12 +339,12 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                         </Button>
                                     </>
                                 ) : (
-                                    <Link href="/student/login" onClick={() => setIsOpen(false)}>
-                                        <Button className="w-full gap-2 justify-center border-primary text-primary hover:bg-primary hover:text-white font-bold h-12 rounded-xl transition-all duration-300" variant="outline">
-                                            <LogIn className="w-4 h-4" />
-                                            Student Portal Login
-                                        </Button>
-                                    </Link>
+                                     <Link href={getLoginHref()} onClick={() => setIsOpen(false)}>
+                                         <Button className="w-full gap-2 justify-center border-primary text-primary hover:bg-primary hover:text-white font-bold h-12 rounded-xl transition-all duration-300" variant="outline">
+                                             <LogIn className="w-4 h-4" />
+                                             Student Portal Login
+                                         </Button>
+                                     </Link>
                                 )}
                             </div>
                         </div>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   Sliders, Plus, Trash2, Edit2, Check, X, Megaphone, Link as LinkIcon,
   ExternalLink, Sparkles, Layers, Bell, Layout, ArrowRight, Eye, RefreshCw,
-  PlusCircle, AlertCircle, Info, ChevronRight, Image as ImageIcon
+  PlusCircle, AlertCircle, Info, ChevronRight, Image as ImageIcon, Copy
 } from "lucide-react";
 import { getNotices, createNotice, updateNotice, deleteNotice } from "@/app/actions/notice";
 import { getMediaGallery, deleteMediaItem } from "@/app/actions/media";
@@ -17,7 +17,11 @@ import {
   createCmsSection, 
   createCmsContentBlock, 
   updateCmsContentBlock, 
-  deleteCmsContentBlock 
+  deleteCmsContentBlock,
+  getSecondarySlides,
+  createSecondarySlideAction,
+  updateSecondarySlideAction,
+  deleteSecondarySlideAction
 } from "@/app/actions/cms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +44,19 @@ export default function CMSDashboard() {
   const [loadingMedia, setLoadingMedia] = useState(false);
   const [mediaFilter, setMediaFilter] = useState("all");
   const [mediaSearch, setMediaSearch] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Secondary Banner Slider state
+  const [secondarySlides, setSecondarySlides] = useState<any[]>([]);
+  const [secondaryModalOpen, setSecondaryModalOpen] = useState(false);
+  const [editingSecondarySlide, setEditingSecondarySlide] = useState<any>(null);
+  const [secondaryForm, setSecondaryForm] = useState({
+    title: "",
+    imageUrl: "",
+    link: "",
+    isActive: true,
+    order: 0,
+  });
 
   // Modals state
   const [slideModalOpen, setSlideModalOpen] = useState(false);
@@ -170,6 +187,19 @@ export default function CMSDashboard() {
     }
   };
 
+  const handleCopyUrl = (id: string, url: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      navigator.clipboard.writeText(fullUrl);
+      setCopiedId(id);
+      toast.success("Image URL copied to clipboard");
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error("Failed to copy URL");
+    }
+  };
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -206,11 +236,100 @@ export default function CMSDashboard() {
       } else if (dynamicRes.error === "Page not found") {
         console.log("Home page not initialized yet.");
       }
+
+      // 4. Fetch Secondary Slider Banners
+      await loadSecondarySlidesData();
     } catch (err: any) {
       toast.error("Failed to load homepage settings");
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSecondarySlidesData = async () => {
+    const res = await getSecondarySlides(true);
+    if (res.success) {
+      setSecondarySlides(res.slides || []);
+    }
+  };
+
+  const handleOpenSecondaryModal = (slide?: any) => {
+    if (slide) {
+      setEditingSecondarySlide(slide);
+      setSecondaryForm({
+        title: slide.title || "",
+        imageUrl: slide.imageUrl || "",
+        link: slide.link || "",
+        isActive: slide.isActive ?? true,
+        order: slide.order || 0,
+      });
+    } else {
+      setEditingSecondarySlide(null);
+      setSecondaryForm({
+        title: "",
+        imageUrl: "",
+        link: "",
+        isActive: true,
+        order: secondarySlides.length + 1,
+      });
+    }
+    setSecondaryModalOpen(true);
+  };
+
+  const handleSaveSecondarySlide = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!secondaryForm.imageUrl.trim()) {
+      toast.error("Image URL is required for secondary banner slide!");
+      return;
+    }
+    try {
+      if (editingSecondarySlide) {
+        const res = await updateSecondarySlideAction(editingSecondarySlide._id, secondaryForm);
+        if (res.success) {
+          toast.success("Secondary slide updated successfully!");
+          setSecondaryModalOpen(false);
+          loadSecondarySlidesData();
+        } else {
+          toast.error(res.error || "Failed to update secondary slide");
+        }
+      } else {
+        const res = await createSecondarySlideAction(secondaryForm);
+        if (res.success) {
+          toast.success("New secondary slide added!");
+          setSecondaryModalOpen(false);
+          loadSecondarySlidesData();
+        } else {
+          toast.error(res.error || "Failed to add secondary slide");
+        }
+      }
+    } catch {
+      toast.error("An error occurred while saving slide");
+    }
+  };
+
+  const handleToggleSecondaryActive = async (slide: any) => {
+    try {
+      const res = await updateSecondarySlideAction(slide._id, { isActive: !slide.isActive });
+      if (res.success) {
+        toast.success(`Slide ${!slide.isActive ? "activated" : "disabled"}`);
+        loadSecondarySlidesData();
+      }
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleDeleteSecondarySlide = async (id: string) => {
+    if (!confirm("Delete this secondary banner slide?")) return;
+    try {
+      const res = await deleteSecondarySlideAction(id);
+      if (res.success) {
+        toast.success("Secondary slide deleted");
+        loadSecondarySlidesData();
+      }
+    } catch {
+      toast.error("Failed to delete slide");
     }
   };
 
@@ -510,6 +629,9 @@ export default function CMSDashboard() {
             </TabsTrigger>
             <TabsTrigger value="gallery" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <ImageIcon className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Gallery Manager
+            </TabsTrigger>
+            <TabsTrigger value="secondary" className="rounded-lg text-xs font-bold px-5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <ImageIcon className="w-3.5 h-3.5 mr-1.5 text-purple-500" /> Secondary Banner Slider
             </TabsTrigger>
           </TabsList>
 
@@ -851,14 +973,41 @@ export default function CMSDashboard() {
                   <div key={m.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm group hover:shadow-md transition-all flex flex-col justify-between">
                     <div>
                       {/* Image Preview */}
-                      <div className="w-full aspect-square relative bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100">
+                      <div className="w-full aspect-square relative bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100 group/img">
                         <img 
                           src={m.url} 
                           alt={m.filename} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                         />
+
+                        {/* Hover Quick Actions Overlay */}
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-[2px]">
+                          <Button
+                            onClick={(e) => handleCopyUrl(m.id, m.url, e)}
+                            size="icon"
+                            variant="secondary"
+                            className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-slate-700 shadow-md transition-transform hover:scale-110"
+                            title="Copy Image URL"
+                          >
+                            {copiedId === m.id ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <a
+                            href={m.url.startsWith('http') ? m.url : `${window.location.origin}${m.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-slate-700 shadow-md flex items-center justify-center transition-transform hover:scale-110"
+                            title="Open full image"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+
                         {/* Usage Status Badge */}
-                        <div className="absolute top-2 right-2 z-10">
+                        <div className="absolute top-2 right-2 z-10 pointer-events-none">
                           {m.inUse ? (
                             <span className="bg-emerald-500/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm">
                               In Use
@@ -881,17 +1030,108 @@ export default function CMSDashboard() {
                         </div>
                       </div>
                     </div>
-                    {/* Delete Action footer */}
-                    <div className="p-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end">
+                    {/* Action footer */}
+                    <div className="p-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                      <Button
+                        onClick={(e) => handleCopyUrl(m.id, m.url, e)}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 flex-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border-slate-200 text-[10px] font-bold rounded-xl transition-all"
+                      >
+                        {copiedId === m.id ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 mr-1" />
+                            Copy Link
+                          </>
+                        )}
+                      </Button>
                       <Button
                         onClick={() => handleDeleteMedia(m.id)}
                         variant="outline"
                         size="sm"
-                        className="h-7 w-full text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-slate-200 text-[10px] font-bold rounded-xl"
+                        className="h-7 px-2.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-slate-200 text-[10px] font-bold rounded-xl"
+                        title="Delete File"
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-1" />
-                        Delete File
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* TAB 5: SECONDARY BANNER SLIDER */}
+          <TabsContent value="secondary" className="mt-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Secondary Banner Slides</h3>
+                <p className="text-xs text-slate-500 font-medium">Upload banner images to display in the middle slider of the homepage.</p>
+              </div>
+              <Button onClick={() => handleOpenSecondaryModal()} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Secondary Slide
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-20"><RefreshCw className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : secondarySlides.length === 0 ? (
+              <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 text-center text-slate-500 flex flex-col items-center">
+                <ImageIcon className="w-10 h-10 mb-3 opacity-20 text-indigo-500" />
+                <p className="font-bold text-slate-700">No Secondary Banners Added Yet</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">Click "Add Secondary Slide" to upload banner images for the homepage middle slider.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {secondarySlides.map((s) => (
+                  <div key={s._id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                    <div className="w-full aspect-[16/5.2] relative bg-slate-950 overflow-hidden flex items-center justify-center border-b border-slate-100 p-1">
+                      <img src={s.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 pointer-events-none" />
+                      <img src={s.imageUrl} alt={s.title || "Banner"} className="relative z-10 w-full h-full object-contain rounded-xl" />
+                      {s.title && (
+                        <div className="absolute bottom-0 inset-x-0 bg-black/70 p-2 text-white text-[11px] font-bold truncate z-20">
+                          {s.title}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-400">Order: {s.order}</span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${s.isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+                        <span className="text-[10px] font-black uppercase text-slate-500">{s.isActive ? "Active" : "Disabled"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button 
+                          onClick={() => handleToggleSecondaryActive(s)} 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-500 hover:text-slate-800"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleOpenSecondaryModal(s)} 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-500 hover:text-slate-800"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleDeleteSecondarySlide(s._id)} 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -900,6 +1140,93 @@ export default function CMSDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* ── SECONDARY BANNER SLIDE MODAL ── */}
+      <Dialog open={secondaryModalOpen} onOpenChange={setSecondaryModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black text-slate-900">
+              {editingSecondarySlide ? "Modify Secondary Slide" : "Add Secondary Banner Slide"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Upload banner image for the middle homepage slider.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveSecondarySlide} className="space-y-4 py-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Banner Title / Caption (Optional)</label>
+              <Input 
+                value={secondaryForm.title}
+                onChange={(e) => setSecondaryForm({ ...secondaryForm, title: e.target.value })}
+                placeholder="e.g. Government Typing Exam Batch 2026"
+                className="h-9 text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Banner Image URL *</label>
+                <a href="/admin/gallery" target="_blank" rel="noreferrer" className="text-[10px] font-black text-indigo-600 hover:underline">
+                  Open Gallery CMS →
+                </a>
+              </div>
+              <Input 
+                value={secondaryForm.imageUrl}
+                onChange={(e) => setSecondaryForm({ ...secondaryForm, imageUrl: e.target.value })}
+                placeholder="https://... or /uploads/..."
+                className="h-9 text-xs"
+                required
+              />
+              {secondaryForm.imageUrl && (
+                <div className="w-full aspect-[16/5.2] rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 relative flex items-center justify-center p-1 mt-2">
+                  <img src={secondaryForm.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 pointer-events-none" />
+                  <img src={secondaryForm.imageUrl} alt="Live Banner Preview" className="relative z-10 w-full h-full object-contain rounded-xl" />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target Link URL (Optional)</label>
+              <Input 
+                value={secondaryForm.link}
+                onChange={(e) => setSecondaryForm({ ...secondaryForm, link: e.target.value })}
+                placeholder="e.g. /typing or /steno"
+                className="h-9 text-xs"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Display Order</label>
+                <Input 
+                  type="number"
+                  value={secondaryForm.order}
+                  onChange={(e) => setSecondaryForm({ ...secondaryForm, order: Number(e.target.value) })}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-4">
+                <label className="text-xs font-bold text-slate-700">Is Active</label>
+                <Switch
+                  checked={secondaryForm.isActive}
+                  onCheckedChange={(checked) => setSecondaryForm({ ...secondaryForm, isActive: checked })}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="ghost" onClick={() => setSecondaryModalOpen(false)} className="h-8 text-xs font-bold">
+                Cancel
+              </Button>
+              <Button type="submit" className="h-8 text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700">
+                Save Banner Slide
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* ── HERO SLIDE MODAL ── */}
       <Dialog open={slideModalOpen} onOpenChange={setSlideModalOpen}>

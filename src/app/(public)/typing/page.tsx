@@ -1,6 +1,7 @@
 import TypingSelectionLayer from "@/components/typing/TypingSelectionLayer";
 import { constructMetadata, getBreadcrumbSchema } from "@/lib/seo";
 import JsonLd from "@/components/seo/JsonLd";
+import { Suspense } from "react";
 
 export const metadata = constructMetadata({
   title: "Hindi & English Typing Test Online | Mangal & Krutidev Practice",
@@ -17,7 +18,9 @@ export default function TypingPage() {
   return (
     <div className="pt-20">
       <JsonLd data={breadcrumbSchema} />
-      <TypingSelectionLayer />
+      <Suspense fallback={<div className="text-center py-20 font-bold text-slate-400 animate-pulse">Loading Typing Practice...</div>}>
+        <TypingSelectionLayer />
+      </Suspense>
     </div>
   );
 }

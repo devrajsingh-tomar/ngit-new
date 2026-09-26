@@ -73,7 +73,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                 /* Graphic Banner Slide (Centered floating white card layout, matching the screenshot) */
                                 <div className="w-full bg-slate-50/50 py-8 sm:py-12 md:py-16 flex items-center justify-center">
                                     <div className="container max-w-6xl mx-auto px-4">
-                                        <div className="relative bg-white rounded-3xl sm:rounded-[2.5rem] p-2 sm:p-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden w-full aspect-[16/9] sm:aspect-[2.4/1] md:aspect-[2.7/1] lg:aspect-[3/1] flex items-center justify-center">
+                                        <div className="relative bg-white rounded-3xl sm:rounded-[2.5rem] p-2 sm:p-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden w-full aspect-[16/9] flex items-center justify-center">
                                             <img
                                                 src={image || defaultBlock.image}
                                                 alt={block.title || "Hero Banner"}
@@ -93,14 +93,19 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                             ) : (
                                 /* Text Overlay Slide (Original full height with object-cover image background) */
                                 <div className="relative w-full aspect-[16/9] sm:aspect-auto min-h-[25vh] sm:min-h-[50vh] lg:min-h-[65vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-slate-950">
-                                    {/* Background Image - Edge to Edge */}
-                                    <div className="absolute inset-0 z-0">
+                                    {/* Background Image - Edge to Edge with complete poster visibility */}
+                                    <div className="absolute inset-0 z-0 flex items-center justify-center">
+                                        <img
+                                            src={image || defaultBlock.image}
+                                            alt=""
+                                            className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 pointer-events-none"
+                                        />
                                         <img
                                             src={image || defaultBlock.image}
                                             alt={block.title || "Hero Image"}
-                                            className="w-full h-full object-cover object-center transition-transform duration-700"
+                                            className="relative z-10 w-full h-full object-contain object-center transition-transform duration-700"
                                         />
-                                        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px]" />
+                                        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px] z-20 pointer-events-none" />
                                     </div>
 
                                     {/* Content Overlay */}

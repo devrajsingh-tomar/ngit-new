@@ -7,6 +7,8 @@ import {
   updateStenoSeriesAction,
   deleteStenoSeriesAction,
   getStenoPassagesAction,
+  getStenoBatchesAction,
+  createStenoBatchAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,21 +20,31 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus, ArrowRight, Headphones, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
+import Link from "next/link";
 
 export default function AdminStenoSeriesPage() {
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [passages, setPassages] = useState<any[]>([]);
+  const [targetBatches, setTargetBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<any | null>(null);
+
+  // Inline Create Batch State
+  const [isNewBatchDialogOpen, setIsNewBatchDialogOpen] = useState(false);
+  const [newBatchName, setNewBatchName] = useState("");
+  const [newBatchHindiName, setNewBatchHindiName] = useState("");
+  const [creatingBatch, setCreatingBatch] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     thumbnailUrl: "",
+    batch: "UPSSSC Steno",
     category: "General Series",
     language: "Hindi",
     selectedPassages: [] as string[],
@@ -43,6 +55,7 @@ export default function AdminStenoSeriesPage() {
   useEffect(() => {
     loadSeries();
     loadPassages();
+    loadBatches();
   }, []);
 
   const loadSeries = async () => {
@@ -63,17 +76,48 @@ export default function AdminStenoSeriesPage() {
     }
   };
 
+  const loadBatches = async () => {
+    const res = await getStenoBatchesAction({ isPublished: undefined });
+    if (res.success && res.batches) {
+      setTargetBatches(res.batches);
+    }
+  };
+
+  const handleCreateInlineBatch = async () => {
+    if (!newBatchName.trim()) {
+      toast.error("Target Batch Name is required");
+      return;
+    }
+    setCreatingBatch(true);
+    const res = await createStenoBatchAction({
+      name: newBatchName.trim(),
+      hindiName: newBatchHindiName.trim(),
+    });
+    setCreatingBatch(false);
+    if (res.success && res.batch) {
+      toast.success(`Target Batch "${res.batch.name}" created`);
+      setFormData((prev) => ({ ...prev, batch: res.batch.name }));
+      setNewBatchName("");
+      setNewBatchHindiName("");
+      setIsNewBatchDialogOpen(false);
+      loadBatches();
+    } else {
+      toast.error(res.error || "Failed to create target batch");
+    }
+  };
+
   const handleOpenCreateModal = () => {
     setEditingSeries(null);
     setFormData({
       title: "",
       description: "",
       thumbnailUrl: "",
+      batch: targetBatches[0]?.name || "UPSSSC Steno",
       category: "General Series",
       language: "Hindi",
       selectedPassages: [],
       isPublished: true,
-      sortOrder: 0,
+      sortOrder: seriesList.length + 1,
     });
     setIsDialogOpen(true);
   };
@@ -84,6 +128,7 @@ export default function AdminStenoSeriesPage() {
       title: s.title || "",
       description: s.description || "",
       thumbnailUrl: s.thumbnailUrl || "",
+      batch: s.batch || "UPSSSC Steno",
       category: s.category || "General Series",
       language: s.language || "Hindi",
       selectedPassages: Array.isArray(s.passages) ? s.passages.map((p: any) => p._id || p) : [],
@@ -104,6 +149,7 @@ export default function AdminStenoSeriesPage() {
       title: formData.title.trim(),
       description: formData.description.trim(),
       thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
+      batch: formData.batch,
       category: formData.category.trim(),
       language: formData.language as any,
       passages: formData.selectedPassages,
@@ -160,19 +206,31 @@ export default function AdminStenoSeriesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Layers className="w-6 h-6 text-emerald-600" /> CMS Steno Series & Collections
+          <div className="flex items-center gap-2">
+            <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-emerald-600" /> Step 3: Series Topics & Collections
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
+            Series Topics & Dictation Collections (Step 3)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
             Organize dictation passages into series (UPSSSC PYQ, SSC PYQ, Court, Editorial, Essay, Literature, Stories, Magazine).
           </p>
         </div>
-        <Button
-          onClick={handleOpenCreateModal}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-4 text-xs rounded-xl gap-1.5"
-        >
-          <Plus className="w-4 h-4" /> Create Series
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleOpenCreateModal}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
+          >
+            <Plus className="w-4 h-4" /> Create Series (Step 3)
+          </Button>
+          <Link href="/admin/steno/passages">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Headphones className="w-4 h-4" /> Go to Step 4: Dictation Passages <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Grid */}
@@ -189,13 +247,20 @@ export default function AdminStenoSeriesPage() {
           {seriesList.map((s) => (
             <Card key={s._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative">
               {/* Image Preview / Banner */}
-              <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative">
+              <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative flex items-center justify-center p-1">
                 {s.thumbnailUrl ? (
-                  <img
-                    src={s.thumbnailUrl}
-                    alt={s.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    <img
+                      src={s.thumbnailUrl}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
+                    />
+                    <img
+                      src={s.thumbnailUrl}
+                      alt={s.title}
+                      className="relative z-10 w-full h-full object-contain rounded-xl"
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 to-slate-900 text-white/50 p-4 text-center">
                     <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
@@ -257,49 +322,90 @@ export default function AdminStenoSeriesPage() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0">
+        <DialogContent className="max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-xl font-black text-slate-900">
               {editingSeries ? "Edit Steno Series / Batch" : "Create New Steno Series / Batch"}
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
             {/* Scrollable Form Body */}
-            <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Series Title *</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">Target Steno Batch (Step 1 Batch) *</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsNewBatchDialogOpen(true)}
+                    className="text-[11px] font-black text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+                  >
+                    + Create New Target Batch
+                  </button>
+                </div>
+                <select
+                  value={formData.batch}
+                  onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                >
+                  {targetBatches.map((tb) => (
+                    <option key={tb._id || tb.name} value={tb.name}>
+                      {tb.name} {tb.hindiName ? `(${tb.hindiName})` : ""}
+                    </option>
+                  ))}
+                  {/* Fallback if list is loading */}
+                  {targetBatches.length === 0 && (
+                    <>
+                      <option value="UPSSSC Steno">UPSSSC Steno (यूपीएसएसएससी स्टेनो)</option>
+                      <option value="UPSI Steno">UPSI Steno (यूपीएसआई स्टेनो)</option>
+                      <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (एसएससी स्टेनो)</option>
+                      <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट स्टेनो)</option>
+                      <option value="रामधारी खण्ड 1">रामधारी खण्ड 1 (Ramdhari Part 1)</option>
+                      <option value="रामधारी खण्ड 2">रामधारी खण्ड 2 (Ramdhari Part 2)</option>
+                      <option value="General Batch">General Steno Batch</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Target Government Exam / Category (Step 2 Exam Filter)</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                >
+                  <option value="General Series">General Series (All Exams)</option>
+                  <option value="UPSSSC Steno">UPSSSC Steno (उ०प्र० अधीनस्थ सेवा चयन आयोग)</option>
+                  <option value="UPSI Steno">UPSI Steno (उ०प्र० पुलिस सब-इंस्पेक्टर)</option>
+                  <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (Staff Selection Commission)</option>
+                  <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट)</option>
+                  <option value="रामधारी खण्ड 1">रामधारी खण्ड 1</option>
+                  <option value="रामधारी खण्ड 2">रामधारी खण्ड 2</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Series Topic / Title (Step 2 Topic) *</label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. UPSSSC PYQ, High Court Steno, Editorial"
+                  placeholder="e.g. संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, कुरुक्षेत्र पत्रिका"
                   className="rounded-xl text-xs font-semibold"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Language</label>
-                  <select
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
-                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                  >
-                    <option value="Hindi">Hindi</option>
-                    <option value="English">English</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Category</label>
-                  <Input
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="e.g. PYQ, Legal, Editorial, Essay"
-                    className="rounded-xl text-xs font-semibold"
-                  />
-                </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Language</label>
+                <select
+                  value={formData.language}
+                  onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                >
+                  <option value="Hindi">Hindi</option>
+                  <option value="English">English</option>
+                </select>
               </div>
 
               <div className="space-y-1">
@@ -313,34 +419,37 @@ export default function AdminStenoSeriesPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-700">Thumbnail URL</label>
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-emerald-600" /> Series Topic / Step 2 Thumbnail Image
+                  </label>
                   <a
                     href="/admin/gallery"
                     target="_blank"
                     rel="noreferrer"
                     className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1"
                   >
-                    <ImageIcon className="w-3 h-3" /> Get URL from Gallery CMS →
+                    Gallery CMS →
                   </a>
                 </div>
-                <Input
+                <ImageUpload
                   value={formData.thumbnailUrl}
-                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="Paste image URL here (e.g. /uploads/image.jpg or https://...)"
-                  className="rounded-xl text-xs font-semibold"
+                  onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                  onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
+                  label="Upload Series Topic Thumbnail"
                 />
-                {formData.thumbnailUrl && (
-                  <div className="h-28 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
-                    <img
-                      src={formData.thumbnailUrl}
-                      alt="Thumbnail Preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                  </div>
-                )}
+                <div className="pt-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Or Image URL Link:
+                  </label>
+                  <Input
+                    value={formData.thumbnailUrl}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                    placeholder="Paste image URL (e.g. /uploads/... or https://...)"
+                    className="rounded-xl text-xs font-semibold bg-white"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -368,7 +477,26 @@ export default function AdminStenoSeriesPage() {
 
               {/* Passages Selection */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700">Assign Passages to Series</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-700">Assign Dictation Passages to Series</label>
+                  {passages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (formData.selectedPassages.length === passages.length) {
+                          setFormData({ ...formData, selectedPassages: [] });
+                        } else {
+                          setFormData({ ...formData, selectedPassages: passages.map((p) => p._id) });
+                        }
+                      }}
+                      className="text-[11px] font-black text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      {formData.selectedPassages.length === passages.length
+                        ? "Deselect All (सभी हटाएं)"
+                        : `Select All Dictations (सभी ${passages.length} चुनें)`}
+                    </button>
+                  )}
+                </div>
                 <div className="max-h-36 overflow-y-auto p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
                   {passages.length === 0 ? (
                     <p className="text-xs text-slate-400">No passages available to assign.</p>
@@ -403,6 +531,60 @@ export default function AdminStenoSeriesPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inline Create Target Batch Modal */}
+      <Dialog open={isNewBatchDialogOpen} onOpenChange={setIsNewBatchDialogOpen}>
+        <DialogContent className="max-w-md p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 pb-3 border-b border-slate-100">
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <FolderPlus className="w-5 h-5 text-indigo-600" /> Create Target Steno Batch (Step 1)
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="p-5 space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Target Batch Name (Step 1) *</label>
+              <Input
+                value={newBatchName}
+                onChange={(e) => setNewBatchName(e.target.value)}
+                placeholder="e.g. UPSSSC Steno, High Court Steno, Rajasthan Steno"
+                className="rounded-xl text-xs font-semibold"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Hindi Batch Name (Optional)</label>
+              <Input
+                value={newBatchHindiName}
+                onChange={(e) => setNewBatchHindiName(e.target.value)}
+                placeholder="e.g. यूपीएसएसएससी स्टेनो बैच"
+                className="rounded-xl text-xs font-semibold"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsNewBatchDialogOpen(false)}
+                className="flex-1 font-bold rounded-2xl h-10 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCreateInlineBatch}
+                disabled={creatingBatch}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl h-10 text-xs gap-1.5"
+              >
+                {creatingBatch ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                Add Target Batch
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

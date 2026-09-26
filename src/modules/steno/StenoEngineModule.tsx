@@ -130,6 +130,26 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [remainingTimeSeconds, setRemainingTimeSeconds] = useState((initialDurationMinutes || 35) * 60);
 
+  // Sync remaining time when initialDurationMinutes changes
+  useEffect(() => {
+    if (initialDurationMinutes) {
+      setRemainingTimeSeconds(initialDurationMinutes * 60);
+    }
+  }, [initialDurationMinutes]);
+
+  // Refs for live state to avoid stale closures in timer interval callbacks
+  const userTranscriptionRef = useRef(userTranscription);
+  useEffect(() => {
+    userTranscriptionRef.current = userTranscription;
+  }, [userTranscription]);
+
+  const remainingTimeSecondsRef = useRef(remainingTimeSeconds);
+  useEffect(() => {
+    remainingTimeSecondsRef.current = remainingTimeSeconds;
+  }, [remainingTimeSeconds]);
+
+  const isSubmittedRef = useRef(false);
+
   // Memoized typed word count
   const typedWordsCount = React.useMemo(() => {
     return (userTranscription || "").trim() ? (userTranscription || "").trim().split(/\s+/).filter(Boolean).length : 0;
@@ -137,7 +157,6 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
   // Helper to insert Alt-Code or character directly into textarea
   const handleInsertAltChar = (char: string) => {
-
     if (!textareaRef.current) {
       setUserTranscription(userTranscription + char);
       return;
@@ -156,11 +175,8 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     toast.success(`Inserted "${char}"`);
   };
 
-
   // Available speeds from passage config or defaults
   const availableSpeeds = passage?.availableSpeeds || [40, 50, 60, 70, 80, 90, 100, 110, 120];
-
-  // Handle Fullscreen toggle
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -202,37 +218,27 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     handleHindiTextareaKeyDown(e, activeModeConfig.type, userTranscription, setUserTranscription);
   };
 
-  useEffect(() => {
-    if (isPaused || isFinished) return;
-    const timer = setInterval(() => {
-      setRemainingTimeSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmitTranscription();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isPaused, isFinished]);
+  const handleSubmitTranscription = (isAutoSubmit = false) => {
+    if (isSubmittedRef.current) return;
 
-  const handleSubmitTranscription = () => {
-    if (!userTranscription.trim()) {
+    const currentTypedText = userTranscriptionRef.current || "";
+    if (!isAutoSubmit && !currentTypedText.trim()) {
       toast.error("Please type your transcription before submitting!");
       return;
     }
+
+    isSubmittedRef.current = true;
     finishStenoSession();
 
     const totalAllocatedSeconds = (initialDurationMinutes || 35) * 60;
-    const elapsedSeconds = Math.max(1, totalAllocatedSeconds - remainingTimeSeconds);
+    const elapsedSeconds = Math.max(1, totalAllocatedSeconds - remainingTimeSecondsRef.current);
     const timeMin = Math.max(0.1, elapsedSeconds / 60);
     const originalText = passage?.transcriptText || (passage as any)?.text || "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ।";
-    const evalData = evaluateStenoTranscriptionDetailed(userTranscription, originalText, timeMin, presetRules);
+    const evalData = evaluateStenoTranscriptionDetailed(currentTypedText, originalText, timeMin, presetRules);
     const res = {
       ...evalData,
       timeSpentSeconds: elapsedSeconds,
-      userTranscription,
+      userTranscription: currentTypedText,
     };
     setEvaluation(evalData);
 
@@ -243,8 +249,41 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     if (onComplete) {
       onComplete(res);
     }
-    toast.success("Steno Examination Submitted & Evaluated Successfully!");
+
+    if (isAutoSubmit) {
+      toast.success("Time's up! Examination automatically submitted.");
+    } else {
+      toast.success("Steno Examination Submitted & Evaluated Successfully!");
+    }
   };
+
+  const handleSubmitRef = useRef(handleSubmitTranscription);
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmitTranscription;
+  });
+
+  const handleResetSession = () => {
+    isSubmittedRef.current = false;
+    resetStenoSession();
+    setRemainingTimeSeconds((initialDurationMinutes || 35) * 60);
+  };
+
+  useEffect(() => {
+    if (isPaused || isFinished || isSubmittedRef.current) return;
+    const timer = setInterval(() => {
+      setRemainingTimeSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setTimeout(() => {
+            handleSubmitRef.current(true);
+          }, 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isPaused, isFinished]);
 
   const formatCountdown = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -445,7 +484,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
           <div className="space-y-2.5">
             <Button
-              onClick={handleSubmitTranscription}
+              onClick={() => handleSubmitTranscription(false)}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black h-12 text-xs rounded-2xl shadow-lg gap-2"
             >
               <CheckCircle2 className="w-4 h-4" /> SUBMIT EXAM
@@ -453,7 +492,7 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
 
             <div className="grid grid-cols-2 gap-2">
               <Button
-                onClick={resetStenoSession}
+                onClick={handleResetSession}
                 variant="outline"
                 className="h-10 text-xs font-bold rounded-xl border-slate-200 bg-white hover:bg-slate-50 gap-1 text-slate-700"
               >

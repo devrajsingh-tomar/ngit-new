@@ -2,150 +2,372 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getStenoSeriesListAction } from "@/app/actions/steno";
+import { useRouter } from "next/navigation";
+import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, RefreshCw, PlayCircle, Keyboard, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
+import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
+
+// Default fallback configuration for standard batches
+const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[]; description: string }> = {
+  "UPSSSC Steno": {
+    color: "from-indigo-600 to-purple-800",
+    topics: ["संपादकीय", "निबन्ध", "साहित्य", "कहानी", "संसदीय", "लीगल", "रामधारी खण्ड 1", "रामधारी खण्ड 2", "कुरुक्षेत्र पत्रिका"],
+    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+  },
+  "UPSI Steno": {
+    color: "from-blue-600 to-cyan-800",
+    topics: ["पुलिस डिक्टेशन", "कानूनी नियम", "सामान्य आशुलिपि"],
+    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
+  },
+  "SSC Steno Grade C & D": {
+    color: "from-emerald-700 to-teal-900",
+    topics: ["SSC PYQ 80 WPM", "SSC PYQ 100 WPM", "संसदीय भाषण"],
+    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
+  },
+  "Allahabad High Court Steno": {
+    color: "from-amber-600 to-rose-700",
+    topics: ["लीगल जजमेंट", "सिविल केस", "क्रिमिनल केस"],
+    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
+  },
+  "रामधारी खण्ड 1": {
+    color: "from-rose-600 to-pink-800",
+    topics: ["अभ्यास 1-20", "अभ्यास 21-40", "अभ्यास 41-60"],
+    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+  },
+  "रामधारी खण्ड 2": {
+    color: "from-violet-700 to-purple-900",
+    topics: ["अभ्यास 1-20", "अभ्यास 21-40", "अभ्यास 41-60"],
+    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के उन्नत स्तर डिक्टेशन ऑडियो",
+  },
+};
+
+const DEFAULT_STATIC_BATCHES = [
+  {
+    name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+    hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+    description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+    thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+    coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+    instituteCode: "THAKURDWARA_STENO",
+    sortOrder: 0,
+    isPublished: true,
+  },
+  {
+    name: "UPSSSC Steno",
+    hindiName: "यूपीएसएसएससी स्टेनो बैच",
+    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
+    sortOrder: 1,
+    isPublished: true,
+  },
+  {
+    name: "UPSI Steno",
+    hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
+    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
+    thumbnailUrl: "",
+    sortOrder: 2,
+    isPublished: true,
+  },
+  {
+    name: "SSC Steno Grade C & D",
+    hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
+    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
+    thumbnailUrl: "",
+    sortOrder: 3,
+    isPublished: true,
+  },
+  {
+    name: "Allahabad High Court Steno",
+    hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
+    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
+    thumbnailUrl: "",
+    sortOrder: 4,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 1",
+    hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    thumbnailUrl: "",
+    sortOrder: 5,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 2",
+    hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    thumbnailUrl: "",
+    sortOrder: 6,
+    isPublished: true,
+  },
+];
 
 export default function StudentStenoSeriesPage() {
+  const router = useRouter();
+  const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+
+
   useEffect(() => {
-    loadSeries();
+    loadData();
   }, []);
 
-  const loadSeries = async () => {
+  const loadData = async () => {
     setLoading(true);
-    const res = await getStenoSeriesListAction();
-    if (res.success && res.series) {
-      setSeriesList(res.series);
-    } else {
-      toast.error(res.error || "Failed to load course batches");
+    try {
+      const [batchRes, seriesRes] = await Promise.all([
+        getStenoBatchesAction({ isPublished: true }),
+        getStenoSeriesListAction({ isPublished: true }),
+      ]);
+
+      const fetchedSeries = (seriesRes.success && seriesRes.series) ? seriesRes.series : [];
+      setSeriesList(fetchedSeries);
+
+      if (batchRes.success && batchRes.batches) {
+        const dbBatches = batchRes.batches;
+        const mergedMap = new Map<string, any>();
+
+        DEFAULT_STATIC_BATCHES.forEach((def) => {
+          mergedMap.set(def.name.toLowerCase().trim(), { ...def });
+        });
+
+        dbBatches.forEach((dbB: any) => {
+          const key = (dbB.name || "").toLowerCase().trim();
+          if (!key) return;
+          const existing = mergedMap.get(key) || {};
+          mergedMap.set(key, { ...existing, ...dbB });
+        });
+
+        const merged = Array.from(mergedMap.values());
+
+        // Sort Batches by newest uploaded content timestamp descending (Step 1 Priority)
+        const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
+          let maxTime = 0;
+          for (const s of sList) {
+            if (matchBatch(s.batch, batchName)) {
+              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+              if (sTime > maxTime) maxTime = sTime;
+              if (Array.isArray(s.passages)) {
+                for (const p of s.passages) {
+                  const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
+                  if (pTime > maxTime) maxTime = pTime;
+                }
+              }
+            }
+          }
+          return maxTime;
+        };
+
+        merged.sort((a, b) => {
+          const timeA = getBatchLatestTimestamp(a.name, fetchedSeries);
+          const timeB = getBatchLatestTimestamp(b.name, fetchedSeries);
+          if (timeA !== timeB) {
+            return timeB - timeA;
+          }
+          return (a.sortOrder ?? 99) - (b.sortOrder ?? 99);
+        });
+
+        setBatches(merged);
+      }
+    } catch (e) {
+      console.error("Error loading steno data:", e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const getBatchSeriesCount = (batchName: string) => {
+    const searchVal = batchName.toLowerCase().trim();
+    const matches = seriesList.filter(
+      (s) =>
+        (s.batch || "").toLowerCase().includes(searchVal) ||
+        (s.title || "").toLowerCase().includes(searchVal)
+    );
+    const uniqueTitles = new Set(matches.map((s) => (s.title || "").toLowerCase().trim()).filter(Boolean));
+    return uniqueTitles.size;
   };
 
   return (
-    <div className="space-y-8 p-1 sm:p-2">
+    <div className="space-y-8 p-1 sm:p-2 max-w-7xl mx-auto">
       {/* Header Banner */}
-      <div className="text-center space-y-2 py-4">
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight uppercase">
-          STENO BATCHES
-        </h1>
-        <p className="text-sm font-bold text-slate-500 max-w-xl mx-auto">
-          Practice shorthand dictations and transcription at various speeds.
-        </p>
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-3 max-w-2xl z-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30">
+              Step 1 • Select Target Steno Batch
+            </span>
+            <Link href="/steno">
+              <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white font-bold h-7 px-3 text-[11px] rounded-full border border-white/20 gap-1 transition-all">
+                <ArrowLeft className="w-3 h-3" /> Back to Steno Portal (/steno)
+              </Button>
+            </Link>
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+            STENO BATCHES & EXAM PORTAL
+          </h1>
+          <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
+            Select your desired Steno Batch to explore series topics, editorial passages, and official speed dictations.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/15 text-xs font-bold text-slate-200">
+          <Layers className="w-5 h-5 text-indigo-400" />
+          <span>{batches.length} Official Batches Active</span>
+        </div>
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-slate-400">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Steno Batches...
+        <div className="py-20 text-center text-slate-400 space-y-2">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Loading Steno Batches...</p>
         </div>
-      ) : seriesList.length === 0 ? (
-        <Card className="p-16 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
-          <Layers className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="text-base font-black text-slate-700">No Steno Batches Published Yet</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            New official Steno dictation batches are currently being uploaded by our instructors. Please check back shortly!
-          </p>
-          <Button
-            onClick={loadSeries}
-            variant="outline"
-            className="mt-2 text-xs font-bold rounded-xl gap-1.5"
-          >
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh Batches
-          </Button>
-        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {seriesList.map((batch, index) => {
-            const gradient = index % 3 === 0 ? "from-indigo-600 to-purple-800" : index % 3 === 1 ? "from-emerald-700 to-teal-900" : "from-amber-600 to-rose-700";
-            return (
-              <Card key={batch._id} className="p-0 rounded-3xl border-slate-200 bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group">
-                {/* Banner Thumbnail */}
-                <div className="h-44 relative overflow-hidden bg-slate-950">
-                  {batch.thumbnailUrl ? (
-                    <>
-                      <img
-                        src={batch.thumbnailUrl}
-                        alt={batch.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
-                        <div className="flex justify-between items-start z-10">
-                          <span className="bg-white/90 backdrop-blur-md text-slate-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
-                            {batch.category || "Official Batch"}
-                          </span>
-                          <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                        </div>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                ALL STENO BATCHES (सारे बैच)
+              </h2>
+              <p className="text-xs font-bold text-slate-500">
+                Click on any batch below to view its Series Topics & Dictation Collections.
+              </p>
+            </div>
+            <Button
+              onClick={loadData}
+              variant="outline"
+              size="sm"
+              className="text-xs font-bold rounded-xl gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            </Button>
+          </div>
 
-                        <div className="z-10 space-y-0.5">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-amber-300">
-                            STENO SOFTWARE BATCH
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {batches.map((batch, index) => {
+              const seriesCount = getBatchSeriesCount(batch.name);
+              const encodeBatch = encodeURIComponent(batch.name);
+              const fallback = DEFAULT_BATCH_FALLBACKS[batch.name] || {
+                color: "from-indigo-700 to-purple-900",
+                topics: ["संपादकीय", "लीगल", "संसदीय"],
+                description: batch.description || "Steno Exam Dictation Practice Batch",
+              };
+              const batchPoster = isRealPoster(batch.thumbnailUrl) ? batch.thumbnailUrl : null;
+              const seriesForBatch = seriesList.find(
+                (s) => isRealPoster(s.thumbnailUrl) && matchBatch(s.batch, batch.name)
+              );
+              const effectiveThumbnailUrl = batchPoster || seriesForBatch?.thumbnailUrl;
+              const hasRealPoster = isRealPoster(effectiveThumbnailUrl);
+              const hasRecentDictations = seriesList.some(
+                (s) => matchBatch(s.batch, batch.name) && (isNewlyUploaded(s.updatedAt || s.createdAt) || (Array.isArray(s.passages) && s.passages.some((p: any) => isNewlyUploaded(p.createdAt))))
+              ) || index === 0;
+
+              return (
+                <Card
+                  key={batch._id || batch.name}
+                  className={`p-0 rounded-3xl bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border ${
+                    hasRecentDictations ? "border-2 border-indigo-300 hover:border-indigo-400" : "border-slate-200 hover:border-indigo-300"
+                  }`}
+                >
+                  {/* Step 1 Poster Image Rendering */}
+                  {hasRealPoster ? (
+                    <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
+                      <img
+                        src={effectiveThumbnailUrl}
+                        alt={batch.name}
+                        className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {hasRecentDictations && (
+                        <div className="absolute top-3 left-3 z-10">
+                          <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 animate-pulse">
+                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT AVAILABLE
                           </span>
-                          <h3 className="text-lg font-black text-white leading-tight drop-shadow-md truncate">
-                            {batch.title}
-                          </h3>
                         </div>
-                      </div>
-                    </>
+                      )}
+                    </div>
                   ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${gradient} text-white p-5 flex flex-col justify-between relative overflow-hidden`}>
+                    /* Fallback Styled Banner if poster is not uploaded */
+                    <div className={`w-full bg-gradient-to-br ${fallback.color} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
                       <div className="flex justify-between items-start z-10">
                         <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                          {batch.category || "Official Batch"}
+                          {batch.name}
                         </span>
-                        <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                        {hasRecentDictations && (
+                          <span className="bg-rose-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs animate-pulse flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT
+                          </span>
+                        )}
                       </div>
 
                       <div className="z-10 space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-300">
-                          STENO SOFTWARE BATCH
-                        </span>
-                        <h3 className="text-xl font-black leading-tight drop-shadow-md truncate">
-                          {batch.title}
+                        <h3 className="text-xl font-black drop-shadow-md leading-tight">
+                          {batch.hindiName || batch.name}
                         </h3>
+                        <p className="text-[10px] font-bold text-slate-200 opacity-90">
+                          {batch.name} Official Batch
+                        </p>
                       </div>
 
-                      {/* Decorative Circle overlay */}
                       <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
                     </div>
                   )}
-                </div>
 
-                {/* Card Body Details */}
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-black text-slate-900">{batch.title}</h4>
-                    <p className="text-xs text-slate-500 font-medium line-clamp-2">
-                      {batch.description || "Curated dictation practice sets with real-time transcription evaluation."}
-                    </p>
+                  {/* Batch Details & Action */}
+                  <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-black text-slate-900">{batch.name}</h3>
+                        <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                          {seriesCount > 0 ? `${seriesCount} Series Topics` : "Official Batch"}
+                        </span>
+                      </div>
 
-                    <div className="space-y-1.5 pt-2">
-                      <p className="text-xs font-bold text-slate-600 flex items-center gap-2">
-                        <PlayCircle className="w-4 h-4 text-indigo-600" /> {batch.passages?.length || "All"} Dictation Tracks
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
+                        {batch.description || fallback.description}
                       </p>
-                      <p className="text-xs font-bold text-slate-600 flex items-center gap-2">
-                        <Keyboard className="w-4 h-4 text-indigo-600" /> SSC & High Court typing interface
-                      </p>
+
+                      {/* Topics Tag List */}
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                          Included Topics / Series:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {fallback.topics.slice(0, 6).map((topic, i) => (
+                            <span
+                              key={i}
+                              className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg border border-slate-200"
+                            >
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Action Button */}
-                  <Link href={`/student/steno/series/${batch._id}`} className="block pt-2">
-                    <Button className="w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-extrabold h-11 text-xs rounded-2xl gap-1.5 transition-all shadow-xs group-hover:bg-indigo-600 group-hover:text-white">
-                      EXPLORE COURSE <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
-            );
-          })}
+                    {/* Action Button */}
+                    {(() => {
+                      const isThakurdwara = (batch.name || "").toLowerCase().includes("thakurdwara") || (batch.name || "").includes("ठाकुरद्वारा") || (batch.name || "").toLowerCase().includes("stenoinstitute");
+                      const targetHref = isThakurdwara
+                        ? `/student/steno/exams?batch=${encodeBatch}`
+                        : `/student/steno/series/batch/${encodeBatch}`;
+                      return (
+                        <Link href={targetHref} className="block pt-2">
+                          <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
+                            <BookOpen className="w-4 h-4" /> {isThakurdwara ? "SELECT EXAM & EXPLORE SERIES" : "EXPLORE SERIES & TOPICS"} <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      );
+                    })()}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
   );
 }
-

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { getSeoMetaDataAction, updateSeoMetaDataAction } from "@/app/actions/seo";
 
 const pages = [
-  { slug: "/", title: "Home Page", defaultTitle: "NGIT | Computer Courses, Typing & Government Exam Preparation in Prayagraj", defaultDesc: "Join NGIT Prayagraj for online Hindi & English typing tests, Steno shorthand dictations, UPSSSC & SSC exam preparation, CCC, O Level & IT computer courses." },
+  { slug: "/", title: "Home Page", defaultTitle: "NGIT | Computer Courses, Typing & Shorthand Software", defaultDesc: "Join NGIT Prayagraj for online Hindi & English typing tests, Steno shorthand dictations, UPSSSC & SSC exam preparation, CCC, O Level & IT computer courses." },
   { slug: "/about", title: "About Us", defaultTitle: "About NGIT | Computer Training & Skill Institute in Prayagraj", defaultDesc: "Learn about NGIT (National Genius Institute of Technology) in Prayagraj. Discover our mission, faculty, computer courses, typing software, and government exam coaching." },
   { slug: "/contact", title: "Contact Us", defaultTitle: "Contact NGIT | Computer Training Institute in Prayagraj", defaultDesc: "Contact NGIT (National Genius Institute of Technology) in Prayagraj. Reach out for course inquiries, typing & steno admissions, or call +91 80049 58441." },
   { slug: "/typing", title: "Typing Tests", defaultTitle: "Hindi & English Typing Test Online | Mangal & Krutidev Practice", defaultDesc: "Practice Hindi and English typing online with NGIT's exam-oriented typing software. Supports Mangal Unicode, Krutidev, speed tracking, backspace control, and government exam practice." },

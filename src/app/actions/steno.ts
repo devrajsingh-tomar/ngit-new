@@ -4,6 +4,7 @@ import connectDB from "@/lib/db";
 import mongoose from "mongoose";
 import StenoPassage from "@/models/StenoPassage";
 import StenoSeries from "@/models/StenoSeries";
+import StenoBatch from "@/models/StenoBatch";
 import StenoExam from "@/models/StenoExam";
 import StenoResult from "@/models/StenoResult";
 import StenoFont from "@/models/StenoFont";
@@ -14,6 +15,7 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { isRealPoster } from "@/lib/steno/stenoUtils";
 import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
 
 // ── PUBLIC & STUDENT STENO DATA ──
@@ -53,7 +55,7 @@ export async function getStenoPassagesAction(query?: any) {
 
     const passages = await StenoPassage.find(filter)
       .populate("seriesId")
-      .sort({ sortOrder: 1, createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .lean();
     return { success: true, passages: JSON.parse(JSON.stringify(passages)) };
   } catch (err: any) {
@@ -61,16 +63,27 @@ export async function getStenoPassagesAction(query?: any) {
   }
 }
 
+
+
 export async function getStenoSeriesListAction(query?: any) {
   try {
     await connectDB();
-    await seedDefaultSeriesAndPassagesAction();
+    const seriesCount = await StenoSeries.countDocuments();
+    if (seriesCount === 0) {
+      await seedDefaultSeriesAndPassagesAction();
+    }
+
+    // Clean up any previously auto-created "सामान्य अभ्यास" series
+    await StenoSeries.deleteMany({ title: "सामान्य अभ्यास" });
+
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
+    if (query?.batch) filter.batch = query.batch;
+    if (query?.category) filter.category = query.category;
 
     const series = await StenoSeries.find(filter)
       .populate("passages")
-      .sort({ sortOrder: 1, createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
     return { success: true, series: JSON.parse(JSON.stringify(series)) };
   } catch (err: any) {
@@ -213,6 +226,7 @@ export async function createStenoPassageAction(data: {
   typingMode?: "unicode_hindi" | "krutidev_010" | "english";
   category: string;
   seriesId?: string;
+  examPresetId?: string;
   examType?: string;
   transcriptText: string;
   wordCount: number;
@@ -241,9 +255,9 @@ export async function createStenoPassageAction(data: {
       ...data,
       durationMinutes: durationMins,
       durationSeconds: durationSecs,
-      seriesId: data.seriesId || null,
+      seriesId: data.seriesId ? data.seriesId : null,
+      examPresetId: data.examPresetId ? data.examPresetId : null,
     });
-
 
     if (data.seriesId) {
       await StenoSeries.findByIdAndUpdate(data.seriesId, {
@@ -274,6 +288,13 @@ export async function updateStenoPassageAction(id: string, data: any) {
       payload.durationSeconds = payload.durationMinutes * 60;
     } else if (payload.durationSeconds !== undefined) {
       payload.durationMinutes = Math.round(Number(payload.durationSeconds) / 60);
+    }
+
+    if (payload.seriesId === "" || payload.seriesId === undefined) {
+      payload.seriesId = null;
+    }
+    if (payload.examPresetId === "" || payload.examPresetId === undefined) {
+      payload.examPresetId = null;
     }
 
     const updated = await StenoPassage.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
@@ -307,12 +328,62 @@ export async function deleteStenoPassageAction(id: string) {
   }
 }
 
+export async function bulkAssignStenoPassagesAction(data: {
+  passageIds: string[];
+  seriesId?: string;
+  examPresetId?: string;
+  examType?: string;
+  category?: string;
+}) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    if (!data.passageIds || !data.passageIds.length) {
+      return { success: false, error: "No dictation passages selected" };
+    }
+
+    const updatePayload: any = {};
+    if (data.seriesId) updatePayload.seriesId = data.seriesId;
+    if (data.examPresetId) updatePayload.examPresetId = data.examPresetId;
+    if (data.examType) updatePayload.examType = data.examType;
+    if (data.category) updatePayload.category = data.category;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return { success: false, error: "Please select a Series, Exam Rules Preset, or Category to assign" };
+    }
+
+    await StenoPassage.updateMany(
+      { _id: { $in: data.passageIds } },
+      { $set: updatePayload }
+    );
+
+    if (data.seriesId) {
+      await StenoSeries.findByIdAndUpdate(data.seriesId, {
+        $addToSet: { passages: { $each: data.passageIds } },
+      });
+    }
+
+    revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/steno/dictation");
+    return { success: true, count: data.passageIds.length };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 // ── ADMIN STENO SERIES CRUD (STEP 10) ──
 
 export async function createStenoSeriesAction(data: {
   title: string;
   description: string;
   thumbnailUrl?: string;
+  batch?: string;
   category: string;
   language: "Hindi" | "English";
   passages?: string[];
@@ -336,7 +407,11 @@ export async function createStenoSeriesAction(data: {
     });
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
     revalidatePath("/steno/series");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    revalidatePath("/student/steno/series/[id]", "page");
     return { success: true, series: JSON.parse(JSON.stringify(series)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -355,7 +430,11 @@ export async function updateStenoSeriesAction(id: string, data: any) {
     const updated = await StenoSeries.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
     revalidatePath("/steno/series");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    revalidatePath("/student/steno/series/[id]", "page");
     return { success: true, series: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -374,7 +453,11 @@ export async function deleteStenoSeriesAction(id: string) {
     await StenoSeries.findByIdAndDelete(id);
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
     revalidatePath("/steno/series");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    revalidatePath("/student/steno/series/[id]", "page");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -389,15 +472,19 @@ export async function seedDefaultSeriesAndPassagesAction() {
     const seriesCount = await StenoSeries.countDocuments();
     if (seriesCount === 0) {
       const defaultSeries = [
-        { title: "UPSSSC PYQ", description: "Previous Year Questions for UPSSSC Steno", category: "PYQ", language: "Hindi", sortOrder: 1 },
-        { title: "SSC Steno PYQ", description: "Official SSC Grade C & D Previous Dictations", category: "PYQ", language: "Hindi", sortOrder: 2 },
-        { title: "High Court Steno", description: "Legal & Court Room Dictations", category: "Court", language: "Hindi", sortOrder: 3 },
-        { title: "Editorial", description: "Daily News & Newspaper Editorial Series", category: "Editorial", language: "Hindi", sortOrder: 4 },
-        { title: "Essay Collection", description: "Curated Essays for Speed Enhancement", category: "Essay", language: "Hindi", sortOrder: 5 },
-        { title: "Literature", description: "Hindi Sahitya & Literature Passages", category: "Literature", language: "Hindi", sortOrder: 6 },
-        { title: "Stories", description: "Narrative Stories Dictations", category: "Stories", language: "Hindi", sortOrder: 7 },
-        { title: "Magazine", description: "General Knowledge & Magazine Dictations", category: "Magazine", language: "Hindi", sortOrder: 8 },
-        { title: "Custom Series", description: "Custom User & Speed Drills Series", category: "Custom", language: "English", sortOrder: 9 },
+        // UPSSSC Steno Series Topics (as per diagram)
+        { title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
+        { title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
+        { title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
+        { title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
+        { title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
+        { title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
+        { title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
+        { title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
+        { title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
+
+        // High Court & Other Batches
+        { title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
       ];
 
       await StenoSeries.insertMany(defaultSeries);
@@ -457,6 +544,7 @@ export async function seedStenoInstituteAccountAction() {
           email: "stenoinstitute@ngitedu.com",
           password: instPassHash,
           role: UserRole.STENO_ADMIN,
+          instituteCode: "NGIT-STENO",
           isActive: true,
         },
       },
@@ -479,23 +567,11 @@ export async function seedStenoInstituteAccountAction() {
       { upsert: true, new: true }
     );
 
-    // 4. Dedicated Typing Module Manager Account
-    const typingMgrPassHash = await bcrypt.hash("TypingManager@2026", 10);
-    await User.findOneAndUpdate(
-      { email: "typingmanager@ngitedu.com" },
-      {
-        $set: {
-          name: "NGIT Typing Module Manager",
-          email: "typingmanager@ngitedu.com",
-          password: typingMgrPassHash,
-          role: UserRole.TYPING_ADMIN,
-          isActive: true,
-        },
-      },
-      { upsert: true, new: true }
-    );
-  } catch (err) {
+
+    return { success: true };
+  } catch (err: any) {
     console.error("seedStenoInstituteAccountAction error:", err);
+    return { success: false, error: err.message };
   }
 }
 
@@ -825,17 +901,38 @@ export async function submitStenoResultAction(data: {
 
     let examDoc: any = null;
     let examRules: Partial<ExamRules> = {};
-    if (data.examId && mongoose.Types.ObjectId.isValid(data.examId)) {
-      examDoc = await StenoExam.findById(data.examId).lean();
-      if (examDoc) {
-        examRules = {
-          spellingWeight: examDoc.spellingPenalty || "full",
-          matraWeight: examDoc.matraPenalty || "half",
-          punctuationWeight: examDoc.punctuationPenalty || "half",
-          addedWordWeight: examDoc.addedWordPenalty || "full",
-          missingWordWeight: examDoc.missingWordPenalty || "full",
-        };
+
+    const presetId = data.examId || passageDoc?.examPresetId;
+    if (presetId && mongoose.Types.ObjectId.isValid(presetId)) {
+      examDoc = await StenoExam.findById(presetId).lean();
+    }
+
+    if (!examDoc && passageDoc?.seriesId) {
+      const seriesDoc: any = await StenoSeries.findById(passageDoc.seriesId).lean();
+      if (seriesDoc?.batch) {
+        const batchDoc: any = await StenoBatch.findOne({ name: seriesDoc.batch }).lean();
+        if (batchDoc?.examPresetId) {
+          examDoc = await StenoExam.findById(batchDoc.examPresetId).lean();
+        }
       }
+    }
+
+    if (!examDoc) {
+      examDoc = await StenoExam.findOne({ isActive: true }).lean();
+    }
+
+    if (examDoc) {
+      examRules = {
+        spellingWeight: examDoc.spellingErrorWeight ?? 1.0,
+        matraWeight: examDoc.matraErrorWeight ?? 0.5,
+        punctuationWeight: examDoc.punctuationErrorWeight ?? 0.5,
+        addedWordWeight: examDoc.addedWordWeight ?? 1.0,
+        missingWordWeight: examDoc.skippedWordWeight ?? 1.0,
+        spacingTranspositionWeight: examDoc.spacingTranspositionWeight ?? 0.5,
+        mistakeExemptionCount: examDoc.mistakeExemptionCount ?? 20,
+        ignoreChandrabindu: examDoc.ignoreChandrabindu ?? true,
+        maxErrorPercentAllowed: examDoc.maxErrorPercentAllowed ?? 5.0,
+      };
     }
 
     const originalText = passageDoc?.transcriptText || passageDoc?.text || "माननीय न्यायाधीश महोदय, अभियुक्त के विरुद्ध प्रस्तुत साक्ष्य और गवाहों के बयानों से यह स्पष्ट है कि घटना के समय वह घटनास्थल पर मौजूद नहीं था।";
@@ -1146,3 +1243,286 @@ export async function getAdminStenoOverviewAction() {
     return { success: false, error: err.message };
   }
 }
+
+/* ==========================================================================
+   STENO TARGET BATCHES (STEP 1 BATCH) ACTIONS
+   ========================================================================== */
+
+const DEFAULT_INITIAL_BATCHES = [
+  {
+    name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+    hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+    description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+    thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+    coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+    instituteCode: "THAKURDWARA_STENO",
+    sortOrder: 0,
+    isPublished: true,
+  },
+  {
+    name: "UPSSSC Steno",
+    hindiName: "यूपीएसएसएससी स्टेनो बैच",
+    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
+    sortOrder: 1,
+    isPublished: true,
+  },
+  {
+    name: "UPSI Steno",
+    hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
+    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
+    thumbnailUrl: "",
+    sortOrder: 2,
+    isPublished: true,
+  },
+  {
+    name: "SSC Steno Grade C & D",
+    hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
+    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
+    thumbnailUrl: "",
+    sortOrder: 3,
+    isPublished: true,
+  },
+  {
+    name: "Allahabad High Court Steno",
+    hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
+    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
+    thumbnailUrl: "",
+    sortOrder: 4,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 1",
+    hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    thumbnailUrl: "",
+    sortOrder: 5,
+    isPublished: true,
+  },
+  {
+    name: "रामधारी खण्ड 2",
+    hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
+    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
+    thumbnailUrl: "",
+    sortOrder: 6,
+    isPublished: true,
+  },
+];
+
+export async function getStenoBatchesAction(query?: any) {
+  try {
+    await connectDB();
+
+    // Purge unwanted auto-generated General Batch from database if it exists
+    await StenoBatch.deleteMany({ name: "General Batch" });
+    await StenoSeries.deleteMany({ batch: "General Batch" });
+
+    const filter: any = {};
+    if (query?.isPublished !== undefined) {
+      filter.isPublished = query.isPublished;
+    }
+
+    let batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+
+    if (batches.length === 0) {
+      // Seed default initial batches if DB is empty
+      await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
+      batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+    }
+
+    // Ensure Thakurdwara batch exists with banner
+    const thakurdwaraBatch = batches.find((b: any) => b.name.includes("ठाकुरद्वारा"));
+    if (!thakurdwaraBatch) {
+      await StenoBatch.create({
+        name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+        hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+        description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+        thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+        coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+        instituteCode: "THAKURDWARA_STENO",
+        sortOrder: 0,
+        isPublished: true,
+      });
+      batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+    }
+
+    if (batches.length === 0) {
+      batches = DEFAULT_INITIAL_BATCHES as any[];
+    }
+
+    return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
+  } catch (err: any) {
+    return { success: true, batches: DEFAULT_INITIAL_BATCHES };
+  }
+}
+
+export async function createStenoBatchAction(data: {
+  name: string;
+  hindiName?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  examPresetId?: string;
+  coachingName?: string;
+  instituteCode?: string;
+  managedByEmail?: string;
+  sortOrder?: number;
+  isPublished?: boolean;
+}) {
+  try {
+    await connectDB();
+    if (!data.name || !data.name.trim()) {
+      return { success: false, error: "Batch Name is required" };
+    }
+
+    const batchName = data.name.trim();
+
+    let batch = await StenoBatch.findOne({ name: batchName });
+    if (!batch) {
+      batch = await StenoBatch.create({
+        name: batchName,
+        hindiName: data.hindiName || "",
+        description: data.description || "",
+        thumbnailUrl: data.thumbnailUrl || "",
+        examPresetId: data.examPresetId ? data.examPresetId : null,
+        coachingName: data.coachingName || "",
+        instituteCode: data.instituteCode || "",
+        managedByEmail: data.managedByEmail || "",
+        sortOrder: data.sortOrder || 0,
+        isPublished: data.isPublished ?? true,
+      });
+    }
+
+
+
+    revalidatePath("/admin/steno/batches");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/admin/steno/passages");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    return { success: true, batch: JSON.parse(JSON.stringify(batch)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateStenoBatchAction(id: string, data: any) {
+  try {
+    await connectDB();
+    const payload = { ...data };
+    if (payload.examPresetId === "" || payload.examPresetId === undefined) {
+      payload.examPresetId = null;
+    }
+    const updated = await StenoBatch.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
+    revalidatePath("/admin/steno/batches");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    return { success: true, batch: JSON.parse(JSON.stringify(updated)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteStenoBatchAction(id: string) {
+  try {
+    await connectDB();
+    await StenoBatch.findByIdAndDelete(id);
+    revalidatePath("/admin/steno/batches");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
+  try {
+    await connectDB();
+    const targetCode = instCode.trim().toUpperCase();
+
+    // 1. Find users with matching instituteCode or whose StudentProfile has this code
+    const users = await User.find({
+      $or: [
+        { instituteCode: targetCode },
+        { email: "stenoinstitute@ngitedu.com" }
+      ]
+    }).select("name email mobile instituteCode createdAt isActive role").lean();
+
+    const userIds = users.filter((u: any) => u.role === UserRole.STUDENT).map((u: any) => u._id);
+
+    // 2. Fetch results for these students
+    const StenoResult = (await import("@/models/StenoResult")).default;
+    const results = await StenoResult.find({ userId: { $in: userIds } })
+      .select("userId speedWpm netWpm accuracy createdAt score")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 3. Aggregate per student stats
+    const studentDataMap: Record<string, any> = {};
+    for (const u of users) {
+      if (u.role !== UserRole.STUDENT) continue;
+      const uidStr = u._id.toString();
+      studentDataMap[uidStr] = {
+        _id: uidStr,
+        name: u.name,
+        email: u.email,
+        mobile: u.mobile || "N/A",
+        instituteCode: u.instituteCode || targetCode,
+        createdAt: u.createdAt,
+        totalAttempts: 0,
+        bestWpm: 0,
+        avgAccuracy: 0,
+        results: [],
+      };
+    }
+
+    let accSumMap: Record<string, number> = {};
+
+    for (const r of results) {
+      const uidStr = r.userId?.toString();
+      if (studentDataMap[uidStr]) {
+        studentDataMap[uidStr].totalAttempts += 1;
+        const wpm = r.netWpm || r.speedWpm || 0;
+        if (wpm > studentDataMap[uidStr].bestWpm) {
+          studentDataMap[uidStr].bestWpm = wpm;
+        }
+        accSumMap[uidStr] = (accSumMap[uidStr] || 0) + (r.accuracy || 0);
+        studentDataMap[uidStr].results.push(r);
+      }
+    }
+
+    const studentList = Object.values(studentDataMap).map((s: any) => {
+      if (s.totalAttempts > 0) {
+        s.avgAccuracy = Math.round((accSumMap[s._id] / s.totalAttempts) * 10) / 10;
+      }
+      return s;
+    });
+
+    return {
+      success: true,
+      instituteCode: targetCode,
+      totalStudents: studentList.length,
+      students: JSON.parse(JSON.stringify(studentList)),
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function cleanupAutoCreatedSeriesAction() {
+  try {
+    await connectDB();
+    const res = await StenoSeries.deleteMany({ title: "सामान्य अभ्यास" });
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/steno");
+    revalidatePath("/student/steno/series");
+    return { success: true, deletedCount: res.deletedCount };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+

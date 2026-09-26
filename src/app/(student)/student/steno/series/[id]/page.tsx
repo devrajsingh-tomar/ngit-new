@@ -1,31 +1,56 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getStenoSeriesByIdAction, getStenoPassagesAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Headphones, Play, Search, Clock, FileText, Keyboard, RefreshCw, Trophy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { isRealPoster, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
-export default function StudentStenoSeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+function SeriesDetailContent({ id }: { id: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryBatch = searchParams.get("batch");
+
   const [series, setSeries] = useState<any>(null);
   const [passages, setPassages] = useState<any[]>([]);
   const [selectedMode, setSelectedMode] = useState<"all" | "unicode_hindi" | "krutidev_010" | "english">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const activeBatch = queryBatch || series?.batch || "";
+
+  // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
+  useEffect(() => {
+    window.history.pushState({ page: "steno-step3" }, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      const targetUrl = activeBatch
+        ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}`
+        : "/student/steno/series";
+      router.replace(targetUrl);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router, activeBatch]);
+
   useEffect(() => {
     loadSeriesData();
-  }, [resolvedParams.id]);
+  }, [id]);
 
   const loadSeriesData = async () => {
     setLoading(true);
     const [sRes, pRes] = await Promise.all([
-      getStenoSeriesByIdAction(resolvedParams.id),
-      getStenoPassagesAction({ seriesId: resolvedParams.id }),
+      getStenoSeriesByIdAction(id),
+      getStenoPassagesAction({ seriesId: id }),
     ]);
 
     if (sRes.success && sRes.series) {
@@ -57,9 +82,9 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
         <Card className="p-12 rounded-3xl border-dashed bg-white space-y-3">
           <h2 className="text-lg font-black text-slate-800">Series Not Found</h2>
           <p className="text-xs text-slate-500">This Steno series might have been unpublished or removed.</p>
-          <Link href="/student/steno/series">
+          <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
             <Button className="rounded-xl text-xs font-bold gap-1.5 mt-2">
-              <ArrowLeft className="w-4 h-4" /> Back to All Batches
+              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} Batch` : "All Batches"}
             </Button>
           </Link>
         </Card>
@@ -82,8 +107,14 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     }
   }
 
+  // Sort ALL passages by createdAt / updatedAt descending (NEWEST UPLOADED FIRST)
+  allPassages.sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+    const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+    return timeB - timeA;
+  });
+
   const filteredTests = allPassages.filter((t) => {
-    // Mode match
     if (selectedMode === "unicode_hindi") {
       if (t.language !== "Hindi" && t.typingMode !== "unicode_hindi") return false;
       if (t.typingMode === "krutidev_010") return false;
@@ -99,46 +130,57 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
     return true;
   });
 
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-1 sm:p-2">
       {/* Header Bar */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
+            {(() => {
+              const isThakurdwara = (activeBatch || "").toLowerCase().includes("thakurdwara") || (activeBatch || "").includes("ठाकुरद्वारा") || (activeBatch || "").toLowerCase().includes("stenoinstitute");
+              return (
+                <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
+                  {isThakurdwara ? "Step 4 of 4 • Dictation Passages" : "Step 3 of 3 • Dictation Passages"}
+                </span>
+              );
+            })()}
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
-              {series.category || "Official Batch"}
+              {activeBatch || "Official Batch"}
             </span>
             <span className="text-xs font-bold text-slate-400">• {series.language || "Hindi"} Steno</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            {series.title}
+            {series.title} • आशुलिपि डिक्टेशन सूची
           </h1>
           {series.description && (
             <p className="text-xs text-slate-500 font-medium max-w-xl">{series.description}</p>
           )}
         </div>
 
-        <Link href="/student/steno/series">
-          <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-            <ArrowLeft className="w-4 h-4" /> Back to Batches
-          </Button>
-        </Link>
+        {/* Back Button to Step 3 / Step 2 */}
+        <div className="flex items-center gap-2 shrink-0">
+          {(() => {
+            const isThakurdwara = (activeBatch || "").toLowerCase().includes("thakurdwara") || (activeBatch || "").includes("ठाकुरद्वारा") || (activeBatch || "").toLowerCase().includes("stenoinstitute");
+            const stepText = isThakurdwara ? "Step 3" : "Step 2";
+            return (
+              <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
+                <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
+                  <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (${stepText})` : "All Batches"}
+                </Button>
+              </Link>
+            );
+          })()}
+        </div>
       </div>
 
-      {/* Series Thumbnail Banner (if uploaded) */}
-      {series.thumbnailUrl && (
-        <div className="h-44 sm:h-52 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-slate-950 relative">
+      {/* Series Thumbnail Poster (if uploaded) */}
+      {isRealPoster(series.thumbnailUrl) && (
+        <div className="w-full rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-950 flex items-center justify-center">
           <img
             src={series.thumbnailUrl}
             alt={series.title}
-            className="w-full h-full object-cover"
+            className="w-full h-auto max-h-[380px] object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
-            <span className="text-white font-black text-lg drop-shadow-md">
-              {series.title} • {allPassages.length} Dictations Available
-            </span>
-          </div>
         </div>
       )}
 
@@ -149,56 +191,55 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
             onClick={() => setSelectedMode("all")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "all"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            🌐 All Dictations ({allPassages.length})
+            All Dictations ({allPassages.length})
           </button>
           <button
             onClick={() => setSelectedMode("unicode_hindi")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "unicode_hindi"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            🇮🇳 Hindi - Mangal
+            Hindi Unicode (मंगल / Inscript)
           </button>
           <button
             onClick={() => setSelectedMode("krutidev_010")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "krutidev_010"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            ⌨️ Hindi - Kruti Dev 010
+            Kruti Dev 010 (कृतिदेव)
           </button>
           <button
             onClick={() => setSelectedMode("english")}
             className={`px-4 py-2 text-xs font-black rounded-lg transition-all whitespace-nowrap ${
               selectedMode === "english"
-                ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-indigo-900 shadow-sm font-black"
+                : "text-slate-500 hover:text-slate-900 font-bold"
             }`}
           >
-            🔤 English
+            English Steno
           </button>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Input */}
         <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search dictations..."
-            className="pl-9 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold h-9 shadow-xs"
+            placeholder="Search dictation..."
+            className="pl-9 h-9 rounded-xl text-xs font-semibold bg-white"
           />
         </div>
       </div>
-
 
       {/* Tests Grid */}
       {filteredTests.length === 0 ? (
@@ -215,20 +256,32 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTests.map((test) => (
-            <Card
-              key={test._id}
-              className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between group"
-            >
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
-                    {test.targetWpm || 80} WPM • {test.language || "Hindi"}
-                  </span>
-                  <span className="text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
-                    {test.category || "General"}
-                  </span>
-                </div>
+          {filteredTests.map((test, idx) => {
+            const isNew = isNewlyUploaded(test.createdAt) || idx === 0;
+
+            return (
+              <Card
+                key={test._id}
+                className={`p-6 rounded-3xl bg-white shadow-xs space-y-4 transition-all flex flex-col justify-between group ${
+                  isNew ? "border-2 border-rose-200 hover:border-rose-300 shadow-sm" : "border border-slate-200 hover:border-indigo-300 hover:shadow-md"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                        {test.targetWpm || 80} WPM • {test.language || "Hindi"}
+                      </span>
+                      {isNew && (
+                        <span className="text-[10px] font-black uppercase bg-rose-600 text-white px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
+                          <Sparkles className="w-3 h-3 fill-white" /> NEW
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded shrink-0">
+                      {test.category || "General"}
+                    </span>
+                  </div>
 
                 <div>
                   <h3 className="text-base font-black text-slate-900 line-clamp-2 group-hover:text-indigo-600 transition-colors leading-snug">
@@ -265,16 +318,35 @@ export default function StudentStenoSeriesDetailPage({ params }: { params: Promi
                 </Link>
               </div>
 
-              <Link href={`/student/steno/passage/${test._id}`} className="block pt-2">
+              <Link href={`/student/steno/passage/${test._id}${activeBatch ? `?batch=${encodeURIComponent(activeBatch)}` : ""}`} className="block pt-2">
                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl shadow-md gap-2">
                   <Play className="w-4 h-4 fill-white" /> Play Dictation / Start Test
                 </Button>
               </Link>
             </Card>
-          ))}
+          );
+        })}
         </div>
       )}
     </div>
   );
 }
 
+export default function StudentStenoSeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+
+  return (
+    <Suspense
+      fallback={
+        <div className="py-24 text-center text-slate-400 space-y-3">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500">
+            Loading Series Tests...
+          </p>
+        </div>
+      }
+    >
+      <SeriesDetailContent id={resolvedParams.id} />
+    </Suspense>
+  );
+}

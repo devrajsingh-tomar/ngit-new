@@ -72,17 +72,13 @@ export default function HeroSlider({ blocks = [] }: HeroSliderProps) {
                             const rel = slide.openInNewTab ? "noopener noreferrer" : undefined;
 
                             const slideContent = (
-                                <div className="relative w-full h-[280px] sm:h-[400px] md:h-[550px] lg:h-[600px] overflow-hidden group/slide">
-                                    <Image
+                                <div className="relative w-full overflow-hidden group/slide flex items-center justify-center bg-white">
+                                    <img
                                         src={imageUrl}
                                         alt={slide.title || "Promotional Banner"}
-                                        fill
-                                        sizes="100vw"
-                                        priority={idx === 0}
-                                        className="object-cover"
+                                        className="w-full h-auto block object-cover"
                                         loading={idx === 0 ? "eager" : "lazy"}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent pointer-events-none" />
                                 </div>
                             );
 

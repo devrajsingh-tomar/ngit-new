@@ -12,9 +12,11 @@ import {
     Type,
     Sliders,
     Trophy,
+    Video,
     BarChart3,
     Clock,
     X,
+    Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,13 +31,14 @@ const stenoAdminMenuGroups = [
         groupLabel: "Steno Management",
         items: [
             { label: "Steno Control Center", href: "/steno/admin/dashboard", icon: Mic },
-            { label: "Steno Batches & Series", href: "/steno/admin/series", icon: Layers },
-            { label: "Dictation Passages", href: "/steno/admin/passages", icon: Headphones },
-            { label: "Exam Presets & Rules", href: "/steno/admin/exams", icon: Award },
+            { label: "Institute Students", href: "/steno/admin/students", icon: Users },
+            { label: "Target Steno Batches (Step 1)", href: "/steno/admin/batches", icon: Layers },
+            { label: "Exam Selection & Rules (Step 2)", href: "/steno/admin/exams", icon: Award },
+            { label: "Series Topics (Step 3)", href: "/steno/admin/series", icon: FileText },
+            { label: "Dictation Passages (Step 4)", href: "/steno/admin/passages", icon: Headphones },
             { label: "Student Results", href: "/steno/admin/results", icon: BarChart3 },
         ]
     }
-
 ];
 
 interface StenoAdminSidebarProps {

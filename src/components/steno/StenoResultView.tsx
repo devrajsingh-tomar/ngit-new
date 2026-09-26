@@ -31,6 +31,8 @@ interface StenoResultViewProps {
 export default function StenoResultView({ result }: StenoResultViewProps) {
   const [logPage, setLogPage] = useState(1);
   const [downloading, setDownloading] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const pageSize = 20;
 
   const dateStr = result.createdAt ? new Date(result.createdAt).toLocaleString() : new Date().toLocaleString();
@@ -49,14 +51,64 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
   };
   const wordTokens = result.wordBreakdown || [];
 
-  const totalLogPages = Math.max(1, Math.ceil(errorLog.length / pageSize));
-  const paginatedErrorLog = errorLog.slice((logPage - 1) * pageSize, logPage * pageSize);
+  const isTokenMatchingFilter = (token: any, filterKey: string) => {
+    if (filterKey === "all") return true;
+    const t = (token.type || "").toLowerCase();
+
+    if (filterKey === "spelling") return t.includes("spelling");
+    if (filterKey === "missing") return t.includes("missing") || t.includes("skipped");
+    if (filterKey === "added") return t.includes("added");
+    if (filterKey === "matra") return t.includes("matra");
+    if (filterKey === "punctuation") return t.includes("punctuation");
+    if (filterKey === "correct") return t.includes("correct") || t === "" || t === "none";
+    return true;
+  };
+
+  const filteredTokens = wordTokens.filter((token: any) => isTokenMatchingFilter(token, selectedCategoryFilter));
+  const correctCount = wordTokens.filter((t: any) => !t.type || t.type === "correct" || t.type === "none").length;
+
+  const filteredErrorLog = errorLog.filter((err: any) => {
+    if (selectedCategoryFilter === "all" || selectedCategoryFilter === "correct") return true;
+    const cat = (err.category || err.errorType || "").toLowerCase();
+    if (selectedCategoryFilter === "spelling") return cat.includes("spelling");
+    if (selectedCategoryFilter === "missing") return cat.includes("missing") || cat.includes("skipped");
+    if (selectedCategoryFilter === "added") return cat.includes("added");
+    if (selectedCategoryFilter === "matra") return cat.includes("matra");
+    if (selectedCategoryFilter === "punctuation") return cat.includes("punctuation");
+    return true;
+  });
+
+  const totalLogPages = Math.max(1, Math.ceil(filteredErrorLog.length / pageSize));
+  const paginatedErrorLog = filteredErrorLog.slice((logPage - 1) * pageSize, logPage * pageSize);
+  const displayedErrorLog = isExportingPdf ? filteredErrorLog : paginatedErrorLog;
 
   const handleDownloadPdf = async () => {
     try {
       setDownloading(true);
-      toast.loading("Generating High-Resolution Steno Result PDF...", { id: "pdf-download" });
+      toast.loading("Generating Official Steno Result PDF...", { id: "pdf-download" });
 
+      if (result._id) {
+        const response = await fetch(`/api/steno/result/${result._id}/pdf`, { credentials: "include" });
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const cleanTitle = (result.passageTitle || "Steno_Result").replace(/[^a-zA-Z0-9]/g, "_");
+          const cleanName = (result.userId?.name || "Student").replace(/[^a-zA-Z0-9]/g, "_");
+          link.download = `NGIT_Steno_Result_${cleanTitle}_${cleanName}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+          toast.success("Result PDF downloaded successfully!", { id: "pdf-download" });
+          return;
+        }
+      }
+
+      // Client-side fallback if result ID is absent
+      setIsExportingPdf(true);
+      await new Promise((resolve) => setTimeout(resolve, 300));
       await generateStenoResultImagePdf({
         elementId: "steno-result-printable-area",
         candidateName: result.userId?.name || "Student",
@@ -68,12 +120,13 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
       console.error("PDF Download Error:", err);
       toast.error(err.message || "Failed to download result PDF.", { id: "pdf-download" });
     } finally {
+      setIsExportingPdf(false);
       setDownloading(false);
     }
   };
 
   return (
-    <div id="steno-result-printable-area" className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500 bg-[#f8fafc]">
+    <div id="steno-result-printable-area" className="space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto bg-[#f8fafc]">
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
@@ -96,7 +149,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             </div>
           </div>
 
-          <div className="shrink-0 flex items-center gap-3">
+          <div className="shrink-0 flex items-center gap-3" data-html2canvas-ignore="true">
             <Button
               onClick={handleDownloadPdf}
               disabled={downloading}
@@ -160,46 +213,129 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
 
       {/* Visual Mistake Category Breakdown */}
       <div className="space-y-3">
-        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.25em] px-1">
-          Mistake Category Breakdown & Error Weights
-        </h3>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.25em]">
+            Mistake Category Breakdown & Error Weights
+          </h3>
+          {selectedCategoryFilter !== "all" && (
+            <button
+              onClick={() => {
+                setSelectedCategoryFilter("all");
+                setLogPage(1);
+              }}
+              className="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 underline flex items-center gap-1 cursor-pointer"
+            >
+              Reset Filter (Show All)
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="p-5 rounded-3xl border-rose-100 bg-rose-50/30 flex justify-between items-center">
+          {/* Spelling Errors Card */}
+          <Card
+            onClick={() => {
+              setSelectedCategoryFilter(selectedCategoryFilter === "spelling" ? "all" : "spelling");
+              setLogPage(1);
+            }}
+            className={`p-5 rounded-3xl border cursor-pointer transition-all flex justify-between items-center ${
+              selectedCategoryFilter === "spelling"
+                ? "border-rose-400 bg-rose-100/90 shadow-md ring-2 ring-rose-400 scale-[1.02]"
+                : "border-rose-100 bg-rose-50/30 hover:bg-rose-50/70 hover:scale-[1.01]"
+            }`}
+          >
             <div>
-              <p className="text-xs font-black text-rose-900">Spelling Errors</p>
+              <p className="text-xs font-black text-rose-900 flex items-center gap-1.5">
+                Spelling Errors
+                {selectedCategoryFilter === "spelling" && <CheckCircle2 className="w-3.5 h-3.5 text-rose-600" />}
+              </p>
               <p className="text-2xl font-black text-rose-600 mt-1">{breakdown.spelling}</p>
             </div>
             <Badge className="bg-rose-100 text-rose-700 font-bold text-[9px] uppercase">{weights.spellingWeight}</Badge>
           </Card>
 
-          <Card className="p-5 rounded-3xl border-amber-100 bg-amber-50/30 flex justify-between items-center">
+          {/* Missing Words Card */}
+          <Card
+            onClick={() => {
+              setSelectedCategoryFilter(selectedCategoryFilter === "missing" ? "all" : "missing");
+              setLogPage(1);
+            }}
+            className={`p-5 rounded-3xl border cursor-pointer transition-all flex justify-between items-center ${
+              selectedCategoryFilter === "missing"
+                ? "border-amber-400 bg-amber-100/90 shadow-md ring-2 ring-amber-400 scale-[1.02]"
+                : "border-amber-100 bg-amber-50/30 hover:bg-amber-50/70 hover:scale-[1.01]"
+            }`}
+          >
             <div>
-              <p className="text-xs font-black text-amber-900">Missing Words</p>
+              <p className="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                Missing Words
+                {selectedCategoryFilter === "missing" && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
+              </p>
               <p className="text-2xl font-black text-amber-600 mt-1">{breakdown.missing}</p>
             </div>
             <Badge className="bg-amber-100 text-amber-700 font-bold text-[9px] uppercase">{weights.missingWordWeight}</Badge>
           </Card>
 
-          <Card className="p-5 rounded-3xl border-blue-100 bg-blue-50/30 flex justify-between items-center">
+          {/* Added Words Card */}
+          <Card
+            onClick={() => {
+              setSelectedCategoryFilter(selectedCategoryFilter === "added" ? "all" : "added");
+              setLogPage(1);
+            }}
+            className={`p-5 rounded-3xl border cursor-pointer transition-all flex justify-between items-center ${
+              selectedCategoryFilter === "added"
+                ? "border-blue-400 bg-blue-100/90 shadow-md ring-2 ring-blue-400 scale-[1.02]"
+                : "border-blue-100 bg-blue-50/30 hover:bg-blue-50/70 hover:scale-[1.01]"
+            }`}
+          >
             <div>
-              <p className="text-xs font-black text-blue-900">Added Words</p>
+              <p className="text-xs font-black text-blue-900 flex items-center gap-1.5">
+                Added Words
+                {selectedCategoryFilter === "added" && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+              </p>
               <p className="text-2xl font-black text-blue-600 mt-1">{breakdown.added}</p>
             </div>
             <Badge className="bg-blue-100 text-blue-700 font-bold text-[9px] uppercase">{weights.addedWordWeight}</Badge>
           </Card>
 
-          <Card className="p-5 rounded-3xl border-purple-100 bg-purple-50/30 flex justify-between items-center">
+          {/* Matra Errors Card */}
+          <Card
+            onClick={() => {
+              setSelectedCategoryFilter(selectedCategoryFilter === "matra" ? "all" : "matra");
+              setLogPage(1);
+            }}
+            className={`p-5 rounded-3xl border cursor-pointer transition-all flex justify-between items-center ${
+              selectedCategoryFilter === "matra"
+                ? "border-purple-400 bg-purple-100/90 shadow-md ring-2 ring-purple-400 scale-[1.02]"
+                : "border-purple-100 bg-purple-50/30 hover:bg-purple-50/70 hover:scale-[1.01]"
+            }`}
+          >
             <div>
-              <p className="text-xs font-black text-purple-900">Matra Errors</p>
+              <p className="text-xs font-black text-purple-900 flex items-center gap-1.5">
+                Matra Errors
+                {selectedCategoryFilter === "matra" && <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />}
+              </p>
               <p className="text-2xl font-black text-purple-600 mt-1">{breakdown.matra}</p>
             </div>
             <Badge className="bg-purple-100 text-purple-700 font-bold text-[9px] uppercase">{weights.matraWeight}</Badge>
           </Card>
 
-          <Card className="p-5 rounded-3xl border-emerald-100 bg-emerald-50/30 flex justify-between items-center col-span-2 md:col-span-1">
+          {/* Punctuation Card */}
+          <Card
+            onClick={() => {
+              setSelectedCategoryFilter(selectedCategoryFilter === "punctuation" ? "all" : "punctuation");
+              setLogPage(1);
+            }}
+            className={`p-5 rounded-3xl border cursor-pointer transition-all flex justify-between items-center col-span-2 md:col-span-1 ${
+              selectedCategoryFilter === "punctuation"
+                ? "border-emerald-400 bg-emerald-100/90 shadow-md ring-2 ring-emerald-400 scale-[1.02]"
+                : "border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50/70 hover:scale-[1.01]"
+            }`}
+          >
             <div>
-              <p className="text-xs font-black text-emerald-900">Punctuation</p>
+              <p className="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+                Punctuation
+                {selectedCategoryFilter === "punctuation" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+              </p>
               <p className="text-2xl font-black text-emerald-600 mt-1">{breakdown.punctuation}</p>
             </div>
             <Badge className="bg-emerald-100 text-emerald-700 font-bold text-[9px] uppercase">{weights.punctuationWeight}</Badge>
@@ -211,40 +347,135 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
       <Card className="p-6 md:p-8 rounded-[2.5rem] border-slate-100 bg-white shadow-xl space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Word-by-Word Evaluation</h3>
-            <p className="text-xs text-slate-400 font-medium">Visual side-by-side alignment of student transcription vs original dictation</p>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Word-by-Word Evaluation</h3>
+              {selectedCategoryFilter !== "all" && (
+                <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase px-2.5 py-0.5 border border-indigo-200">
+                  Filtered: {selectedCategoryFilter} ({filteredTokens.length} words)
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
+              {selectedCategoryFilter === "all"
+                ? "Visual side-by-side alignment of student transcription vs original dictation"
+                : `Showing only ${selectedCategoryFilter.toUpperCase()} items below. Click any card/badge to change filter.`}
+            </p>
           </div>
 
-          {/* Highlighting Legend */}
+          {/* Interactive Highlighting Legend Pills */}
           <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
-            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">Correct</span>
-            <span className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg border border-rose-200">Spelling Error</span>
-            <span className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg border border-amber-200">Missing Word</span>
-            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg border border-blue-200">Added Word</span>
-            <span className="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg border border-purple-200">Matra Error</span>
-            <span className="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg border border-teal-200">Punctuation</span>
+            <button
+              onClick={() => { setSelectedCategoryFilter("all"); setLogPage(1); }}
+              className={`px-3 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "all"
+                  ? "bg-slate-900 text-white border-slate-900 font-black shadow-xs"
+                  : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+              }`}
+            >
+              All Words ({wordTokens.length})
+            </button>
+            <button
+              onClick={() => { setSelectedCategoryFilter(selectedCategoryFilter === "correct" ? "all" : "correct"); setLogPage(1); }}
+              className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "correct"
+                  ? "bg-emerald-600 text-white border-emerald-600 font-black shadow-xs ring-2 ring-emerald-300"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              }`}
+            >
+              Correct ({correctCount})
+            </button>
+            <button
+              onClick={() => { setSelectedCategoryFilter(selectedCategoryFilter === "spelling" ? "all" : "spelling"); setLogPage(1); }}
+              className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "spelling"
+                  ? "bg-rose-600 text-white border-rose-600 font-black shadow-xs ring-2 ring-rose-300"
+                  : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+              }`}
+            >
+              Spelling Error ({breakdown.spelling})
+            </button>
+            <button
+              onClick={() => { setSelectedCategoryFilter(selectedCategoryFilter === "missing" ? "all" : "missing"); setLogPage(1); }}
+              className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "missing"
+                  ? "bg-amber-600 text-white border-amber-600 font-black shadow-xs ring-2 ring-amber-300"
+                  : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              Missing Word ({breakdown.missing})
+            </button>
+            <button
+              onClick={() => { setSelectedCategoryFilter(selectedCategoryFilter === "added" ? "all" : "added"); setLogPage(1); }}
+              className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "added"
+                  ? "bg-blue-600 text-white border-blue-600 font-black shadow-xs ring-2 ring-blue-300"
+                  : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+              }`}
+            >
+              Added Word ({breakdown.added})
+            </button>
+            <button
+              onClick={() => { setSelectedCategoryFilter(selectedCategoryFilter === "matra" ? "all" : "matra"); setLogPage(1); }}
+              className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "matra"
+                  ? "bg-purple-600 text-white border-purple-600 font-black shadow-xs ring-2 ring-purple-300"
+                  : "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+              }`}
+            >
+              Matra Error ({breakdown.matra})
+            </button>
+            <button
+              onClick={() => { setSelectedCategoryFilter(selectedCategoryFilter === "punctuation" ? "all" : "punctuation"); setLogPage(1); }}
+              className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                selectedCategoryFilter === "punctuation"
+                  ? "bg-teal-600 text-white border-teal-600 font-black shadow-xs ring-2 ring-teal-300"
+                  : "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100"
+              }`}
+            >
+              Punctuation ({breakdown.punctuation})
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-sm leading-relaxed p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[160px] max-h-[350px] overflow-y-auto">
-          {wordTokens.map((token: any, idx: number) => {
-            let colorClasses = "bg-emerald-50 text-emerald-800 border-emerald-200";
-            if (token.type === "spelling") colorClasses = "bg-rose-100 text-rose-900 border-rose-300 font-bold";
-            if (token.type === "missing") colorClasses = "bg-amber-100 text-amber-900 border-amber-300 line-through";
-            if (token.type === "added") colorClasses = "bg-blue-100 text-blue-900 border-blue-300 underline";
-            if (token.type === "matra") colorClasses = "bg-purple-100 text-purple-900 border-purple-300 font-bold";
-            if (token.type === "punctuation") colorClasses = "bg-teal-100 text-teal-900 border-teal-300";
-
-            return (
-              <span
-                key={idx}
-                className={`px-2 py-1 rounded-xl border text-sm inline-block transition-transform hover:scale-105 ${colorClasses}`}
-                title={`Typed: "${token.typed}" | Original: "${token.original}"`}
+        <div className={`flex flex-wrap gap-2 text-sm leading-relaxed p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[160px] ${isExportingPdf ? "" : "max-h-[350px] overflow-y-auto"}`}>
+          {filteredTokens.length === 0 ? (
+            <div className="w-full py-10 text-center text-slate-400 space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+              <p className="text-sm font-black text-slate-700 uppercase">
+                No {selectedCategoryFilter} Instances Found
+              </p>
+              <p className="text-xs text-slate-400 font-medium">
+                There are 0 word tokens matching the "{selectedCategoryFilter}" category in this test transcript.
+              </p>
+              <Button
+                onClick={() => setSelectedCategoryFilter("all")}
+                variant="outline"
+                size="sm"
+                className="mt-2 rounded-xl text-xs font-bold"
               >
-                {token.typed !== "—" ? token.typed : token.original}
-              </span>
-            );
-          })}
+                Show All Words
+              </Button>
+            </div>
+          ) : (
+            filteredTokens.map((token: any, idx: number) => {
+              let colorClasses = "bg-emerald-50 text-emerald-800 border-emerald-200";
+              if (token.type === "spelling") colorClasses = "bg-rose-100 text-rose-900 border-rose-300 font-bold";
+              if (token.type === "missing") colorClasses = "bg-amber-100 text-amber-900 border-amber-300 line-through";
+              if (token.type === "added") colorClasses = "bg-blue-100 text-blue-900 border-blue-300 underline";
+              if (token.type === "matra") colorClasses = "bg-purple-100 text-purple-900 border-purple-300 font-bold";
+              if (token.type === "punctuation") colorClasses = "bg-teal-100 text-teal-900 border-teal-300";
+
+              return (
+                <span
+                  key={idx}
+                  className={`px-2 py-1 rounded-xl border text-sm inline-block transition-transform hover:scale-105 ${colorClasses}`}
+                  title={`Typed: "${token.typed}" | Original: "${token.original}"`}
+                >
+                  {token.typed !== "—" ? token.typed : token.original}
+                </span>
+              );
+            })
+          )}
         </div>
       </Card>
 
@@ -252,8 +483,13 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
       <Card className="p-6 md:p-8 rounded-[2.5rem] border-slate-100 bg-white shadow-xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Detailed Mistake Log ({errorLog.length})</h3>
-            <p className="text-xs text-slate-400 font-medium">Itemized list of every mistake, category, error weight, and calculated penalty</p>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">
+              Detailed Mistake Log ({filteredErrorLog.length})
+            </h3>
+            <p className="text-xs text-slate-400 font-medium">
+              Itemized list of every mistake, category, error weight, and calculated penalty
+              {selectedCategoryFilter !== "all" && ` (Filtered: ${selectedCategoryFilter.toUpperCase()})`}
+            </p>
           </div>
         </div>
 
@@ -271,16 +507,16 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedErrorLog.length === 0 ? (
+              {displayedErrorLog.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-12 text-center text-slate-400 font-bold">
                     Clean transcript! Zero mistakes recorded for this attempt.
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedErrorLog.map((err: any, idx: number) => (
+                displayedErrorLog.map((err: any, idx: number) => (
                   <TableRow key={idx} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="font-bold text-slate-400 pl-6">{err.index || (logPage - 1) * pageSize + idx + 1}</TableCell>
+                    <TableCell className="font-bold text-slate-400 pl-6">{err.index || (isExportingPdf ? idx + 1 : (logPage - 1) * pageSize + idx + 1)}</TableCell>
                     <TableCell className="font-bold text-slate-900">{err.errorType}</TableCell>
                     <TableCell className="font-bold text-rose-600">{err.typedWord || "—"}</TableCell>
                     <TableCell className="font-bold text-slate-700">{err.originalWord || "—"}</TableCell>
@@ -295,7 +531,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             </TableBody>
           </Table>
 
-          {totalLogPages > 1 && (
+          {!isExportingPdf && totalLogPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Showing {paginatedErrorLog.length} of {errorLog.length} errors
@@ -334,7 +570,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <Mic className="w-5 h-5" />
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Original Dictation Transcript</h3>
           </div>
-          <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "" : "max-h-[300px] overflow-y-auto"}`}>
             {result.originalText || result.passageId?.transcriptText || result.passageId?.text || "Original passage text unavailable."}
           </div>
         </Card>
@@ -345,7 +581,7 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             <Keyboard className="w-5 h-5" />
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Your Typed Student Transcript</h3>
           </div>
-          <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+          <div className={`p-6 bg-slate-50 rounded-3xl border border-slate-100 text-sm leading-relaxed font-medium text-slate-800 whitespace-pre-wrap ${isExportingPdf ? "" : "max-h-[300px] overflow-y-auto"}`}>
             {result.typedTranscription || "Typed transcription text unavailable."}
           </div>
         </Card>

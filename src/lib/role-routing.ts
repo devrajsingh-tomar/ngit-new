@@ -43,6 +43,6 @@ export function getDashboardRoute(role?: string | UserRole | null): string {
             return "/student";
             
         default:
-            return "/";
+            return "/student";
     }
 }

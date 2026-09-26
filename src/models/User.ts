@@ -11,7 +11,10 @@ export interface IUser extends Document {
     image?: string;
     bio?: string;
     role: UserRole;
+    instituteCode?: string;
     isActive: boolean;
+    resetToken?: string;
+    resetTokenExpiry?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -29,7 +32,10 @@ const UserSchema = new Schema<IUser>(
             enum: Object.values(UserRole),
             default: UserRole.STUDENT,
         },
+        instituteCode: { type: String, index: true },
         isActive: { type: Boolean, default: true },
+        resetToken: { type: String, default: null },
+        resetTokenExpiry: { type: Date, default: null },
     },
     { timestamps: true }
 );

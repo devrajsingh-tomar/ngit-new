@@ -3,6 +3,7 @@
 import NotificationBell from "@/components/shared/NotificationBell";
 import { Menu, LogOut, User, Settings } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,6 +20,7 @@ interface ManagerNavbarProps {
 
 export default function ManagerNavbar({ onMenuClick }: ManagerNavbarProps) {
     const { data: session } = useSession();
+    const router = useRouter();
 
     return (
         <header className="h-20 bg-white/80 backdrop-blur-md border-b flex items-center justify-between px-6 md:px-10 sticky top-0 z-40">
@@ -56,7 +58,11 @@ export default function ManagerNavbar({ onMenuClick }: ManagerNavbarProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-64 rounded-2xl p-2 shadow-2xl border-slate-100" align="end" sideOffset={8}>
                             <DropdownMenuLabel className="font-bold text-xs text-slate-400 uppercase tracking-widest px-3 mb-1">Manager Account</DropdownMenuLabel>
-                            <DropdownMenuItem className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer gap-3" asChild>
+                            <DropdownMenuItem 
+                                className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer gap-3" 
+                                onSelect={() => router.push("/admin/settings")}
+                                asChild
+                            >
                                 <Link href="/admin/settings">
                                     <User className="w-4 h-4" /> Profile Info & Security
                                 </Link>

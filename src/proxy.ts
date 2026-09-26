@@ -113,9 +113,9 @@ export async function proxy(request: NextRequest) {
 
         const role = token.role as string;
 
-        // Student accessing admin routes → redirect to student portal
+        // Student accessing admin routes → redirect to home portal
         if (role === UserRole.STUDENT || role === "STUDENT") {
-            return NextResponse.redirect(new URL("/student", request.url));
+            return NextResponse.redirect(new URL("/", request.url));
         }
 
         // Full ADMIN keeps full access to all /admin/* routes

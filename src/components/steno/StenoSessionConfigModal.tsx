@@ -45,7 +45,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   defaultDurationMinutes,
 }) => {
   const [activeTab, setActiveTab] = useState<"exam" | "manual">("exam");
-  const [selectedExam, setSelectedExam] = useState(defaultExam || "Allahabad High Court Steno");
+  const [selectedExam, setSelectedExam] = useState(defaultExam || "UPSSSC Steno");
   const [selectedMode, setSelectedMode] = useState<string>(typingMode || "unicode_hindi");
 
   // Manual configuration state
@@ -60,7 +60,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
   React.useEffect(() => {
     if (typingMode) setSelectedMode(typingMode);
-    if (defaultExam) setSelectedExam(defaultExam);
+    setSelectedExam(defaultExam || "UPSSSC Steno");
     if (defaultDurationMinutes) setDurationMinutes(defaultDurationMinutes);
   }, [typingMode, defaultExam, defaultDurationMinutes]);
 
@@ -97,8 +97,8 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
     },
     "UPSSSC Steno": {
       backspace: "Enabled",
-      transcriptionDuration: 45,
-      dictationDuration: 10,
+      transcriptionDuration: 40,
+      dictationDuration: 5,
       spelling: "Full",
       capitalization: "Ignore",
       punctuation: "Half",
@@ -110,7 +110,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   const handleSaveAndContinue = () => {
     const resolvedMode = resolveStenoTypingMode(selectedMode);
     if (activeTab === "exam") {
-      const preset = examPresetsRules[selectedExam] || examPresetsRules["Allahabad High Court Steno"];
+      const preset = examPresetsRules[selectedExam] || examPresetsRules["UPSSSC Steno"];
       const effectiveDuration = defaultDurationMinutes || preset.transcriptionDuration;
       onSave({
         mode: "exam",
@@ -144,8 +144,8 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   return (
 
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-        <DialogHeader className="p-6 pb-4 border-b border-slate-100 shrink-0 text-center space-y-1">
+      <DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b border-slate-100 shrink-0 text-center space-y-1 bg-white z-10">
           <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight text-center">
             Configure Your Transcription Session
           </DialogTitle>
@@ -155,7 +155,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
         </DialogHeader>
 
         {/* Scrollable Modal Body */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
           {/* Tab Toggle Bar */}
           <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
             <button
@@ -328,6 +328,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
                   <option value={15}>15 Minutes</option>
                   <option value={20}>20 Minutes</option>
                   <option value={35}>35 Minutes</option>
+                  <option value={40}>40 Minutes</option>
                   <option value={45}>45 Minutes</option>
                   <option value={60}>60 Minutes</option>
                 </select>

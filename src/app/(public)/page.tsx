@@ -1,32 +1,34 @@
 export const dynamic = "force-dynamic";
 
 import HeroSlider from "@/components/home/HeroSlider";
+import SecondaryBannerSlider from "@/components/home/SecondaryBannerSlider";
 import QuickActionsGrid from "@/components/public/QuickActionsGrid";
-import TypingInformationSection from "@/components/public/TypingInformationSection";
 import AppDownloadSection from "@/components/public/AppDownloadSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
 import BlogSection from "@/components/public/BlogSection";
 
-import { getHeroSlides, getDynamicPageData } from "@/app/actions/cms";
+import { getHeroSlides, getSecondarySlides, getDynamicPageData } from "@/app/actions/cms";
 import { getNotices } from "@/app/actions/notice";
 import { listBlogPosts } from "@/app/actions/blog";
 import { constructMetadata } from "@/lib/seo";
 
 export const metadata = constructMetadata({
-  title: "NGIT | Computer Courses, Typing & Government Exam Preparation in Prayagraj",
+  title: "NGIT | Computer Courses, Typing & Shorthand Software",
   description: "Join NGIT Prayagraj for online Hindi & English typing tests, Steno shorthand dictations, UPSSSC & SSC exam preparation, CCC, O Level & IT computer courses.",
   path: "/",
 });
 
 export default async function PublicHomePage() {
-    const [slidesRes, dynamicRes, noticesRes, blogRes] = await Promise.all([
+    const [slidesRes, secondaryRes, dynamicRes, noticesRes, blogRes] = await Promise.all([
         getHeroSlides(),
+        getSecondarySlides(false),
         getDynamicPageData("home"),
         getNotices(false),
         listBlogPosts({ status: "PUBLISHED", limit: 3, page: 1 }),
     ]);
 
     const heroSlides = slidesRes.success ? slidesRes.slides : [];
+    const secondarySlides = secondaryRes.success ? secondaryRes.slides : [];
     const rawNotices = noticesRes.success ? noticesRes.notices : [];
     const blogs = blogRes.success && blogRes.data ? (blogRes.data.posts || []) : [];
     
@@ -52,8 +54,8 @@ export default async function PublicHomePage() {
             {/* 3. Quick Navigation Workspace */}
             <QuickActionsGrid blocks={navigationBlocks} />
 
-            {/* 4. Typing Software Module Information Section */}
-            <TypingInformationSection />
+            {/* 4. Secondary Image Banner Slider (Admin-managed) */}
+            <SecondaryBannerSlider slides={secondarySlides} />
 
             {/* 5. Mobile App Download Section */}
             <AppDownloadSection />

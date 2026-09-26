@@ -196,6 +196,7 @@ const SimpleRegistrationSchema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
+    instituteCode: z.string().optional(),
 });
 
 export const registerUser = createSafeAction(
@@ -209,6 +210,7 @@ export const registerUser = createSafeAction(
         }
 
         const hashedPassword = await bcrypt.hash(formData.password, 12);
+        const cleanInstCode = formData.instituteCode?.trim().toUpperCase() || undefined;
 
         // Simple user registration creates active user directly
         const user = await User.create({
@@ -217,6 +219,7 @@ export const registerUser = createSafeAction(
             password: hashedPassword,
             mobile: formData.mobile,
             role: UserRole.STUDENT,
+            instituteCode: cleanInstCode,
             isActive: true, 
         });
 

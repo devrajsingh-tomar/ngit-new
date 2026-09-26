@@ -22,6 +22,7 @@ import {
     Trophy,
     BarChart3,
     Clock,
+    Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -37,9 +38,12 @@ const menuGroups = [
         groupLabel: "Steno Management",
         items: [
             { label: "Steno Overview", href: "/admin/steno", icon: Mic },
-            { label: "Steno Batches & Series", href: "/admin/steno/series", icon: Layers },
-            { label: "Dictation Passages", href: "/admin/steno/passages", icon: Headphones },
-            { label: "Exam Presets & Rules", href: "/admin/steno/exams", icon: Award },
+            { label: "Institute Students", href: "/admin/steno/students", icon: Users },
+            { label: "Target Steno Batches (Step 1)", href: "/admin/steno/batches", icon: Layers },
+            { label: "Steno Exam Selection & Rules", href: "/admin/steno/exams", icon: Award },
+            { label: "Series Topics (Step 2)", href: "/admin/steno/series", icon: FileText },
+            { label: "Dictation Passages (Step 3)", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Doubt Solution Videos", href: "/admin/steno/doubt-videos", icon: Video },
             { label: "Student Results", href: "/admin/steno/results", icon: BarChart3 },
         ]
     },
