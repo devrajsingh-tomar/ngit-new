@@ -1124,6 +1124,13 @@ export async function getStenoLeaderboardAction(filters?: {
 export async function getStenoExamsAction() {
   try {
     await connectDB();
+
+    // Clean up any legacy exam records in database that had "Official Exam Rules" in their title
+    await StenoExam.updateMany(
+      { name: /Official Exam Rules/i },
+      { $set: { name: "UPSSSC Steno" } }
+    );
+
     const count = await StenoExam.countDocuments();
     if (count === 0) {
       const defaultExams = [
@@ -1617,5 +1624,151 @@ export async function cleanupAutoCreatedSeriesAction() {
     return { success: false, error: err.message };
   }
 }
+
+// ── SEPARATE STENO EXAM EVALUATION & ERROR RULES CRUD ──
+
+export async function getStenoErrorRulesAction(): Promise<{ success: boolean; rules: any[]; error?: string }> {
+  try {
+    await connectDB();
+    const count = await StenoErrorRule.countDocuments();
+
+    if (count === 0) {
+      const defaultRules = [
+        {
+          ruleName: "UPSSSC Steno Official Evaluation Scheme",
+          authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
+          examType: "UPSSSC",
+          description: "20 अशुद्धियों की पूर्ण छूट, बैकस्पेस मान्य, वर्तनी 1.0, मात्रा/वचन 0.5, अधिकतम 5% त्रुटि सीमा",
+          spellingErrorWeight: 1.0,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.5,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 20,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 5.0,
+          backspaceMode: "full",
+          isDefault: true,
+        },
+        {
+          ruleName: "SSC Steno Grade C & D Marking Scheme",
+          authorityName: "Staff Selection Commission",
+          examType: "SSC",
+          description: "Full Error (1.0) per omission/substitution, Half Error (0.5) per spelling/capitalization, 5% Grade C / 7% Grade D",
+          spellingErrorWeight: 0.5,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.0,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 0,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 5.0,
+          backspaceMode: "full",
+          isDefault: false,
+        },
+        {
+          ruleName: "Allahabad High Court Steno Evaluation Scheme",
+          authorityName: "High Court of Judicature at Allahabad",
+          examType: "HighCourt",
+          description: "लीगल डिक्टेशन मार्किंग स्कीम: Wrong Word (1.0), Punctuation/Capitalization (0.5), 7% अधिकतम त्रुटि सीमा",
+          spellingErrorWeight: 1.0,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.5,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 0,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 7.0,
+          backspaceMode: "full",
+          isDefault: false,
+        },
+        {
+          ruleName: "UPSI Steno Evaluation Scheme",
+          authorityName: "उत्तर प्रदेश पुलिस भर्ती एवं प्रोन्नति बोर्ड",
+          examType: "UPSI",
+          description: "15 अशुद्धियों की छूट, 5 मिनट डिक्टेशन, 40 मिनट लिप्यंतरण, 5% त्रुटि सीमा",
+          spellingErrorWeight: 1.0,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.5,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 15,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 5.0,
+          backspaceMode: "full",
+          isDefault: false,
+        },
+      ];
+      await StenoErrorRule.insertMany(defaultRules);
+    }
+
+    const rules = await StenoErrorRule.find({}).sort({ createdAt: -1 }).lean();
+    return { success: true, rules: JSON.parse(JSON.stringify(rules)) };
+  } catch (err: any) {
+    return { success: false, rules: [], error: err.message };
+  }
+}
+
+export async function createStenoErrorRuleAction(data: any) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    const rule = await StenoErrorRule.create(data);
+    revalidatePath("/admin/steno/error-rules");
+    revalidatePath("/manager/steno/error-rules");
+    revalidatePath("/steno/admin/error-rules");
+    return { success: true, rule: JSON.parse(JSON.stringify(rule)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateStenoErrorRuleAction(id: string, data: any) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    const updated = await StenoErrorRule.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+    revalidatePath("/admin/steno/error-rules");
+    revalidatePath("/manager/steno/error-rules");
+    revalidatePath("/steno/admin/error-rules");
+    return { success: true, rule: JSON.parse(JSON.stringify(updated)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteStenoErrorRuleAction(id: string) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    await StenoErrorRule.findByIdAndDelete(id);
+    revalidatePath("/admin/steno/error-rules");
+    revalidatePath("/manager/steno/error-rules");
+    revalidatePath("/steno/admin/error-rules");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 
 

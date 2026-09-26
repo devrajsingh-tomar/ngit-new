@@ -42,6 +42,7 @@ const managerMenuGroups = [
             { label: "Government Exams with Poster (Step 2)", href: "/manager/steno/exams", icon: Award },
             { label: "Series Topics & Assignment (Step 3)", href: "/manager/steno/series", icon: FileText },
             { label: "Dictation Passages (Step 4)", href: "/manager/steno/passages", icon: Headphones },
+            { label: "Exam Evaluation Rules", href: "/manager/steno/error-rules", icon: Sliders },
             { label: "Student Results", href: "/manager/steno/results", icon: BarChart3 },
         ]
     }

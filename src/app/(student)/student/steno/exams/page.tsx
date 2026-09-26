@@ -215,9 +215,9 @@ function StudentStenoExamsContent() {
                           {exam.dictationDurationMinutes} min dictation
                         </span>
                       )}
-                      {exam.mistakeExemptionCount !== undefined && (
-                        <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-100">
-                          {exam.mistakeExemptionCount} छूट
+                      {exam.transcriptionDurationMinutes && (
+                        <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                          {exam.transcriptionDurationMinutes} min transcription
                         </span>
                       )}
                     </div>

@@ -2,11 +2,21 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IStenoErrorRule extends Document {
   ruleName: string;
-  description: string;
-  examType: "SSC" | "HighCourt" | "UPSSSC" | "General";
-  fullErrorPenalty: number; // e.g. 1 mistake per omitted/wrong word
-  halfErrorPenalty: number; // e.g. 0.5 mistake per spelling/punctuation/capitalization
-  maxAllowedErrorPercent: number; // e.g. 5% or 7%
+  authorityName?: string;
+  description?: string;
+  examType: string;
+  spellingErrorWeight: number; // e.g. 1.0 (Full) or 0.5 (Half)
+  matraErrorWeight: number; // e.g. 0.5 (Half)
+  punctuationErrorWeight: number; // e.g. 0.5 or 0.0
+  addedWordWeight: number; // e.g. 1.0
+  skippedWordWeight: number; // e.g. 1.0
+  spacingTranspositionWeight: number; // e.g. 0.5
+  mistakeExemptionCount: number; // e.g. 20 (UPSSSC)
+  ignoreChandrabindu: boolean; // true
+  maxErrorPercentAllowed: number; // e.g. 5.0%
+  backspaceMode: "full" | "word" | "disabled" | "upssssc";
+  allowedFonts?: string[];
+  isDefault?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,11 +24,21 @@ export interface IStenoErrorRule extends Document {
 const StenoErrorRuleSchema = new Schema<IStenoErrorRule>(
   {
     ruleName: { type: String, required: true },
+    authorityName: { type: String, default: "" },
     description: { type: String, default: "" },
-    examType: { type: String, enum: ["SSC", "HighCourt", "UPSSSC", "General"], default: "General" },
-    fullErrorPenalty: { type: Number, default: 1.0 },
-    halfErrorPenalty: { type: Number, default: 0.5 },
-    maxAllowedErrorPercent: { type: Number, default: 5.0 },
+    examType: { type: String, default: "General" },
+    spellingErrorWeight: { type: Number, default: 1.0 },
+    matraErrorWeight: { type: Number, default: 0.5 },
+    punctuationErrorWeight: { type: Number, default: 0.5 },
+    addedWordWeight: { type: Number, default: 1.0 },
+    skippedWordWeight: { type: Number, default: 1.0 },
+    spacingTranspositionWeight: { type: Number, default: 0.5 },
+    mistakeExemptionCount: { type: Number, default: 20 },
+    ignoreChandrabindu: { type: Boolean, default: true },
+    maxErrorPercentAllowed: { type: Number, default: 5.0 },
+    backspaceMode: { type: String, enum: ["full", "word", "disabled", "upssssc"], default: "full" },
+    allowedFonts: { type: [String], default: ["Kruti Dev 010", "Mangal"] },
+    isDefault: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

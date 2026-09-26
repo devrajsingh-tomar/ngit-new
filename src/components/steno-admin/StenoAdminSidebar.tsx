@@ -36,6 +36,7 @@ const stenoAdminMenuGroups = [
             { label: "Government Exams with Poster (Step 2)", href: "/steno/admin/exams", icon: Award },
             { label: "Series Topics & Assignment (Step 3)", href: "/steno/admin/series", icon: FileText },
             { label: "Dictation Passages (Step 4)", href: "/steno/admin/passages", icon: Headphones },
+            { label: "Exam Evaluation Rules", href: "/steno/admin/error-rules", icon: Sliders },
             { label: "Student Results", href: "/steno/admin/results", icon: BarChart3 },
         ]
     }

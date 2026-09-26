@@ -43,6 +43,7 @@ const menuGroups = [
             { label: "Government Exams with Poster (Step 2)", href: "/admin/steno/exams", icon: Award },
             { label: "Series Topics & Assignment (Step 3)", href: "/admin/steno/series", icon: FileText },
             { label: "Dictation Passages (Step 4)", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Exam Evaluation Rules", href: "/admin/steno/error-rules", icon: Sliders },
             { label: "Doubt Solution Videos", href: "/admin/steno/doubt-videos", icon: Video },
             { label: "Student Results", href: "/admin/steno/results", icon: BarChart3 },
         ]
