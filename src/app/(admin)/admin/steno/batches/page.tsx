@@ -146,14 +146,14 @@ export default function AdminStenoBatchesPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5" /> Step 1: Batch Setup
+              <Layers className="w-3.5 h-3.5" /> Step 1 of 4 • Steno Batches Management
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Target Steno Batches (Step 1 Batch)
+            Target Steno Batches (Step 1)
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Manage target steno exam categories (e.g. UPSSSC Steno, High Court Steno, SSC Steno, Ramdhari Series).
+            Manage target steno batches (e.g. हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा), UPSSSC Steno Batch, SSC Steno Batch, Allahabad High Court Steno Batch).
           </p>
         </div>
 
@@ -165,8 +165,8 @@ export default function AdminStenoBatchesPage() {
             <Plus className="w-4 h-4" /> Create Target Batch (Step 1)
           </Button>
           <Link href="/admin/steno/exams">
-            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-              <Award className="w-4 h-4" /> Go to Step 2: Exam Selection & Rules <ArrowRight className="w-3.5 h-3.5" />
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50">
+              <Award className="w-4 h-4" /> Go to Step 2: Government Exams with Poster <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
@@ -244,7 +244,7 @@ export default function AdminStenoBatchesPage() {
                       size="sm"
                       className="w-full h-9 text-xs font-black rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 gap-1.5"
                     >
-                      <Award className="w-3.5 h-3.5 text-amber-600" /> Exam Selection (Step 2)
+                      <Award className="w-3.5 h-3.5 text-amber-600" /> Government Exams (Step 2)
                     </Button>
                   </Link>
                   <Button

@@ -17,8 +17,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Award, Plus, RefreshCw, Trash2, Edit, CheckCircle2, ShieldCheck, FileText, ArrowRight } from "lucide-react";
+import { Award, Plus, RefreshCw, Trash2, Edit, CheckCircle2, ShieldCheck, FileText, ArrowRight, ArrowLeft, Layers, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
 
 export default function AdminStenoExamsPage() {
@@ -185,26 +186,31 @@ export default function AdminStenoExamsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-amber-600" /> Steno Exam Selection & Rules Presets
+              <Award className="w-3.5 h-3.5 text-amber-600" /> Step 2 of 4 • Government Exams with Poster & Rules
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
-            Admin Steno Exam Selection & Rules Presets
+            Government Steno Exams with Poster (Step 2)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Configure target government steno exam rules (UPSSSC, High Court, SSC, UP SI) including error weights, mistake exemption, Chandrabindu rules, backspace status, and qualifying speed.
+            Configure government exam names, authority badges, poster images (thumbnails), and official evaluation rules (UPSSSC Steno, UPSI Steno, SSC Steno, Allahabad High Court Steno).
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/steno/batches">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Step 1: Batches
+            </Button>
+          </Link>
           <Button
             onClick={handleOpenCreateModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
           >
-            <Plus className="w-4 h-4" /> Create Exam Preset Rules
+            <Plus className="w-4 h-4" /> Create Govt Exam (Step 2)
           </Button>
           <Link href="/admin/steno/series">
             <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
-              <FileText className="w-4 h-4" /> Go to Series Topics <ArrowRight className="w-3.5 h-3.5" />
+              <FileText className="w-4 h-4" /> Go to Step 3: Series Topics <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
@@ -324,7 +330,16 @@ export default function AdminStenoExamsPage() {
                   <span>Allowed Fonts: <strong className="text-indigo-600 font-extrabold">{Array.isArray(exam.allowedFonts) ? exam.allowedFonts.join(", ") : "Kruti Dev 010, Mangal"}</strong></span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link href="/admin/steno/series">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="h-8 text-xs font-bold rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-emerald-600" /> Assign Series (Step 3)
+                    </Button>
+                  </Link>
                   <Button
                     onClick={() => handleOpenEditModal(exam)}
                     variant="outline"
@@ -353,7 +368,7 @@ export default function AdminStenoExamsPage() {
         <DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
           <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-xl font-black text-slate-900">
-              {editingExam ? "Edit Official Steno Exam Rules Preset" : "Create Official Steno Exam Rules Preset"}
+              {editingExam ? "Edit Official Steno Exam Rules & Poster" : "Create Official Steno Exam Rules & Poster"}
             </DialogTitle>
           </DialogHeader>
 
@@ -361,11 +376,11 @@ export default function AdminStenoExamsPage() {
             {/* Scrollable Form */}
             <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Exam Preset Title (Rule Name) *</label>
+                <label className="text-xs font-bold text-slate-700">Exam Title / Name *</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. UPSSSC STENO 1224/333 — Official Exam Rules"
+                  placeholder="e.g. UPSSSC Steno, UPSI Steno, SSC Steno Grade C & D, Allahabad High Court Steno"
                   className="rounded-xl text-xs font-semibold"
                   required
                 />
@@ -381,15 +396,23 @@ export default function AdminStenoExamsPage() {
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Government Exam Card Poster / Thumbnail URL (Step 2 Thumbnail Image)</label>
+              <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-amber-600" /> Government Exam Card Poster (Step 2 Thumbnail)
+                </label>
+                <ImageUpload
+                  value={formData.thumbnailUrl}
+                  onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                  onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
+                  label="Upload Exam Poster Image"
+                />
                 <Input
                   value={formData.thumbnailUrl}
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="https://ngitedu.com/uploads/gallery/my-exam-poster.jpg"
-                  className="rounded-xl text-xs font-semibold"
+                  placeholder="Or paste poster image URL (https://...)"
+                  className="rounded-xl text-xs font-medium bg-white"
                 />
-                <p className="text-[10px] text-slate-400 font-medium">Upload or paste poster image URL to show on Step 2 Government Exam Card.</p>
+                <p className="text-[10px] text-slate-400 font-medium">This poster appears on Step 2 of the student portal when selecting exams.</p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

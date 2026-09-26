@@ -198,7 +198,7 @@ export default function StudentStenoSeriesPage() {
         <div className="space-y-3 max-w-2xl z-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30">
-              Step 1 • Select Target Steno Batch
+              Step 1 of 4 • Select Target Steno Batch
             </span>
             <Link href="/steno">
               <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white font-bold h-7 px-3 text-[11px] rounded-full border border-white/20 gap-1 transition-all">
@@ -207,10 +207,10 @@ export default function StudentStenoSeriesPage() {
             </Link>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
-            STENO BATCHES & EXAM PORTAL
+            STENO BATCHES & EXAM PORTAL (Step 1)
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-            Select your desired Steno Batch to explore series topics, editorial passages, and official speed dictations.
+            Select your desired Steno Batch to choose your target Government Exam (UPSSSC Steno, UPSI Steno, SSC Steno, Allahabad High Court Steno) and explore official dictation series.
           </p>
         </div>
 
@@ -347,20 +347,12 @@ export default function StudentStenoSeriesPage() {
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    {(() => {
-                      const isThakurdwara = (batch.name || "").toLowerCase().includes("thakurdwara") || (batch.name || "").includes("ठाकुरद्वारा") || (batch.name || "").toLowerCase().includes("stenoinstitute");
-                      const targetHref = isThakurdwara
-                        ? `/student/steno/exams?batch=${encodeBatch}`
-                        : `/student/steno/series/batch/${encodeBatch}`;
-                      return (
-                        <Link href={targetHref} className="block pt-2">
-                          <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                            <BookOpen className="w-4 h-4" /> {isThakurdwara ? "SELECT EXAM & EXPLORE SERIES" : "EXPLORE SERIES & TOPICS"} <ArrowRight className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                      );
-                    })()}
+                    {/* Action Button: Unified Step 2 Flow for ALL Batches */}
+                    <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block pt-2">
+                      <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
+                        <BookOpen className="w-4 h-4" /> SELECT TARGET GOVT EXAM (Step 2) <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </div>
                 </Card>
               );

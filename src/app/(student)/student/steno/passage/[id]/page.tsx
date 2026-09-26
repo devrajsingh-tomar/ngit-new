@@ -16,6 +16,7 @@ function PassagePlayerContent({ id }: { id: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryBatch = searchParams.get("batch");
+  const queryExam = searchParams.get("exam");
 
   const [passage, setPassage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -88,8 +89,14 @@ function PassagePlayerContent({ id }: { id: string }) {
 
 
   const handleBack = () => {
-    if (queryBatch) {
-      router.replace(`/student/steno/series/batch/${encodeURIComponent(queryBatch)}`);
+    if (passage?.seriesId) {
+      router.replace(
+        `/student/steno/series/${passage.seriesId}${queryBatch ? `?batch=${encodeURIComponent(queryBatch)}` : ""}${queryExam ? `&exam=${encodeURIComponent(queryExam)}` : ""}`
+      );
+    } else if (queryBatch) {
+      router.replace(
+        `/student/steno/series/batch/${encodeURIComponent(queryBatch)}${queryExam ? `?exam=${encodeURIComponent(queryExam)}` : ""}`
+      );
     } else {
       router.replace("/student/steno/series");
     }
@@ -161,7 +168,7 @@ function PassagePlayerContent({ id }: { id: string }) {
             onClick={handleBack}
             className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-9 px-4 text-xs rounded-xl gap-2 shadow-xs"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to {queryBatch ? `${queryBatch}` : "All Batches"}
+            <ArrowLeft className="w-4 h-4" /> {passage?.seriesId ? "Back to Passages (Step 4)" : queryBatch ? `Back to ${queryBatch} (Step 3)` : "Back to Batches"}
           </Button>
         </div>
       </div>

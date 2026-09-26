@@ -9,6 +9,7 @@ import {
   getStenoPassagesAction,
   getStenoBatchesAction,
   createStenoBatchAction,
+  getStenoExamsAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus, ArrowRight, Headphones, FileText } from "lucide-react";
+import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus, ArrowRight, ArrowLeft, Headphones, FileText, Award, Search } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
@@ -29,9 +30,15 @@ export default function AdminStenoSeriesPage() {
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [passages, setPassages] = useState<any[]>([]);
   const [targetBatches, setTargetBatches] = useState<any[]>([]);
+  const [targetExams, setTargetExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<any | null>(null);
+
+  // Filters State
+  const [filterBatch, setFilterBatch] = useState("all");
+  const [filterExam, setFilterExam] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Inline Create Batch State
   const [isNewBatchDialogOpen, setIsNewBatchDialogOpen] = useState(false);
@@ -45,6 +52,7 @@ export default function AdminStenoSeriesPage() {
     description: "",
     thumbnailUrl: "",
     batch: "UPSSSC Steno",
+    exam: "UPSSSC Steno",
     category: "General Series",
     language: "Hindi",
     selectedPassages: [] as string[],
@@ -56,6 +64,7 @@ export default function AdminStenoSeriesPage() {
     loadSeries();
     loadPassages();
     loadBatches();
+    loadExams();
   }, []);
 
   const loadSeries = async () => {
@@ -80,6 +89,13 @@ export default function AdminStenoSeriesPage() {
     const res = await getStenoBatchesAction({ isPublished: undefined });
     if (res.success && res.batches) {
       setTargetBatches(res.batches);
+    }
+  };
+
+  const loadExams = async () => {
+    const res = await getStenoExamsAction();
+    if (res.success && res.exams) {
+      setTargetExams(res.exams);
     }
   };
 
@@ -113,6 +129,7 @@ export default function AdminStenoSeriesPage() {
       description: "",
       thumbnailUrl: "",
       batch: targetBatches[0]?.name || "UPSSSC Steno",
+      exam: targetExams[0]?.name || "UPSSSC Steno",
       category: "General Series",
       language: "Hindi",
       selectedPassages: [],
@@ -128,7 +145,8 @@ export default function AdminStenoSeriesPage() {
       title: s.title || "",
       description: s.description || "",
       thumbnailUrl: s.thumbnailUrl || "",
-      batch: s.batch || "UPSSSC Steno",
+      batch: s.batch || targetBatches[0]?.name || "UPSSSC Steno",
+      exam: s.exam || s.category || targetExams[0]?.name || "UPSSSC Steno",
       category: s.category || "General Series",
       language: s.language || "Hindi",
       selectedPassages: Array.isArray(s.passages) ? s.passages.map((p: any) => p._id || p) : [],
@@ -150,6 +168,7 @@ export default function AdminStenoSeriesPage() {
       description: formData.description.trim(),
       thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
       batch: formData.batch,
+      exam: formData.exam,
       category: formData.category.trim(),
       language: formData.language as any,
       passages: formData.selectedPassages,
@@ -189,6 +208,25 @@ export default function AdminStenoSeriesPage() {
     }
   };
 
+  const filteredSeriesList = seriesList.filter((s) => {
+    if (filterBatch !== "all") {
+      const match = (s.batch || "").toLowerCase().includes(filterBatch.toLowerCase());
+      if (!match) return false;
+    }
+    if (filterExam !== "all") {
+      const examVal = filterExam.toLowerCase();
+      const sExam = (s.exam || s.category || "").toLowerCase();
+      if (!sExam.includes(examVal)) return false;
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const titleMatch = (s.title || "").toLowerCase().includes(q);
+      const descMatch = (s.description || "").toLowerCase().includes(q);
+      if (!titleMatch && !descMatch) return false;
+    }
+    return true;
+  });
+
   const togglePassageSelection = (passageId: string) => {
     setFormData((prev) => {
       const exists = prev.selectedPassages.includes(passageId);
@@ -208,22 +246,27 @@ export default function AdminStenoSeriesPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-emerald-600" /> Step 3: Series Topics & Collections
+              <FileText className="w-3.5 h-3.5 text-emerald-600" /> Step 3 of 4 • Series Topics & Assignment
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
-            Series Topics & Dictation Collections (Step 3)
+            Series Topics & Assignment (Step 3)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Organize dictation passages into series (UPSSSC PYQ, SSC PYQ, Court, Editorial, Essay, Literature, Stories, Magazine).
+            Create series topics (e.g. संपादकीय एवं निबन्ध, संसदीय, लीगल, रामधारी खण्ड 1) and assign them to Target Steno Batch (Step 1) and Target Government Exam (Step 2).
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/steno/exams">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Step 2: Govt Exams
+            </Button>
+          </Link>
           <Button
             onClick={handleOpenCreateModal}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
           >
-            <Plus className="w-4 h-4" /> Create Series (Step 3)
+            <Plus className="w-4 h-4" /> Create Series Topic (Step 3)
           </Button>
           <Link href="/admin/steno/passages">
             <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
@@ -233,87 +276,171 @@ export default function AdminStenoSeriesPage() {
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex-1 min-w-[200px] max-w-md">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search series topics..."
+              className="pl-9 text-xs rounded-xl"
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Step 1 Batch:</span>
+            <select
+              value={filterBatch}
+              onChange={(e) => setFilterBatch(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-semibold"
+            >
+              <option value="all">All Batches (सभी बैच)</option>
+              {targetBatches.map((tb) => (
+                <option key={tb._id || tb.name} value={tb.name}>
+                  {tb.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Step 2 Exam:</span>
+            <select
+              value={filterExam}
+              onChange={(e) => setFilterExam(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-semibold"
+            >
+              <option value="all">All Govt Exams (सभी परीक्षाएं)</option>
+              {targetExams.map((te) => (
+                <option key={te._id || te.name} value={te.name}>
+                  {te.name}
+                </option>
+              ))}
+              <option value="UPSSSC Steno">UPSSSC Steno</option>
+              <option value="UPSI Steno">UPSI Steno</option>
+              <option value="SSC Steno Grade C & D">SSC Steno Grade C & D</option>
+              <option value="Allahabad High Court Steno">Allahabad High Court Steno</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       {/* Grid */}
       {loading ? (
         <div className="py-20 text-center text-slate-400">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" /> Loading series...
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" /> Loading series topics...
         </div>
-      ) : seriesList.length === 0 ? (
+      ) : filteredSeriesList.length === 0 ? (
         <Card className="p-12 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-          No series created yet. Click "Create Series" above to create one.
+          No series topics match the filter criteria. Click "Create Series Topic" above to create one.
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {seriesList.map((s) => (
-            <Card key={s._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative">
-              {/* Image Preview / Banner */}
-              <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative flex items-center justify-center p-1">
-                {s.thumbnailUrl ? (
-                  <>
-                    <img
-                      src={s.thumbnailUrl}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
-                    />
-                    <img
-                      src={s.thumbnailUrl}
-                      alt={s.title}
-                      className="relative z-10 w-full h-full object-contain rounded-xl"
-                    />
-                  </>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 to-slate-900 text-white/50 p-4 text-center">
-                    <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
-                    <span className="text-[10px] font-bold">No Image Uploaded</span>
+          {filteredSeriesList.map((s) => (
+            <Card key={s._id} className="p-6 rounded-3xl border-slate-200 bg-white shadow-xs space-y-4 relative flex flex-col justify-between">
+              <div className="space-y-3">
+                {/* Image Preview / Banner */}
+                <div className="h-36 rounded-2xl overflow-hidden bg-slate-900 relative flex items-center justify-center p-1">
+                  {s.thumbnailUrl ? (
+                    <>
+                      <img
+                        src={s.thumbnailUrl}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 pointer-events-none"
+                      />
+                      <img
+                        src={s.thumbnailUrl}
+                        alt={s.title}
+                        className="relative z-10 w-full h-full object-contain rounded-xl"
+                      />
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 to-slate-900 text-white/50 p-4 text-center">
+                      <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
+                      <span className="text-[10px] font-bold">No Image Uploaded</span>
+                    </div>
+                  )}
+                  <div className="absolute top-2 left-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md text-white px-2.5 py-1 rounded-md border border-white/20">
+                      {s.language} Series
+                    </span>
                   </div>
-                )}
-                <div className="absolute top-2 left-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md text-white px-2.5 py-1 rounded-md border border-white/20">
-                    {s.language} Series
-                  </span>
+                  <div className="absolute top-2 right-2">
+                    <span
+                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm ${
+                        s.isPublished ? "bg-emerald-500 text-white font-bold" : "bg-slate-700 text-white"
+                      }`}
+                    >
+                      {s.isPublished ? "Published" : "Draft"}
+                    </span>
+                  </div>
                 </div>
-                <div className="absolute top-2 right-2">
-                  <span
-                    className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm ${
-                      s.isPublished ? "bg-emerald-500 text-white font-bold" : "bg-slate-700 text-white"
-                    }`}
+
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">{s.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{s.description || "Steno Course Series Topic"}</p>
+                </div>
+
+                {/* Assignment Info Badges (Step 1 & Step 2) */}
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs font-semibold">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <Layers className="w-3.5 h-3.5 text-indigo-600" /> Step 1 Batch:
+                    </span>
+                    <strong className="text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100 text-[11px] truncate max-w-[160px]">
+                      {s.batch || "UPSSSC Steno"}
+                    </strong>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5 text-amber-600" /> Step 2 Exam:
+                    </span>
+                    <strong className="text-amber-900 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 text-[11px] truncate max-w-[160px]">
+                      {s.exam || s.category || "All Exams"}
+                    </strong>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <Headphones className="w-3.5 h-3.5 text-emerald-600" /> Step 4 Dictations:
+                    </span>
+                    <strong className="text-slate-900 font-black">
+                      {s.passages?.length || 0} Tracks
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <Link href="/admin/steno/passages" className="block">
+                  <Button
+                    size="sm"
+                    className="w-full h-8 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 shadow-xs"
                   >
-                    {s.isPublished ? "Published" : "Draft"}
-                  </span>
+                    <Headphones className="w-3.5 h-3.5" /> Manage Dictation Tracks (Step 4)
+                  </Button>
+                </Link>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleOpenEditModal(s)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-8 text-xs font-bold rounded-xl gap-1"
+                  >
+                    <Edit className="w-3.5 h-3.5" /> Edit Series
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(s._id)}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs font-bold rounded-xl text-rose-600 hover:bg-rose-50 border-rose-200"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-black text-slate-900">{s.title}</h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{s.description || "Steno Course Series"}</p>
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1 text-xs text-slate-600 font-medium">
-                <p className="flex justify-between">
-                  <span>Assigned Passages:</span> <strong className="font-bold text-slate-900">{s.passages?.length || 0} Tracks</strong>
-                </p>
-                <p className="flex justify-between">
-                  <span>Sort Order:</span> <strong className="font-bold text-emerald-600">#{s.sortOrder || 0}</strong>
-                </p>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={() => handleOpenEditModal(s)}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 h-8 text-xs font-bold rounded-xl gap-1"
-                >
-                  <Edit className="w-3.5 h-3.5" /> Edit Series
-                </Button>
-                <Button
-                  onClick={() => handleDelete(s._id)}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs font-bold rounded-xl text-rose-600 hover:bg-rose-50 border-rose-200"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
               </div>
             </Card>
           ))}
@@ -325,16 +452,19 @@ export default function AdminStenoSeriesPage() {
         <DialogContent className="max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
           <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-xl font-black text-slate-900">
-              {editingSeries ? "Edit Steno Series / Batch" : "Create New Steno Series / Batch"}
+              {editingSeries ? "Edit Steno Series Topic" : "Create New Steno Series Topic (Step 3)"}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
             {/* Scrollable Form Body */}
             <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              {/* Step 1 Batch Assignment */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700">Target Steno Batch (Step 1 Batch) *</label>
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-indigo-600" /> Target Steno Batch (Step 1 Batch) *
+                  </label>
                   <button
                     type="button"
                     onClick={() => setIsNewBatchDialogOpen(true)}
@@ -356,6 +486,7 @@ export default function AdminStenoSeriesPage() {
                   {/* Fallback if list is loading */}
                   {targetBatches.length === 0 && (
                     <>
+                      <option value="हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)">हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)</option>
                       <option value="UPSSSC Steno">UPSSSC Steno (यूपीएसएसएससी स्टेनो)</option>
                       <option value="UPSI Steno">UPSI Steno (यूपीएसआई स्टेनो)</option>
                       <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (एसएससी स्टेनो)</option>
@@ -368,44 +499,72 @@ export default function AdminStenoSeriesPage() {
                 </select>
               </div>
 
+              {/* Step 2 Government Exam Assignment */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Target Government Exam / Category (Step 2 Exam Filter)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-amber-600" /> Target Government Exam (Step 2 Exam) *
+                  </label>
+                  <Link
+                    href="/admin/steno/exams"
+                    className="text-[11px] font-black text-amber-600 hover:text-amber-800 hover:underline flex items-center gap-1"
+                  >
+                    Manage Step 2 Exams →
+                  </Link>
+                </div>
                 <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.exam}
+                  onChange={(e) => setFormData({ ...formData, exam: e.target.value })}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                 >
-                  <option value="General Series">General Series (All Exams)</option>
+                  {targetExams.map((te) => (
+                    <option key={te._id || te.name} value={te.name}>
+                      {te.name} {te.authorityName ? `(${te.authorityName})` : ""}
+                    </option>
+                  ))}
                   <option value="UPSSSC Steno">UPSSSC Steno (उ०प्र० अधीनस्थ सेवा चयन आयोग)</option>
                   <option value="UPSI Steno">UPSI Steno (उ०प्र० पुलिस सब-इंस्पेक्टर)</option>
                   <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (Staff Selection Commission)</option>
                   <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट)</option>
-                  <option value="रामधारी खण्ड 1">रामधारी खण्ड 1</option>
-                  <option value="रामधारी खण्ड 2">रामधारी खण्ड 2</option>
+                  <option value="All Exams">All Exams / General</option>
                 </select>
               </div>
 
+              {/* Step 3 Series Topic Title */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Series Topic / Title (Step 2 Topic) *</label>
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-emerald-600" /> Series Topic / Title (Step 3 Topic Name) *
+                </label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, कुरुक्षेत्र पत्रिका"
+                  placeholder="उदा: संपादकीय एवं निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1, कुरुक्षेत्र पत्रिका"
                   className="rounded-xl text-xs font-semibold"
                   required
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Language</label>
-                <select
-                  value={formData.language}
-                  onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                >
-                  <option value="Hindi">Hindi</option>
-                  <option value="English">English</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Category / Genre</label>
+                  <Input
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g. Editorial, Legal, General Series"
+                    className="rounded-xl text-xs font-semibold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Language</label>
+                  <select
+                    value={formData.language}
+                    onChange={(e) => setFormData({ ...formData, language: e.target.value as any })}
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                  >
+                    <option value="Hindi">Hindi</option>
+                    <option value="English">English</option>
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -414,7 +573,7 @@ export default function AdminStenoSeriesPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Course series description..."
-                  rows={3}
+                  rows={2}
                   className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
                 />
               </div>
@@ -422,34 +581,29 @@ export default function AdminStenoSeriesPage() {
               <div className="space-y-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4 text-emerald-600" /> Series Topic / Step 2 Thumbnail Image
+                    <ImageIcon className="w-4 h-4 text-emerald-600" /> Series Topic / Step 3 Poster Thumbnail
                   </label>
                   <a
                     href="/admin/gallery"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[10px] font-black text-indigo-600 hover:underline flex items-center gap-1"
+                    className="text-[10px] text-indigo-600 hover:underline font-bold"
                   >
-                    Gallery CMS →
+                    Browse Gallery ↗
                   </a>
                 </div>
                 <ImageUpload
                   value={formData.thumbnailUrl}
                   onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                   onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
-                  label="Upload Series Topic Thumbnail"
+                  label="Upload Series Poster"
                 />
-                <div className="pt-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Or Image URL Link:
-                  </label>
-                  <Input
-                    value={formData.thumbnailUrl}
-                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                    placeholder="Paste image URL (e.g. /uploads/... or https://...)"
-                    className="rounded-xl text-xs font-semibold bg-white"
-                  />
-                </div>
+                <Input
+                  value={formData.thumbnailUrl}
+                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                  placeholder="Or paste direct image URL (https://...)"
+                  className="text-xs rounded-xl bg-white"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">

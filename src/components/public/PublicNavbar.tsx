@@ -214,7 +214,6 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem 
                                                 className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer" 
-                                                onSelect={() => router.push(session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings')}
                                                 asChild
                                             >
                                                 <Link href={session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings'}>

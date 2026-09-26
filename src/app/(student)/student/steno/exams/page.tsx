@@ -1,21 +1,26 @@
 "use client";
 
-import { Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { getStenoExamsAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, Sparkles, BookOpen, Clock, ShieldCheck, RefreshCw } from "lucide-react";
 import { isRealPoster } from "@/lib/steno/stenoUtils";
 
-// Official Government Steno Exam Categories for Step 2 (Thakurdwara Flow)
-const STENO_GOVT_EXAMS = [
+// Default Government Steno Exam Presets for Step 2
+const DEFAULT_STENO_GOVT_EXAMS = [
   {
     _id: "upsssc_steno",
     name: "UPSSSC Steno",
     authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
     thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
     description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+    targetWpm: 80,
+    dictationDurationMinutes: 5,
+    transcriptionDurationMinutes: 40,
+    mistakeExemptionCount: 20,
   },
   {
     _id: "upsi_steno",
@@ -23,6 +28,10 @@ const STENO_GOVT_EXAMS = [
     authorityName: "उत्तर प्रदेश पुलिस भर्ती एवं प्रोन्नति बोर्ड",
     thumbnailUrl: "/images/steno-weekly-test-banner.jpg",
     description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
+    targetWpm: 80,
+    dictationDurationMinutes: 5,
+    transcriptionDurationMinutes: 40,
+    mistakeExemptionCount: 15,
   },
   {
     _id: "ssc_steno",
@@ -30,6 +39,10 @@ const STENO_GOVT_EXAMS = [
     authorityName: "Staff Selection Commission",
     thumbnailUrl: "/images/steno-test-guide-banner.jpg",
     description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
+    targetWpm: 80,
+    dictationDurationMinutes: 10,
+    transcriptionDurationMinutes: 50,
+    mistakeExemptionCount: 25,
   },
   {
     _id: "hc_steno",
@@ -37,12 +50,46 @@ const STENO_GOVT_EXAMS = [
     authorityName: "High Court of Judicature at Allahabad",
     thumbnailUrl: "/images/steno-analytics-banner.jpg",
     description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
+    targetWpm: 80,
+    dictationDurationMinutes: 5,
+    transcriptionDurationMinutes: 30,
+    mistakeExemptionCount: 10,
   },
 ];
 
 function StudentStenoExamsContent() {
   const searchParams = useSearchParams();
   const rawBatch = searchParams.get("batch") || "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)";
+  const [exams, setExams] = useState<any[]>(DEFAULT_STENO_GOVT_EXAMS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadExams();
+  }, []);
+
+  const loadExams = async () => {
+    setLoading(true);
+    try {
+      const res = await getStenoExamsAction();
+      if (res.success && Array.isArray(res.exams) && res.exams.length > 0) {
+        const mergedMap = new Map<string, any>();
+        DEFAULT_STENO_GOVT_EXAMS.forEach((def) => {
+          mergedMap.set(def.name.toLowerCase().trim(), { ...def });
+        });
+        res.exams.forEach((dbExam: any) => {
+          const key = (dbExam.name || "").toLowerCase().trim();
+          if (!key) return;
+          const existing = mergedMap.get(key) || {};
+          mergedMap.set(key, { ...existing, ...dbExam });
+        });
+        setExams(Array.from(mergedMap.values()));
+      }
+    } catch (e) {
+      console.error("Failed to load exams:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 p-1 sm:p-2 max-w-7xl mx-auto">
@@ -88,7 +135,7 @@ function StudentStenoExamsContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {STENO_GOVT_EXAMS.map((exam, index) => {
+          {exams.map((exam, index) => {
             const hasPoster = isRealPoster(exam.thumbnailUrl);
             const gradients = [
               "from-indigo-700 to-purple-900",
@@ -154,17 +201,35 @@ function StudentStenoExamsContent() {
                     </div>
 
                     <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
-                      {exam.description}
+                      {exam.description || "Official Government Steno Exam Dictations & Rules"}
                     </p>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {exam.targetWpm && (
+                        <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-indigo-600" /> {exam.targetWpm} WPM
+                        </span>
+                      )}
+                      {exam.dictationDurationMinutes && (
+                        <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                          {exam.dictationDurationMinutes} min dictation
+                        </span>
+                      )}
+                      {exam.mistakeExemptionCount !== undefined && (
+                        <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-100">
+                          {exam.mistakeExemptionCount} छूट
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Action Button */}
+                  {/* Action Button: Navigate to Step 3 */}
                   <Link
                     href={`/student/steno/series/batch/${encodeURIComponent(rawBatch)}?exam=${encodeURIComponent(exam.name)}`}
                     className="block pt-2"
                   >
                     <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                      <BookOpen className="w-4 h-4" /> EXPLORE SERIES & TOPICS <ArrowRight className="w-4 h-4" />
+                      <BookOpen className="w-4 h-4" /> EXPLORE SERIES TOPICS (Step 3) <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                 </div>

@@ -16,6 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ import {
 import {
   Headphones,
   Plus,
+  ArrowLeft,
   RefreshCw,
   Trash2,
   Edit,
@@ -387,6 +389,14 @@ export default function AdminStenoPassagesPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link href="/admin/steno/series">
+            <Button
+              variant="outline"
+              className="rounded-2xl h-11 px-4 text-xs font-bold gap-2 border-slate-300 hover:bg-slate-50"
+            >
+              <ArrowLeft className="w-4 h-4" /> Series Topics (Step 3)
+            </Button>
+          </Link>
           <Button
             onClick={handleOpenCreateModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl h-11 px-5 text-xs shadow-md gap-2"

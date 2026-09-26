@@ -22,16 +22,17 @@ function SeriesDetailContent({ id }: { id: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const queryExam = searchParams.get("exam") || series?.exam || "";
   const activeBatch = queryBatch || series?.batch || "";
 
   // Handle browser back button (mobile hardware/gesture back or desktop browser back button)
   useEffect(() => {
-    window.history.pushState({ page: "steno-step3" }, "", window.location.href);
+    window.history.pushState({ page: "steno-step4" }, "", window.location.href);
 
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
       const targetUrl = activeBatch
-        ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}`
+        ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}${queryExam ? `?exam=${encodeURIComponent(queryExam)}` : ""}`
         : "/student/steno/series";
       router.replace(targetUrl);
     };
@@ -40,7 +41,7 @@ function SeriesDetailContent({ id }: { id: string }) {
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [router, activeBatch]);
+  }, [router, activeBatch, queryExam]);
 
   useEffect(() => {
     loadSeriesData();
@@ -82,9 +83,9 @@ function SeriesDetailContent({ id }: { id: string }) {
         <Card className="p-12 rounded-3xl border-dashed bg-white space-y-3">
           <h2 className="text-lg font-black text-slate-800">Series Not Found</h2>
           <p className="text-xs text-slate-500">This Steno series might have been unpublished or removed.</p>
-          <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
+          <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}${queryExam ? `?exam=${encodeURIComponent(queryExam)}` : ""}` : "/student/steno/series"}>
             <Button className="rounded-xl text-xs font-bold gap-1.5 mt-2">
-              <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} Batch` : "All Batches"}
+              <ArrowLeft className="w-4 h-4" /> Back to Series Topics (Step 3)
             </Button>
           </Link>
         </Card>
@@ -136,17 +137,17 @@ function SeriesDetailContent({ id }: { id: string }) {
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            {(() => {
-              const isThakurdwara = (activeBatch || "").toLowerCase().includes("thakurdwara") || (activeBatch || "").includes("ठाकुरद्वारा") || (activeBatch || "").toLowerCase().includes("stenoinstitute");
-              return (
-                <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
-                  {isThakurdwara ? "Step 4 of 4 • Dictation Passages" : "Step 3 of 3 • Dictation Passages"}
-                </span>
-              );
-            })()}
+            <span className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs">
+              Step 4 of 4 • Dictation Passages
+            </span>
             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-100">
               {activeBatch || "Official Batch"}
             </span>
+            {queryExam && (
+              <span className="bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
+                Exam: {queryExam}
+              </span>
+            )}
             <span className="text-xs font-bold text-slate-400">• {series.language || "Hindi"} Steno</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -157,19 +158,19 @@ function SeriesDetailContent({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Back Button to Step 3 / Step 2 */}
+        {/* Back Button to Step 3 */}
         <div className="flex items-center gap-2 shrink-0">
-          {(() => {
-            const isThakurdwara = (activeBatch || "").toLowerCase().includes("thakurdwara") || (activeBatch || "").includes("ठाकुरद्वारा") || (activeBatch || "").toLowerCase().includes("stenoinstitute");
-            const stepText = isThakurdwara ? "Step 3" : "Step 2";
-            return (
-              <Link href={activeBatch ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}` : "/student/steno/series"}>
-                <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
-                  <ArrowLeft className="w-4 h-4" /> Back to {activeBatch ? `${activeBatch} (${stepText})` : "All Batches"}
-                </Button>
-              </Link>
-            );
-          })()}
+          <Link
+            href={
+              activeBatch
+                ? `/student/steno/series/batch/${encodeURIComponent(activeBatch)}${queryExam ? `?exam=${encodeURIComponent(queryExam)}` : ""}`
+                : "/student/steno/series"
+            }
+          >
+            <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs shrink-0">
+              <ArrowLeft className="w-4 h-4" /> Back to Series Topics (Step 3)
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -318,7 +319,7 @@ function SeriesDetailContent({ id }: { id: string }) {
                 </Link>
               </div>
 
-              <Link href={`/student/steno/passage/${test._id}${activeBatch ? `?batch=${encodeURIComponent(activeBatch)}` : ""}`} className="block pt-2">
+              <Link href={`/student/steno/passage/${test._id}${activeBatch ? `?batch=${encodeURIComponent(activeBatch)}` : ""}${queryExam ? `&exam=${encodeURIComponent(queryExam)}` : ""}`} className="block pt-2">
                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl shadow-md gap-2">
                   <Play className="w-4 h-4 fill-white" /> Play Dictation / Start Test
                 </Button>
