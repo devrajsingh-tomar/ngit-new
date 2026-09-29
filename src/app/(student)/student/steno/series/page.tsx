@@ -127,22 +127,8 @@ export default function StudentStenoSeriesPage() {
       const fetchedSeries = (seriesRes.success && seriesRes.series) ? seriesRes.series : [];
       setSeriesList(fetchedSeries);
 
-      if (batchRes.success && batchRes.batches) {
-        const dbBatches = batchRes.batches;
-        const mergedMap = new Map<string, any>();
-
-        DEFAULT_STATIC_BATCHES.forEach((def) => {
-          mergedMap.set(def.name.toLowerCase().trim(), { ...def });
-        });
-
-        dbBatches.forEach((dbB: any) => {
-          const key = (dbB.name || "").toLowerCase().trim();
-          if (!key) return;
-          const existing = mergedMap.get(key) || {};
-          mergedMap.set(key, { ...existing, ...dbB });
-        });
-
-        const merged = Array.from(mergedMap.values());
+      if (batchRes.success && batchRes.batches && batchRes.batches.length > 0) {
+        const merged = [...batchRes.batches];
 
         // Sort Batches by newest uploaded content timestamp descending (Step 1 Priority)
         const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {

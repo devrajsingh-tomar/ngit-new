@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   getStenoSeriesListAction,
   createStenoSeriesAction,
@@ -26,7 +27,11 @@ import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
 
-export default function AdminStenoSeriesPage() {
+function AdminStenoSeriesContent() {
+  const searchParams = useSearchParams();
+  const initialBatchParam = searchParams.get("batch") || "all";
+  const initialExamParam = searchParams.get("exam") || "all";
+
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [passages, setPassages] = useState<any[]>([]);
   const [targetBatches, setTargetBatches] = useState<any[]>([]);
@@ -36,9 +41,14 @@ export default function AdminStenoSeriesPage() {
   const [editingSeries, setEditingSeries] = useState<any | null>(null);
 
   // Filters State
-  const [filterBatch, setFilterBatch] = useState("all");
-  const [filterExam, setFilterExam] = useState("all");
+  const [filterBatch, setFilterBatch] = useState(initialBatchParam);
+  const [filterExam, setFilterExam] = useState(initialExamParam);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    if (initialBatchParam && initialBatchParam !== "all") setFilterBatch(initialBatchParam);
+    if (initialExamParam && initialExamParam !== "all") setFilterExam(initialExamParam);
+  }, [initialBatchParam, initialExamParam]);
 
   // Inline Create Batch State
   const [isNewBatchDialogOpen, setIsNewBatchDialogOpen] = useState(false);
@@ -124,12 +134,16 @@ export default function AdminStenoSeriesPage() {
 
   const handleOpenCreateModal = () => {
     setEditingSeries(null);
+    const selectedBatch = filterBatch !== "all" ? filterBatch : (targetBatches[0]?.name || "");
+    const matchingExams = targetExams.filter((te) => !te.batch || te.batch.toLowerCase().trim() === selectedBatch.toLowerCase().trim());
+    const defaultExam = filterExam !== "all" ? filterExam : (matchingExams[0]?.name || targetExams[0]?.name || "");
+
     setFormData({
       title: "",
       description: "",
       thumbnailUrl: "",
-      batch: targetBatches[0]?.name || "UPSSSC Steno",
-      exam: targetExams[0]?.name || "UPSSSC Steno",
+      batch: selectedBatch,
+      exam: defaultExam,
       category: "General Series",
       language: "Hindi",
       selectedPassages: [],
@@ -210,13 +224,13 @@ export default function AdminStenoSeriesPage() {
 
   const filteredSeriesList = seriesList.filter((s) => {
     if (filterBatch !== "all") {
-      const match = (s.batch || "").toLowerCase().includes(filterBatch.toLowerCase());
+      const match = (s.batch || "").toLowerCase().trim() === filterBatch.toLowerCase().trim();
       if (!match) return false;
     }
     if (filterExam !== "all") {
-      const examVal = filterExam.toLowerCase();
-      const sExam = (s.exam || s.category || "").toLowerCase();
-      if (!sExam.includes(examVal)) return false;
+      const examVal = filterExam.toLowerCase().trim();
+      const sExam = (s.exam || "").toLowerCase().trim();
+      if (sExam !== examVal) return false;
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -516,17 +530,23 @@ export default function AdminStenoSeriesPage() {
                   value={formData.exam}
                   onChange={(e) => setFormData({ ...formData, exam: e.target.value })}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                  required
                 >
-                  {targetExams.map((te) => (
-                    <option key={te._id || te.name} value={te.name}>
-                      {te.name} {te.authorityName ? `(${te.authorityName})` : ""}
-                    </option>
-                  ))}
-                  <option value="UPSSSC Steno">UPSSSC Steno (उ०प्र० अधीनस्थ सेवा चयन आयोग)</option>
-                  <option value="UPSI Steno">UPSI Steno (उ०प्र० पुलिस सब-इंस्पेक्टर)</option>
-                  <option value="SSC Steno Grade C & D">SSC Steno Grade C & D (Staff Selection Commission)</option>
-                  <option value="Allahabad High Court Steno">Allahabad High Court Steno (इलाहाबाद हाईकोर्ट)</option>
-                  <option value="All Exams">All Exams / General</option>
+                  <option value="">-- Select Target Government Exam --</option>
+                  {targetExams
+                    .filter((te) => !formData.batch || !te.batch || te.batch.toLowerCase().trim() === formData.batch.toLowerCase().trim())
+                    .map((te) => (
+                      <option key={te._id || te.name} value={te.name}>
+                        {te.name} {te.authorityName ? `(${te.authorityName})` : ""}
+                      </option>
+                    ))}
+                  {targetExams
+                    .filter((te) => formData.batch && te.batch && te.batch.toLowerCase().trim() !== formData.batch.toLowerCase().trim())
+                    .map((te) => (
+                      <option key={te._id || te.name} value={te.name}>
+                        {te.name} [Other Batch: {te.batch}]
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -742,5 +762,13 @@ export default function AdminStenoSeriesPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminStenoSeriesPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center font-bold text-slate-400">Loading Series Topics...</div>}>
+      <AdminStenoSeriesContent />
+    </Suspense>
   );
 }

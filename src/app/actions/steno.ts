@@ -23,7 +23,6 @@ import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
 export async function getStenoPassagesAction(query?: any) {
   try {
     await connectDB();
-    await seedDefaultSeriesAndPassagesAction();
     const filter: any = {};
     if (query?.isPublished !== undefined) {
       filter.isPublished = query.isPublished;
@@ -68,23 +67,32 @@ export async function getStenoPassagesAction(query?: any) {
 export async function getStenoSeriesListAction(query?: any) {
   try {
     await connectDB();
-    const seriesCount = await StenoSeries.countDocuments();
-    if (seriesCount === 0) {
-      await seedDefaultSeriesAndPassagesAction();
-    }
 
     // Clean up any previously auto-created "सामान्य अभ्यास" series
     await StenoSeries.deleteMany({ title: "सामान्य अभ्यास" });
 
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
-    if (query?.batch) filter.batch = query.batch;
-    if (query?.exam) {
+    if (query?.batch && query.batch !== "all") {
+      const escapedBatch = query.batch.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.$or = [
-        { exam: query.exam },
-        { category: query.exam },
+        { batch: query.batch.trim() },
+        { batch: { $regex: new RegExp(`^${escapedBatch}$`, "i") } },
       ];
-    } else if (query?.category) {
+    }
+    if (query?.exam && query.exam !== "all") {
+      const escapedExam = query.exam.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const examCondition = [
+        { exam: query.exam.trim() },
+        { exam: { $regex: new RegExp(`^${escapedExam}$`, "i") } },
+      ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: examCondition }];
+        delete filter.$or;
+      } else {
+        filter.$or = examCondition;
+      }
+    } else if (query?.category && query.category !== "all") {
       filter.category = query.category;
     }
 
@@ -105,9 +113,6 @@ export async function getStenoSeriesByIdAction(id: string) {
     if (mongoose.Types.ObjectId.isValid(id)) {
       seriesItem = await StenoSeries.findById(id).populate("passages").lean();
     }
-    if (!seriesItem) {
-      seriesItem = await StenoSeries.findOne({ isPublished: true }).populate("passages").lean();
-    }
     if (!seriesItem) return { success: false, error: "Series not found" };
     return { success: true, series: JSON.parse(JSON.stringify(seriesItem)) };
   } catch (err: any) {
@@ -121,9 +126,6 @@ export async function getStenoPassageByIdAction(id: string) {
     let passage = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
       passage = await StenoPassage.findById(id).populate("seriesId").lean();
-    }
-    if (!passage) {
-      passage = await StenoPassage.findOne({ isPublished: true }).populate("seriesId").lean();
     }
     if (!passage) return { success: false, error: "Passage not found" };
     return { success: true, passage: JSON.parse(JSON.stringify(passage)) };
@@ -304,10 +306,27 @@ export async function updateStenoPassageAction(id: string, data: any) {
       payload.examPresetId = null;
     }
 
+    const oldPassage = await StenoPassage.findById(id).lean();
     const updated = await StenoPassage.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
 
+    // Sync StenoSeries.passages:
+    if (oldPassage && String(oldPassage.seriesId || "") !== String(payload.seriesId || "")) {
+      if (oldPassage.seriesId) {
+        await StenoSeries.findByIdAndUpdate(oldPassage.seriesId, {
+          $pull: { passages: id },
+        });
+      }
+      if (payload.seriesId) {
+        await StenoSeries.findByIdAndUpdate(payload.seriesId, {
+          $addToSet: { passages: id },
+        });
+      }
+    }
+
     revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
     revalidatePath("/steno/dictation");
+    revalidatePath("/student/steno/series");
     return { success: true, passage: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -370,6 +389,12 @@ export async function bulkAssignStenoPassagesAction(data: {
     );
 
     if (data.seriesId) {
+      // Remove these passages from any other series first
+      await StenoSeries.updateMany(
+        { passages: { $in: data.passageIds } },
+        { $pull: { passages: { $in: data.passageIds } } }
+      );
+      // Then assign to target series
       await StenoSeries.findByIdAndUpdate(data.seriesId, {
         $addToSet: { passages: { $each: data.passageIds } },
       });
@@ -482,50 +507,11 @@ export async function deleteStenoSeriesAction(id: string) {
   }
 }
 
-// ── SEEDING DEFAULT SERIES AND PASSAGES ──
+// ── SEEDING DEFAULT SERIES AND PASSAGES (LEGACY HANDLER) ──
 
 export async function seedDefaultSeriesAndPassagesAction() {
   try {
     await connectDB();
-    const seriesCount = await StenoSeries.countDocuments();
-    if (seriesCount === 0) {
-      const defaultSeries = [
-        // UPSSSC Steno Series Topics (as per diagram)
-        { title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
-        { title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
-        { title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
-        { title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
-        { title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
-        { title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
-        { title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
-        { title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
-        { title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
-
-        // High Court & Other Batches
-        { title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-      ];
-
-      await StenoSeries.insertMany(defaultSeries);
-    }
-
-    const passageCount = await StenoPassage.countDocuments();
-    if (passageCount === 0) {
-      const samplePassage = {
-        title: "80 WPM Hindi Legal Dictation - Practice 1",
-        language: "Hindi",
-        category: "Legal",
-        transcriptText: "माननीय न्यायाधीश महोदय, अभियुक्त के विरुद्ध प्रस्तुत साक्ष्य और गवाहों के बयानों से यह स्पष्ट है कि घटना के समय वह घटनास्थल पर मौजूद नहीं था। पुलिस द्वारा प्रस्तुत प्रथम सूचना रिपोर्ट में भी अनेक विरोधाभास हैं। अतः न्याय के हित में अभियुक्त को दोषमुक्त किया जाना न्यायसंगत होगा।",
-        wordCount: 45,
-        durationSeconds: 300,
-        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        availableSpeeds: [40, 50, 60, 70, 80, 90, 100, 110, 120],
-        targetWpm: 80,
-        isPublished: true,
-        sortOrder: 1,
-      };
-      await StenoPassage.create(samplePassage);
-    }
-
     await seedStenoInstituteAccountAction();
   } catch (err) {
     console.error("seedDefaultSeriesAndPassagesAction error:", err);
@@ -1119,81 +1105,26 @@ export async function getStenoLeaderboardAction(filters?: {
   }
 }
 
-// ── ADMIN EXAM PRESETS ACTIONS (STEP 8) ──
+// ── ADMIN EXAM PRESETS ACTIONS (STEP 8 / STEP 2 GOVT EXAMS) ──
 
-export async function getStenoExamsAction() {
+export async function getStenoExamsAction(query?: { batch?: string; isActive?: boolean }) {
   try {
     await connectDB();
 
-    // Clean up any legacy exam records in database that had "Official Exam Rules" in their title
-    await StenoExam.updateMany(
-      { name: /Official Exam Rules/i },
-      { $set: { name: "UPSSSC Steno" } }
-    );
-
-    const count = await StenoExam.countDocuments();
-    if (count === 0) {
-      const defaultExams = [
-        {
-          name: "UPSSSC Steno",
-          authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
-          thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
-          description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
-          targetWpm: 80,
-          totalWords: 420,
-          dictationDurationMinutes: 5,
-          transcriptionDurationMinutes: 40,
-          backspaceMode: "full",
-          mistakeExemptionCount: 20,
-          ignoreChandrabindu: true,
-          isActive: true,
-        },
-        {
-          name: "UPSI Steno",
-          authorityName: "उत्तर प्रदेश पुलिस भर्ती एवं प्रोन्नति बोर्ड",
-          thumbnailUrl: "/images/steno-weekly-test-banner.jpg",
-          description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-          targetWpm: 80,
-          totalWords: 400,
-          dictationDurationMinutes: 5,
-          transcriptionDurationMinutes: 40,
-          backspaceMode: "full",
-          mistakeExemptionCount: 15,
-          ignoreChandrabindu: true,
-          isActive: true,
-        },
-        {
-          name: "SSC Steno Grade C & D",
-          authorityName: "Staff Selection Commission",
-          thumbnailUrl: "/images/steno-test-guide-banner.jpg",
-          description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-          targetWpm: 80,
-          totalWords: 800,
-          dictationDurationMinutes: 10,
-          transcriptionDurationMinutes: 50,
-          backspaceMode: "full",
-          mistakeExemptionCount: 25,
-          ignoreChandrabindu: true,
-          isActive: true,
-        },
-        {
-          name: "Allahabad High Court Steno",
-          authorityName: "High Court of Judicature at Allahabad",
-          thumbnailUrl: "/images/steno-analytics-banner.jpg",
-          description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-          targetWpm: 80,
-          totalWords: 400,
-          dictationDurationMinutes: 5,
-          transcriptionDurationMinutes: 30,
-          backspaceMode: "full",
-          mistakeExemptionCount: 10,
-          ignoreChandrabindu: true,
-          isActive: true,
-        },
-      ];
-      await StenoExam.insertMany(defaultExams);
+    const filter: any = {};
+    if (query?.isActive !== undefined) {
+      filter.isActive = query.isActive;
     }
-    const exams = await StenoExam.find({}).sort({ createdAt: -1 }).lean();
+
+    if (query?.batch && query.batch !== "all") {
+      const escaped = query.batch.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.$or = [
+        { batch: query.batch.trim() },
+        { batch: { $regex: new RegExp(`^${escaped}$`, "i") } },
+      ];
+    }
+
+    const exams = await StenoExam.find(filter).sort({ createdAt: -1 }).lean();
     return { success: true, exams: JSON.parse(JSON.stringify(exams)) };
   } catch (err: any) {
     return { success: false, error: err.message };

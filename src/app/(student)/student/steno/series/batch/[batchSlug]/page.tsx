@@ -12,34 +12,12 @@ import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtil
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string, examName?: string | null) {
   let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
 
-  if (matched.length === 0) {
-    matched = allSeries.filter((s: any) => {
-      const titleVal = (s.title || "").toLowerCase().trim();
-      const catVal = (s.category || "").toLowerCase().trim();
-      const searchVal = batchName.toLowerCase().trim();
-      return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
-    });
-  }
-
   if (examName) {
     const examLower = examName.toLowerCase().trim();
-    const filteredByExam = matched.filter((s: any) => {
+    matched = matched.filter((s: any) => {
       const sExam = (s.exam || "").toLowerCase().trim();
-      const sCategory = (s.category || "").toLowerCase().trim();
-      const sBatch = (s.batch || "").toLowerCase().trim();
-      const sTitle = (s.title || "").toLowerCase().trim();
-      return (
-        sExam.includes(examLower) ||
-        sCategory.includes(examLower) ||
-        sBatch.includes(examLower) ||
-        sTitle.includes(examLower) ||
-        sExam === "all exams" ||
-        sCategory === "general series"
-      );
+      return sExam === examLower;
     });
-    if (filteredByExam.length > 0) {
-      matched = filteredByExam;
-    }
   }
 
   const uniqueMap = new Map<string, any>();
@@ -111,13 +89,20 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
   const loadSeriesForBatch = async () => {
     setLoading(true);
     try {
-      const res = await getStenoSeriesListAction({ isPublished: true });
+      const res = await getStenoSeriesListAction({
+        isPublished: true,
+        batch: rawBatchName,
+        exam: examParam || undefined,
+      });
       if (res.success && res.series) {
         const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName, examParam);
         setSeriesList(deduplicated);
+      } else {
+        setSeriesList([]);
       }
     } catch (e) {
       console.error("Error loading batch series:", e);
+      setSeriesList([]);
     } finally {
       setLoading(false);
     }

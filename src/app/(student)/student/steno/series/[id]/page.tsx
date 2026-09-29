@@ -93,17 +93,29 @@ function SeriesDetailContent({ id }: { id: string }) {
     );
   }
 
-  // Combine passages from series.passages and direct seriesId matches
+  // Combine passages strictly belonging to this series
   const allPassages: any[] = [];
-  if (series.passages && Array.isArray(series.passages)) {
-    for (const p of series.passages) {
-      if (p && p._id) allPassages.push(p);
-    }
-  }
+  const stringId = id?.toString();
+
+  // Direct seriesId matches from database
   if (passages && Array.isArray(passages)) {
     for (const p of passages) {
-      if (!allPassages.some((ap) => ap._id?.toString() === p._id?.toString())) {
+      if (p && p._id) {
         allPassages.push(p);
+      }
+    }
+  }
+
+  // Also include passages populated on series, unless they are assigned to a different series
+  if (series.passages && Array.isArray(series.passages)) {
+    for (const p of series.passages) {
+      if (p && p._id) {
+        const pSeriesId = p.seriesId?._id ? p.seriesId._id.toString() : p.seriesId ? p.seriesId.toString() : null;
+        if (!pSeriesId || pSeriesId === stringId) {
+          if (!allPassages.some((ap) => ap._id?.toString() === p._id?.toString())) {
+            allPassages.push(p);
+          }
+        }
       }
     }
   }

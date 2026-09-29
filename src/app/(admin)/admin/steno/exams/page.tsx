@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   getStenoExamsAction,
   createStenoExamAction,
   updateStenoExamAction,
   deleteStenoExamAction,
+  getStenoBatchesAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,33 +31,55 @@ import {
   Sliders,
   Clock,
   Zap,
+  Layers,
+  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
 
-export default function AdminStenoExamsPage() {
+function AdminStenoExamsContent() {
+  const searchParams = useSearchParams();
+  const initialBatchParam = searchParams.get("batch") || "all";
+
   const [exams, setExams] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
+  const [filterBatch, setFilterBatch] = useState<string>(initialBatchParam);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<any | null>(null);
 
-  // Form State - ONLY Government Exam Info and Poster Image (Evaluation Rules managed separately in /error-rules)
+  // Form State - Clean initial values (No dummy links or fallback data)
   const [formData, setFormData] = useState({
-    name: "UPSSSC Steno",
-    authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
-    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
-    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
+    name: "",
+    batch: "",
+    authorityName: "",
+    thumbnailUrl: "",
+    description: "",
     targetWpm: 80,
-    totalWords: 420,
+    totalWords: 400,
     dictationDurationMinutes: 5,
     transcriptionDurationMinutes: 40,
     isActive: true,
   });
 
   useEffect(() => {
+    loadBatches();
     loadExams();
   }, []);
+
+  useEffect(() => {
+    if (initialBatchParam && initialBatchParam !== "all") {
+      setFilterBatch(initialBatchParam);
+    }
+  }, [initialBatchParam]);
+
+  const loadBatches = async () => {
+    const res = await getStenoBatchesAction();
+    if (res.success && res.batches) {
+      setBatches(res.batches);
+    }
+  };
 
   const loadExams = async () => {
     setLoading(true);
@@ -70,8 +94,10 @@ export default function AdminStenoExamsPage() {
 
   const handleOpenCreateModal = () => {
     setEditingExam(null);
+    const defaultBatch = filterBatch !== "all" ? filterBatch : (batches[0]?.name || "");
     setFormData({
       name: "",
+      batch: defaultBatch,
       authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
       thumbnailUrl: "",
       description: "",
@@ -88,6 +114,7 @@ export default function AdminStenoExamsPage() {
     setEditingExam(exam);
     setFormData({
       name: exam.name || "",
+      batch: exam.batch || (batches[0]?.name || ""),
       authorityName: exam.authorityName || "उ०प्र० अधीनस्थ सेवा चयन आयोग",
       thumbnailUrl: exam.thumbnailUrl || "",
       description: exam.description || "",
@@ -106,9 +133,14 @@ export default function AdminStenoExamsPage() {
       toast.error("Government Exam name is required!");
       return;
     }
+    if (!formData.batch.trim()) {
+      toast.error("Target Steno Batch (Step 1) is required!");
+      return;
+    }
 
     const payload = {
       name: formData.name.trim(),
+      batch: formData.batch.trim(),
       authorityName: formData.authorityName.trim(),
       thumbnailUrl: formData.thumbnailUrl.trim(),
       description: formData.description.trim(),
@@ -151,6 +183,11 @@ export default function AdminStenoExamsPage() {
     }
   };
 
+  const filteredExams = exams.filter((exam) => {
+    if (filterBatch === "all") return true;
+    return (exam.batch || "").toLowerCase() === filterBatch.toLowerCase();
+  });
+
   return (
     <div className="bg-[#f8fafc] p-4 sm:p-6 min-h-screen space-y-6">
       {/* Top Header */}
@@ -165,7 +202,7 @@ export default function AdminStenoExamsPage() {
             Government Steno Exams with Poster (Step 2)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Configure government exam names, board authority badges, and official poster thumbnails for all batches.
+            Configure government exam names, board authority badges, and official poster thumbnails individual to each Batch.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -193,18 +230,58 @@ export default function AdminStenoExamsPage() {
         </div>
       </div>
 
+      {/* Batch Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <Filter className="w-4 h-4 text-indigo-600" />
+          <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
+            Filter by Target Batch (Step 1):
+          </span>
+          <select
+            value={filterBatch}
+            onChange={(e) => setFilterBatch(e.target.value)}
+            className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="all">All Batches ({exams.length} Exams)</option>
+            {batches.map((b) => (
+              <option key={b._id || b.name} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-xs font-semibold text-slate-500">
+          Showing <strong className="text-slate-900">{filteredExams.length}</strong> exam{filteredExams.length === 1 ? "" : "s"}
+          {filterBatch !== "all" && <span> for batch: <strong className="text-indigo-600">{filterBatch}</strong></span>}
+        </div>
+      </div>
+
       {/* Government Exam Cards Grid */}
       {loading ? (
         <div className="py-20 text-center text-slate-400">
           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Government Exams...
         </div>
-      ) : exams.length === 0 ? (
-        <Card className="p-12 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-          No Government Exams found. Click "Create Govt Exam (Step 2)" to add one.
+      ) : filteredExams.length === 0 ? (
+        <Card className="p-12 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+          <Award className="w-10 h-10 text-slate-300 mx-auto" />
+          <p className="text-sm font-black text-slate-600">
+            {filterBatch !== "all"
+              ? `No Government Exams found for "${filterBatch}".`
+              : "No Government Exams found."}
+          </p>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            Click below to create a Government Exam assigned to this batch.
+          </p>
+          <Button
+            onClick={handleOpenCreateModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Create Govt Exam (Step 2)
+          </Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {exams.map((exam) => (
+          {filteredExams.map((exam) => (
             <Card
               key={exam._id}
               className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between group overflow-hidden"
@@ -222,6 +299,9 @@ export default function AdminStenoExamsPage() {
                     <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-950 flex flex-col items-center justify-center p-4 text-center">
                       <Award className="w-10 h-10 text-amber-400 mb-2" />
                       <span className="text-white text-xs font-black">{exam.name}</span>
+                      {exam.batch && (
+                        <span className="text-indigo-300 text-[10px] font-bold mt-1">{exam.batch}</span>
+                      )}
                     </div>
                   )}
                   {exam.authorityName && (
@@ -229,13 +309,21 @@ export default function AdminStenoExamsPage() {
                       {exam.authorityName}
                     </span>
                   )}
+                  <span className="absolute bottom-2.5 left-2.5 bg-slate-900/90 backdrop-blur-md text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-amber-400" /> {exam.batch || "No Batch Assigned"}
+                  </span>
                 </div>
 
                 {/* Exam Title & Description */}
                 <div>
-                  <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    {exam.name}
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      {exam.name}
+                    </h3>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                      Step 2 Exam
+                    </span>
+                  </div>
                   {exam.description && (
                     <p className="text-xs text-slate-500 font-medium line-clamp-2 mt-1">
                       {exam.description}
@@ -258,7 +346,10 @@ export default function AdminStenoExamsPage() {
 
               {/* Action Buttons */}
               <div className="space-y-2 pt-2 border-t border-slate-100">
-                <Link href={`/admin/steno/series?exam=${encodeURIComponent(exam.name)}`} className="block">
+                <Link
+                  href={`/admin/steno/series?batch=${encodeURIComponent(exam.batch || "")}&exam=${encodeURIComponent(exam.name)}`}
+                  className="block"
+                >
                   <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-9 text-xs rounded-xl gap-1.5 shadow-sm">
                     <FileText className="w-3.5 h-3.5" /> Assign Series Topics (Step 3) <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
@@ -300,6 +391,29 @@ export default function AdminStenoExamsPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
             <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              {/* Target Batch Assignment */}
+              <div className="space-y-1 bg-indigo-50/70 p-3.5 rounded-2xl border border-indigo-100">
+                <label className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-indigo-600" /> Target Steno Batch (Step 1 Batch) *
+                </label>
+                <select
+                  value={formData.batch}
+                  onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  required
+                >
+                  <option value="">-- Select Target Batch --</option>
+                  {batches.map((b) => (
+                    <option key={b._id || b.name} value={b.name}>
+                      {b.name} {b.hindiName ? `(${b.hindiName})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-indigo-700 font-medium">
+                  यह परीक्षा केवल चुने गए बैच के अंदर ही Step 2 में दिखाई देगी।
+                </p>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Exam Title / Name *</label>
                 <Input
@@ -339,7 +453,7 @@ export default function AdminStenoExamsPage() {
                   className="rounded-xl text-xs font-medium bg-white"
                 />
                 <p className="text-[10px] text-slate-400 font-medium">
-                  यह पोस्टर इमेज छात्र पोर्टल पर Step 2 में परीक्षा चयन कार्ड पर दिखाई देगी।
+                  यह पोस्टर इमेज छात्र पोर्टल पर Step 2 में परीक्षा चयन कार्ड पर दिखाई देगी। खाली रखने पर डिफ़ॉल्ट कार्ड स्टाइल दिखेगा।
                 </p>
               </div>
 
@@ -427,5 +541,13 @@ export default function AdminStenoExamsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminStenoExamsPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center font-bold text-slate-400">Loading Government Exams...</div>}>
+      <AdminStenoExamsContent />
+    </Suspense>
   );
 }

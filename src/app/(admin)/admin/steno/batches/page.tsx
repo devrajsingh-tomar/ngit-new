@@ -238,7 +238,7 @@ export default function AdminStenoBatchesPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <Link href="/admin/steno/exams" className="col-span-2">
+                  <Link href={`/admin/steno/exams?batch=${encodeURIComponent(b.name)}`} className="col-span-2">
                     <Button
                       variant="secondary"
                       size="sm"
