@@ -7,7 +7,7 @@ import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/s
 import { checkStenoAccessAction } from "@/app/actions/steno-subscription";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus, Lock } from "lucide-react";
+import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus, Lock, Award } from "lucide-react";
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 // Default fallback configuration for standard batches
@@ -107,7 +107,7 @@ const DEFAULT_STATIC_BATCHES = [
 
 export default function StudentStenoSeriesPage() {
   const router = useRouter();
-  const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
+  const [batches, setBatches] = useState<any[]>([]);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessState, setAccessState] = useState<{
@@ -141,31 +141,14 @@ export default function StudentStenoSeriesPage() {
       if (batchRes.success && batchRes.batches && batchRes.batches.length > 0) {
         const merged = [...batchRes.batches];
 
-        // Sort Batches by newest uploaded content timestamp descending (Step 1 Priority)
-        const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
-          let maxTime = 0;
-          for (const s of sList) {
-            if (matchBatch(s.batch, batchName)) {
-              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
-              if (sTime > maxTime) maxTime = sTime;
-              if (Array.isArray(s.passages)) {
-                for (const p of s.passages) {
-                  const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
-                  if (pTime > maxTime) maxTime = pTime;
-                }
-              }
-            }
-          }
-          return maxTime;
-        };
-
+        // Sort Batches strictly by sortOrder ascending (as configured by Admin in Admin Panel)
         merged.sort((a, b) => {
-          const timeA = getBatchLatestTimestamp(a.name, fetchedSeries);
-          const timeB = getBatchLatestTimestamp(b.name, fetchedSeries);
-          if (timeA !== timeB) {
-            return timeB - timeA;
+          const orderA = a.sortOrder !== undefined && a.sortOrder !== null ? Number(a.sortOrder) : 99;
+          const orderB = b.sortOrder !== undefined && b.sortOrder !== null ? Number(b.sortOrder) : 99;
+          if (orderA !== orderB) {
+            return orderA - orderB;
           }
-          return (a.sortOrder ?? 99) - (b.sortOrder ?? 99);
+          return (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime());
         });
 
         setBatches(merged);
@@ -294,12 +277,9 @@ export default function StudentStenoSeriesPage() {
                 topics: ["संपादकीय", "लीगल", "संसदीय"],
                 description: batch.description || "Steno Exam Dictation Practice Batch",
               };
-              const batchPoster = isRealPoster(batch.thumbnailUrl) ? batch.thumbnailUrl : null;
-              const seriesForBatch = seriesList.find(
-                (s) => isRealPoster(s.thumbnailUrl) && matchBatch(s.batch, batch.name)
-              );
-              const effectiveThumbnailUrl = batchPoster || seriesForBatch?.thumbnailUrl;
-              const hasRealPoster = isRealPoster(effectiveThumbnailUrl);
+              const posterUrl = batch.thumbnailUrl && typeof batch.thumbnailUrl === "string" && batch.thumbnailUrl.trim() !== ""
+                ? batch.thumbnailUrl.trim()
+                : null;
               const hasRecentDictations = seriesList.some(
                 (s) => matchBatch(s.batch, batch.name) && (isNewlyUploaded(s.updatedAt || s.createdAt) || (Array.isArray(s.passages) && s.passages.some((p: any) => isNewlyUploaded(p.createdAt))))
               ) || index === 0;
@@ -311,16 +291,21 @@ export default function StudentStenoSeriesPage() {
                     hasRecentDictations ? "border-2 border-indigo-300 hover:border-indigo-400" : "border-slate-200 hover:border-indigo-300"
                   }`}
                 >
-                  {/* Step 1 Poster Image Rendering */}
-                  {hasRealPoster ? (
-                    <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
+                  {/* Step 1 Poster Image Rendering - exactly like Admin Panel */}
+                  {posterUrl ? (
+                    <div className="h-44 sm:h-52 w-full bg-slate-900 overflow-hidden relative border-b border-slate-100 flex items-center justify-center p-2">
                       <img
-                        src={effectiveThumbnailUrl}
+                        src={posterUrl}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover blur-md opacity-35 pointer-events-none"
+                      />
+                      <img
+                        src={posterUrl}
                         alt={batch.name}
-                        className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="relative z-10 w-full h-full object-contain rounded-xl group-hover:scale-105 transition-transform duration-500"
                       />
                       {hasRecentDictations && (
-                        <div className="absolute top-3 left-3 z-10">
+                        <div className="absolute top-3 left-3 z-20">
                           <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 animate-pulse">
                             <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT AVAILABLE
                           </span>
@@ -329,7 +314,7 @@ export default function StudentStenoSeriesPage() {
                     </div>
                   ) : (
                     /* Fallback Styled Banner if poster is not uploaded */
-                    <div className={`w-full bg-gradient-to-br ${fallback.color} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
+                    <div className={`w-full bg-gradient-to-br ${fallback.color} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44 sm:h-52`}>
                       <div className="flex justify-between items-start z-10">
                         <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                           {batch.name}
@@ -386,12 +371,19 @@ export default function StudentStenoSeriesPage() {
                       </div>
                     </div>
 
-                    {/* Action Button: Unified Step 2 Flow for ALL Batches */}
-                    <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block pt-2">
-                      <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                        <BookOpen className="w-4 h-4" /> SELECT TARGET GOVT EXAM (Step 2) <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
+                    {/* Action Buttons: Direct Series Access or Govt Exams */}
+                    <div className="space-y-2 pt-2">
+                      <Link href={`/student/steno/series/batch/${encodeBatch}`} className="block">
+                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.01]">
+                          <BookOpen className="w-4 h-4" /> ओपन बैच • सीरीज एवं डिक्टेशन देखें <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block">
+                        <Button variant="outline" className="w-full text-slate-700 hover:text-indigo-600 border-slate-200 hover:border-indigo-200 font-bold h-8 text-[11px] rounded-xl gap-1">
+                          <Award className="w-3.5 h-3.5 text-amber-600" /> सरकारी परीक्षा नियम (Step 2)
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </Card>
               );

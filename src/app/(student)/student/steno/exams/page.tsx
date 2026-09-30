@@ -100,12 +100,19 @@ function StudentStenoExamsContent() {
             <p className="text-xs text-slate-400 max-w-md mx-auto">
               एडमिन पैनल से इस बैच के लिए सरकारी परीक्षाएं (Step 2) बनाए जाने के बाद वे यहां व्यक्तिगत रूप से दिखाई देंगी।
             </p>
-            <div className="pt-2">
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-2">
               <Link href="/student/steno/series">
                 <Button variant="outline" className="text-xs font-bold rounded-xl gap-1.5">
                   <ArrowLeft className="w-3.5 h-3.5" /> Back to All Batches (Step 1)
                 </Button>
               </Link>
+              {rawBatch && (
+                <Link href={`/student/steno/series/batch/${encodeURIComponent(rawBatch)}`}>
+                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs px-5 shadow-sm gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5" /> इस बैच की सीरीज एवं डिक्टेशन देखें <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </Card>
         ) : (
