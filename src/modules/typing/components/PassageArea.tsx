@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { cn } from '@/lib/utils';
+import { alignWords, normalizeChar } from '../utils/calculations';
 
 /**
  * PassageArea Component
@@ -11,9 +12,14 @@ export const PassageArea: React.FC = () => {
   const { passage, typedText, settings, updateSettings } = useTypingStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const typedWords = typedText.split(/\s+/);
-  const words = passage.split(/\s+/);
-  const currentWordIdx = typedWords.length - 1;
+  const words = useMemo(
+    () => (passage || "").trim().split(/\s+/).filter((w) => w.length > 0),
+    [passage]
+  );
+  const alignment = useMemo(() => {
+    return alignWords(words, typedText);
+  }, [words, typedText]);
+  const currentWordIdx = alignment.activeOriginalIndex;
 
   // Auto-scroll logic: Keeps the current word centered
   useEffect(() => {
@@ -57,9 +63,11 @@ export const PassageArea: React.FC = () => {
       >
         <div className="flex flex-wrap gap-x-3 gap-y-4">
           {words.map((word, i) => {
+            const status = alignment.alignedOriginalStatuses[i] || 'pending';
+
             // Previous words: Full word green/red
             if (i < currentWordIdx) {
-                const isCorrect = typedWords[i] === word;
+                const isCorrect = status === 'correct';
                 return (
                   <span key={i} className={cn("transition-all duration-200", isCorrect ? "text-emerald-600" : "text-rose-600 underline decoration-rose-300")}>
                     {word}
@@ -69,13 +77,13 @@ export const PassageArea: React.FC = () => {
             
             // Current word: Character-by-character feedback
             if (i === currentWordIdx) {
-                const currentTypedWord = typedWords[i] || "";
+                const currentTypedWord = alignment.currentTypedWord;
                 return (
                   <span key={i} className="active-word text-blue-600 underline decoration-blue-400 decoration-4 underline-offset-8">
                     {word.split('').map((char, charIdx) => {
                       let charClass = "text-blue-600"; // default for untyped
                       if (charIdx < currentTypedWord.length) {
-                        charClass = char === currentTypedWord[charIdx] ? "text-emerald-600" : "text-rose-600 bg-rose-50 rounded-sm ring-1 ring-rose-200";
+                        charClass = normalizeChar(char) === normalizeChar(currentTypedWord[charIdx]) ? "text-emerald-600" : "text-rose-600 bg-rose-50 rounded-sm ring-1 ring-rose-200";
                       }
                       return <span key={charIdx} className={cn("transition-colors duration-75", charClass)}>{char}</span>;
                     })}

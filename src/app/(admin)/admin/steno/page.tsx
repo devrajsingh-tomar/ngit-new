@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   RefreshCw,
   Video,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -75,7 +76,10 @@ export default function AdminStenoDashboardPage() {
     { title: "Series Topics (Step 3)", href: `${basePath}/series`, icon: FileText, desc: "Manage dictation course series collections" },
     { title: "Dictation Passages (Step 4)", href: `${basePath}/passages`, icon: Headphones, desc: "Audio/video dictation audio & transcripts" },
     ...(isAdminWorkspace
-      ? [{ title: "Doubt Solution Videos", href: `${basePath}/doubt-videos`, icon: Video, desc: "Manage video tutorials & doubt clearance sessions" }]
+      ? [
+          { title: "Doubt Solution Videos", href: `${basePath}/doubt-videos`, icon: Video, desc: "Manage video tutorials & doubt clearance sessions" },
+          { title: "Subscription Plans & Pricing", href: `${basePath}/plans`, icon: CreditCard, desc: "Manage plan costs, 7-day free trial & student subscriptions" },
+        ]
       : []),
     { title: "Student Results", href: `${basePath}/results`, icon: BarChart3, desc: "Student transcriptions & error reports" },
   ];

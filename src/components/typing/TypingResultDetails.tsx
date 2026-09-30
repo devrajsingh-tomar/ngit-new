@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { alignFullPassage } from "@/modules/typing/utils/calculations";
 
 export default function TypingResultDetails({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -75,40 +76,9 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   }
 
   const passageContent = result.examId?.passageId?.content || "";
-  const originalWords = passageContent ? passageContent.trim().split(/\s+/) : [];
-  const submittedWords = result.submittedText?.trim().split(/\s+/) || [];
-  
+  const originalWords = passageContent ? passageContent.trim().split(/\s+/).filter((w: string) => w.length > 0) : [];
+  const submittedWords = result.submittedText?.trim().split(/\s+/).filter((w: string) => w.length > 0) || [];
   const totalStrokes = result.submittedText?.length || 0;
-  let correctStrokes = 0;
-  let wrongStrokes = 0;
-  let correctWords = 0;
-  let wrongWords = 0;
-
-  submittedWords.forEach((word: string, idx: number) => {
-    const original = originalWords[idx];
-    if (!original) {
-      wrongStrokes += word.length + 1;
-      wrongWords++;
-      return;
-    }
-
-    if (word === original) {
-      correctWords++;
-      correctStrokes += word.length + 1;
-    } else {
-      wrongWords++;
-      const mLen = Math.min(word.length, original.length);
-      for (let i = 0; i < mLen; i++) {
-        if (word[i] === original[i]) correctStrokes++;
-        else wrongStrokes++;
-      }
-      wrongStrokes += Math.abs(word.length - original.length);
-      wrongStrokes++;
-    }
-  });
-
-  let fullMistakes = 0;
-  let halfMistakes = 0;
 
   const lang = result.examId?.language?.toLowerCase() || "";
   const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
@@ -125,64 +95,22 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   
   const allowHalfMistakes = isAHC ? false : (categoryConfig ? categoryConfig.allowHalfMistakes : true);
 
-  const maxWords = submittedWords.length;
-  for (let idx = 0; idx < maxWords; idx++) {
-    const originalWord = originalWords[idx];
-    const typedWord = submittedWords[idx];
+  // Resilient full passage alignment: auto-synchronizes after extra spaces / split words
+  const evaluation = alignFullPassage(passageContent, result.submittedText || "", {
+    allowHalfMistakes,
+    isHindi
+  });
 
-    if (!originalWord) {
-      if (typedWord) fullMistakes++;
-      continue;
-    }
-
-    if (typedWord === originalWord) {
-      continue;
-    }
-
-    // AHC RO/ARO: No concept of half-mistakes. Every error is a full mistake.
-    // (Spelling, omitted/skipped words, extra words, capitalization, punctuation — all full penalty)
-    if (!allowHalfMistakes) {
-      fullMistakes++;
-      continue;
-    }
-
-    let isHalf = false;
-    
-    // 1. Capitalization Mismatch (English Only)
-    if (!isHindi) {
-      if (typedWord.toLowerCase() === originalWord.toLowerCase()) {
-        halfMistakes++;
-        isHalf = true;
-      }
-    }
-
-    // 2. Punctuation Mismatch/Omission
-    if (!isHalf) {
-      const cleanTyped = typedWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-      const cleanOriginal = originalWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-      if (cleanTyped === cleanOriginal && cleanTyped !== "") {
-        halfMistakes++;
-        isHalf = true;
-      }
-    }
-
-    // 3. Otherwise -> Full Mistake (Spelling, Substitution)
-    if (!isHalf) {
-      fullMistakes++;
-    }
-  }
-
-  // Also count omitted/skipped words (original words not typed at all)
-  if (!allowHalfMistakes) {
-    for (let idx = submittedWords.length; idx < originalWords.length; idx++) {
-      if (originalWords[idx]) fullMistakes++;
-    }
-  }
+  const correctWords = evaluation.correctWords;
+  const wrongWords = evaluation.wrongWords;
+  const correctStrokes = evaluation.correctStrokes;
+  const wrongStrokes = evaluation.wrongStrokes;
+  const fullMistakes = evaluation.fullMistakes;
+  const halfMistakes = evaluation.halfMistakes;
+  const totalErrors = evaluation.totalErrors;
 
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const timeDurationMins = result.examId?.duration || 10;
-  
-  const totalErrors = !allowHalfMistakes ? fullMistakes : fullMistakes + (halfMistakes / 2);
 
   // Marks Calculation: AHC RO/ARO or Junior Assistant standard or dynamically configured
   const ahcTotalMarks = isAHCJA ? 25 : (isAHC ? 50 : (categoryConfig ? (categoryConfig.totalMarks || 50) : 50));
@@ -470,17 +398,16 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                         </div>
                         <div className="p-10 bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-slate-200/40 min-h-[400px] print:p-6 print:rounded-2xl print:min-h-0 print:border-slate-200 print:shadow-none">
                             <p className="text-xl leading-[2.5] font-semibold print:text-slate-900 print:text-sm" style={{ fontFamily: getFontFamily() }}>
-                                {submittedWords.map((word: string, i: number) => {
-                                    const isCorrect = word === originalWords[i];
+                                {evaluation.transcriptWords.map((item: any, i: number) => {
                                     return (
                                         <span 
                                             key={i} 
                                             className={cn(
                                                 "transition-colors",
-                                                isCorrect ? "text-slate-900" : "text-rose-500 font-black bg-rose-50 px-1 rounded-lg ring-1 ring-rose-100 underline decoration-rose-300 underline-offset-[12px] decoration-4 print:bg-transparent print:ring-0 print:underline"
+                                                item.isCorrect ? "text-slate-900" : "text-rose-500 font-black bg-rose-50 px-1 rounded-lg ring-1 ring-rose-100 underline decoration-rose-300 underline-offset-[12px] decoration-4 print:bg-transparent print:ring-0 print:underline"
                                             )}
                                         >
-                                            {word}{' '}
+                                            {item.word}{' '}
                                         </span>
                                     );
                                 })}

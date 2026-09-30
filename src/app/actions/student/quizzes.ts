@@ -11,6 +11,7 @@ import Question from "@/models/Question";
 import { z } from "zod";
 import { createSafeAction } from "@/lib/safe-action";
 import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
+import { alignWords } from "@/modules/typing/utils/calculations";
 
 const QuizIdSchema = z.object({
     quizId: z.string().min(1)
@@ -222,16 +223,9 @@ export const submitQuiz = createSafeAction(
                         if (!typedText.trim()) {
                             isCorrect = false;
                         } else {
-                            const originalWords = originalText.trim().split(/\s+/);
-                            const typedWords = typedText.trim().split(/\s+/);
-                            
-                            let correctWords = 0;
-                            for (let i = 0; i < Math.min(originalWords.length, typedWords.length); i++) {
-                                if (originalWords[i] === typedWords[i]) {
-                                    correctWords++;
-                                }
-                            }
-                            const accuracy = (correctWords / Math.max(1, originalWords.length)) * 100;
+                            const originalWords = originalText.trim().split(/\s+/).filter(Boolean);
+                            const evalResult = alignWords(originalWords, typedText);
+                            const accuracy = (evalResult.correctWordsCount / Math.max(1, originalWords.length)) * 100;
                             isCorrect = accuracy >= 80;
                         }
                     }

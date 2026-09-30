@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/steno";
+import { checkStenoAccessAction } from "@/app/actions/steno-subscription";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
+import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus, Lock } from "lucide-react";
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 // Default fallback configuration for standard batches
@@ -109,8 +110,14 @@ export default function StudentStenoSeriesPage() {
   const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-
+  const [accessState, setAccessState] = useState<{
+    hasAccess: boolean;
+    isAdmin: boolean;
+    isTrialActive: boolean;
+    trialExpired: boolean;
+    daysLeftInTrial: number;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -119,10 +126,14 @@ export default function StudentStenoSeriesPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [batchRes, seriesRes] = await Promise.all([
+      const [batchRes, seriesRes, access] = await Promise.all([
         getStenoBatchesAction({ isPublished: true }),
         getStenoSeriesListAction({ isPublished: true }),
+        checkStenoAccessAction({}),
       ]);
+      if (access.success && access.data) {
+        setAccessState(access.data as any);
+      }
 
       const fetchedSeries = (seriesRes.success && seriesRes.series) ? seriesRes.series : [];
       setSeriesList(fetchedSeries);
@@ -205,6 +216,48 @@ export default function StudentStenoSeriesPage() {
           <span>{batches.length} Official Batches Active</span>
         </div>
       </div>
+
+      {/* Trial Expired Alert Banner */}
+      {accessState?.trialExpired && !accessState.hasAccess && (
+        <div className="bg-gradient-to-r from-rose-500/15 via-red-500/10 to-orange-500/15 border-2 border-rose-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-700 flex items-center justify-center flex-shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-rose-950">
+                ⚠️ आपका 7-दिन का निःशुल्क ट्रायल समाप्त हो चुका है (Trial Expired)
+              </h3>
+              <p className="text-xs text-rose-800 font-medium">
+                डिक्टेशन टेस्ट, ट्रांसक्रिप्शन मूल्यांकन और सभी बैच अनलॉक रखने के लिए कृपया NGIT Steno प्लान सब्सक्राइब करें।
+              </p>
+            </div>
+          </div>
+          <Link href="/student/steno/subscribe" className="w-full sm:w-auto flex-shrink-0">
+            <Button className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-black text-xs h-9 px-5 rounded-xl shadow-md gap-2">
+              <Sparkles className="w-3.5 h-3.5" /> अभी सब्सक्राइब करें (₹99 से शुरू) <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Trial Active Banner */}
+      {accessState?.isTrialActive && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-orange-500/15 border border-amber-300 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+            <p className="text-xs font-bold text-amber-950">
+              🎉 <span className="font-black">7-दिन फ़्री ट्रायल सक्रिय:</span> आपके पास अभी{" "}
+              <span className="underline decoration-amber-500 font-black">{accessState.daysLeftInTrial} दिन</span> का फ्री एक्सेस शेष है। सभी बैच और डिक्टेशन टेस्ट एक्सेस कर सकते हैं।
+            </p>
+          </div>
+          <Link href="/student/steno/subscribe" className="flex-shrink-0 w-full sm:w-auto">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto h-7 text-[11px] font-black border-amber-400 text-amber-900 bg-white/90 hover:bg-white rounded-lg shadow-2xs gap-1">
+              सब्सक्रिप्शन प्लान्स देखें <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {loading ? (
         <div className="py-20 text-center text-slate-400 space-y-2">

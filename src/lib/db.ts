@@ -21,6 +21,9 @@ import "@/models/StenoResult";
 import "@/models/StenoFont";
 import "@/models/StenoErrorRule";
 import "@/models/StenoCustomTest";
+import "@/models/StenoSubscriptionPlan";
+import "@/models/StenoSubscription";
+import "@/models/StenoSetting";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 

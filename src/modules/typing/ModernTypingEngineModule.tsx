@@ -347,7 +347,13 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
       }
     }
 
-    setTypedText(val);
+    // Prevent redundant multiple trailing spaces from accidental double-space
+    let cleanVal = val;
+    if (val.length > typedText.length && /\s{2,}$/.test(val)) {
+      cleanVal = val.replace(/\s{2,}$/, ' ');
+    }
+
+    setTypedText(cleanVal);
 
     // Update lockedLengthRef monotonically
     if (settings.backspaceMode === 'upssssc') {
@@ -376,7 +382,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     resetIdleTimer();
 
     // 0. Alt-Code Handling (Alt 039 / Alt 39 -> Single Inverted Comma ', etc.)
-    if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+    if (e.key === "Alt" || e.key === "AltGraph" || e.code === "AltLeft" || e.code === "AltRight") {
       isAltDownRef.current = true;
       altDigitsRef.current = "";
       return;
@@ -400,7 +406,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
     // Accidental Extra Space Protection:
     // If typed text already ends with a space (user accidentally double-taps space) or is empty,
     // prevent inserting redundant trailing space to prevent cascading errors on subsequent words.
-    if (e.key === ' ') {
+    if (e.key === ' ' || e.code === 'Space') {
       if (typedText.endsWith(' ') || typedText === '') {
         e.preventDefault();
         return;
@@ -493,7 +499,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
   };
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+    if (e.key === "Alt" || e.key === "AltGraph" || e.code === "AltLeft" || e.code === "AltRight") {
       isAltDownRef.current = false;
       if (altDigitsRef.current) {
         const char = resolveAltCodeChar(altDigitsRef.current);
@@ -784,6 +790,7 @@ export const ModernTypingEngineModule: React.FC<ModernTypingEngineModuleProps> =
           )}>
             <textarea
                 ref={inputRef}
+                data-custom-alt="true"
                 value={typedText}
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}

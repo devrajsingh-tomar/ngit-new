@@ -2,12 +2,15 @@
 
 import { useEffect, useState, useRef, use, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { getStenoPassageByIdAction, submitStenoResultAction } from "@/app/actions/steno";
+import { checkStenoAccessAction } from "@/app/actions/steno-subscription";
 import { StenoEngineModule } from "@/modules/steno/StenoEngineModule";
 import { StenoSessionConfigModal, StenoSessionConfig } from "@/components/steno/StenoSessionConfigModal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Pause, Keyboard, Info, Volume2, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Play, Pause, Keyboard, Info, Volume2, RefreshCw, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 import StenoDictationPlayer from "@/components/steno/StenoDictationPlayer";
@@ -20,6 +23,14 @@ function PassagePlayerContent({ id }: { id: string }) {
 
   const [passage, setPassage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [accessState, setAccessState] = useState<{
+    hasAccess: boolean;
+    isAdmin: boolean;
+    isTrialActive: boolean;
+    trialExpired: boolean;
+    daysLeftInTrial: number;
+    message: string;
+  } | null>(null);
 
   // Modal & Workspace state
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -32,7 +43,13 @@ function PassagePlayerContent({ id }: { id: string }) {
 
   const loadPassage = async () => {
     setLoading(true);
-    const res = await getStenoPassageByIdAction(id);
+    const [res, access] = await Promise.all([
+      getStenoPassageByIdAction(id),
+      checkStenoAccessAction({}),
+    ]);
+    if (access.success && access.data) {
+      setAccessState(access.data as any);
+    }
     if (res.success && res.passage) {
       setPassage(res.passage);
     } else {
@@ -48,6 +65,15 @@ function PassagePlayerContent({ id }: { id: string }) {
       });
     }
     setLoading(false);
+  };
+
+  const handleStartTranscriptionClicked = () => {
+    if (accessState && !accessState.hasAccess && accessState.trialExpired) {
+      toast.error("आपका 7-दिन का फ़्री ट्रायल समाप्त हो चुका है। आगे अभ्यास के लिए कृपया सब्सक्राइब करें।");
+      router.push("/student/steno/subscribe");
+      return;
+    }
+    setIsConfigModalOpen(true);
   };
 
   const handleSaveConfig = (config: StenoSessionConfig) => {
@@ -110,6 +136,58 @@ function PassagePlayerContent({ id }: { id: string }) {
     );
   }
 
+  // If trial has expired and student does not have active subscription
+  if (accessState && !accessState.hasAccess && accessState.trialExpired) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto py-12 px-4 text-center">
+        <Card className="p-8 sm:p-10 rounded-3xl border-2 border-amber-200/80 bg-gradient-to-b from-amber-50/50 via-white to-orange-50/30 shadow-xl space-y-6">
+          <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
+            <Lock className="w-8 h-8 text-white" />
+          </div>
+
+          <div className="space-y-2">
+            <Badge className="bg-amber-100 text-amber-900 border-amber-300 font-black text-xs uppercase px-3 py-1">
+              7-Day Free Trial Expired
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+              स्टेनो डिक्टेशन एक्सेस लॉक है
+            </h2>
+            <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+              आपका 7 दिनों का निःशुल्क स्टेनो ट्रायल समाप्त हो चुका है। असीमित ऑडियो डिक्टेशन, रियल-टाइम ट्रांसक्रिप्शन टेस्ट, और विस्तृत मूल्यांकन जारी रखने के लिए कृपया अपनी पसंद का प्लान चुनें।
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between text-left">
+            <div>
+              <p className="text-xs font-bold text-slate-500">Super Affordable Plans</p>
+              <p className="text-sm font-black text-slate-900">1 Month, 3 Months & 6 Months Plans</p>
+            </div>
+            <Link href="/student/steno/subscribe">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md gap-1">
+                <Sparkles className="w-3.5 h-3.5" /> प्लान्स देखें <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="rounded-xl font-bold text-xs"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" /> वापस जाएं
+            </Button>
+            <Link href="/student/steno/subscribe" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-xs rounded-xl shadow-lg gap-2 h-11 px-6">
+                अभी सब्सक्राइब करें (Unlock All) <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   // If student configured session and clicked Start Transcription, show Final Exam Workspace
   if (startEngine) {
     const presetRulesObj = sessionConfig
@@ -155,6 +233,24 @@ function PassagePlayerContent({ id }: { id: string }) {
   // Dictation Player & Instructions View
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-1 sm:p-2">
+      {/* 7-Day Free Trial Notice Banner */}
+      {accessState?.isTrialActive && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-orange-500/10 border border-amber-300/60 rounded-2xl p-3.5 px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+            <p className="font-bold text-amber-950">
+              🎉 <span className="font-black">फ़्री 7-दिन ट्रायल सक्रिय:</span> आपके पास अभी{" "}
+              <span className="underline decoration-amber-500 font-black">{accessState.daysLeftInTrial} दिन</span> का फ्री एक्सेस शेष है।
+            </p>
+          </div>
+          <Link href="/student/steno/subscribe" className="flex-shrink-0 w-full sm:w-auto">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto h-7 text-[11px] font-black border-amber-400 text-amber-900 bg-white/90 hover:bg-white rounded-lg shadow-2xs gap-1">
+              सब्सक्रिप्शन प्लान्स <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+      )}
+
       {/* Header Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
@@ -176,7 +272,7 @@ function PassagePlayerContent({ id }: { id: string }) {
       {/* Main Dictation Player Component */}
       <StenoDictationPlayer
         passage={passage}
-        onStartTranscription={() => setIsConfigModalOpen(true)}
+        onStartTranscription={handleStartTranscriptionClicked}
       />
 
       {/* Instructions Box */}

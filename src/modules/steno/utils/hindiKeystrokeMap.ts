@@ -328,49 +328,108 @@ export const KRUTI_DEV_CODE_MAP: Record<string, { normal: string; shift: string 
   Slash: { normal: "ध्", shift: "घ्" },
 };
 
-// 4. Kruti Dev Alt-Codes Reference Chart
-export interface KrutiDevAltCode {
+// 4a. Common Windows Alt Codes / Special Characters & Punctuation
+// Standard universal Windows Alt-Codes for symbols and punctuation,
+// widely used across all typing layouts (Mangal, Remington Gail, Inscript, English, Kruti Dev).
+export interface AltCodeEntry {
   code: string;
   char: string;
   desc: string;
   example: string;
+  category?: string;
 }
 
-export const KRUTI_DEV_ALT_CODES: Record<string, KrutiDevAltCode> = {
-  "063": { code: "063", char: "?", desc: "प्रश्नवाचक चिह्न", example: "क्या?" },
-  "63": { code: "63", char: "?", desc: "प्रश्नवाचक चिह्न", example: "क्या?" },
-  "033": { code: "033", char: "!", desc: "विस्मयादिबोधक चिह्न", example: "अरे!" },
-  "33": { code: "33", char: "!", desc: "विस्मयादिबोधक चिह्न", example: "अरे!" },
-  "034": { code: "034", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
-  "34": { code: "34", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
-  "0034": { code: "0034", char: '"', desc: "उद्धरण चिह्न", example: '"कहा"' },
-  "0147": { code: "0147", char: '"', desc: "उद्धरण चिह्न (बायाँ)", example: '"कहा"' },
-  "0148": { code: "0148", char: '"', desc: "उद्धरण चिह्न (दायाँ)", example: '"कहा"' },
-  "039": { code: "039", char: "'", desc: "एकल उद्धरण चिह्न (सिंगल इनवर्टेड कॉमा)", example: "'राम'" },
-  "39": { code: "39", char: "'", desc: "एकल उद्धरण चिह्न (सिंगल इनवर्टेड कॉमा)", example: "'राम'" },
-  "0039": { code: "0039", char: "'", desc: "एकल उद्धरण चिह्न (सिंगल इनवर्टेड कॉमा)", example: "'राम'" },
-  "0145": { code: "0145", char: "'", desc: "एकल उद्धरण चिह्न (बायाँ)", example: "'राम'" },
-  "0146": { code: "0146", char: "'", desc: "एकल उद्धरण चिह्न (दायाँ)", example: "'राम'" },
-  "0161": { code: "0161", char: "कँ", desc: "चंद्रबिंदु", example: "हूँ, नहीं" },
-  "0165": { code: "0165", char: "ञ", desc: "ञ अक्षर", example: "पञ्चायत" },
-  "0179": { code: "0179", char: "ङ", desc: "ङ अक्षर", example: "शङ्का, गङ्गा" },
-  "0196": { code: "0196", char: "घ", desc: "घ अक्षर", example: "घर, बाघ" },
-  "0197": { code: "0197", char: "ऊ", desc: "बड़ा ऊ (दीर्घ स्वर)", example: "ऊपर" },
-  "0210": { code: "0210", char: "भ", desc: "भ अक्षर", example: "भारत, सभा" },
-  "0216": { code: "0216", char: "क्र", desc: "क्र संयुक्त अक्षर", example: "क्रम, चक्र" },
-  "0221": { code: "0221", char: "फ्र", desc: "फ्र संयुक्त अक्षर", example: "फ्रांस" },
-  "0224": { code: "0224", char: "ह्न", desc: "ह्न संयुक्त अक्षर", example: "चिह्न" },
-  "0225": { code: "0225", char: "ह्य", desc: "ह्य संयुक्त अक्षर", example: "सह्य" },
-  "0227": { code: "0227", char: "ह्म", desc: "ह्म संयुक्त अक्षर", example: "ब्रह्म" },
-  "0228": { code: "0228", char: "क्त", desc: "क्त संयुक्त अक्षर", example: "तथ्य, संपर्क, रक्त" },
-  "0229": { code: "0229", char: "॰", desc: "लाघव चिह्न (संक्षेप)", example: "डॉ॰" },
-  "0230": { code: "0230", char: "द्र", desc: "द्र संयुक्त अक्षर", example: "द्रव्य, समुद्र" },
-  "0231": { code: "0231", char: "प्र", desc: "प्र संयुक्त अक्षर", example: "प्रश्न, प्रधान" },
-  "0233": { code: "0233", char: "न्न", desc: "न्न संयुक्त अक्षर", example: "अन्न, सन्नाटा" },
-  "0243": { code: "0243", char: "स्त्र", desc: "स्त्र संयुक्त अक्षर", example: "शास्त्र, अस्त्र" },
-  "0244": { code: "0244", char: "क्क", desc: "क्क संयुक्त अक्षर", example: "मक्का, धक्का" },
-  "0217": { code: "0217", char: "ज्ञ", desc: "ज्ञ संयुक्त अक्षर", example: "ज्ञान, विज्ञान" },
-  "0226": { code: "0226", char: "श्र", desc: "श्र संयुक्त अक्षर", example: "श्री, श्रम" },
+export type KrutiDevAltCode = AltCodeEntry;
+
+export const COMMON_WINDOWS_ALT_CODES: Record<string, AltCodeEntry> = {
+  // Punctuation Marks
+  "033": { code: "033", char: "!", desc: "विस्मयादिबोधक चिह्न (!)", example: "अरे!", category: "Common Windows Alt Codes / Special Characters" },
+  "33": { code: "33", char: "!", desc: "विस्मयादिबोधक चिह्न (!)", example: "अरे!", category: "Common Windows Alt Codes / Special Characters" },
+  "063": { code: "063", char: "?", desc: "प्रश्नवाचक चिह्न (?)", example: "क्या?", category: "Common Windows Alt Codes / Special Characters" },
+  "63": { code: "63", char: "?", desc: "प्रश्नवाचक चिह्न (?)", example: "क्या?", category: "Common Windows Alt Codes / Special Characters" },
+  "034": { code: "034", char: '"', desc: "डबल उद्धरण चिह्न (\")", example: '"कहा"', category: "Common Windows Alt Codes / Special Characters" },
+  "34": { code: "34", char: '"', desc: "डबल उद्धरण चिह्न (\")", example: '"कहा"', category: "Common Windows Alt Codes / Special Characters" },
+  "0034": { code: "0034", char: '"', desc: "डबल उद्धरण चिह्न (\")", example: '"कहा"', category: "Common Windows Alt Codes / Special Characters" },
+  "0147": { code: "0147", char: "“", desc: "उद्धरण चिह्न बायाँ (“)", example: "“कहा”", category: "Common Windows Alt Codes / Special Characters" },
+  "147": { code: "147", char: "“", desc: "उद्धरण चिह्न बायाँ (“)", example: "“कहा”", category: "Common Windows Alt Codes / Special Characters" },
+  "0148": { code: "0148", char: "”", desc: "उद्धरण चिह्न दायाँ (”)", example: "“कहा”", category: "Common Windows Alt Codes / Special Characters" },
+  "148": { code: "148", char: "”", desc: "उद्धरण चिह्न दायाँ (”)", example: "“कहा”", category: "Common Windows Alt Codes / Special Characters" },
+  "039": { code: "039", char: "'", desc: "एकल उद्धरण चिह्न (')", example: "'राम'", category: "Common Windows Alt Codes / Special Characters" },
+  "39": { code: "39", char: "'", desc: "एकल उद्धरण चिह्न (')", example: "'राम'", category: "Common Windows Alt Codes / Special Characters" },
+  "0039": { code: "0039", char: "'", desc: "एकल उद्धरण चिह्न (')", example: "'राम'", category: "Common Windows Alt Codes / Special Characters" },
+  "0145": { code: "0145", char: "‘", desc: "एकल उद्धरण चिह्न बायाँ (‘)", example: "‘राम’", category: "Common Windows Alt Codes / Special Characters" },
+  "145": { code: "145", char: "‘", desc: "एकल उद्धरण चिह्न बायाँ (‘)", example: "‘राम’", category: "Common Windows Alt Codes / Special Characters" },
+  "0146": { code: "0146", char: "’", desc: "एकल उद्धरण चिह्न दायाँ (’)", example: "‘राम’", category: "Common Windows Alt Codes / Special Characters" },
+  "146": { code: "146", char: "’", desc: "एकल उद्धरण चिह्न दायाँ (’)", example: "‘राम’", category: "Common Windows Alt Codes / Special Characters" },
+  "058": { code: "058", char: ":", desc: "अपूर्ण विराम / कोलन (:)", example: "समय : 10", category: "Common Windows Alt Codes / Special Characters" },
+  "58": { code: "58", char: ":", desc: "अपूर्ण विराम / कोलन (:)", example: "समय : 10", category: "Common Windows Alt Codes / Special Characters" },
+  "059": { code: "059", char: ";", desc: "अर्ध विराम / सेमी कोलन (;)", example: "राम ; श्याम", category: "Common Windows Alt Codes / Special Characters" },
+  "59": { code: "59", char: ";", desc: "अर्ध विराम / सेमी कोलन (;)", example: "राम ; श्याम", category: "Common Windows Alt Codes / Special Characters" },
+  "045": { code: "045", char: "-", desc: "योजक चिह्न / हाइफन (-)", example: "माता-पिता", category: "Common Windows Alt Codes / Special Characters" },
+  "45": { code: "45", char: "-", desc: "योजक चिह्न / हाइफन (-)", example: "माता-पिता", category: "Common Windows Alt Codes / Special Characters" },
+  "0150": { code: "0150", char: "–", desc: "एन डैश / En dash (–)", example: "1947–2024", category: "Common Windows Alt Codes / Special Characters" },
+  "150": { code: "150", char: "–", desc: "एन डैश / En dash (–)", example: "1947–2024", category: "Common Windows Alt Codes / Special Characters" },
+  "0151": { code: "0151", char: "—", desc: "एम डैश / Em dash (—)", example: "सत्य — अहिंसा", category: "Common Windows Alt Codes / Special Characters" },
+  "151": { code: "151", char: "—", desc: "एम डैश / Em dash (—)", example: "सत्य — अहिंसा", category: "Common Windows Alt Codes / Special Characters" },
+  "047": { code: "047", char: "/", desc: "तिर्यक रेखा / फॉरवर्ड स्लैश (/)", example: "दिन/रात", category: "Common Windows Alt Codes / Special Characters" },
+  "47": { code: "47", char: "/", desc: "तिर्यक रेखा / फॉरवर्ड स्लैश (/)", example: "दिन/रात", category: "Common Windows Alt Codes / Special Characters" },
+  "092": { code: "092", char: "\\", desc: "बैक स्लैश (\\)", example: "C:\\", category: "Common Windows Alt Codes / Special Characters" },
+  "92": { code: "92", char: "\\", desc: "बैक स्लैश (\\)", example: "C:\\", category: "Common Windows Alt Codes / Special Characters" },
+
+  // Special Characters & Symbols
+  "035": { code: "035", char: "#", desc: "हैश चिह्न (#)", example: "#1", category: "Common Windows Alt Codes / Special Characters" },
+  "35": { code: "35", char: "#", desc: "हैश चिह्न (#)", example: "#1", category: "Common Windows Alt Codes / Special Characters" },
+  "036": { code: "036", char: "$", desc: "डॉलर चिह्न ($)", example: "$100", category: "Common Windows Alt Codes / Special Characters" },
+  "36": { code: "36", char: "$", desc: "डॉलर चिह्न ($)", example: "$100", category: "Common Windows Alt Codes / Special Characters" },
+  "037": { code: "037", char: "%", desc: "प्रतिशत चिह्न (%)", example: "50%", category: "Common Windows Alt Codes / Special Characters" },
+  "37": { code: "37", char: "%", desc: "प्रतिशत चिह्न (%)", example: "50%", category: "Common Windows Alt Codes / Special Characters" },
+  "038": { code: "038", char: "&", desc: "एम्परसेंड चिह्न (&)", example: "A & B", category: "Common Windows Alt Codes / Special Characters" },
+  "38": { code: "38", char: "&", desc: "एम्परसेंड चिह्न (&)", example: "A & B", category: "Common Windows Alt Codes / Special Characters" },
+  "064": { code: "064", char: "@", desc: "एट द रेट चिह्न (@)", example: "@ngit", category: "Common Windows Alt Codes / Special Characters" },
+  "64": { code: "64", char: "@", desc: "एट द रेट चिह्न (@)", example: "@ngit", category: "Common Windows Alt Codes / Special Characters" },
+
+  // Abbreviation & Zero / Laghav Symbols
+  "0111": { code: "0111", char: "o", desc: "संक्षेप चिह्न 'o'", example: "डॉ० o", category: "Common Windows Alt Codes / Special Characters" },
+  "111": { code: "111", char: "o", desc: "संक्षेप चिह्न 'o'", example: "डॉ० o", category: "Common Windows Alt Codes / Special Characters" },
+  "2406": { code: "2406", char: "०", desc: "देवनागरी शून्य / लाघव चिह्न '०'", example: "बी०ए०", category: "Common Windows Alt Codes / Special Characters" },
+  "02406": { code: "02406", char: "०", desc: "देवनागरी शून्य / लाघव चिह्न '०'", example: "बी०ए०", category: "Common Windows Alt Codes / Special Characters" },
+};
+
+// 4b. Kruti Dev 010 Font-Specific Alt-Codes
+// Specific to Kruti Dev legacy font glyphs (half consonants, conjuncts, special Hindi ligatures)
+export const KRUTI_DEV_FONT_ALT_CODES: Record<string, AltCodeEntry> = {
+  "0161": { code: "0161", char: "कँ", desc: "चंद्रबिंदु", example: "हूँ, नहीं", category: "Kruti Dev Font Glyphs" },
+  "0165": { code: "0165", char: "ञ", desc: "ञ अक्षर", example: "पञ्चायत", category: "Kruti Dev Font Glyphs" },
+  "0179": { code: "0179", char: "ङ", desc: "ङ अक्षर", example: "शङ्का, गङ्गा", category: "Kruti Dev Font Glyphs" },
+  "0196": { code: "0196", char: "घ", desc: "घ अक्षर", example: "घर, बाघ", category: "Kruti Dev Font Glyphs" },
+  "0197": { code: "0197", char: "ऊ", desc: "बड़ा ऊ (दीर्घ स्वर)", example: "ऊपर", category: "Kruti Dev Font Glyphs" },
+  "0210": { code: "0210", char: "भ", desc: "भ अक्षर", example: "भारत, सभा", category: "Kruti Dev Font Glyphs" },
+  "0216": { code: "0216", char: "क्र", desc: "क्र संयुक्त अक्षर", example: "क्रम, चक्र", category: "Kruti Dev Font Glyphs" },
+  "0221": { code: "0221", char: "फ्र", desc: "फ्र संयुक्त अक्षर", example: "फ्रांस", category: "Kruti Dev Font Glyphs" },
+  "0224": { code: "0224", char: "ह्न", desc: "ह्न संयुक्त अक्षर", example: "चिह्न", category: "Kruti Dev Font Glyphs" },
+  "0225": { code: "0225", char: "ह्य", desc: "ह्य संयुक्त अक्षर", example: "सह्य", category: "Kruti Dev Font Glyphs" },
+  "0227": { code: "0227", char: "ह्म", desc: "ह्म संयुक्त अक्षर", example: "ब्रह्म", category: "Kruti Dev Font Glyphs" },
+  "0228": { code: "0228", char: "क्त", desc: "क्त संयुक्त अक्षर", example: "तथ्य, संपर्क, रक्त", category: "Kruti Dev Font Glyphs" },
+  "0229": { code: "0229", char: "॰", desc: "लाघव चिह्न (संक्षेप)", example: "डॉ॰", category: "Kruti Dev Font Glyphs" },
+  "0230": { code: "0230", char: "द्र", desc: "द्र संयुक्त अक्षर", example: "द्रव्य, समुद्र", category: "Kruti Dev Font Glyphs" },
+  "0231": { code: "0231", char: "प्र", desc: "प्र संयुक्त अक्षर", example: "प्रश्न, प्रधान", category: "Kruti Dev Font Glyphs" },
+  "0233": { code: "0233", char: "न्न", desc: "न्न संयुक्त अक्षर", example: "अन्न, सन्नाटा", category: "Kruti Dev Font Glyphs" },
+  "0243": { code: "0243", char: "स्त्र", desc: "स्त्र संयुक्त अक्षर", example: "शास्त्र, अस्त्र", category: "Kruti Dev Font Glyphs" },
+  "0244": { code: "0244", char: "क्क", desc: "क्क संयुक्त अक्षर", example: "मक्का, धक्का", category: "Kruti Dev Font Glyphs" },
+  "0217": { code: "0217", char: "ज्ञ", desc: "ज्ञ संयुक्त अक्षर", example: "ज्ञान, विज्ञान", category: "Kruti Dev Font Glyphs" },
+  "0226": { code: "0226", char: "श्र", desc: "श्र संयुक्त अक्षर", example: "श्री, श्रम", category: "Kruti Dev Font Glyphs" },
+};
+
+// Combined dictionary for backwards-compatibility with existing components
+export const KRUTI_DEV_ALT_CODES: Record<string, AltCodeEntry> = {
+  ...KRUTI_DEV_FONT_ALT_CODES,
+  ...COMMON_WINDOWS_ALT_CODES,
+};
+
+// Universal alias for all typing Alt Codes
+export const ALL_TYPING_ALT_CODES: Record<string, AltCodeEntry> = {
+  ...COMMON_WINDOWS_ALT_CODES,
+  ...KRUTI_DEV_FONT_ALT_CODES,
 };
 
 // Map of half consonants in Kruti Dev to their base consonants
@@ -672,6 +731,16 @@ export function resolveAltCodeChar(codeStr: string): string | null {
   const cleanCode = codeStr.trim();
   if (!cleanCode) return null;
 
+  // 1. Check Common Windows Alt Codes / Special Characters first
+  if (COMMON_WINDOWS_ALT_CODES[cleanCode]) {
+    return COMMON_WINDOWS_ALT_CODES[cleanCode].char;
+  }
+
+  // 2. Check Kruti Dev Font Glyphs
+  if (KRUTI_DEV_FONT_ALT_CODES[cleanCode]) {
+    return KRUTI_DEV_FONT_ALT_CODES[cleanCode].char;
+  }
+
   if (KRUTI_DEV_ALT_CODES[cleanCode]) {
     return KRUTI_DEV_ALT_CODES[cleanCode].char;
   }
@@ -679,19 +748,40 @@ export function resolveAltCodeChar(codeStr: string): string | null {
   const numVal = parseInt(cleanCode, 10);
   if (isNaN(numVal)) return null;
 
-  // Explicit handling for single inverted comma (Alt 039 / Alt 39 / Alt 0039)
-  if (numVal === 39) {
-    return "'";
-  }
-  // Explicit handling for double quotes (Alt 034 / Alt 34)
-  if (numVal === 34) {
-    return '"';
-  }
-
   const strippedStr = numVal.toString();
+  if (COMMON_WINDOWS_ALT_CODES[strippedStr]) {
+    return COMMON_WINDOWS_ALT_CODES[strippedStr].char;
+  }
+  if (KRUTI_DEV_FONT_ALT_CODES[strippedStr]) {
+    return KRUTI_DEV_FONT_ALT_CODES[strippedStr].char;
+  }
   if (KRUTI_DEV_ALT_CODES[strippedStr]) {
     return KRUTI_DEV_ALT_CODES[strippedStr].char;
   }
+
+  // Common Windows CP1252 / Alt code direct mappings
+  if (numVal === 150) return "–"; // En dash
+  if (numVal === 151) return "—"; // Em dash
+  if (numVal === 145) return "‘";
+  if (numVal === 146) return "’";
+  if (numVal === 147) return "“";
+  if (numVal === 148) return "”";
+  if (numVal === 2406) return "०"; // Devanagari digit zero (बी०ए०)
+  if (numVal === 111) return "o";
+  if (numVal === 39) return "'";
+  if (numVal === 34) return '"';
+  if (numVal === 35) return "#";
+  if (numVal === 36) return "$";
+  if (numVal === 37) return "%";
+  if (numVal === 38) return "&";
+  if (numVal === 64) return "@";
+  if (numVal === 58) return ":";
+  if (numVal === 59) return ";";
+  if (numVal === 45) return "-";
+  if (numVal === 47) return "/";
+  if (numVal === 92) return "\\";
+  if (numVal === 33) return "!";
+  if (numVal === 63) return "?";
 
   if (numVal > 0 && numVal <= 255) {
     return String.fromCharCode(numVal);
@@ -707,7 +797,7 @@ if (typeof window !== "undefined") {
   window.addEventListener(
     "keydown",
     (e) => {
-      if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+      if (e.key === "Alt" || e.key === "AltGraph" || e.code === "AltLeft" || e.code === "AltRight") {
         isGlobalAltActive = true;
         globalAltCodeDigits = "";
       } else if (isGlobalAltActive || e.altKey) {
@@ -732,10 +822,15 @@ if (typeof window !== "undefined") {
   window.addEventListener(
     "keyup",
     (e) => {
-      if (e.key === "Alt" || e.code === "AltLeft" || e.code === "AltRight") {
+      if (e.key === "Alt" || e.key === "AltGraph" || e.code === "AltLeft" || e.code === "AltRight") {
         isGlobalAltActive = false;
         if (globalAltCodeDigits) {
           const activeElem = document.activeElement as HTMLTextAreaElement | HTMLInputElement;
+          // Skip if target element has dedicated custom Alt-code handling to avoid double insertion
+          if (activeElem && (activeElem.dataset as any)?.customAlt === "true") {
+            globalAltCodeDigits = "";
+            return;
+          }
           if (activeElem && (activeElem.tagName === "TEXTAREA" || activeElem.tagName === "INPUT")) {
             const char = resolveAltCodeChar(globalAltCodeDigits);
             if (char) {

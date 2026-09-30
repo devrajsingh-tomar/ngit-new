@@ -2,6 +2,7 @@ import React from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { cn } from '@/lib/utils';
 import { mapKeyToHindi } from '../utils/hindiMapping';
+import { alignWords, normalizeChar } from '../utils/calculations';
 
 /**
  * TypingInput Component
@@ -20,14 +21,23 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
     incrementBackspace
   } = useTypingStore();
 
-  const words = passage.split(/\s+/);
-  const typedWords = typedText.split(/\s+/);
-  const currentWordIdx = typedWords.length - 1;
-  const currentWord = words[currentWordIdx] || "";
-  const currentTypedWord = typedWords[currentWordIdx] || "";
-  const hasError = currentTypedWord.length > 0 && !currentWord.startsWith(currentTypedWord);
+  const words = React.useMemo(() => passage.split(/\s+/).filter((w) => w.length > 0), [passage]);
+  const alignment = React.useMemo(() => alignWords(words, typedText), [words, typedText]);
+  const currentWord = words[alignment.activeOriginalIndex] || "";
+  const currentTypedWord = alignment.currentTypedWord || "";
+  const hasError =
+    currentTypedWord.length > 0 &&
+    !normalizeChar(currentWord).startsWith(normalizeChar(currentTypedWord));
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Prevent accidental double-space
+    if (e.key === ' ' || e.code === 'Space') {
+      if (typedText.endsWith(' ')) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     if (e.key === 'Backspace') {
       if (settings.backspaceMode === 'disabled') {
         e.preventDefault();
@@ -40,7 +50,7 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
         }
       }
       if (settings.backspaceMode === 'upssssc') {
-        const typedWords = typedText.split(' ');
+        const typedWords = typedText.trim().split(/\s+/);
         if (typedWords.length >= 3) {
           const lockedWords = typedWords.slice(0, typedWords.length - 2);
           const lockedText = lockedWords.join(' ') + ' ';
@@ -58,6 +68,8 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
     if (isFinished) return;
     
     let val = e.target.value;
+    // Collapse any accidental multiple spaces at the end
+    val = val.replace(/\s{2,}$/, ' ');
     const isDeletion = val.length < typedText.length;
 
     // 0. HINDI MAPPING LOGIC
@@ -69,7 +81,6 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
             val = val.slice(0, -1) + mapped;
         }
     }
-
 
     if (!isActive && val.length > 0) {
       startTest(); // Auto-start on first key
@@ -83,7 +94,7 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
         if (typedText.endsWith(' ') && !val.endsWith(' ')) return;
       }
       if (settings.backspaceMode === 'upssssc') {
-        const typedWords = typedText.split(' ');
+        const typedWords = typedText.trim().split(/\s+/);
         if (typedWords.length >= 3) {
           const lockedWords = typedWords.slice(0, typedWords.length - 2);
           const lockedText = lockedWords.join(' ') + ' ';
@@ -94,7 +105,7 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
 
     // 2. WORD LIMIT LOGIC
     if (settings.wordLimit > 0 && !isDeletion) {
-      const currentWordCount = val.trim().split(/\s+/).length;
+      const currentWordCount = val.trim().split(/\s+/).filter(Boolean).length;
       if (currentWordCount > settings.wordLimit) return;
     }
 

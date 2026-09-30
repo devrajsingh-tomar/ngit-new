@@ -46,6 +46,7 @@ const menuGroups = [
             { label: "Exam Evaluation Rules", href: "/admin/steno/error-rules", icon: Sliders },
             { label: "Doubt Solution Videos", href: "/admin/steno/doubt-videos", icon: Video },
             { label: "Student Results", href: "/admin/steno/results", icon: BarChart3 },
+            { label: "Subscription Plans & Pricing", href: "/admin/steno/plans", icon: CreditCard },
         ]
     },
 
