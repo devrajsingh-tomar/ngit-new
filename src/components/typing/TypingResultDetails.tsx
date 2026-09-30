@@ -119,7 +119,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   
   const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * errorPenalty)) : 0;
   
-  // Determine gross WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
+  // Determine gross WPM (prefer saved positive value, fallback to dynamic calculation based on exam mode)
   let fallbackGrossWpm = 0;
   if (timeTakenMins > 0) {
     if (isUPPolice) {
@@ -128,13 +128,14 @@ export default function TypingResultDetails({ params }: { params: { id: string }
       fallbackGrossWpm = totalStrokes / 5 / timeTakenMins;
     }
   }
-  const grossWpm = result.grossWpm !== undefined 
-    ? result.grossWpm.toFixed(2) 
-    : (result.rawWpm !== undefined 
-        ? result.rawWpm.toFixed(2) 
-        : fallbackGrossWpm.toFixed(2));
+  const grossVal = (result.grossWpm !== undefined && result.grossWpm !== null && result.grossWpm > 0)
+    ? result.grossWpm
+    : ((result.rawWpm !== undefined && result.rawWpm !== null && result.rawWpm > 0)
+        ? result.rawWpm
+        : fallbackGrossWpm);
+  const grossWpm = grossVal.toFixed(2);
   
-  // Determine net WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
+  // Determine net WPM (prefer saved positive value, fallback to dynamic calculation based on exam mode)
   let fallbackNetWpm = 0;
   if (timeTakenMins > 0) {
     const wordCountBase = isUPPolice ? submittedWords.length : totalStrokes / 5;
@@ -151,20 +152,23 @@ export default function TypingResultDetails({ params }: { params: { id: string }
       fallbackNetWpm = Math.max(0, wordCountBase - totalErrors) / timeTakenMins;
     }
   }
-  const netWpm = result.netWpm !== undefined 
-    ? result.netWpm.toFixed(2) 
-    : (result.wpm !== undefined 
-        ? result.wpm.toFixed(2) 
-        : fallbackNetWpm.toFixed(2));
+  const netVal = (result.netWpm !== undefined && result.netWpm !== null && result.netWpm > 0)
+    ? result.netWpm
+    : ((result.wpm !== undefined && result.wpm !== null && result.wpm > 0)
+        ? result.wpm
+        : fallbackNetWpm);
+  const netWpm = netVal.toFixed(2);
 
   // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. UP Police: Hindi 25, English 30. BSF: Hindi 30, English 35.
   const passingWpm = isAHCJA 
     ? (isHindi ? 25 : 30) 
     : (isAHC ? 25 : (isUPPolice ? (isHindi ? 25 : 30) : (isBSF ? (isHindi ? 30 : 35) : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : 30)))));
   const minAccuracy = isBSF ? 95.00 : (isUPPolice ? 85.00 : (categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00));
-  const accuracy = result.accuracy !== undefined 
-    ? result.accuracy.toFixed(2) 
-    : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
+  
+  const accuracyVal = (result.accuracy !== undefined && result.accuracy !== null && result.accuracy > 0)
+    ? result.accuracy
+    : (totalStrokes > 0 ? Math.max(0, (correctStrokes / totalStrokes) * 100) : 0);
+  const accuracy = accuracyVal.toFixed(2);
   
   // AHC dual qualifying rule: Net WPM >= 25 AND Marks >= 25/50
   const isQualified = isAHC
@@ -392,20 +396,58 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center px-6">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] print:text-slate-900">Your Transcript</span>
+                        <div className="flex flex-wrap justify-between items-center px-6 gap-2">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] print:text-slate-900">Your Transcript</span>
+                                <div className="hidden sm:flex items-center gap-2.5 text-[10px] font-bold">
+                                    <span className="inline-flex items-center gap-1 text-slate-600"><span className="w-2 h-2 rounded-full bg-slate-500"></span> Correct</span>
+                                    {!isAHC && <span className="inline-flex items-center gap-1 text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Half Mistake</span>}
+                                    <span className="inline-flex items-center gap-1 text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Mistake</span>
+                                </div>
+                            </div>
                             <div className="w-3 h-3 rounded-full bg-primary print:hidden" />
                         </div>
                         <div className="p-10 bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-slate-200/40 min-h-[400px] print:p-6 print:rounded-2xl print:min-h-0 print:border-slate-200 print:shadow-none">
                             <p className="text-xl leading-[2.5] font-semibold print:text-slate-900 print:text-sm" style={{ fontFamily: getFontFamily() }}>
                                 {evaluation.transcriptWords.map((item: any, i: number) => {
+                                    const isOmitted = typeof item.word === 'string' && item.word.startsWith('[छूटा:');
+                                    if (isOmitted) {
+                                      return (
+                                        <span 
+                                            key={i} 
+                                            className="inline-block text-rose-400 text-xs font-normal italic bg-rose-50/70 px-2 py-0.5 rounded-md border border-dashed border-rose-200 mr-1.5"
+                                            title="Omitted word from passage"
+                                        >
+                                            {item.word}{' '}
+                                        </span>
+                                      );
+                                    }
+                                    if (item.isHalf) {
+                                      return (
+                                        <span 
+                                            key={i} 
+                                            className="inline-block text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded-md ring-1 ring-amber-300 underline decoration-amber-400 decoration-2 underline-offset-4 print:bg-transparent print:ring-0 print:underline mr-1"
+                                            title="Half Mistake (Punctuation or case mismatch)"
+                                        >
+                                            {item.word}{' '}
+                                        </span>
+                                      );
+                                    }
+                                    if (!item.isCorrect) {
+                                      return (
+                                        <span 
+                                            key={i} 
+                                            className="inline-block text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded-md ring-1 ring-rose-300 underline decoration-rose-400 decoration-2 underline-offset-4 print:bg-transparent print:ring-0 print:underline mr-1"
+                                            title="Full Mistake (Typo / Mismatch)"
+                                        >
+                                            {item.word}{' '}
+                                        </span>
+                                      );
+                                    }
                                     return (
                                         <span 
                                             key={i} 
-                                            className={cn(
-                                                "transition-colors",
-                                                item.isCorrect ? "text-slate-900" : "text-rose-500 font-black bg-rose-50 px-1 rounded-lg ring-1 ring-rose-100 underline decoration-rose-300 underline-offset-[12px] decoration-4 print:bg-transparent print:ring-0 print:underline"
-                                            )}
+                                            className="text-slate-900 transition-colors mr-1"
                                         >
                                             {item.word}{' '}
                                         </span>

@@ -26,9 +26,17 @@ export interface WordAlignmentResult {
 }
 
 /**
- * Normalizes characters to ensure common symbols (quotes, apostrophes, commas) 
- * match regardless of whether they are "smart/curly" or "straight".
- * Single inverted commas from Alt 039 / Alt 39 (' and smart quotes ‘ ’) are mapped to standard apostrophe '.
+ * Strips edge punctuation from words (commas, periods, quotes, exclamation, question marks, purnaviram, etc.)
+ */
+export const cleanPunctuation = (word: string): string => {
+  if (!word) return "";
+  return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()।?"'‘“’”—–]+|[.,\/#!$%\^&\*;:{}=\-_`~()।?"'‘“’”—–]+$/g, "");
+};
+
+/**
+ * Normalizes characters to ensure common symbols (quotes, apostrophes, commas, dashes)
+ * and Devanagari variations (Nuktas, ZWJ/ZWNJ, Chandrabindu/Anusvara, Purnaviram)
+ * match identically across English, Mangal Unicode, and Kruti Dev.
  */
 export const normalizeChar = (char: string): string => {
   if (!char) return "";
@@ -37,16 +45,28 @@ export const normalizeChar = (char: string): string => {
     .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036\u0022]/g, '"')
     .replace(/[\u2013\u2014\u2212\u2010\u2011]/g, "-")
     .replace(/[\uFF0C]/g, ",")
-    .replace(/[\u00A0\u200B\uFEFF]/g, " ")
+    .replace(/[\u00A0\u200B-\u200D\uFEFF]/g, "") // remove zero-width & non-breaking spaces
     .replace(/[|]/g, "।")
     .replace(/[\u0970\u0966]/g, "०")
+    // Devanagari Nukta Normalization (unify precomposed & decomposed nuktas)
+    .replace(/\u093C/g, "") // Strip nukta mark
     .replace(/[\u0958]/g, "क")
     .replace(/[\u0959]/g, "ख")
     .replace(/[\u095A]/g, "ग")
     .replace(/[\u095B]/g, "ज")
     .replace(/[\u095C]/g, "ड")
     .replace(/[\u095D]/g, "ढ")
-    .replace(/[\u095E]/g, "फ");
+    .replace(/[\u095E]/g, "फ")
+    // Chandrabindu to Anusvara unification
+    .replace(/\u0901/g, "ं");
+};
+
+/**
+ * Unicode-aware word normalizer
+ */
+export const normalizeWord = (w: string): string => {
+  if (!w) return "";
+  return w.normalize("NFC").split("").map(normalizeChar).join("");
 };
 
 /**
@@ -88,9 +108,8 @@ export function alignWords(
     currentTypedWord = rawTypedWords[rawTypedWords.length - 1] || "";
   }
 
-  const norm = (w: string) => w.split("").map(normalizeChar).join("");
-  const normOrig = cleanOriginal.map(norm);
-  const normTyped = committedTypedWords.map(norm);
+  const normOrig = cleanOriginal.map(normalizeWord);
+  const normTyped = committedTypedWords.map(normalizeWord);
 
   const statuses: ("correct" | "error" | "pending" | "active")[] = new Array(
     cleanOriginal.length
@@ -102,8 +121,11 @@ export function alignWords(
   let correctCount = 0;
 
   while (i < cleanOriginal.length && j < committedTypedWords.length) {
-    // 1. Direct Match
-    if (normOrig[i] === normTyped[j]) {
+    const o = normOrig[i];
+    const t = normTyped[j];
+
+    // 1. Direct Match (Exact or Punctuation-tolerant)
+    if (o === t || (cleanPunctuation(o) !== "" && cleanPunctuation(o) === cleanPunctuation(t))) {
       statuses[i] = "correct";
       correctCount++;
       i++;
@@ -112,7 +134,7 @@ export function alignWords(
     }
 
     // 2. Accidental Space in the middle of a word (Split word: e.g. "भा" + "रत" === "भारत")
-    if (j + 1 < committedTypedWords.length && normTyped[j] + normTyped[j + 1] === normOrig[i]) {
+    if (j + 1 < committedTypedWords.length && normTyped[j] + normTyped[j + 1] === o) {
       mistakes += 1; // single mistake for the accidental space
       statuses[i] = "error";
       i++;
@@ -123,7 +145,7 @@ export function alignWords(
     // 2b. Accidental 3-part split
     if (
       j + 2 < committedTypedWords.length &&
-      normTyped[j] + normTyped[j + 1] + normTyped[j + 2] === normOrig[i]
+      normTyped[j] + normTyped[j + 1] + normTyped[j + 2] === o
     ) {
       mistakes += 1;
       statuses[i] = "error";
@@ -133,14 +155,14 @@ export function alignWords(
     }
 
     // 3. Extra Word / Stray Token from accidental space (next typed matches current original)
-    if (j + 1 < committedTypedWords.length && normTyped[j + 1] === normOrig[i]) {
+    if (j + 1 < committedTypedWords.length && (normTyped[j + 1] === o || (cleanPunctuation(normTyped[j + 1]) !== "" && cleanPunctuation(normTyped[j + 1]) === cleanPunctuation(o)))) {
       mistakes += 1; // single mistake for stray token
       j++; // skip stray token, i stays at current original word
       continue;
     }
 
     // 4. Skipped Word in Passage (current typed matches next original)
-    if (i + 1 < cleanOriginal.length && normTyped[j] === normOrig[i + 1]) {
+    if (i + 1 < cleanOriginal.length && (t === normOrig[i + 1] || (cleanPunctuation(t) !== "" && cleanPunctuation(t) === cleanPunctuation(normOrig[i + 1])))) {
       mistakes += 1;
       statuses[i] = "error";
       i++; // advance past skipped original word
@@ -151,7 +173,7 @@ export function alignWords(
     if (
       i + 1 < cleanOriginal.length &&
       j + 1 < committedTypedWords.length &&
-      normTyped[j + 1] === normOrig[i + 1]
+      (normTyped[j + 1] === normOrig[i + 1] || (cleanPunctuation(normTyped[j + 1]) !== "" && cleanPunctuation(normTyped[j + 1]) === cleanPunctuation(normOrig[i + 1])))
     ) {
       mistakes += 1;
       statuses[i] = "error";
@@ -160,13 +182,13 @@ export function alignWords(
       continue;
     }
 
-    // 6. Lookahead window (up to distance 4) to recover from multi-word or stray space drift
+    // 6. Lookahead window (up to distance 3) to recover from multi-word drift
     let bestMatch: { di: number; dj: number } | null = null;
-    for (let dist = 1; dist <= 4; dist++) {
-      for (let di = 0; di <= dist; di++) {
+    for (let dist = 2; dist <= 3; dist++) {
+      for (let di = 1; di <= dist; di++) {
         const dj = dist - di;
-        if (i + di < cleanOriginal.length && j + dj < committedTypedWords.length) {
-          if (normOrig[i + di] === normTyped[j + dj]) {
+        if (dj >= 1 && i + di < cleanOriginal.length && j + dj < committedTypedWords.length) {
+          if (normOrig[i + di] === normTyped[j + dj] || (cleanPunctuation(normOrig[i + di]) !== "" && cleanPunctuation(normOrig[i + di]) === cleanPunctuation(normTyped[j + dj]))) {
             bestMatch = { di, dj };
             break;
           }
@@ -243,7 +265,7 @@ export interface AlignedPassageEvaluation {
 
 /**
  * Full Passage Alignment and Evaluation for Exam Results
- * Prevents cascading 0-marks results from accidental extra spaces, split words, or skipped words.
+ * Accurately identifies correct and incorrect words without false errors or cascade penalties.
  */
 export function alignFullPassage(
   passage: string,
@@ -259,9 +281,8 @@ export function alignFullPassage(
   const originalWords = (passage || "").trim().split(/\s+/).filter(w => w.length > 0);
   const submittedWords = (submittedText || "").trim().split(/\s+/).filter(w => w.length > 0);
 
-  const norm = (w: string) => w.split("").map(normalizeChar).join("");
-  const normOrig = originalWords.map(norm);
-  const normTyped = submittedWords.map(norm);
+  const normOrig = originalWords.map(normalizeWord);
+  const normTyped = submittedWords.map(normalizeWord);
 
   let i = 0;
   let j = 0;
@@ -277,9 +298,11 @@ export function alignFullPassage(
   while (i < originalWords.length && j < submittedWords.length) {
     const origWord = originalWords[i];
     const typedWord = submittedWords[j];
+    const o = normOrig[i];
+    const t = normTyped[j];
 
-    // 1. Direct Match
-    if (normOrig[i] === normTyped[j]) {
+    // 1. Direct Match (Exact character match after normalization)
+    if (o === t) {
       correctWords++;
       correctStrokes += typedWord.length + 1;
       transcriptWords.push({ word: typedWord, isCorrect: true });
@@ -288,13 +311,33 @@ export function alignFullPassage(
       continue;
     }
 
+    // 1b. Punctuation / Capitalization Match (Stem matches when edge punctuation removed)
+    const cleanO = cleanPunctuation(o);
+    const cleanT = cleanPunctuation(t);
+    if (cleanO !== "" && (cleanO === cleanT || (!isHindi && cleanO.toLowerCase() === cleanT.toLowerCase()))) {
+      const isCaseOrPunctDiff = (o !== t);
+      if (isCaseOrPunctDiff && allowHalfMistakes) {
+        halfMistakes++;
+        transcriptWords.push({ word: typedWord, isCorrect: true, isHalf: true });
+      } else if (isCaseOrPunctDiff) {
+        fullMistakes++;
+        transcriptWords.push({ word: typedWord, isCorrect: true, isHalf: true });
+      } else {
+        transcriptWords.push({ word: typedWord, isCorrect: true });
+      }
+      correctWords++;
+      correctStrokes += typedWord.length + 1;
+      i++;
+      j++;
+      continue;
+    }
+
     // 2. Accidental Space Split (e.g. "भा" + "रत" === "भारत") -> Single mistake, auto-syncs next words!
-    if (j + 1 < submittedWords.length && normTyped[j] + normTyped[j + 1] === normOrig[i]) {
+    if (j + 1 < submittedWords.length && (normTyped[j] + normTyped[j + 1] === o || cleanPunctuation(normTyped[j] + normTyped[j + 1]) === cleanO)) {
       fullMistakes++;
       wrongWords++;
       wrongStrokes += submittedWords[j].length + submittedWords[j + 1].length + 1;
-      transcriptWords.push({ word: submittedWords[j], isCorrect: false });
-      transcriptWords.push({ word: submittedWords[j + 1], isCorrect: false });
+      transcriptWords.push({ word: `${submittedWords[j]} ${submittedWords[j + 1]}`, isCorrect: false });
       i++;
       j += 2;
       continue;
@@ -303,21 +346,19 @@ export function alignFullPassage(
     // 2b. 3-part split
     if (
       j + 2 < submittedWords.length &&
-      normTyped[j] + normTyped[j + 1] + normTyped[j + 2] === normOrig[i]
+      (normTyped[j] + normTyped[j + 1] + normTyped[j + 2] === o || cleanPunctuation(normTyped[j] + normTyped[j + 1] + normTyped[j + 2]) === cleanO)
     ) {
       fullMistakes++;
       wrongWords++;
       wrongStrokes += submittedWords[j].length + submittedWords[j + 1].length + submittedWords[j + 2].length + 1;
-      transcriptWords.push({ word: submittedWords[j], isCorrect: false });
-      transcriptWords.push({ word: submittedWords[j + 1], isCorrect: false });
-      transcriptWords.push({ word: submittedWords[j + 2], isCorrect: false });
+      transcriptWords.push({ word: `${submittedWords[j]} ${submittedWords[j + 1]} ${submittedWords[j + 2]}`, isCorrect: false });
       i++;
       j += 3;
       continue;
     }
 
     // 3. Extra Word / Stray Token from accidental space (next typed matches current original)
-    if (j + 1 < submittedWords.length && normTyped[j + 1] === normOrig[i]) {
+    if (j + 1 < submittedWords.length && (normTyped[j + 1] === o || (cleanPunctuation(normTyped[j + 1]) !== "" && cleanPunctuation(normTyped[j + 1]) === cleanO))) {
       fullMistakes++;
       wrongWords++;
       wrongStrokes += typedWord.length + 1;
@@ -327,9 +368,11 @@ export function alignFullPassage(
     }
 
     // 4. Skipped Word in Passage (current typed matches next original)
-    if (i + 1 < originalWords.length && normTyped[j] === normOrig[i + 1]) {
+    if (i + 1 < originalWords.length && (t === normOrig[i + 1] || (cleanT !== "" && cleanT === cleanPunctuation(normOrig[i + 1])))) {
       fullMistakes++;
+      wrongWords++;
       wrongStrokes += origWord.length + 1;
+      transcriptWords.push({ word: `[छूटा: ${origWord}]`, isCorrect: false });
       i++; // advance past skipped original word
       continue;
     }
@@ -338,26 +381,10 @@ export function alignFullPassage(
     if (
       i + 1 < originalWords.length &&
       j + 1 < submittedWords.length &&
-      normTyped[j + 1] === normOrig[i + 1]
+      (normTyped[j + 1] === normOrig[i + 1] || (cleanPunctuation(normTyped[j + 1]) !== "" && cleanPunctuation(normTyped[j + 1]) === cleanPunctuation(normOrig[i + 1])))
     ) {
       wrongWords++;
-      let isHalf = false;
-      if (allowHalfMistakes) {
-        if (!isHindi && typedWord.toLowerCase() === origWord.toLowerCase()) {
-          halfMistakes++;
-          isHalf = true;
-        } else {
-          const cleanT = typedWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-          const cleanO = origWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-          if (cleanT === cleanO && cleanT !== "") {
-            halfMistakes++;
-            isHalf = true;
-          }
-        }
-      }
-      if (!isHalf) {
-        fullMistakes++;
-      }
+      fullMistakes++;
 
       const mLen = Math.min(typedWord.length, origWord.length);
       for (let k = 0; k < mLen; k++) {
@@ -366,19 +393,19 @@ export function alignFullPassage(
       }
       wrongStrokes += Math.abs(typedWord.length - origWord.length) + 1;
 
-      transcriptWords.push({ word: typedWord, isCorrect: false, isHalf });
+      transcriptWords.push({ word: typedWord, isCorrect: false });
       i++;
       j++;
       continue;
     }
 
-    // 6. Lookahead window (up to distance 4) to recover from multi-word drift or accidental space insertions
+    // 6. Lookahead window (up to distance 3) to recover from multi-word drift
     let bestMatch: { di: number; dj: number } | null = null;
-    for (let dist = 1; dist <= 4; dist++) {
-      for (let di = 0; di <= dist; di++) {
+    for (let dist = 2; dist <= 3; dist++) {
+      for (let di = 1; di <= dist; di++) {
         const dj = dist - di;
-        if (i + di < originalWords.length && j + dj < submittedWords.length) {
-          if (normOrig[i + di] === normTyped[j + dj]) {
+        if (dj >= 1 && i + di < originalWords.length && j + dj < submittedWords.length) {
+          if (normOrig[i + di] === normTyped[j + dj] || (cleanPunctuation(normOrig[i + di]) !== "" && cleanPunctuation(normOrig[i + di]) === cleanPunctuation(normTyped[j + dj]))) {
             bestMatch = { di, dj };
             break;
           }
@@ -401,23 +428,7 @@ export function alignFullPassage(
 
     // 7. Fallback: single word error
     wrongWords++;
-    let isHalf = false;
-    if (allowHalfMistakes) {
-      if (!isHindi && typedWord.toLowerCase() === origWord.toLowerCase()) {
-        halfMistakes++;
-        isHalf = true;
-      } else {
-        const cleanT = typedWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-        const cleanO = origWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-        if (cleanT === cleanO && cleanT !== "") {
-          halfMistakes++;
-          isHalf = true;
-        }
-      }
-    }
-    if (!isHalf) {
-      fullMistakes++;
-    }
+    fullMistakes++;
 
     const mLen = Math.min(typedWord.length, origWord.length);
     for (let k = 0; k < mLen; k++) {
@@ -426,7 +437,7 @@ export function alignFullPassage(
     }
     wrongStrokes += Math.abs(typedWord.length - origWord.length) + 1;
 
-    transcriptWords.push({ word: typedWord, isCorrect: false, isHalf });
+    transcriptWords.push({ word: typedWord, isCorrect: false });
     i++;
     j++;
   }
@@ -440,11 +451,8 @@ export function alignFullPassage(
     j++;
   }
 
-  // Any remaining un-typed original words
-  while (i < originalWords.length) {
-    fullMistakes++;
-    i++;
-  }
+  // NOTE: Un-typed remaining original words in passage are NOT counted as mistakes!
+  // In timed typing tests, candidates are only evaluated on what they attempted within the time limit.
 
   // Count consecutive space occurrences in submittedText as single mistakes (1 mistake per extra space press)
   const consecutiveSpaceMatches = (submittedText || "").match(/\s{2,}/g) || [];
