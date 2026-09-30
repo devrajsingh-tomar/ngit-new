@@ -141,8 +141,54 @@ export default function StudentStenoSeriesPage() {
       if (batchRes.success && batchRes.batches && batchRes.batches.length > 0) {
         const merged = [...batchRes.batches];
 
-        // Sort Batches strictly by sortOrder ascending (as configured by Admin in Admin Panel)
+        // Helper to check if a batch is Thakurdwara Special Batch
+        const isThakurdwaraBatch = (b: any) => {
+          const name = (b.name || "").toLowerCase();
+          const coaching = (b.coachingName || "").toLowerCase();
+          const code = (b.instituteCode || "").toUpperCase();
+          return name.includes("thakurdwara") || 
+                 name.includes("ठाकुरद्वारा") || 
+                 coaching.includes("thakurdwara") || 
+                 code === "THAKURDWARA_STENO";
+        };
+
+        // Helper to get newest uploaded content timestamp for a batch
+        const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
+          let maxTime = 0;
+          for (const s of sList) {
+            if (matchBatch(s.batch, batchName)) {
+              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+              if (sTime > maxTime) maxTime = sTime;
+              if (Array.isArray(s.passages)) {
+                for (const p of s.passages) {
+                  const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
+                  if (pTime > maxTime) maxTime = pTime;
+                }
+              }
+            }
+          }
+          return maxTime;
+        };
+
+        // Sort Batches:
+        // 1. Thakurdwara Special Batch ALWAYS stays hardcoded at first position (index 0)
+        // 2. All other batches sorted by newest uploaded content timestamp descending (timeB - timeA)
         merged.sort((a, b) => {
+          const isThakurdwaraA = isThakurdwaraBatch(a);
+          const isThakurdwaraB = isThakurdwaraBatch(b);
+
+          if (isThakurdwaraA && !isThakurdwaraB) return -1;
+          if (!isThakurdwaraA && isThakurdwaraB) return 1;
+          if (isThakurdwaraA && isThakurdwaraB) return 0;
+
+          const timeA = getBatchLatestTimestamp(a.name, fetchedSeries);
+          const timeB = getBatchLatestTimestamp(b.name, fetchedSeries);
+
+          if (timeA !== timeB) {
+            return timeB - timeA;
+          }
+
+          // Fallback to sortOrder or creation date
           const orderA = a.sortOrder !== undefined && a.sortOrder !== null ? Number(a.sortOrder) : 99;
           const orderB = b.sortOrder !== undefined && b.sortOrder !== null ? Number(b.sortOrder) : 99;
           if (orderA !== orderB) {

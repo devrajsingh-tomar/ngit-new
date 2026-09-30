@@ -11,6 +11,7 @@ import { ArrowLeft, Clock, Keyboard, Play, ChevronLeft, ChevronRight } from "luc
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { signTryoutToken } from "@/lib/tryoutToken";
 
 export const dynamic = "force-dynamic";
 
@@ -71,23 +72,8 @@ export default async function TestSelectionPage({
 
   const resolvedDuration = categoryDuration || exam.defaultDuration || 10;
 
-  // Determine the 3 free exams for this category (3 oldest active ones under this govExamId or its categories, or general)
   const parentCategories = await GovExamCategory.find({ govExamId: exam._id }).select("_id").lean();
   const categoryIds = parentCategories.map(c => c._id);
-
-  const freeExams = await TypingExam.find({ 
-    $or: [
-      { govExamId: exam._id },
-      { govExamCategoryId: { $in: categoryIds } },
-      { govExamId: { $in: [null, undefined] } }
-    ],
-    status: { $ne: "Inactive" }
-  })
-    .sort({ createdAt: 1 })
-    .limit(3)
-    .populate("passageId")
-    .lean();
-  const freeExamIds = new Set(freeExams.map(e => e._id.toString()));
 
   const langFormatted = params.language.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const diffFormatted = params.difficulty.charAt(0).toUpperCase() + params.difficulty.slice(1);
@@ -107,6 +93,31 @@ export default async function TestSelectionPage({
     difficulty: diffFormatted,
     status: { $ne: "Inactive" }
   };
+
+  // Determine a SINGLE random free tryout test matching the user's selected criteria
+  const freeCandidateQuery = {
+    ...query,
+    "pricing.type": { $ne: "PAID" }
+  };
+
+  const freeCandidatesCount = await TypingExam.countDocuments(freeCandidateQuery);
+  const targetTryoutQuery = freeCandidatesCount > 0 ? freeCandidateQuery : query;
+  const targetTryoutCount = freeCandidatesCount > 0 ? freeCandidatesCount : await TypingExam.countDocuments(query);
+
+  let freeExams: any[] = [];
+  let tryoutToken = "";
+  if (targetTryoutCount > 0) {
+    const randomSkip = Math.floor(Math.random() * targetTryoutCount);
+    const selectedFreeExam = await TypingExam.findOne(targetTryoutQuery)
+      .skip(randomSkip)
+      .populate("passageId")
+      .lean();
+    if (selectedFreeExam) {
+      tryoutToken = signTryoutToken(selectedFreeExam._id.toString());
+      freeExams = [{ ...selectedFreeExam, tryoutToken }];
+    }
+  }
+  const freeExamIds = new Set(freeExams.map(e => e._id.toString()));
 
   // Fetch typing tests that match the criteria with pagination
   const [typingExams, totalTests] = await Promise.all([
@@ -144,11 +155,11 @@ export default async function TestSelectionPage({
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               <h2 className="text-xs font-black text-emerald-600 uppercase tracking-widest">
-                Free Tryout Tests (No Subscription Required)
+                Free Tryout Test (No Subscription Required)
               </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {freeExams.map((test, index) => {
+            <div className="w-full max-w-md">
+              {freeExams.map((test) => {
                 const passageText = (test.passageId as any)?.content || "";
                 const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;
                 
@@ -158,7 +169,7 @@ export default async function TestSelectionPage({
                     <div className="space-y-2 relative z-10">
                       <div className="flex justify-between items-center">
                         <span className="bg-indigo-50 text-indigo-700 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
-                          Free Test {index + 1}
+                          Free Tryout Test
                         </span>
                         <span className="text-[9px] font-bold text-slate-400">
                           #{test._id.toString().substring(18)}
@@ -177,7 +188,7 @@ export default async function TestSelectionPage({
                     
                     <div className="pt-2 relative z-10">
                       <Link 
-                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}${categoryId ? `&govExamCategoryId=${categoryId}` : ''}${exam ? `&govExamId=${exam._id.toString()}` : ''}`}
+                        href={`/typing/exam/${test._id.toString()}?lang=${langFormatted}&layout=${langFormatted === 'English' ? 'English' : 'Inscript'}${categoryId ? `&govExamCategoryId=${categoryId}` : ''}${exam ? `&govExamId=${exam._id.toString()}` : ''}&token=${test.tryoutToken || ''}`}
                         className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-100 hover:shadow-lg flex items-center justify-center gap-2 group-hover:scale-[1.01] cursor-pointer"
                       >
                         Start Free <Play className="w-3 h-3 fill-white shrink-0" />
@@ -279,7 +290,7 @@ export default async function TestSelectionPage({
                           )
                         ) : (
                           <span className="px-2 py-1 rounded bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-wider">
-                            Free
+                            Free Tryout
                           </span>
                         )}
                       </td>
@@ -293,6 +304,7 @@ export default async function TestSelectionPage({
                           langFormatted={langFormatted}
                           govExamCategoryId={categoryId || undefined}
                           govExamId={exam._id.toString()}
+                          tryoutToken={isFree ? tryoutToken : undefined}
                         />
                       </td>
                     </tr>

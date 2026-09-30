@@ -10,6 +10,7 @@ import "@/models/TypingRulePreset";
 import "@/models/GovExam";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { verifyTryoutToken } from "@/lib/tryoutToken";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -37,6 +38,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const { searchParams } = new URL(req.url);
     const govExamCategoryId = searchParams.get("govExamCategoryId");
     const govExamId = searchParams.get("govExamId");
+    const token = searchParams.get("token");
     
     let examObj = exam.toObject();
 
@@ -50,7 +52,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     if (govExamCategoryId && mongoose.Types.ObjectId.isValid(govExamCategoryId)) {
       const GovExamCategory = (await import("@/models/GovExamCategory")).default;
-      const category = await GovExamCategory.findById(govExamCategoryId).populate("govExamId").lean();
+      const category = await GovExamCategory.findById(govExamCategoryId).populate("govExamId").lean() as any;
       if (category) {
         examObj.govExamCategoryId = category;
         examObj.examMode = category.examMode;
@@ -61,7 +63,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       }
     } else if (govExamId && mongoose.Types.ObjectId.isValid(govExamId)) {
       const GovExam = (await import("@/models/GovExam")).default;
-      const gov = await GovExam.findById(govExamId).lean();
+      const gov = await GovExam.findById(govExamId).lean() as any;
       if (gov) {
         examObj.govExamId = gov;
         examObj.duration = gov.defaultDuration || examObj.duration;
@@ -70,26 +72,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     // Determine if the exam is free:
     // 1. Explicitly PAID -> not free
-    // 2. Otherwise, check if it's one of the 3 oldest active exams in this category
+    // 2. Verified tryout token -> single selected tryout exam is free
     let isFree = false;
     if (exam.pricing?.type === "PAID") {
       isFree = false;
-    } else {
-      const categoryQuery: any = { status: "Active" };
-      if (exam.govExamId) {
-        categoryQuery.govExamId = exam.govExamId;
-      } else {
-        categoryQuery.govExamId = { $in: [null, undefined] };
-      }
-      categoryQuery["pricing.type"] = { $ne: "PAID" };
-
-      const freeExams = await TypingExam.find(categoryQuery)
-        .sort({ createdAt: 1 })
-        .limit(3)
-        .select("_id")
-        .lean();
-      const freeExamIds = freeExams.map(e => e._id.toString());
-      isFree = freeExamIds.includes(exam._id.toString());
+    } else if (token && verifyTryoutToken(exam._id.toString(), token)) {
+      isFree = true;
     }
 
     if (!isFree) {

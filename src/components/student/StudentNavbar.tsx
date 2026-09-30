@@ -1,7 +1,7 @@
 "use client";
 
 import NotificationBell from "../shared/NotificationBell";
-import { Search, LogOut, User, Settings, Shield, Menu, PlayCircle, Trophy, Home, LayoutDashboard, Layers, Award, Mic } from "lucide-react";
+import { Search, LogOut, User, Settings, Shield, Menu, PlayCircle, Trophy, Home, LayoutDashboard, Layers, Award, Mic, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -33,6 +33,7 @@ const stenoNavLinks = [
     { label: "Steno Batches", href: "/student/steno/series", icon: Layers },
     { label: "My Tests", href: "/student/steno/my-tests", icon: Award },
     { label: "Leaderboard", href: "/student/steno/leaderboard", icon: Trophy },
+    { label: "Subscribe", href: "/student/steno/subscribe", icon: Crown, isSpecial: true },
 ];
 
 export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
@@ -87,9 +88,11 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                             "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all",
                                             isActive
                                                 ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
-                                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                                : (link as any).isSpecial
+                                                    ? "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/80 shadow-sm"
+                                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                                         )}>
-                                            <link.icon className="w-4 h-4" />
+                                            <link.icon className={cn("w-4 h-4", (link as any).isSpecial && !isActive ? "text-amber-500" : "")} />
                                             {link.label}
                                         </span>
                                     </Link>
@@ -215,6 +218,19 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                             Attendance Logs
                                         </Link>
                                     </DropdownMenuItem>
+
+                                    <DropdownMenuItem 
+                                        className="rounded-2xl p-4 font-black text-sm text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer flex items-center gap-4 transition-all" 
+                                        onSelect={() => router.push("/student/steno/subscribe")}
+                                        asChild
+                                    >
+                                        <Link href="/student/steno/subscribe">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-200">
+                                                <Crown className="h-5 w-5" />
+                                            </div>
+                                            Steno Pro Subscription
+                                        </Link>
+                                    </DropdownMenuItem>
     
                                 </div>
     
@@ -239,23 +255,46 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
 
             {/* Mobile quick-access bar (full width second row) */}
             <div className="sm:hidden flex items-center gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                    type="text"
-                    placeholder="Search lessons, tests..."
-                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl pl-3 pr-3 h-9 text-sm focus:ring-2 focus:ring-primary/20 outline-none font-medium min-w-0"
-                />
-                {quickLinks.map(link => (
-                    <Link key={link.href} href={link.href} className="shrink-0">
-                        <span className={cn(
-                            "flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all",
-                            pathname.startsWith(link.href) ? "bg-primary text-white" : link.color
-                        )}>
-                            <link.icon className="w-3.5 h-3.5" />
-                            {link.label}
-                        </span>
-                    </Link>
-                ))}
+                {isStenoRoute ? (
+                    stenoNavLinks.map(link => {
+                        const isActive = pathname === link.href || (link.href !== "/student/steno/dashboard" && pathname.startsWith(link.href));
+                        return (
+                            <Link key={link.href} href={link.href} className="shrink-0">
+                                <span className={cn(
+                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
+                                    isActive
+                                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
+                                        : (link as any).isSpecial
+                                            ? "bg-amber-50 text-amber-800 border border-amber-200"
+                                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                )}>
+                                    <link.icon className={cn("w-3.5 h-3.5", (link as any).isSpecial && !isActive ? "text-amber-500" : "")} />
+                                    {link.label}
+                                </span>
+                            </Link>
+                        );
+                    })
+                ) : (
+                    <>
+                        <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                        <input
+                            type="text"
+                            placeholder="Search lessons, tests..."
+                            className="flex-1 bg-slate-50 border border-slate-100 rounded-xl pl-3 pr-3 h-9 text-sm focus:ring-2 focus:ring-primary/20 outline-none font-medium min-w-0"
+                        />
+                        {quickLinks.map(link => (
+                            <Link key={link.href} href={link.href} className="shrink-0">
+                                <span className={cn(
+                                    "flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all",
+                                    pathname.startsWith(link.href) ? "bg-primary text-white" : link.color
+                                )}>
+                                    <link.icon className="w-3.5 h-3.5" />
+                                    {link.label}
+                                </span>
+                            </Link>
+                        ))}
+                    </>
+                )}
             </div>
         </header>
     );

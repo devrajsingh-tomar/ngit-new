@@ -76,6 +76,7 @@ export default function TypingExamPage() {
 
   const categoryId = searchParams?.get("govExamCategoryId");
   const govExamId = searchParams?.get("govExamId");
+  const token = searchParams?.get("token");
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +84,7 @@ export default function TypingExamPage() {
     const paramsList = [];
     if (categoryId) paramsList.push(`govExamCategoryId=${categoryId}`);
     if (govExamId) paramsList.push(`govExamId=${govExamId}`);
+    if (token) paramsList.push(`token=${token}`);
     const queryString = paramsList.length > 0 ? `?${paramsList.join("&")}` : "";
     fetch(`/api/typing/exams/${id}${queryString}`)
       .then(async res => {
