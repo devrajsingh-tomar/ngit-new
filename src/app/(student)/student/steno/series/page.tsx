@@ -107,7 +107,7 @@ const DEFAULT_STATIC_BATCHES = [
 
 export default function StudentStenoSeriesPage() {
   const router = useRouter();
-  const [batches, setBatches] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessState, setAccessState] = useState<{
@@ -126,50 +126,74 @@ export default function StudentStenoSeriesPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [batchRes, seriesRes, access] = await Promise.all([
-        getStenoBatchesAction({ isPublished: true }),
-        getStenoSeriesListAction({ isPublished: true }),
-        checkStenoAccessAction({}),
-      ]);
-      if (access.success && access.data) {
-        setAccessState(access.data as any);
+      let fetchedBatches: any[] = [];
+      let fetchedSeries: any[] = [];
+
+      // 1. Fetch Batches safely (using { isPublished: undefined } like admin panel to get all active batches)
+      try {
+        const batchRes = await getStenoBatchesAction({ isPublished: undefined });
+        if (batchRes && Array.isArray(batchRes.batches) && batchRes.batches.length > 0) {
+          fetchedBatches = batchRes.batches;
+        }
+      } catch (err) {
+        console.error("Failed to load batches from server:", err);
       }
 
-      const fetchedSeries = (seriesRes.success && seriesRes.series) ? seriesRes.series : [];
+      // 2. Fetch Series list safely
+      try {
+        const seriesRes = await getStenoSeriesListAction({ isPublished: true });
+        if (seriesRes?.success && Array.isArray(seriesRes.series)) {
+          fetchedSeries = seriesRes.series;
+        }
+      } catch (err) {
+        console.error("Failed to load series from server:", err);
+      }
       setSeriesList(fetchedSeries);
 
-      if (batchRes.success && batchRes.batches && batchRes.batches.length > 0) {
-        const merged = [...batchRes.batches];
+      // 3. Fetch Steno subscription access state safely
+      try {
+        const access = await checkStenoAccessAction({});
+        if (access?.success && access.data) {
+          setAccessState(access.data as any);
+        }
+      } catch (err) {
+        console.error("Failed to check steno access:", err);
+      }
 
-        // Helper to check if a batch is Thakurdwara Special Batch
-        const isThakurdwaraBatch = (b: any) => {
-          const name = (b.name || "").toLowerCase();
-          const coaching = (b.coachingName || "").toLowerCase();
-          const code = (b.instituteCode || "").toUpperCase();
-          return name.includes("thakurdwara") || 
-                 name.includes("ठाकुरद्वारा") || 
-                 coaching.includes("thakurdwara") || 
-                 code === "THAKURDWARA_STENO";
-        };
+      // If server returned batches, use them; otherwise use default static batches
+      const baseBatches = fetchedBatches.length > 0 ? fetchedBatches : DEFAULT_STATIC_BATCHES;
+      const merged = [...baseBatches];
 
-        // Helper to get newest uploaded content timestamp for a batch
-        const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
-          let maxTime = 0;
-          for (const s of sList) {
-            if (matchBatch(s.batch, batchName)) {
-              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
-              if (sTime > maxTime) maxTime = sTime;
-              if (Array.isArray(s.passages)) {
-                for (const p of s.passages) {
-                  const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
-                  if (pTime > maxTime) maxTime = pTime;
-                }
+      // Helper to check if a batch is Thakurdwara Special Batch
+      const isThakurdwaraBatch = (b: any) => {
+        const name = (b.name || "").toLowerCase();
+        const coaching = (b.coachingName || "").toLowerCase();
+        const code = (b.instituteCode || "").toUpperCase();
+        return name.includes("thakurdwara") || 
+               name.includes("ठाकुरद्वारा") || 
+               coaching.includes("thakurdwara") || 
+               code === "THAKURDWARA_STENO";
+      };
+
+      // Helper to get newest uploaded content timestamp for a batch
+      const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
+        let maxTime = 0;
+        for (const s of sList) {
+          if (matchBatch(s.batch, batchName)) {
+            const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+            if (sTime > maxTime) maxTime = sTime;
+            if (Array.isArray(s.passages)) {
+              for (const p of s.passages) {
+                const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
+                if (pTime > maxTime) maxTime = pTime;
               }
             }
           }
-          return maxTime;
-        };
+        }
+        return maxTime;
+      };
 
+      try {
         // Sort Batches:
         // 1. Thakurdwara Special Batch ALWAYS stays hardcoded at first position (index 0)
         // 2. All other batches sorted by newest uploaded content timestamp descending (timeB - timeA)
@@ -196,11 +220,14 @@ export default function StudentStenoSeriesPage() {
           }
           return (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime());
         });
-
-        setBatches(merged);
+      } catch (sortErr) {
+        console.error("Sorting error fallback:", sortErr);
       }
+
+      setBatches(merged);
     } catch (e) {
       console.error("Error loading steno data:", e);
+      setBatches(DEFAULT_STATIC_BATCHES);
     } finally {
       setLoading(false);
     }

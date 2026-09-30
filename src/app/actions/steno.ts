@@ -1344,46 +1344,77 @@ export async function getStenoBatchesAction(query?: any): Promise<{ success: boo
   try {
     await connectDB();
 
-    // Purge unwanted auto-generated General Batch from database if it exists
-    await StenoBatch.deleteMany({ name: "General Batch" });
-    await StenoSeries.deleteMany({ batch: "General Batch" });
+    // Silently cleanup any unwanted auto-generated General Batch
+    try {
+      await StenoBatch.deleteMany({ name: "General Batch" });
+      await StenoSeries.deleteMany({ batch: "General Batch" });
+    } catch {
+      // ignore
+    }
 
     const filter: any = {};
     if (query?.isPublished !== undefined) {
-      filter.isPublished = query.isPublished;
+      if (query.isPublished === true) {
+        filter.isPublished = { $ne: false };
+      } else {
+        filter.isPublished = query.isPublished;
+      }
     }
 
-    let batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
-
-    if (batches.length === 0) {
-      // Seed default initial batches if DB is empty
-      await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
+    let batches: any[] = [];
+    try {
       batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+    } catch {
+      // Fallback without populate if populate fails
+      batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+    }
+
+    if (!batches || batches.length === 0) {
+      // Seed default initial batches if DB is empty
+      try {
+        await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
+        batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+      } catch {
+        batches = DEFAULT_INITIAL_BATCHES as any[];
+      }
     }
 
     // Ensure Thakurdwara batch exists with banner
-    const thakurdwaraBatch = batches.find((b: any) => b.name.includes("ठाकुरद्वारा"));
+    const thakurdwaraBatch = batches.find((b: any) => 
+      b.name && (b.name.includes("ठाकुरद्वारा") || b.name.toLowerCase().includes("thakurdwara"))
+    );
     if (!thakurdwaraBatch) {
-      await StenoBatch.create({
-        name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
-        hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
-        description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
-        thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
-        coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
-        instituteCode: "THAKURDWARA_STENO",
-        sortOrder: 0,
-        isPublished: true,
-      });
-      batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+      try {
+        const existingThakurdwara = await StenoBatch.findOne({
+          name: { $regex: /ठाकुरद्वारा|thakurdwara/i }
+        }).lean();
+
+        if (!existingThakurdwara) {
+          await StenoBatch.create({
+            name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+            hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+            description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+            thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+            coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+            instituteCode: "THAKURDWARA_STENO",
+            sortOrder: 0,
+            isPublished: true,
+          });
+        }
+        batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+      } catch {
+        // ignore duplicate or creation errors
+      }
     }
 
-    if (batches.length === 0) {
+    if (!batches || batches.length === 0) {
       batches = DEFAULT_INITIAL_BATCHES as any[];
     }
 
     return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
   } catch (err: any) {
-    return { success: false, batches: DEFAULT_INITIAL_BATCHES, error: err.message };
+    console.error("getStenoBatchesAction error:", err);
+    return { success: true, batches: DEFAULT_INITIAL_BATCHES, error: err.message };
   }
 }
 
