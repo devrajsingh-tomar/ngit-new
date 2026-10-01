@@ -12,26 +12,12 @@ import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtil
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string, examName?: string | null) {
   let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
 
-  if (matched.length === 0) {
-    matched = allSeries.filter((s: any) => {
-      const titleVal = (s.title || "").toLowerCase().trim();
-      const catVal = (s.category || "").toLowerCase().trim();
-      const searchVal = batchName.toLowerCase().trim();
-      return searchVal.includes(titleVal) || searchVal.includes(catVal) || titleVal.includes(searchVal);
-    });
-  }
-
   if (examName) {
     const examLower = examName.toLowerCase().trim();
-    const filteredByExam = matched.filter((s: any) => {
-      const sBatch = (s.batch || "").toLowerCase().trim();
-      const sCategory = (s.category || "").toLowerCase().trim();
-      const sTitle = (s.title || "").toLowerCase().trim();
-      return sBatch.includes(examLower) || sCategory.includes(examLower) || sTitle.includes(examLower);
+    matched = matched.filter((s: any) => {
+      const sExam = (s.exam || "").toLowerCase().trim();
+      return sExam === examLower;
     });
-    if (filteredByExam.length > 0) {
-      matched = filteredByExam;
-    }
   }
 
   const uniqueMap = new Map<string, any>();
@@ -103,13 +89,20 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
   const loadSeriesForBatch = async () => {
     setLoading(true);
     try {
-      const res = await getStenoSeriesListAction({ isPublished: true });
+      const res = await getStenoSeriesListAction({
+        isPublished: true,
+        batch: rawBatchName,
+        exam: examParam || undefined,
+      });
       if (res.success && res.series) {
         const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName, examParam);
         setSeriesList(deduplicated);
+      } else {
+        setSeriesList([]);
       }
     } catch (e) {
       console.error("Error loading batch series:", e);
+      setSeriesList([]);
     } finally {
       setLoading(false);
     }
@@ -121,20 +114,17 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            {(() => {
-              const isThakurdwara = (rawBatchName || "").toLowerCase().includes("thakurdwara") || (rawBatchName || "").includes("ठाकुरद्वारा") || (rawBatchName || "").toLowerCase().includes("stenoinstitute");
-              return (
-                <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
-                  {isThakurdwara ? "Step 3 of 4 • Series Topics & Collections" : "Step 2 of 3 • Series Topics & Collections"}
-                </span>
-              );
-            })()}
+            <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-amber-200">
+              Step 3 of 4 • Series Topics & Collections
+            </span>
+            <span className="bg-slate-100 text-slate-800 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-slate-200">
+              Batch: {rawBatchName}
+            </span>
             {examParam && (
               <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border border-indigo-200">
-                Exam: {examParam}
+                Govt Exam: {examParam}
               </span>
             )}
-            <span className="text-xs font-bold text-slate-400">• Official Steno Batch</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             {rawBatchName} {examParam ? `(${examParam})` : ""} • सीरीज एवं टॉपिक्स
@@ -145,22 +135,11 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {(() => {
-            const isThakurdwara = (rawBatchName || "").toLowerCase().includes("thakurdwara") || (rawBatchName || "").includes("ठाकुरद्वारा") || (rawBatchName || "").toLowerCase().includes("stenoinstitute");
-            const backHref = isThakurdwara
-              ? `/student/steno/exams?batch=${encodeURIComponent(rawBatchName)}`
-              : `/student/steno/series`;
-            const backText = isThakurdwara
-              ? "Back to Step 2 (Exam Selection)"
-              : "Back to All Batches (Step 1)";
-            return (
-              <Link href={backHref}>
-                <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
-                  <ArrowLeft className="w-4 h-4" /> {backText}
-                </Button>
-              </Link>
-            );
-          })()}
+          <Link href={`/student/steno/exams?batch=${encodeURIComponent(rawBatchName)}`}>
+            <Button variant="default" className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-10 px-5 text-xs rounded-xl gap-2 shadow-xs">
+              <ArrowLeft className="w-4 h-4" /> Back to Target Govt Exams (Step 2)
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -172,13 +151,13 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
       ) : seriesList.length === 0 ? (
         <Card className="p-16 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
           <Layers className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="text-base font-black text-slate-700">No Series Found for {rawBatchName}</h3>
+          <h3 className="text-base font-black text-slate-700">No Series Found for {rawBatchName} {examParam ? `(${examParam})` : ""}</h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            New series collections for this batch are currently being configured by instructors.
+            Series topics for this exam are being configured by instructors. You can also view all series for this batch.
           </p>
-          <Link href="/student/steno/series">
+          <Link href={`/student/steno/exams?batch=${encodeURIComponent(rawBatchName)}`}>
             <Button variant="outline" className="mt-2 text-xs font-bold rounded-xl gap-1.5">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to All Batches (Step 1)
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Target Govt Exams (Step 2)
             </Button>
           </Link>
         </Card>
@@ -266,10 +245,10 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
                     </div>
                   </div>
 
-                  {/* Action Button to Step 3 */}
-                  <Link href={`/student/steno/series/${series._id}?batch=${encodeURIComponent(rawBatchName)}`} className="block pt-2">
+                  {/* Action Button to Step 4 */}
+                  <Link href={`/student/steno/series/${series._id}?batch=${encodeURIComponent(rawBatchName)}${examParam ? `&exam=${encodeURIComponent(examParam)}` : ''}`} className="block pt-2">
                     <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                      <BookOpen className="w-4 h-4" /> VIEW DICTATION PASSAGES <ArrowRight className="w-4 h-4" />
+                      <BookOpen className="w-4 h-4" /> PRACTICE DICTATIONS (Step 4) <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                 </div>

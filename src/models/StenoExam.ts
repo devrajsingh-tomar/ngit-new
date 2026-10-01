@@ -2,6 +2,8 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IStenoExam extends Document {
   name: string;
+  batch?: string;
+  batchId?: mongoose.Types.ObjectId;
   authorityName?: string;
   thumbnailUrl?: string;
   description?: string;
@@ -28,6 +30,8 @@ export interface IStenoExam extends Document {
 const StenoExamSchema = new Schema<IStenoExam>(
   {
     name: { type: String, required: true },
+    batch: { type: String, default: "" },
+    batchId: { type: Schema.Types.ObjectId, ref: "StenoBatch" },
     authorityName: { type: String, default: "उ०प्र० अधीनस्थ सेवा चयन आयोग" },
     thumbnailUrl: { type: String, default: "" },
     description: { type: String, default: "" },

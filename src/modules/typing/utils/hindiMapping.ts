@@ -4,10 +4,14 @@ export {
   REMINGTON_MAP,
   INSCRIPT_MAP,
   KRUTI_DEV_ALT_CODES,
+  COMMON_WINDOWS_ALT_CODES,
+  KRUTI_DEV_FONT_ALT_CODES,
+  ALL_TYPING_ALT_CODES,
   mapKeystrokeToHindi,
   mapEventToKrutiDev,
   transformKrutiDevInput,
   handleHindiTextareaKeyDown,
+  resolveAltCodeChar,
 } from "@/modules/steno/utils/hindiKeystrokeMap";
 
 

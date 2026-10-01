@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { alignFullPassage } from "@/modules/typing/utils/calculations";
 
 export default function TypingResultDetails({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -75,40 +76,9 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   }
 
   const passageContent = result.examId?.passageId?.content || "";
-  const originalWords = passageContent ? passageContent.trim().split(/\s+/) : [];
-  const submittedWords = result.submittedText?.trim().split(/\s+/) || [];
-  
+  const originalWords = passageContent ? passageContent.trim().split(/\s+/).filter((w: string) => w.length > 0) : [];
+  const submittedWords = result.submittedText?.trim().split(/\s+/).filter((w: string) => w.length > 0) || [];
   const totalStrokes = result.submittedText?.length || 0;
-  let correctStrokes = 0;
-  let wrongStrokes = 0;
-  let correctWords = 0;
-  let wrongWords = 0;
-
-  submittedWords.forEach((word: string, idx: number) => {
-    const original = originalWords[idx];
-    if (!original) {
-      wrongStrokes += word.length + 1;
-      wrongWords++;
-      return;
-    }
-
-    if (word === original) {
-      correctWords++;
-      correctStrokes += word.length + 1;
-    } else {
-      wrongWords++;
-      const mLen = Math.min(word.length, original.length);
-      for (let i = 0; i < mLen; i++) {
-        if (word[i] === original[i]) correctStrokes++;
-        else wrongStrokes++;
-      }
-      wrongStrokes += Math.abs(word.length - original.length);
-      wrongStrokes++;
-    }
-  });
-
-  let fullMistakes = 0;
-  let halfMistakes = 0;
 
   const lang = result.examId?.language?.toLowerCase() || "";
   const isHindi = lang.includes("hindi") || lang.includes("mangal") || lang.includes("kruti");
@@ -125,64 +95,22 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   
   const allowHalfMistakes = isAHC ? false : (categoryConfig ? categoryConfig.allowHalfMistakes : true);
 
-  const maxWords = submittedWords.length;
-  for (let idx = 0; idx < maxWords; idx++) {
-    const originalWord = originalWords[idx];
-    const typedWord = submittedWords[idx];
+  // Resilient full passage alignment: auto-synchronizes after extra spaces / split words
+  const evaluation = alignFullPassage(passageContent, result.submittedText || "", {
+    allowHalfMistakes,
+    isHindi
+  });
 
-    if (!originalWord) {
-      if (typedWord) fullMistakes++;
-      continue;
-    }
-
-    if (typedWord === originalWord) {
-      continue;
-    }
-
-    // AHC RO/ARO: No concept of half-mistakes. Every error is a full mistake.
-    // (Spelling, omitted/skipped words, extra words, capitalization, punctuation — all full penalty)
-    if (!allowHalfMistakes) {
-      fullMistakes++;
-      continue;
-    }
-
-    let isHalf = false;
-    
-    // 1. Capitalization Mismatch (English Only)
-    if (!isHindi) {
-      if (typedWord.toLowerCase() === originalWord.toLowerCase()) {
-        halfMistakes++;
-        isHalf = true;
-      }
-    }
-
-    // 2. Punctuation Mismatch/Omission
-    if (!isHalf) {
-      const cleanTyped = typedWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-      const cleanOriginal = originalWord.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()।?]/g, "");
-      if (cleanTyped === cleanOriginal && cleanTyped !== "") {
-        halfMistakes++;
-        isHalf = true;
-      }
-    }
-
-    // 3. Otherwise -> Full Mistake (Spelling, Substitution)
-    if (!isHalf) {
-      fullMistakes++;
-    }
-  }
-
-  // Also count omitted/skipped words (original words not typed at all)
-  if (!allowHalfMistakes) {
-    for (let idx = submittedWords.length; idx < originalWords.length; idx++) {
-      if (originalWords[idx]) fullMistakes++;
-    }
-  }
+  const correctWords = evaluation.correctWords;
+  const wrongWords = evaluation.wrongWords;
+  const correctStrokes = evaluation.correctStrokes;
+  const wrongStrokes = evaluation.wrongStrokes;
+  const fullMistakes = evaluation.fullMistakes;
+  const halfMistakes = evaluation.halfMistakes;
+  const totalErrors = evaluation.totalErrors;
 
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const timeDurationMins = result.examId?.duration || 10;
-  
-  const totalErrors = !allowHalfMistakes ? fullMistakes : fullMistakes + (halfMistakes / 2);
 
   // Marks Calculation: AHC RO/ARO or Junior Assistant standard or dynamically configured
   const ahcTotalMarks = isAHCJA ? 25 : (isAHC ? 50 : (categoryConfig ? (categoryConfig.totalMarks || 50) : 50));
@@ -191,7 +119,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   
   const ahcMarksObtained = isAHC ? Math.max(0, ahcTotalMarks - (fullMistakes * errorPenalty)) : 0;
   
-  // Determine gross WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
+  // Determine gross WPM (prefer saved positive value, fallback to dynamic calculation based on exam mode)
   let fallbackGrossWpm = 0;
   if (timeTakenMins > 0) {
     if (isUPPolice) {
@@ -200,13 +128,14 @@ export default function TypingResultDetails({ params }: { params: { id: string }
       fallbackGrossWpm = totalStrokes / 5 / timeTakenMins;
     }
   }
-  const grossWpm = result.grossWpm !== undefined 
-    ? result.grossWpm.toFixed(2) 
-    : (result.rawWpm !== undefined 
-        ? result.rawWpm.toFixed(2) 
-        : fallbackGrossWpm.toFixed(2));
+  const grossVal = (result.grossWpm !== undefined && result.grossWpm !== null && result.grossWpm > 0)
+    ? result.grossWpm
+    : ((result.rawWpm !== undefined && result.rawWpm !== null && result.rawWpm > 0)
+        ? result.rawWpm
+        : fallbackGrossWpm);
+  const grossWpm = grossVal.toFixed(2);
   
-  // Determine net WPM (prefer saved value, fallback to dynamic calculation based on exam mode)
+  // Determine net WPM (prefer saved positive value, fallback to dynamic calculation based on exam mode)
   let fallbackNetWpm = 0;
   if (timeTakenMins > 0) {
     const wordCountBase = isUPPolice ? submittedWords.length : totalStrokes / 5;
@@ -223,20 +152,23 @@ export default function TypingResultDetails({ params }: { params: { id: string }
       fallbackNetWpm = Math.max(0, wordCountBase - totalErrors) / timeTakenMins;
     }
   }
-  const netWpm = result.netWpm !== undefined 
-    ? result.netWpm.toFixed(2) 
-    : (result.wpm !== undefined 
-        ? result.wpm.toFixed(2) 
-        : fallbackNetWpm.toFixed(2));
+  const netVal = (result.netWpm !== undefined && result.netWpm !== null && result.netWpm > 0)
+    ? result.netWpm
+    : ((result.wpm !== undefined && result.wpm !== null && result.wpm > 0)
+        ? result.wpm
+        : fallbackNetWpm);
+  const netWpm = netVal.toFixed(2);
 
   // AHC RO/ARO: passing WPM is 25. AHC JA: English 30, Hindi 25. UP Police: Hindi 25, English 30. BSF: Hindi 30, English 35.
   const passingWpm = isAHCJA 
     ? (isHindi ? 25 : 30) 
     : (isAHC ? 25 : (isUPPolice ? (isHindi ? 25 : 30) : (isBSF ? (isHindi ? 30 : 35) : (categoryConfig ? (categoryConfig.minWpm || 25) : (isHindi ? 25 : 30)))));
   const minAccuracy = isBSF ? 95.00 : (isUPPolice ? 85.00 : (categoryConfig ? (categoryConfig.minAccuracy || 85.00) : 85.00));
-  const accuracy = result.accuracy !== undefined 
-    ? result.accuracy.toFixed(2) 
-    : (totalStrokes > 0 ? ((correctStrokes / totalStrokes) * 100).toFixed(2) : "0.00");
+  
+  const accuracyVal = (result.accuracy !== undefined && result.accuracy !== null && result.accuracy > 0)
+    ? result.accuracy
+    : (totalStrokes > 0 ? Math.max(0, (correctStrokes / totalStrokes) * 100) : 0);
+  const accuracy = accuracyVal.toFixed(2);
   
   // AHC dual qualifying rule: Net WPM >= 25 AND Marks >= 25/50
   const isQualified = isAHC
@@ -464,23 +396,60 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center px-6">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] print:text-slate-900">Your Transcript</span>
+                        <div className="flex flex-wrap justify-between items-center px-6 gap-2">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] print:text-slate-900">Your Transcript</span>
+                                <div className="hidden sm:flex items-center gap-2.5 text-[10px] font-bold">
+                                    <span className="inline-flex items-center gap-1 text-slate-600"><span className="w-2 h-2 rounded-full bg-slate-500"></span> Correct</span>
+                                    {!isAHC && <span className="inline-flex items-center gap-1 text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Half Mistake</span>}
+                                    <span className="inline-flex items-center gap-1 text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Mistake</span>
+                                </div>
+                            </div>
                             <div className="w-3 h-3 rounded-full bg-primary print:hidden" />
                         </div>
                         <div className="p-10 bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-slate-200/40 min-h-[400px] print:p-6 print:rounded-2xl print:min-h-0 print:border-slate-200 print:shadow-none">
                             <p className="text-xl leading-[2.5] font-semibold print:text-slate-900 print:text-sm" style={{ fontFamily: getFontFamily() }}>
-                                {submittedWords.map((word: string, i: number) => {
-                                    const isCorrect = word === originalWords[i];
+                                {evaluation.transcriptWords.map((item: any, i: number) => {
+                                    const isOmitted = typeof item.word === 'string' && item.word.startsWith('[छूटा:');
+                                    if (isOmitted) {
+                                      return (
+                                        <span 
+                                            key={i} 
+                                            className="inline-block text-rose-400 text-xs font-normal italic bg-rose-50/70 px-2 py-0.5 rounded-md border border-dashed border-rose-200 mr-1.5"
+                                            title="Omitted word from passage"
+                                        >
+                                            {item.word}{' '}
+                                        </span>
+                                      );
+                                    }
+                                    if (item.isHalf) {
+                                      return (
+                                        <span 
+                                            key={i} 
+                                            className="inline-block text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded-md ring-1 ring-amber-300 underline decoration-amber-400 decoration-2 underline-offset-4 print:bg-transparent print:ring-0 print:underline mr-1"
+                                            title="Half Mistake (Punctuation or case mismatch)"
+                                        >
+                                            {item.word}{' '}
+                                        </span>
+                                      );
+                                    }
+                                    if (!item.isCorrect) {
+                                      return (
+                                        <span 
+                                            key={i} 
+                                            className="inline-block text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded-md ring-1 ring-rose-300 underline decoration-rose-400 decoration-2 underline-offset-4 print:bg-transparent print:ring-0 print:underline mr-1"
+                                            title="Full Mistake (Typo / Mismatch)"
+                                        >
+                                            {item.word}{' '}
+                                        </span>
+                                      );
+                                    }
                                     return (
                                         <span 
                                             key={i} 
-                                            className={cn(
-                                                "transition-colors",
-                                                isCorrect ? "text-slate-900" : "text-rose-500 font-black bg-rose-50 px-1 rounded-lg ring-1 ring-rose-100 underline decoration-rose-300 underline-offset-[12px] decoration-4 print:bg-transparent print:ring-0 print:underline"
-                                            )}
+                                            className="text-slate-900 transition-colors mr-1"
                                         >
-                                            {word}{' '}
+                                            {item.word}{' '}
                                         </span>
                                     );
                                 })}

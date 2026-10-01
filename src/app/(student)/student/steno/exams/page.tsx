@@ -1,48 +1,43 @@
 "use client";
 
-import { Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { getStenoExamsAction } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, Sparkles, BookOpen, Clock, RefreshCw } from "lucide-react";
 import { isRealPoster } from "@/lib/steno/stenoUtils";
-
-// Official Government Steno Exam Categories for Step 2 (Thakurdwara Flow)
-const STENO_GOVT_EXAMS = [
-  {
-    _id: "upsssc_steno",
-    name: "UPSSSC Steno",
-    authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
-    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
-    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
-  },
-  {
-    _id: "upsi_steno",
-    name: "UPSI Steno",
-    authorityName: "उत्तर प्रदेश पुलिस भर्ती एवं प्रोन्नति बोर्ड",
-    thumbnailUrl: "/images/steno-weekly-test-banner.jpg",
-    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-  },
-  {
-    _id: "ssc_steno",
-    name: "SSC Steno Grade C & D",
-    authorityName: "Staff Selection Commission",
-    thumbnailUrl: "/images/steno-test-guide-banner.jpg",
-    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-  },
-  {
-    _id: "hc_steno",
-    name: "Allahabad High Court Steno",
-    authorityName: "High Court of Judicature at Allahabad",
-    thumbnailUrl: "/images/steno-analytics-banner.jpg",
-    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-  },
-];
 
 function StudentStenoExamsContent() {
   const searchParams = useSearchParams();
-  const rawBatch = searchParams.get("batch") || "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)";
+  const rawBatch = searchParams.get("batch") || "";
+  const [exams, setExams] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadExams();
+  }, [rawBatch]);
+
+  const loadExams = async () => {
+    setLoading(true);
+    try {
+      const res = await getStenoExamsAction({
+        batch: rawBatch || undefined,
+        isActive: true,
+      });
+      if (res.success && Array.isArray(res.exams)) {
+        setExams(res.exams);
+      } else {
+        setExams([]);
+      }
+    } catch (e) {
+      console.error("Failed to load exams:", e);
+      setExams([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 p-1 sm:p-2 max-w-7xl mx-auto">
@@ -53,15 +48,17 @@ function StudentStenoExamsContent() {
             <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30 flex items-center gap-1.5">
               <Award className="w-3.5 h-3.5 text-amber-300" /> Step 2 of 4 • Select Target Government Exam
             </span>
-            <span className="bg-white/10 text-slate-200 text-[10px] font-extrabold px-3 py-0.5 rounded-full border border-white/10">
-              {rawBatch}
-            </span>
+            {rawBatch && (
+              <span className="bg-white/10 text-slate-200 text-[10px] font-extrabold px-3 py-0.5 rounded-full border border-white/10">
+                {rawBatch}
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
             GOVERNMENT STENO EXAMS (Step 2)
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-            Select your target government steno exam (UPSSSC Steno, UPSI Steno, SSC Steno, High Court Steno) to view its Series Topics.
+            {rawBatch ? `Select target government exam configured for ${rawBatch} to explore series topics.` : "Select target government exam to explore its series topics & dictations."}
           </p>
         </div>
 
@@ -87,91 +84,142 @@ function StudentStenoExamsContent() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {STENO_GOVT_EXAMS.map((exam, index) => {
-            const hasPoster = isRealPoster(exam.thumbnailUrl);
-            const gradients = [
-              "from-indigo-700 to-purple-900",
-              "from-blue-700 to-cyan-900",
-              "from-emerald-700 to-teal-900",
-              "from-amber-700 to-rose-900",
-            ];
-            const fallbackGradient = gradients[index % gradients.length];
+        {loading ? (
+          <div className="py-20 text-center text-slate-400 space-y-3">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+            <p className="text-xs font-black uppercase tracking-wider text-slate-500">
+              Loading Government Exams...
+            </p>
+          </div>
+        ) : exams.length === 0 ? (
+          <Card className="p-16 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+            <Award className="w-12 h-12 text-slate-300 mx-auto" />
+            <h3 className="text-base font-black text-slate-700">
+              {rawBatch ? `इस बैच (${rawBatch}) के लिए कोई सरकारी परीक्षा उपलब्ध नहीं है` : "No Government Exams Found"}
+            </h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              एडमिन पैनल से इस बैच के लिए सरकारी परीक्षाएं (Step 2) बनाए जाने के बाद वे यहां व्यक्तिगत रूप से दिखाई देंगी।
+            </p>
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-2">
+              <Link href="/student/steno/series">
+                <Button variant="outline" className="text-xs font-bold rounded-xl gap-1.5">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back to All Batches (Step 1)
+                </Button>
+              </Link>
+              {rawBatch && (
+                <Link href={`/student/steno/series/batch/${encodeURIComponent(rawBatch)}`}>
+                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs px-5 shadow-sm gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5" /> इस बैच की सीरीज एवं डिक्टेशन देखें <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {exams.map((exam, index) => {
+              const hasPoster = isRealPoster(exam.thumbnailUrl);
+              const gradients = [
+                "from-indigo-700 to-purple-900",
+                "from-blue-700 to-cyan-900",
+                "from-emerald-700 to-teal-900",
+                "from-amber-700 to-rose-900",
+              ];
+              const fallbackGradient = gradients[index % gradients.length];
 
-            return (
-              <Card
-                key={exam._id || exam.name}
-                className="p-0 rounded-3xl bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border border-slate-200 hover:border-indigo-400"
-              >
-                {/* Step 2 Poster Image Rendering */}
-                {hasPoster ? (
-                  <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
-                    <img
-                      src={exam.thumbnailUrl}
-                      alt={exam.name}
-                      className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-3 left-3 z-10">
-                      <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 fill-white" /> TARGET GOVT EXAM
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  /* Fallback Styled Banner */
-                  <div className={`w-full bg-gradient-to-br ${fallbackGradient} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
-                    <div className="flex justify-between items-start z-10">
-                      <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        Target Govt Exam
-                      </span>
-                      {exam.authorityName && (
-                        <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-xs">
-                          {exam.authorityName}
+              return (
+                <Card
+                  key={exam._id || exam.name}
+                  className="p-0 rounded-3xl bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border border-slate-200 hover:border-indigo-400"
+                >
+                  {/* Step 2 Poster Image Rendering */}
+                  {hasPoster ? (
+                    <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
+                      <img
+                        src={exam.thumbnailUrl}
+                        alt={exam.name}
+                        className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 z-10">
+                        <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 fill-white" /> TARGET GOVT EXAM
                         </span>
-                      )}
+                      </div>
                     </div>
-
-                    <div className="z-10 space-y-1">
-                      <h3 className="text-xl font-black drop-shadow-md leading-tight">
-                        {exam.name}
-                      </h3>
-                    </div>
-
-                    <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-                  </div>
-                )}
-
-                {/* Body Details */}
-                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-black text-slate-900">{exam.name}</h3>
-                      {exam.authorityName && (
-                        <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">
-                          {exam.authorityName}
+                  ) : (
+                    /* Fallback Styled Banner */
+                    <div className={`w-full bg-gradient-to-br ${fallbackGradient} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
+                      <div className="flex justify-between items-start z-10">
+                        <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                          Target Govt Exam
                         </span>
-                      )}
+                        {exam.authorityName && (
+                          <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-xs">
+                            {exam.authorityName}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="z-10 space-y-1">
+                        <h3 className="text-xl font-black drop-shadow-md leading-tight">
+                          {exam.name}
+                        </h3>
+                      </div>
+
+                      <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
+                    </div>
+                  )}
+
+                  {/* Body Details */}
+                  <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-black text-slate-900">{exam.name}</h3>
+                        {exam.authorityName && (
+                          <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                            {exam.authorityName}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
+                        {exam.description || "Official Government Steno Exam Dictations & Rules"}
+                      </p>
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {exam.targetWpm && (
+                          <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-indigo-600" /> {exam.targetWpm} WPM
+                          </span>
+                        )}
+                        {exam.dictationDurationMinutes && (
+                          <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            {exam.dictationDurationMinutes} min dictation
+                          </span>
+                        )}
+                        {exam.transcriptionDurationMinutes && (
+                          <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            {exam.transcriptionDurationMinutes} min transcription
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
-                      {exam.description}
-                    </p>
+                    {/* Action Button: Navigate to Step 3 */}
+                    <Link
+                      href={`/student/steno/series/batch/${encodeURIComponent(rawBatch || exam.batch || "")}?exam=${encodeURIComponent(exam.name)}`}
+                      className="block pt-2"
+                    >
+                      <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
+                        <BookOpen className="w-4 h-4" /> EXPLORE SERIES TOPICS (Step 3) <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </div>
-
-                  {/* Action Button */}
-                  <Link
-                    href={`/student/steno/series/batch/${encodeURIComponent(rawBatch)}?exam=${encodeURIComponent(exam.name)}`}
-                    className="block pt-2"
-                  >
-                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                      <BookOpen className="w-4 h-4" /> EXPLORE SERIES & TOPICS <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,7 +17,11 @@ import {
   X,
   Play,
   Trophy,
+  LogIn,
+  KeyRound,
+  Sparkles,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -94,8 +98,31 @@ export default function StenoMainLandingPage() {
   }, []);
 
   return (
-    <div className="bg-slate-50 min-h-screen py-8 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className={cn("bg-slate-50 min-h-screen py-8 px-4 sm:px-6 transition-all", !isLoggedIn && "pb-24 sm:pb-32")}>
+      <div className="max-w-7xl mx-auto space-y-8 sm:space-y-10">
+        {/* Top Notice for visiting students */}
+        {!isLoggedIn && (
+          <div className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 border border-emerald-400/40">
+            <div className="flex items-center gap-3 text-xs sm:text-sm font-bold text-center sm:text-left">
+              <span className="flex h-3 w-3 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+              <span>
+                🎁 <strong className="font-black">7-Day Free Trial:</strong> नए छात्रों के लिए 7 दिन का निःशुल्क स्टेनो ट्रायल! लॉगिन करें और तुरंत सभी बैच व डिक्टेशन टेस्ट दें।
+              </span>
+            </div>
+            <Link
+              href="/student/login?callbackUrl=/student/steno/series"
+              className="shrink-0 w-full sm:w-auto"
+            >
+              <Button size="sm" className="w-full sm:w-auto bg-white hover:bg-emerald-50 text-emerald-900 font-black px-5 py-2 rounded-xl shadow gap-2 text-xs sm:text-sm">
+                <LogIn className="w-4 h-4" /> छात्र लॉगिन करें (Student Login)
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* 1. Single Top Banner Image */}
         <div className="w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
           <img
@@ -105,14 +132,36 @@ export default function StenoMainLandingPage() {
           />
         </div>
 
-        {/* Single Main Login Button directly under Hero Image */}
-        <div className="flex justify-center">
+        {/* Full-width High-Visibility Main Login Button on ALL devices */}
+        <div className="w-full">
           <Link
             href={isLoggedIn ? "/student/steno/series" : "/student/login?callbackUrl=/student/steno/series"}
-            className="w-full max-w-md inline-block"
+            className="w-full block group"
           >
-            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold h-14 sm:h-16 px-8 rounded-2xl shadow-lg hover:shadow-xl text-sm sm:text-base gap-3 transition-all">
-              {isLoggedIn ? "Browse Steno Batches & Series" : "Login Required to Access"} <ArrowRight className="w-5 h-5" />
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black h-16 sm:h-20 px-5 sm:px-10 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl text-base sm:text-2xl gap-3 sm:gap-4 transition-all duration-300 border-2 border-emerald-400/40 relative overflow-hidden flex items-center justify-between">
+              <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+                  {isLoggedIn ? (
+                    <Layers className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                  ) : (
+                    <LogIn className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                  )}
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="text-[11px] sm:text-xs font-bold text-emerald-100 uppercase tracking-wider flex items-center gap-1.5">
+                    {isLoggedIn ? "Access Granted" : "🔑 Online Shorthand Portal"}
+                  </div>
+                  <div className="text-sm sm:text-xl md:text-2xl font-black text-white truncate">
+                    {isLoggedIn
+                      ? "Browse Steno Batches & Series • अपनी प्रैक्टिस शुरू करें"
+                      : "स्टेनो टेस्ट एवं बैच शुरू करने के लिए यहाँ लॉगिन करें (Student Login)"}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 bg-white text-emerald-800 font-extrabold px-3.5 sm:px-6 py-2 sm:py-3.5 rounded-xl sm:rounded-2xl text-xs sm:text-base shadow-md group-hover:bg-emerald-50 group-hover:translate-x-1 transition-all">
+                <span>{isLoggedIn ? "Open Portal" : "Login Now"}</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
             </Button>
           </Link>
         </div>
@@ -132,7 +181,7 @@ export default function StenoMainLandingPage() {
               </div>
 
               {/* Section Details */}
-              <div className="p-6 sm:p-8 space-y-3">
+              <div className="p-6 sm:p-8 space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5" /> Official Steno Portal
@@ -142,6 +191,20 @@ export default function StenoMainLandingPage() {
                 <p className="text-xs sm:text-sm text-slate-600 font-semibold leading-relaxed">
                   <span className="text-slate-900 font-extrabold">एक कदम सफलता की ओर</span> • Curated Legal, Editorial, PYQ, and Speed Building passage collections categorized for targeted speed enhancement.
                 </p>
+                <div className="pt-2">
+                  <Link
+                    href={isLoggedIn ? "/student/steno/series" : "/student/login?callbackUrl=/student/steno/series"}
+                    className="w-full block"
+                  >
+                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black h-12 sm:h-14 rounded-2xl shadow-md gap-2.5 text-sm sm:text-base transition-all">
+                      {isLoggedIn ? (
+                        <>Open Steno Batches & Series <ArrowRight className="w-4 h-4" /></>
+                      ) : (
+                        <><LogIn className="w-4 h-4" /> लॉगिन करें और बैच देखें (Login to View Batches) <ArrowRight className="w-4 h-4" /></>
+                      )}
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </Card>
@@ -159,7 +222,7 @@ export default function StenoMainLandingPage() {
               </div>
 
               {/* Section Details */}
-              <div className="p-6 sm:p-8 space-y-3">
+              <div className="p-6 sm:p-8 space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1.5">
                     <Trophy className="w-3.5 h-3.5" /> Steno Free Weekly Test
@@ -169,6 +232,20 @@ export default function StenoMainLandingPage() {
                 <p className="text-xs sm:text-sm text-slate-600 font-semibold leading-relaxed">
                   <span className="text-slate-900 font-extrabold">अपनी स्पीड और एक्यूरेसी को करें हर हफ्ते मजबूत</span> • Real Exam Pattern, Time Based Tests for UPSSSC, High Court, UP SI & Government Steno Exams.
                 </p>
+                <div className="pt-2">
+                  <Link
+                    href={isLoggedIn ? "/student/steno/series" : "/student/login?callbackUrl=/student/steno/series"}
+                    className="w-full block"
+                  >
+                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black h-12 sm:h-14 rounded-2xl shadow-md gap-2.5 text-sm sm:text-base transition-all">
+                      {isLoggedIn ? (
+                        <>Start Free Weekly Test <ArrowRight className="w-4 h-4" /></>
+                      ) : (
+                        <><Trophy className="w-4 h-4" /> फ्री टेस्ट देने के लिए लॉगिन करें (Login for Free Test) <ArrowRight className="w-4 h-4" /></>
+                      )}
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </Card>
@@ -353,6 +430,31 @@ export default function StenoMainLandingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Sticky Floating Login Bar for Students on all devices */}
+      {!isLoggedIn && (
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-emerald-500/40 px-4 py-3 sm:py-3.5 shadow-[0_-8px_25px_rgba(0,0,0,0.4)]">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
+            <div className="hidden sm:flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-black text-white truncate">NGIT Steno Shorthand Portal</div>
+                <div className="text-xs text-slate-400 font-medium truncate">ऑनलाइन स्टेनो टेस्ट और डिक्टेशन के लिए लॉगिन आवश्यक है</div>
+              </div>
+            </div>
+            <Link
+              href="/student/login?callbackUrl=/student/steno/series"
+              className="w-full sm:w-auto"
+            >
+              <Button className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black h-12 px-6 sm:px-8 rounded-xl shadow-lg gap-2 text-sm sm:text-base transition-all">
+                <LogIn className="w-4 h-4" /> छात्र लॉगिन करें (Student Login) <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

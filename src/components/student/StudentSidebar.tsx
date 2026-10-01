@@ -40,6 +40,7 @@ const menuItems = [
       { label: "My Profile", href: "/student/steno/my-tests" },
       { label: "Steno Batches", href: "/student/steno/series" },
       { label: "Steno Leaderboard", href: "/student/steno/leaderboard" },
+      { label: "Steno Subscription", href: "/student/steno/subscribe" },
     ],
   },
 

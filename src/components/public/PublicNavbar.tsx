@@ -214,7 +214,6 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem 
                                                 className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer" 
-                                                onSelect={() => router.push(session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings')}
                                                 asChild
                                             >
                                                 <Link href={session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings'}>
@@ -247,7 +246,15 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                     </div>
 
                     {/* Mobile Menu Controls */}
-                    <div className="flex lg:hidden items-center gap-1">
+                    <div className="flex lg:hidden items-center gap-1.5">
+                        {!session?.user && (
+                            <Link href={getLoginHref()}>
+                                <Button size="sm" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-black px-2.5 py-1 text-xs rounded-xl gap-1 shadow-sm">
+                                    <LogIn className="w-3.5 h-3.5" />
+                                    Login
+                                </Button>
+                            </Link>
+                        )}
                         <Link href="/notices">
                             <Button variant="ghost" size="icon" className="relative w-10 h-10 text-slate-600 hover:text-primary hover:bg-primary/5 rounded-full transition-all" title="Official Notices">
                                 <Bell className="w-5 h-5" />

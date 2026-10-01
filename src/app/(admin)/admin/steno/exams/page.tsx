@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   getStenoExamsAction,
   createStenoExamAction,
   updateStenoExamAction,
   deleteStenoExamAction,
+  getStenoBatchesAction,
 } from "@/app/actions/steno";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,44 +17,69 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Award, Plus, RefreshCw, Trash2, Edit, CheckCircle2, ShieldCheck, FileText, ArrowRight } from "lucide-react";
+import {
+  Award,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Edit,
+  FileText,
+  ArrowRight,
+  ArrowLeft,
+  Image as ImageIcon,
+  Sliders,
+  Clock,
+  Zap,
+  Layers,
+  Filter,
+} from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
 import Link from "next/link";
 
-export default function AdminStenoExamsPage() {
+function AdminStenoExamsContent() {
+  const searchParams = useSearchParams();
+  const initialBatchParam = searchParams.get("batch") || "all";
+
   const [exams, setExams] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
+  const [filterBatch, setFilterBatch] = useState<string>(initialBatchParam);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<any | null>(null);
 
-  // Form State
+  // Form State - Clean initial values (No dummy links or fallback data)
   const [formData, setFormData] = useState({
-    name: "UPSSSC STENO 1224/333 — Official Exam Rules",
-    authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
+    name: "",
+    batch: "",
+    authorityName: "",
     thumbnailUrl: "",
+    description: "",
+    targetWpm: 80,
+    totalWords: 400,
     dictationDurationMinutes: 5,
     transcriptionDurationMinutes: 40,
-    targetWpm: 80,
-    totalWords: 420,
-    backspaceMode: "full",
-    spellingErrorWeight: 1.0,
-    matraErrorWeight: 0.5,
-    punctuationErrorWeight: 0.5,
-    addedWordWeight: 1.0,
-    skippedWordWeight: 1.0,
-    spacingTranspositionWeight: 0.5,
-    mistakeExemptionCount: 20,
-    ignoreChandrabindu: true,
-    maxErrorPercentAllowed: 5.0,
-    allowedFonts: "Kruti Dev 010, Mangal",
     isActive: true,
   });
 
   useEffect(() => {
+    loadBatches();
     loadExams();
   }, []);
+
+  useEffect(() => {
+    if (initialBatchParam && initialBatchParam !== "all") {
+      setFilterBatch(initialBatchParam);
+    }
+  }, [initialBatchParam]);
+
+  const loadBatches = async () => {
+    const res = await getStenoBatchesAction();
+    if (res.success && res.batches) {
+      setBatches(res.batches);
+    }
+  };
 
   const loadExams = async () => {
     setLoading(true);
@@ -60,32 +87,24 @@ export default function AdminStenoExamsPage() {
     if (res.success && res.exams) {
       setExams(res.exams);
     } else {
-      toast.error(res.error || "Failed to load exam presets");
+      toast.error(res.error || "Failed to load government exams");
     }
     setLoading(false);
   };
 
   const handleOpenCreateModal = () => {
     setEditingExam(null);
+    const defaultBatch = filterBatch !== "all" ? filterBatch : (batches[0]?.name || "");
     setFormData({
-      name: "UPSSSC STENO 1224/333 — Official Exam Rules",
+      name: "",
+      batch: defaultBatch,
       authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
       thumbnailUrl: "",
+      description: "",
+      targetWpm: 80,
+      totalWords: 400,
       dictationDurationMinutes: 5,
       transcriptionDurationMinutes: 40,
-      targetWpm: 80,
-      totalWords: 420,
-      backspaceMode: "full",
-      spellingErrorWeight: 1.0,
-      matraErrorWeight: 0.5,
-      punctuationErrorWeight: 0.5,
-      addedWordWeight: 1.0,
-      skippedWordWeight: 1.0,
-      spacingTranspositionWeight: 0.5,
-      mistakeExemptionCount: 20,
-      ignoreChandrabindu: true,
-      maxErrorPercentAllowed: 5.0,
-      allowedFonts: "Kruti Dev 010, Mangal",
       isActive: true,
     });
     setIsDialogOpen(true);
@@ -95,24 +114,15 @@ export default function AdminStenoExamsPage() {
     setEditingExam(exam);
     setFormData({
       name: exam.name || "",
+      batch: exam.batch || (batches[0]?.name || ""),
       authorityName: exam.authorityName || "उ०प्र० अधीनस्थ सेवा चयन आयोग",
       thumbnailUrl: exam.thumbnailUrl || "",
+      description: exam.description || "",
+      targetWpm: exam.targetWpm || 80,
+      totalWords: exam.totalWords || 400,
       dictationDurationMinutes: exam.dictationDurationMinutes || 5,
       transcriptionDurationMinutes: exam.transcriptionDurationMinutes || 40,
-      targetWpm: exam.targetWpm || 80,
-      totalWords: exam.totalWords || 420,
-      backspaceMode: exam.backspaceMode || "full",
-      spellingErrorWeight: exam.spellingErrorWeight ?? 1.0,
-      matraErrorWeight: exam.matraErrorWeight ?? 0.5,
-      punctuationErrorWeight: exam.punctuationErrorWeight ?? 0.5,
-      addedWordWeight: exam.addedWordWeight ?? 1.0,
-      skippedWordWeight: exam.skippedWordWeight ?? 1.0,
-      spacingTranspositionWeight: exam.spacingTranspositionWeight ?? 0.5,
-      mistakeExemptionCount: exam.mistakeExemptionCount ?? 20,
-      ignoreChandrabindu: exam.ignoreChandrabindu ?? true,
-      maxErrorPercentAllowed: exam.maxErrorPercentAllowed ?? 5.0,
-      allowedFonts: Array.isArray(exam.allowedFonts) ? exam.allowedFonts.join(", ") : "Kruti Dev 010, Mangal",
-      isActive: exam.isActive ?? true,
+      isActive: exam.isActive !== false,
     });
     setIsDialogOpen(true);
   };
@@ -120,63 +130,63 @@ export default function AdminStenoExamsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error("Exam name is required!");
+      toast.error("Government Exam name is required!");
+      return;
+    }
+    if (!formData.batch.trim()) {
+      toast.error("Target Steno Batch (Step 1) is required!");
       return;
     }
 
     const payload = {
       name: formData.name.trim(),
+      batch: formData.batch.trim(),
       authorityName: formData.authorityName.trim(),
       thumbnailUrl: formData.thumbnailUrl.trim(),
-      dictationDurationMinutes: Number(formData.dictationDurationMinutes),
-      transcriptionDurationMinutes: Number(formData.transcriptionDurationMinutes),
+      description: formData.description.trim(),
       targetWpm: Number(formData.targetWpm),
       totalWords: Number(formData.totalWords),
-      backspaceMode: formData.backspaceMode as any,
-      spellingErrorWeight: Number(formData.spellingErrorWeight),
-      matraErrorWeight: Number(formData.matraErrorWeight),
-      punctuationErrorWeight: Number(formData.punctuationErrorWeight),
-      addedWordWeight: Number(formData.addedWordWeight),
-      skippedWordWeight: Number(formData.skippedWordWeight),
-      spacingTranspositionWeight: Number(formData.spacingTranspositionWeight),
-      mistakeExemptionCount: Number(formData.mistakeExemptionCount),
-      ignoreChandrabindu: Boolean(formData.ignoreChandrabindu),
-      maxErrorPercentAllowed: Number(formData.maxErrorPercentAllowed),
-      allowedFonts: formData.allowedFonts.split(",").map((f) => f.trim()).filter(Boolean),
+      dictationDurationMinutes: Number(formData.dictationDurationMinutes),
+      transcriptionDurationMinutes: Number(formData.transcriptionDurationMinutes),
       isActive: Boolean(formData.isActive),
     };
 
     if (editingExam) {
       const res = await updateStenoExamAction(editingExam._id, payload);
       if (res.success) {
-        toast.success("Exam preset rules updated successfully!");
+        toast.success("Government Exam updated successfully!");
         setIsDialogOpen(false);
         loadExams();
       } else {
-        toast.error(res.error || "Failed to update preset");
+        toast.error(res.error || "Failed to update exam");
       }
     } else {
       const res = await createStenoExamAction(payload);
       if (res.success) {
-        toast.success("New Steno Exam preset rules created!");
+        toast.success("New Government Exam created successfully!");
         setIsDialogOpen(false);
         loadExams();
       } else {
-        toast.error(res.error || "Failed to create preset");
+        toast.error(res.error || "Failed to create exam");
       }
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this exam preset rule?")) return;
+    if (!confirm("Are you sure you want to delete this government exam?")) return;
     const res = await deleteStenoExamAction(id);
     if (res.success) {
-      toast.success("Exam preset rule deleted");
+      toast.success("Government exam deleted");
       loadExams();
     } else {
-      toast.error(res.error || "Failed to delete preset");
+      toast.error(res.error || "Failed to delete exam");
     }
   };
+
+  const filteredExams = exams.filter((exam) => {
+    if (filterBatch === "all") return true;
+    return (exam.batch || "").toLowerCase() === filterBatch.toLowerCase();
+  });
 
   return (
     <div className="bg-[#f8fafc] p-4 sm:p-6 min-h-screen space-y-6">
@@ -185,159 +195,180 @@ export default function AdminStenoExamsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-amber-600" /> Steno Exam Selection & Rules Presets
+              <Award className="w-3.5 h-3.5 text-amber-600" /> Step 2 of 4 • Target Government Exams with Poster
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-1">
-            Admin Steno Exam Selection & Rules Presets
+            Government Steno Exams with Poster (Step 2)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Configure target government steno exam rules (UPSSSC, High Court, SSC, UP SI) including error weights, mistake exemption, Chandrabindu rules, backspace status, and qualifying speed.
+            Configure government exam names, board authority badges, and official poster thumbnails individual to each Batch.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link href="/admin/steno/batches">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Step 1: Batches
+            </Button>
+          </Link>
+          <Link href="/admin/steno/error-rules">
+            <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-orange-200 text-orange-700 bg-orange-50/50 hover:bg-orange-100">
+              <Sliders className="w-3.5 h-3.5 text-orange-600" /> Exam Rules (अलग से नियम) →
+            </Button>
+          </Link>
           <Button
             onClick={handleOpenCreateModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 px-5 text-xs rounded-2xl shadow-md gap-2"
           >
-            <Plus className="w-4 h-4" /> Create Exam Preset Rules
+            <Plus className="w-4 h-4" /> Create Govt Exam (Step 2)
           </Button>
           <Link href="/admin/steno/series">
             <Button variant="outline" className="font-bold h-11 px-4 rounded-2xl text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
-              <FileText className="w-4 h-4" /> Go to Series Topics <ArrowRight className="w-3.5 h-3.5" />
+              <FileText className="w-4 h-4" /> Go to Step 3: Series Topics <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Presets List / Official Exam Rule Cards */}
+      {/* Batch Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <Filter className="w-4 h-4 text-indigo-600" />
+          <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
+            Filter by Target Batch (Step 1):
+          </span>
+          <select
+            value={filterBatch}
+            onChange={(e) => setFilterBatch(e.target.value)}
+            className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="all">All Batches ({exams.length} Exams)</option>
+            {batches.map((b) => (
+              <option key={b._id || b.name} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-xs font-semibold text-slate-500">
+          Showing <strong className="text-slate-900">{filteredExams.length}</strong> exam{filteredExams.length === 1 ? "" : "s"}
+          {filterBatch !== "all" && <span> for batch: <strong className="text-indigo-600">{filterBatch}</strong></span>}
+        </div>
+      </div>
+
+      {/* Government Exam Cards Grid */}
       {loading ? (
         <div className="py-20 text-center text-slate-400">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading exam presets...
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Government Exams...
         </div>
-      ) : exams.length === 0 ? (
-        <Card className="p-12 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-          No Steno Exam Presets found in database. Click "Create Exam Preset Rules" to add one.
+      ) : filteredExams.length === 0 ? (
+        <Card className="p-12 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+          <Award className="w-10 h-10 text-slate-300 mx-auto" />
+          <p className="text-sm font-black text-slate-600">
+            {filterBatch !== "all"
+              ? `No Government Exams found for "${filterBatch}".`
+              : "No Government Exams found."}
+          </p>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            Click below to create a Government Exam assigned to this batch.
+          </p>
+          <Button
+            onClick={handleOpenCreateModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Create Govt Exam (Step 2)
+          </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {exams.map((exam) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredExams.map((exam) => (
             <Card
               key={exam._id}
-              className="p-6 rounded-[2rem] border-indigo-100 bg-gradient-to-br from-indigo-50/40 via-white to-slate-50/50 shadow-md hover:shadow-xl transition-all space-y-4 relative border"
+              className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between group overflow-hidden"
             >
-              {/* Exam Card Poster Thumbnail if present */}
-              {exam.thumbnailUrl && exam.thumbnailUrl.trim() !== "" && (
-                <div className="w-full h-44 bg-slate-900 rounded-2xl overflow-hidden mb-3 border border-slate-200 shadow-xs relative">
-                  <img
-                    src={exam.thumbnailUrl}
-                    alt={exam.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
-              {/* Card Header matching Screenshot 2 */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-100 pb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📋</span>
-                  <h3 className="text-base sm:text-lg font-black text-indigo-950 tracking-tight">
-                    {exam.name}
-                  </h3>
-                </div>
-                {exam.authorityName && (
-                  <span className="bg-indigo-600 text-white text-[11px] font-black px-3 py-1 rounded-xl shadow-xs">
-                    {exam.authorityName}
+              <div className="space-y-3.5">
+                {/* Exam Card Poster Thumbnail */}
+                <div className="w-full h-44 bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 shadow-xs relative">
+                  {exam.thumbnailUrl && exam.thumbnailUrl.trim() !== "" ? (
+                    <img
+                      src={exam.thumbnailUrl}
+                      alt={exam.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-950 flex flex-col items-center justify-center p-4 text-center">
+                      <Award className="w-10 h-10 text-amber-400 mb-2" />
+                      <span className="text-white text-xs font-black">{exam.name}</span>
+                      {exam.batch && (
+                        <span className="text-indigo-300 text-[10px] font-bold mt-1">{exam.batch}</span>
+                      )}
+                    </div>
+                  )}
+                  {exam.authorityName && (
+                    <span className="absolute top-2.5 right-2.5 bg-indigo-600/95 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm">
+                      {exam.authorityName}
+                    </span>
+                  )}
+                  <span className="absolute bottom-2.5 left-2.5 bg-slate-900/90 backdrop-blur-md text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-amber-400" /> {exam.batch || "No Batch Assigned"}
                   </span>
-                )}
-              </div>
-
-              {/* Official Exam Rules Grid (Matching Screenshot 2 layout) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs font-semibold text-slate-700 pt-1">
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Backspace:</span>
-                  <strong className="text-indigo-700 font-extrabold uppercase">
-                    {exam.backspaceMode === "full" ? "Enabled (सुधार मान्य)" : exam.backspaceMode}
-                  </strong>
                 </div>
 
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Transcription Duration:</span>
-                  <strong className="text-indigo-700 font-extrabold">{exam.transcriptionDurationMinutes || 40} Mins</strong>
+                {/* Exam Title & Description */}
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      {exam.name}
+                    </h3>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                      Step 2 Exam
+                    </span>
+                  </div>
+                  {exam.description && (
+                    <p className="text-xs text-slate-500 font-medium line-clamp-2 mt-1">
+                      {exam.description}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Total Words:</span>
-                  <strong className="text-indigo-700 font-extrabold">{exam.totalWords || 420} Words</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Dictation Duration:</span>
-                  <strong className="text-indigo-700 font-extrabold">{exam.dictationDurationMinutes || 5} Mins</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Spelling Error (वर्तनी):</span>
-                  <strong className="text-slate-900 font-extrabold">Full ({exam.spellingErrorWeight ?? 1.0})</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Maatra / Vachan (मात्रा/वचन):</span>
-                  <strong className="text-slate-900 font-extrabold">Half ({exam.matraErrorWeight ?? 0.5})</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Added Words (अतिरिक्त शब्द):</span>
-                  <strong className="text-slate-900 font-extrabold">Full ({exam.addedWordWeight ?? 1.0})</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Skipped Words (छूटे शब्द):</span>
-                  <strong className="text-slate-900 font-extrabold">Full ({exam.skippedWordWeight ?? 1.0})</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200/80">
-                  <span className="text-emerald-900 font-bold">• Mistake Exemption (छूट):</span>
-                  <strong className="text-emerald-700 font-black">{exam.mistakeExemptionCount ?? 20} अशुद्धियों की छूट</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-indigo-50/80 p-2.5 rounded-xl border border-indigo-200/80">
-                  <span className="text-indigo-900 font-bold">• Qualifying Speed (अर्हता):</span>
-                  <strong className="text-indigo-700 font-black">{exam.targetWpm || 80} WPM (अनिवार्य)</strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Chandrabindu (ँ / ं):</span>
-                  <strong className="text-emerald-700 font-extrabold">
-                    {exam.ignoreChandrabindu !== false ? "मान्य (No Mistake)" : "Mistake Counted"}
-                  </strong>
-                </div>
-
-                <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                  <span>• Spacing / Transposition:</span>
-                  <strong className="text-slate-900 font-extrabold">Half Mistake ({exam.spacingTranspositionWeight ?? 0.5})</strong>
+                {/* Exam Metadata Badges */}
+                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-600 pt-1">
+                  <div className="flex items-center gap-1.5 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <Zap className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Speed: <strong className="text-slate-900 font-black">{exam.targetWpm || 80} WPM</strong></span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Duration: <strong className="text-slate-900 font-black">{exam.transcriptionDurationMinutes || 40} Mins</strong></span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
-                <div className="text-[11px] font-bold text-slate-500 flex items-center gap-2">
-                  <span>Allowed Fonts: <strong className="text-indigo-600 font-extrabold">{Array.isArray(exam.allowedFonts) ? exam.allowedFonts.join(", ") : "Kruti Dev 010, Mangal"}</strong></span>
-                </div>
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <Link
+                  href={`/admin/steno/series?batch=${encodeURIComponent(exam.batch || "")}&exam=${encodeURIComponent(exam.name)}`}
+                  className="block"
+                >
+                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-9 text-xs rounded-xl gap-1.5 shadow-sm">
+                    <FileText className="w-3.5 h-3.5" /> Assign Series Topics (Step 3) <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
 
-                <div className="flex gap-2">
+                <div className="flex items-center justify-between gap-2">
                   <Button
                     onClick={() => handleOpenEditModal(exam)}
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs font-bold rounded-xl gap-1"
+                    className="flex-1 h-8 text-xs font-bold rounded-xl gap-1"
                   >
-                    <Edit className="w-3.5 h-3.5" /> Edit Rules
+                    <Edit className="w-3.5 h-3.5" /> Edit Poster & Details
                   </Button>
                   <Button
                     onClick={() => handleDelete(exam._id)}
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs font-bold rounded-xl text-rose-600 hover:bg-rose-50 border-rose-200"
+                    className="h-8 text-xs font-bold rounded-xl text-rose-600 hover:bg-rose-50 border-rose-200 px-3"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -350,22 +381,45 @@ export default function AdminStenoExamsPage() {
 
       {/* Dialog Form Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white z-10">
-            <DialogTitle className="text-xl font-black text-slate-900">
-              {editingExam ? "Edit Official Steno Exam Rules Preset" : "Create Official Steno Exam Rules Preset"}
+        <DialogContent className="max-w-xl max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+          <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white">
+            <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Award className="w-5 h-5 text-indigo-600" />
+              {editingExam ? "Edit Government Exam & Poster" : "Create Government Exam with Poster"}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
-            {/* Scrollable Form */}
             <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              {/* Target Batch Assignment */}
+              <div className="space-y-1 bg-indigo-50/70 p-3.5 rounded-2xl border border-indigo-100">
+                <label className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-indigo-600" /> Target Steno Batch (Step 1 Batch) *
+                </label>
+                <select
+                  value={formData.batch}
+                  onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  required
+                >
+                  <option value="">-- Select Target Batch --</option>
+                  {batches.map((b) => (
+                    <option key={b._id || b.name} value={b.name}>
+                      {b.name} {b.hindiName ? `(${b.hindiName})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-indigo-700 font-medium">
+                  यह परीक्षा केवल चुने गए बैच के अंदर ही Step 2 में दिखाई देगी।
+                </p>
+              </div>
+
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Exam Preset Title (Rule Name) *</label>
+                <label className="text-xs font-bold text-slate-700">Exam Title / Name *</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. UPSSSC STENO 1224/333 — Official Exam Rules"
+                  placeholder="उदा: UPSSSC Steno, UPSI Steno, SSC Steno Grade C & D, Allahabad High Court Steno"
                   className="rounded-xl text-xs font-semibold"
                   required
                 />
@@ -376,40 +430,63 @@ export default function AdminStenoExamsPage() {
                 <Input
                   value={formData.authorityName}
                   onChange={(e) => setFormData({ ...formData, authorityName: e.target.value })}
-                  placeholder="e.g. उ०प्र० अधीनस्थ सेवा चयन आयोग"
+                  placeholder="उदा: उ०प्र० अधीनस्थ सेवा चयन आयोग"
                   className="rounded-xl text-xs font-semibold"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Government Exam Card Poster / Thumbnail URL (Step 2 Thumbnail Image)</label>
+              {/* Poster Image Upload & Live Preview */}
+              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-amber-600" /> Government Exam Card Poster (Step 2 Thumbnail)
+                </label>
+                <ImageUpload
+                  value={formData.thumbnailUrl}
+                  onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                  onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
+                  label="Upload Exam Poster Image"
+                />
                 <Input
                   value={formData.thumbnailUrl}
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="https://ngitedu.com/uploads/gallery/my-exam-poster.jpg"
-                  className="rounded-xl text-xs font-semibold"
+                  placeholder="Or paste poster image URL (https://...)"
+                  className="rounded-xl text-xs font-medium bg-white"
                 />
-                <p className="text-[10px] text-slate-400 font-medium">Upload or paste poster image URL to show on Step 2 Government Exam Card.</p>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  यह पोस्टर इमेज छात्र पोर्टल पर Step 2 में परीक्षा चयन कार्ड पर दिखाई देगी। खाली रखने पर डिफ़ॉल्ट कार्ड स्टाइल दिखेगा।
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Description / Overview</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="उदा: संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह"
+                  rows={2}
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none"
+                />
+              </div>
+
+              {/* Quick Specs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Qualifying Speed (WPM)</label>
+                  <label className="text-xs font-bold text-slate-700">Speed (WPM)</label>
                   <Input
                     type="number"
                     value={formData.targetWpm}
                     onChange={(e) => setFormData({ ...formData, targetWpm: Number(e.target.value) })}
-                    className="rounded-xl text-xs font-semibold"
+                    className="rounded-xl text-xs font-semibold bg-white"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Total Passage Words</label>
+                  <label className="text-xs font-bold text-slate-700">Total Words</label>
                   <Input
                     type="number"
                     value={formData.totalWords}
                     onChange={(e) => setFormData({ ...formData, totalWords: Number(e.target.value) })}
-                    className="rounded-xl text-xs font-semibold"
+                    className="rounded-xl text-xs font-semibold bg-white"
                   />
                 </div>
 
@@ -419,7 +496,7 @@ export default function AdminStenoExamsPage() {
                     type="number"
                     value={formData.dictationDurationMinutes}
                     onChange={(e) => setFormData({ ...formData, dictationDurationMinutes: Number(e.target.value) })}
-                    className="rounded-xl text-xs font-semibold"
+                    className="rounded-xl text-xs font-semibold bg-white"
                   />
                 </div>
 
@@ -429,166 +506,48 @@ export default function AdminStenoExamsPage() {
                     type="number"
                     value={formData.transcriptionDurationMinutes}
                     onChange={(e) => setFormData({ ...formData, transcriptionDurationMinutes: Number(e.target.value) })}
-                    className="rounded-xl text-xs font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Backspace Policy</label>
-                <select
-                  value={formData.backspaceMode}
-                  onChange={(e) => setFormData({ ...formData, backspaceMode: e.target.value as any })}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                >
-                  <option value="full">Enabled (40 मिनट में सुधार मान्य)</option>
-                  <option value="word">Same Word Backspace Only</option>
-                  <option value="disabled">Backspace Disabled completely</option>
-                </select>
-              </div>
-
-              {/* Error Weights Grid */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                <h4 className="text-xs font-black text-indigo-900 uppercase tracking-wider">Official Error Evaluation Weights</h4>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Spelling Error (वर्तनी) Weight</label>
-                    <select
-                      value={formData.spellingErrorWeight}
-                      onChange={(e) => setFormData({ ...formData, spellingErrorWeight: Number(e.target.value) })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                    >
-                      <option value="1">Full Mistake (1.0)</option>
-                      <option value="0.5">Half Mistake (0.5)</option>
-                      <option value="0">Zero Penalty (0.0)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Maatra / Vachan (मात्रा/वचन) Weight</label>
-                    <select
-                      value={formData.matraErrorWeight}
-                      onChange={(e) => setFormData({ ...formData, matraErrorWeight: Number(e.target.value) })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                    >
-                      <option value="0.5">Half Mistake (0.5)</option>
-                      <option value="1">Full Mistake (1.0)</option>
-                      <option value="0">Zero Penalty (0.0)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Added Words (अतिरिक्त शब्द) Weight</label>
-                    <select
-                      value={formData.addedWordWeight}
-                      onChange={(e) => setFormData({ ...formData, addedWordWeight: Number(e.target.value) })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                    >
-                      <option value="1">Full Mistake (1.0)</option>
-                      <option value="0.5">Half Mistake (0.5)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Skipped Words (छूटे शब्द) Weight</label>
-                    <select
-                      value={formData.skippedWordWeight}
-                      onChange={(e) => setFormData({ ...formData, skippedWordWeight: Number(e.target.value) })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                    >
-                      <option value="1">Full Mistake (1.0)</option>
-                      <option value="0.5">Half Mistake (0.5)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Spacing / Transposition Weight</label>
-                    <select
-                      value={formData.spacingTranspositionWeight}
-                      onChange={(e) => setFormData({ ...formData, spacingTranspositionWeight: Number(e.target.value) })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                    >
-                      <option value="0.5">Half Mistake (0.5)</option>
-                      <option value="1">Full Mistake (1.0)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Punctuation Error Weight</label>
-                    <select
-                      value={formData.punctuationErrorWeight}
-                      onChange={(e) => setFormData({ ...formData, punctuationErrorWeight: Number(e.target.value) })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                    >
-                      <option value="0.5">Half Mistake (0.5)</option>
-                      <option value="1">Full Mistake (1.0)</option>
-                      <option value="0">Zero Penalty (0.0)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Exemptions & Rules Grid */}
-              <div className="grid grid-cols-2 gap-3 bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-emerald-950">Mistake Exemption Count (अशुद्धियों की छूट)</label>
-                  <Input
-                    type="number"
-                    value={formData.mistakeExemptionCount}
-                    onChange={(e) => setFormData({ ...formData, mistakeExemptionCount: Number(e.target.value) })}
-                    placeholder="e.g. 20"
                     className="rounded-xl text-xs font-semibold bg-white"
                   />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-emerald-950">Max Error Allowed (%)</label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={formData.maxErrorPercentAllowed}
-                    onChange={(e) => setFormData({ ...formData, maxErrorPercentAllowed: Number(e.target.value) })}
-                    placeholder="e.g. 5.0"
-                    className="rounded-xl text-xs font-semibold bg-white"
-                  />
-                </div>
-
-                <div className="col-span-2 pt-1">
-                  <label className="flex items-center gap-2.5 text-xs font-bold text-emerald-950 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.ignoreChandrabindu}
-                      onChange={(e) => setFormData({ ...formData, ignoreChandrabindu: e.target.checked })}
-                      className="w-4 h-4 rounded text-emerald-600 accent-emerald-600"
-                    />
-                    Chandrabindu (ँ / ं) Exemption Allowed: मान्य (No Mistake)
-                  </label>
-                </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Allowed Fonts (Comma separated)</label>
-                <Input
-                  value={formData.allowedFonts}
-                  onChange={(e) => setFormData({ ...formData, allowedFonts: e.target.value })}
-                  placeholder="Kruti Dev 010, Mangal"
-                  className="rounded-xl text-xs font-semibold"
-                />
+              {/* Notice linking to separate evaluation rules */}
+              <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-orange-950 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <strong className="font-bold flex items-center gap-1.5 text-orange-900">
+                    <Sliders className="w-3.5 h-3.5 text-orange-600" /> मूल्यांकन नियम अलग से प्रबंधित हैं
+                  </strong>
+                  <p className="text-[11px] text-orange-700">
+                    वर्तनी, मात्रा, 20 अशुद्धियों की छूट व बैकस्पेस नीतियाँ अलग मेनू में सेट की जाती हैं।
+                  </p>
+                </div>
+                <Link href="/admin/steno/error-rules" target="_blank">
+                  <Button type="button" variant="outline" size="sm" className="bg-white border-orange-300 text-orange-800 text-[11px] font-bold h-7 shrink-0">
+                    नियम खोलें →
+                  </Button>
+                </Link>
               </div>
             </div>
 
-            <DialogFooter className="p-4 px-6 border-t border-slate-100 bg-slate-50 shrink-0">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl text-xs">
+            <div className="p-4 sm:p-5 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl text-xs font-bold">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold px-6">
-                {editingExam ? "Save Preset Rules" : "Create Preset Rules"}
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md">
+                {editingExam ? "Save Changes" : "Create Exam"}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminStenoExamsPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center font-bold text-slate-400">Loading Government Exams...</div>}>
+      <AdminStenoExamsContent />
+    </Suspense>
   );
 }

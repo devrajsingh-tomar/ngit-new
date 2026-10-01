@@ -16,6 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ import {
 import {
   Headphones,
   Plus,
+  ArrowLeft,
   RefreshCw,
   Trash2,
   Edit,
@@ -387,6 +389,14 @@ export default function AdminStenoPassagesPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link href="/admin/steno/series">
+            <Button
+              variant="outline"
+              className="rounded-2xl h-11 px-4 text-xs font-bold gap-2 border-slate-300 hover:bg-slate-50"
+            >
+              <ArrowLeft className="w-4 h-4" /> Series Topics (Step 3)
+            </Button>
+          </Link>
           <Button
             onClick={handleOpenCreateModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl h-11 px-5 text-xs shadow-md gap-2"
@@ -714,7 +724,7 @@ export default function AdminStenoPassagesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700">Assign Series Topic (Step 2)</label>
+                      <label className="text-xs font-bold text-slate-700">Assign Series Topic (Step 3)</label>
                       <button
                         type="button"
                         onClick={() => setIsQuickSeriesDialogOpen(true)}
@@ -731,7 +741,7 @@ export default function AdminStenoPassagesPage() {
                       <option value="">No Series (Standalone Dictation)</option>
                       {seriesList.map((s) => (
                         <option key={s._id} value={s._id}>
-                          {s.batch ? `${s.batch} • ` : ""}{s.title}
+                          {s.batch ? `${s.batch} • ` : ""}{s.exam ? `[${s.exam}] • ` : ""}{s.title}
                         </option>
                       ))}
                     </select>

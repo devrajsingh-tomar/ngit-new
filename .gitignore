@@ -8,4 +8,6 @@ node_modules
 .env.development
 exports/
 scratch/
+.agents
+.vscode
 

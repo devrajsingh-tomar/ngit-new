@@ -23,7 +23,6 @@ import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
 export async function getStenoPassagesAction(query?: any) {
   try {
     await connectDB();
-    await seedDefaultSeriesAndPassagesAction();
     const filter: any = {};
     if (query?.isPublished !== undefined) {
       filter.isPublished = query.isPublished;
@@ -68,18 +67,34 @@ export async function getStenoPassagesAction(query?: any) {
 export async function getStenoSeriesListAction(query?: any) {
   try {
     await connectDB();
-    const seriesCount = await StenoSeries.countDocuments();
-    if (seriesCount === 0) {
-      await seedDefaultSeriesAndPassagesAction();
-    }
 
     // Clean up any previously auto-created "सामान्य अभ्यास" series
     await StenoSeries.deleteMany({ title: "सामान्य अभ्यास" });
 
     const filter: any = {};
     if (query?.isPublished !== undefined) filter.isPublished = query.isPublished;
-    if (query?.batch) filter.batch = query.batch;
-    if (query?.category) filter.category = query.category;
+    if (query?.batch && query.batch !== "all") {
+      const escapedBatch = query.batch.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.$or = [
+        { batch: query.batch.trim() },
+        { batch: { $regex: new RegExp(`^${escapedBatch}$`, "i") } },
+      ];
+    }
+    if (query?.exam && query.exam !== "all") {
+      const escapedExam = query.exam.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const examCondition = [
+        { exam: query.exam.trim() },
+        { exam: { $regex: new RegExp(`^${escapedExam}$`, "i") } },
+      ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: examCondition }];
+        delete filter.$or;
+      } else {
+        filter.$or = examCondition;
+      }
+    } else if (query?.category && query.category !== "all") {
+      filter.category = query.category;
+    }
 
     const series = await StenoSeries.find(filter)
       .populate("passages")
@@ -98,9 +113,6 @@ export async function getStenoSeriesByIdAction(id: string) {
     if (mongoose.Types.ObjectId.isValid(id)) {
       seriesItem = await StenoSeries.findById(id).populate("passages").lean();
     }
-    if (!seriesItem) {
-      seriesItem = await StenoSeries.findOne({ isPublished: true }).populate("passages").lean();
-    }
     if (!seriesItem) return { success: false, error: "Series not found" };
     return { success: true, series: JSON.parse(JSON.stringify(seriesItem)) };
   } catch (err: any) {
@@ -114,9 +126,6 @@ export async function getStenoPassageByIdAction(id: string) {
     let passage = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
       passage = await StenoPassage.findById(id).populate("seriesId").lean();
-    }
-    if (!passage) {
-      passage = await StenoPassage.findOne({ isPublished: true }).populate("seriesId").lean();
     }
     if (!passage) return { success: false, error: "Passage not found" };
     return { success: true, passage: JSON.parse(JSON.stringify(passage)) };
@@ -297,10 +306,27 @@ export async function updateStenoPassageAction(id: string, data: any) {
       payload.examPresetId = null;
     }
 
+    const oldPassage = await StenoPassage.findById(id).lean();
     const updated = await StenoPassage.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
 
+    // Sync StenoSeries.passages:
+    if (oldPassage && String(oldPassage.seriesId || "") !== String(payload.seriesId || "")) {
+      if (oldPassage.seriesId) {
+        await StenoSeries.findByIdAndUpdate(oldPassage.seriesId, {
+          $pull: { passages: id },
+        });
+      }
+      if (payload.seriesId) {
+        await StenoSeries.findByIdAndUpdate(payload.seriesId, {
+          $addToSet: { passages: id },
+        });
+      }
+    }
+
     revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
     revalidatePath("/steno/dictation");
+    revalidatePath("/student/steno/series");
     return { success: true, passage: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -363,6 +389,12 @@ export async function bulkAssignStenoPassagesAction(data: {
     );
 
     if (data.seriesId) {
+      // Remove these passages from any other series first
+      await StenoSeries.updateMany(
+        { passages: { $in: data.passageIds } },
+        { $pull: { passages: { $in: data.passageIds } } }
+      );
+      // Then assign to target series
       await StenoSeries.findByIdAndUpdate(data.seriesId, {
         $addToSet: { passages: { $each: data.passageIds } },
       });
@@ -385,6 +417,7 @@ export async function createStenoSeriesAction(data: {
   thumbnailUrl?: string;
   batch?: string;
   category: string;
+  exam?: string;
   language: "Hindi" | "English";
   passages?: string[];
   isPremium?: boolean;
@@ -401,15 +434,19 @@ export async function createStenoSeriesAction(data: {
 
     const series = await StenoSeries.create({
       ...data,
+      exam: data.exam || "",
       passages: data.passages || [],
       isPublished: data.isPublished ?? true,
       sortOrder: data.sortOrder || 0,
     });
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/manager/steno/series");
+    revalidatePath("/steno/admin/series");
     revalidatePath("/steno");
     revalidatePath("/steno/series");
     revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/exams");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     revalidatePath("/student/steno/series/[id]", "page");
     return { success: true, series: JSON.parse(JSON.stringify(series)) };
@@ -430,9 +467,12 @@ export async function updateStenoSeriesAction(id: string, data: any) {
     const updated = await StenoSeries.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/manager/steno/series");
+    revalidatePath("/steno/admin/series");
     revalidatePath("/steno");
     revalidatePath("/steno/series");
     revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/exams");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     revalidatePath("/student/steno/series/[id]", "page");
     return { success: true, series: JSON.parse(JSON.stringify(updated)) };
@@ -453,9 +493,12 @@ export async function deleteStenoSeriesAction(id: string) {
     await StenoSeries.findByIdAndDelete(id);
 
     revalidatePath("/admin/steno/series");
+    revalidatePath("/manager/steno/series");
+    revalidatePath("/steno/admin/series");
     revalidatePath("/steno");
     revalidatePath("/steno/series");
     revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/exams");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     revalidatePath("/student/steno/series/[id]", "page");
     return { success: true };
@@ -464,50 +507,11 @@ export async function deleteStenoSeriesAction(id: string) {
   }
 }
 
-// ── SEEDING DEFAULT SERIES AND PASSAGES ──
+// ── SEEDING DEFAULT SERIES AND PASSAGES (LEGACY HANDLER) ──
 
 export async function seedDefaultSeriesAndPassagesAction() {
   try {
     await connectDB();
-    const seriesCount = await StenoSeries.countDocuments();
-    if (seriesCount === 0) {
-      const defaultSeries = [
-        // UPSSSC Steno Series Topics (as per diagram)
-        { title: "संपादकीय", description: "दैनिक समाचार पत्र संपादकीय एवं डिक्टेशन संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Editorial", language: "Hindi", sortOrder: 1 },
-        { title: "निबन्ध", description: "महत्वपूर्ण सामाजिक एवं समसामयिक निबंध डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Essay", language: "Hindi", sortOrder: 2 },
-        { title: "साहित्य", description: "हिंदी साहित्य एवं मानक आशुलिपि अभ्यास संग्रह", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Literature", language: "Hindi", sortOrder: 3 },
-        { title: "कहानी", description: "कथा एवं आख्यान आशुलिपि अभ्यास डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Stories", language: "Hindi", sortOrder: 4 },
-        { title: "संसदीय", description: "संसदीय बहस, भाषण एवं लोकसभा/राज्यसभा डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Parliamentary", language: "Hindi", sortOrder: 5 },
-        { title: "लीगल", description: "न्यायालयीन एवं विधिक निर्णय आशुलिपि डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Legal", language: "Hindi", sortOrder: 6 },
-        { title: "रामधारी खण्ड 1", description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 7 },
-        { title: "रामधारी खण्ड 2", description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका संपूर्ण डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Ramdhari", language: "Hindi", sortOrder: 8 },
-        { title: "कुरुक्षेत्र पत्रिका", description: "कुरुक्षेत्र एवं योजना पत्रिका समसामयिक डिक्टेशन", thumbnailUrl: "", batch: "UPSSSC Steno", category: "Magazine", language: "Hindi", sortOrder: 9 },
-
-        // High Court & Other Batches
-        { title: "High Court Legal Series", description: "High Court & District Court Judgments", thumbnailUrl: "", batch: "Allahabad High Court Steno", category: "Legal", language: "Hindi", sortOrder: 10 },
-      ];
-
-      await StenoSeries.insertMany(defaultSeries);
-    }
-
-    const passageCount = await StenoPassage.countDocuments();
-    if (passageCount === 0) {
-      const samplePassage = {
-        title: "80 WPM Hindi Legal Dictation - Practice 1",
-        language: "Hindi",
-        category: "Legal",
-        transcriptText: "माननीय न्यायाधीश महोदय, अभियुक्त के विरुद्ध प्रस्तुत साक्ष्य और गवाहों के बयानों से यह स्पष्ट है कि घटना के समय वह घटनास्थल पर मौजूद नहीं था। पुलिस द्वारा प्रस्तुत प्रथम सूचना रिपोर्ट में भी अनेक विरोधाभास हैं। अतः न्याय के हित में अभियुक्त को दोषमुक्त किया जाना न्यायसंगत होगा।",
-        wordCount: 45,
-        durationSeconds: 300,
-        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        availableSpeeds: [40, 50, 60, 70, 80, 90, 100, 110, 120],
-        targetWpm: 80,
-        isPublished: true,
-        sortOrder: 1,
-      };
-      await StenoPassage.create(samplePassage);
-    }
-
     await seedStenoInstituteAccountAction();
   } catch (err) {
     console.error("seedDefaultSeriesAndPassagesAction error:", err);
@@ -603,7 +607,7 @@ export async function getStudentStenoDashboardDataAction(filterOptions?: {
     let recentLogs: Array<any> = [];
 
     if (session?.user?.id) {
-      const userResults = await StenoResult.find({ userId: session.user.id })
+      const userResults: any[] = await StenoResult.find({ userId: session.user.id })
         .populate("passageId")
         .populate("examId")
         .sort({ createdAt: -1 })
@@ -781,7 +785,7 @@ export async function getStudentStenoProfileDataAction(page = 1, limit = 10) {
     const user = await User.findById(session.user.id).select("-password").lean();
     const skip = (page - 1) * limit;
 
-    const [totalAttempts, resultsDocs] = await Promise.all([
+    const [totalAttempts, resultsDocs]: [number, any[]] = await Promise.all([
       StenoResult.countDocuments({ userId: session.user.id }),
       StenoResult.find({ userId: session.user.id })
         .populate("passageId")
@@ -880,6 +884,8 @@ export async function submitStenoResultAction(data: {
   fontUsed?: string;
   speedWpm?: number;
   accuracy?: number;
+  fullErrors?: number;
+  halfErrors?: number;
   totalErrors?: number;
   score?: number;
   status?: "Passed" | "Failed" | "Evaluated";
@@ -1041,6 +1047,7 @@ export async function getStenoUserHistoryAction() {
 
 export async function getStenoLeaderboardAction(filters?: {
   exam?: string;
+  examId?: string;
   seriesId?: string;
   passageId?: string;
   language?: string;
@@ -1054,8 +1061,9 @@ export async function getStenoLeaderboardAction(filters?: {
     if (filters?.passageId && filters.passageId !== "All") {
       queryFilter.passageId = filters.passageId;
     }
-    if (filters?.examId && filters.examId !== "All") {
-      queryFilter.examId = filters.examId;
+    const targetExam = filters?.examId || filters?.exam;
+    if (targetExam && targetExam !== "All") {
+      queryFilter.examId = targetExam;
     }
     if (filters?.targetWpm) {
       queryFilter.targetWpm = Number(filters.targetWpm);
@@ -1097,12 +1105,26 @@ export async function getStenoLeaderboardAction(filters?: {
   }
 }
 
-// ── ADMIN EXAM PRESETS ACTIONS (STEP 8) ──
+// ── ADMIN EXAM PRESETS ACTIONS (STEP 8 / STEP 2 GOVT EXAMS) ──
 
-export async function getStenoExamsAction() {
+export async function getStenoExamsAction(query?: { batch?: string; isActive?: boolean }) {
   try {
     await connectDB();
-    const exams = await StenoExam.find({}).sort({ createdAt: -1 }).lean();
+
+    const filter: any = {};
+    if (query?.isActive !== undefined) {
+      filter.isActive = query.isActive;
+    }
+
+    if (query?.batch && query.batch !== "all") {
+      const escaped = query.batch.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.$or = [
+        { batch: query.batch.trim() },
+        { batch: { $regex: new RegExp(`^${escaped}$`, "i") } },
+      ];
+    }
+
+    const exams = await StenoExam.find(filter).sort({ createdAt: -1 }).lean();
     return { success: true, exams: JSON.parse(JSON.stringify(exams)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1120,6 +1142,9 @@ export async function createStenoExamAction(data: any) {
 
     const exam = await StenoExam.create(data);
     revalidatePath("/admin/steno/exams");
+    revalidatePath("/manager/steno/exams");
+    revalidatePath("/steno/admin/exams");
+    revalidatePath("/student/steno/exams");
     revalidatePath("/steno/mock-tests");
     return { success: true, exam: JSON.parse(JSON.stringify(exam)) };
   } catch (err: any) {
@@ -1138,6 +1163,9 @@ export async function updateStenoExamAction(id: string, data: any) {
 
     const updated = await StenoExam.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
     revalidatePath("/admin/steno/exams");
+    revalidatePath("/manager/steno/exams");
+    revalidatePath("/steno/admin/exams");
+    revalidatePath("/student/steno/exams");
     return { success: true, exam: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1155,6 +1183,9 @@ export async function deleteStenoExamAction(id: string) {
 
     await StenoExam.findByIdAndDelete(id);
     revalidatePath("/admin/steno/exams");
+    revalidatePath("/manager/steno/exams");
+    revalidatePath("/steno/admin/exams");
+    revalidatePath("/student/steno/exams");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -1309,50 +1340,81 @@ const DEFAULT_INITIAL_BATCHES = [
   },
 ];
 
-export async function getStenoBatchesAction(query?: any) {
+export async function getStenoBatchesAction(query?: any): Promise<{ success: boolean; batches: any[]; error?: string }> {
   try {
     await connectDB();
 
-    // Purge unwanted auto-generated General Batch from database if it exists
-    await StenoBatch.deleteMany({ name: "General Batch" });
-    await StenoSeries.deleteMany({ batch: "General Batch" });
+    // Silently cleanup any unwanted auto-generated General Batch
+    try {
+      await StenoBatch.deleteMany({ name: "General Batch" });
+      await StenoSeries.deleteMany({ batch: "General Batch" });
+    } catch {
+      // ignore
+    }
 
     const filter: any = {};
     if (query?.isPublished !== undefined) {
-      filter.isPublished = query.isPublished;
+      if (query.isPublished === true) {
+        filter.isPublished = { $ne: false };
+      } else {
+        filter.isPublished = query.isPublished;
+      }
     }
 
-    let batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
-
-    if (batches.length === 0) {
-      // Seed default initial batches if DB is empty
-      await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
+    let batches: any[] = [];
+    try {
       batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+    } catch {
+      // Fallback without populate if populate fails
+      batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+    }
+
+    if (!batches || batches.length === 0) {
+      // Seed default initial batches if DB is empty
+      try {
+        await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
+        batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+      } catch {
+        batches = DEFAULT_INITIAL_BATCHES as any[];
+      }
     }
 
     // Ensure Thakurdwara batch exists with banner
-    const thakurdwaraBatch = batches.find((b: any) => b.name.includes("ठाकुरद्वारा"));
+    const thakurdwaraBatch = batches.find((b: any) => 
+      b.name && (b.name.includes("ठाकुरद्वारा") || b.name.toLowerCase().includes("thakurdwara"))
+    );
     if (!thakurdwaraBatch) {
-      await StenoBatch.create({
-        name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
-        hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
-        description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
-        thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
-        coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
-        instituteCode: "THAKURDWARA_STENO",
-        sortOrder: 0,
-        isPublished: true,
-      });
-      batches = await StenoBatch.find(filter).populate("examPresetId").sort({ sortOrder: 1, createdAt: -1 }).lean();
+      try {
+        const existingThakurdwara = await StenoBatch.findOne({
+          name: { $regex: /ठाकुरद्वारा|thakurdwara/i }
+        }).lean();
+
+        if (!existingThakurdwara) {
+          await StenoBatch.create({
+            name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
+            hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
+            description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
+            thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
+            coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
+            instituteCode: "THAKURDWARA_STENO",
+            sortOrder: 0,
+            isPublished: true,
+          });
+        }
+        batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
+      } catch {
+        // ignore duplicate or creation errors
+      }
     }
 
-    if (batches.length === 0) {
+    if (!batches || batches.length === 0) {
       batches = DEFAULT_INITIAL_BATCHES as any[];
     }
 
     return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
   } catch (err: any) {
-    return { success: true, batches: DEFAULT_INITIAL_BATCHES };
+    console.error("getStenoBatchesAction error:", err);
+    return { success: true, batches: DEFAULT_INITIAL_BATCHES, error: err.message };
   }
 }
 
@@ -1524,5 +1586,151 @@ export async function cleanupAutoCreatedSeriesAction() {
     return { success: false, error: err.message };
   }
 }
+
+// ── SEPARATE STENO EXAM EVALUATION & ERROR RULES CRUD ──
+
+export async function getStenoErrorRulesAction(): Promise<{ success: boolean; rules: any[]; error?: string }> {
+  try {
+    await connectDB();
+    const count = await StenoErrorRule.countDocuments();
+
+    if (count === 0) {
+      const defaultRules = [
+        {
+          ruleName: "UPSSSC Steno Official Evaluation Scheme",
+          authorityName: "उ०प्र० अधीनस्थ सेवा चयन आयोग",
+          examType: "UPSSSC",
+          description: "20 अशुद्धियों की पूर्ण छूट, बैकस्पेस मान्य, वर्तनी 1.0, मात्रा/वचन 0.5, अधिकतम 5% त्रुटि सीमा",
+          spellingErrorWeight: 1.0,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.5,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 20,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 5.0,
+          backspaceMode: "full",
+          isDefault: true,
+        },
+        {
+          ruleName: "SSC Steno Grade C & D Marking Scheme",
+          authorityName: "Staff Selection Commission",
+          examType: "SSC",
+          description: "Full Error (1.0) per omission/substitution, Half Error (0.5) per spelling/capitalization, 5% Grade C / 7% Grade D",
+          spellingErrorWeight: 0.5,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.0,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 0,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 5.0,
+          backspaceMode: "full",
+          isDefault: false,
+        },
+        {
+          ruleName: "Allahabad High Court Steno Evaluation Scheme",
+          authorityName: "High Court of Judicature at Allahabad",
+          examType: "HighCourt",
+          description: "लीगल डिक्टेशन मार्किंग स्कीम: Wrong Word (1.0), Punctuation/Capitalization (0.5), 7% अधिकतम त्रुटि सीमा",
+          spellingErrorWeight: 1.0,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.5,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 0,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 7.0,
+          backspaceMode: "full",
+          isDefault: false,
+        },
+        {
+          ruleName: "UPSI Steno Evaluation Scheme",
+          authorityName: "उत्तर प्रदेश पुलिस भर्ती एवं प्रोन्नति बोर्ड",
+          examType: "UPSI",
+          description: "15 अशुद्धियों की छूट, 5 मिनट डिक्टेशन, 40 मिनट लिप्यंतरण, 5% त्रुटि सीमा",
+          spellingErrorWeight: 1.0,
+          matraErrorWeight: 0.5,
+          punctuationErrorWeight: 0.5,
+          addedWordWeight: 1.0,
+          skippedWordWeight: 1.0,
+          spacingTranspositionWeight: 0.5,
+          mistakeExemptionCount: 15,
+          ignoreChandrabindu: true,
+          maxErrorPercentAllowed: 5.0,
+          backspaceMode: "full",
+          isDefault: false,
+        },
+      ];
+      await StenoErrorRule.insertMany(defaultRules);
+    }
+
+    const rules = await StenoErrorRule.find({}).sort({ createdAt: -1 }).lean();
+    return { success: true, rules: JSON.parse(JSON.stringify(rules)) };
+  } catch (err: any) {
+    return { success: false, rules: [], error: err.message };
+  }
+}
+
+export async function createStenoErrorRuleAction(data: any) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    const rule = await StenoErrorRule.create(data);
+    revalidatePath("/admin/steno/error-rules");
+    revalidatePath("/manager/steno/error-rules");
+    revalidatePath("/steno/admin/error-rules");
+    return { success: true, rule: JSON.parse(JSON.stringify(rule)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateStenoErrorRuleAction(id: string, data: any) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    const updated = await StenoErrorRule.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+    revalidatePath("/admin/steno/error-rules");
+    revalidatePath("/manager/steno/error-rules");
+    revalidatePath("/steno/admin/error-rules");
+    return { success: true, rule: JSON.parse(JSON.stringify(updated)) };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteStenoErrorRuleAction(id: string) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    await StenoErrorRule.findByIdAndDelete(id);
+    revalidatePath("/admin/steno/error-rules");
+    revalidatePath("/manager/steno/error-rules");
+    revalidatePath("/steno/admin/error-rules");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 
 

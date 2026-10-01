@@ -6,6 +6,7 @@ export interface IStenoSeries extends Document {
   thumbnailUrl?: string;
   batch?: string;
   category: string;
+  exam?: string;
   language: "Hindi" | "English";
   passages: mongoose.Types.ObjectId[];
   isPremium: boolean;
@@ -22,6 +23,7 @@ const StenoSeriesSchema = new Schema<IStenoSeries>(
     thumbnailUrl: { type: String },
     batch: { type: String, default: "UPSSSC Steno" },
     category: { type: String, default: "General Series" },
+    exam: { type: String, default: "" },
     language: { type: String, enum: ["Hindi", "English"], default: "Hindi" },
     passages: [{ type: Schema.Types.ObjectId, ref: "StenoPassage" }],
     isPremium: { type: Boolean, default: false },

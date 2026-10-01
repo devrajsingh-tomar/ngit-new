@@ -14,7 +14,7 @@ export function matchBatch(seriesBatch?: string | null, targetBatch?: string | n
   const tBatch = targetBatch.toLowerCase().trim();
 
   if (tBatch.includes("ठाकुरद्वारा") || tBatch.includes("thakurdwara")) {
-    return true; // All series available in main Thakurdwara batch
+    return sBatch.includes("ठाकुरद्वारा") || sBatch.includes("thakurdwara");
   }
 
   if (!seriesBatch) return true;

@@ -4,44 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/steno";
+import { checkStenoAccessAction } from "@/app/actions/steno-subscription";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus } from "lucide-react";
+import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus, Lock } from "lucide-react";
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
-// Default fallback configuration for standard batches
-const DEFAULT_BATCH_FALLBACKS: Record<string, { color: string; topics: string[]; description: string }> = {
-  "UPSSSC Steno": {
-    color: "from-indigo-600 to-purple-800",
-    topics: ["संपादकीय", "निबन्ध", "साहित्य", "कहानी", "संसदीय", "लीगल", "रामधारी खण्ड 1", "रामधारी खण्ड 2", "कुरुक्षेत्र पत्रिका"],
-    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
-  },
-  "UPSI Steno": {
-    color: "from-blue-600 to-cyan-800",
-    topics: ["पुलिस डिक्टेशन", "कानूनी नियम", "सामान्य आशुलिपि"],
-    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-  },
-  "SSC Steno Grade C & D": {
-    color: "from-emerald-700 to-teal-900",
-    topics: ["SSC PYQ 80 WPM", "SSC PYQ 100 WPM", "संसदीय भाषण"],
-    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-  },
-  "Allahabad High Court Steno": {
-    color: "from-amber-600 to-rose-700",
-    topics: ["लीगल जजमेंट", "सिविल केस", "क्रिमिनल केस"],
-    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-  },
-  "रामधारी खण्ड 1": {
-    color: "from-rose-600 to-pink-800",
-    topics: ["अभ्यास 1-20", "अभ्यास 21-40", "अभ्यास 41-60"],
-    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-  },
-  "रामधारी खण्ड 2": {
-    color: "from-violet-700 to-purple-900",
-    topics: ["अभ्यास 1-20", "अभ्यास 21-40", "अभ्यास 41-60"],
-    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के उन्नत स्तर डिक्टेशन ऑडियो",
-  },
-};
 
 const DEFAULT_STATIC_BATCHES = [
   {
@@ -109,8 +77,14 @@ export default function StudentStenoSeriesPage() {
   const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-
+  const [accessState, setAccessState] = useState<{
+    hasAccess: boolean;
+    isAdmin: boolean;
+    isTrialActive: boolean;
+    trialExpired: boolean;
+    daysLeftInTrial: number;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -119,62 +93,108 @@ export default function StudentStenoSeriesPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [batchRes, seriesRes] = await Promise.all([
-        getStenoBatchesAction({ isPublished: true }),
-        getStenoSeriesListAction({ isPublished: true }),
-      ]);
+      let fetchedBatches: any[] = [];
+      let fetchedSeries: any[] = [];
 
-      const fetchedSeries = (seriesRes.success && seriesRes.series) ? seriesRes.series : [];
+      // 1. Fetch Batches safely (using { isPublished: undefined } like admin panel to get all active batches)
+      try {
+        const batchRes = await getStenoBatchesAction({ isPublished: undefined });
+        if (batchRes && Array.isArray(batchRes.batches) && batchRes.batches.length > 0) {
+          fetchedBatches = batchRes.batches;
+        }
+      } catch (err) {
+        console.error("Failed to load batches from server:", err);
+      }
+
+      // 2. Fetch Series list safely
+      try {
+        const seriesRes = await getStenoSeriesListAction({ isPublished: true });
+        if (seriesRes?.success && Array.isArray(seriesRes.series)) {
+          fetchedSeries = seriesRes.series;
+        }
+      } catch (err) {
+        console.error("Failed to load series from server:", err);
+      }
       setSeriesList(fetchedSeries);
 
-      if (batchRes.success && batchRes.batches) {
-        const dbBatches = batchRes.batches;
-        const mergedMap = new Map<string, any>();
+      // 3. Fetch Steno subscription access state safely
+      try {
+        const access = await checkStenoAccessAction({});
+        if (access?.success && access.data) {
+          setAccessState(access.data as any);
+        }
+      } catch (err) {
+        console.error("Failed to check steno access:", err);
+      }
 
-        DEFAULT_STATIC_BATCHES.forEach((def) => {
-          mergedMap.set(def.name.toLowerCase().trim(), { ...def });
-        });
+      // If server returned batches, use them; otherwise use default static batches
+      const baseBatches = fetchedBatches.length > 0 ? fetchedBatches : DEFAULT_STATIC_BATCHES;
+      const merged = [...baseBatches];
 
-        dbBatches.forEach((dbB: any) => {
-          const key = (dbB.name || "").toLowerCase().trim();
-          if (!key) return;
-          const existing = mergedMap.get(key) || {};
-          mergedMap.set(key, { ...existing, ...dbB });
-        });
+      // Helper to check if a batch is Thakurdwara Special Batch
+      const isThakurdwaraBatch = (b: any) => {
+        const name = (b.name || "").toLowerCase();
+        const coaching = (b.coachingName || "").toLowerCase();
+        const code = (b.instituteCode || "").toUpperCase();
+        return name.includes("thakurdwara") || 
+               name.includes("ठाकुरद्वारा") || 
+               coaching.includes("thakurdwara") || 
+               code === "THAKURDWARA_STENO";
+      };
 
-        const merged = Array.from(mergedMap.values());
-
-        // Sort Batches by newest uploaded content timestamp descending (Step 1 Priority)
-        const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
-          let maxTime = 0;
-          for (const s of sList) {
-            if (matchBatch(s.batch, batchName)) {
-              const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
-              if (sTime > maxTime) maxTime = sTime;
-              if (Array.isArray(s.passages)) {
-                for (const p of s.passages) {
-                  const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
-                  if (pTime > maxTime) maxTime = pTime;
-                }
+      // Helper to get newest uploaded content timestamp for a batch
+      const getBatchLatestTimestamp = (batchName: string, sList: any[]) => {
+        let maxTime = 0;
+        for (const s of sList) {
+          if (matchBatch(s.batch, batchName)) {
+            const sTime = new Date(s.updatedAt || s.createdAt || 0).getTime();
+            if (sTime > maxTime) maxTime = sTime;
+            if (Array.isArray(s.passages)) {
+              for (const p of s.passages) {
+                const pTime = new Date(p.createdAt || p.updatedAt || 0).getTime();
+                if (pTime > maxTime) maxTime = pTime;
               }
             }
           }
-          return maxTime;
-        };
+        }
+        return maxTime;
+      };
 
+      try {
+        // Sort Batches:
+        // 1. Thakurdwara Special Batch ALWAYS stays hardcoded at first position (index 0)
+        // 2. All other batches sorted by newest uploaded content timestamp descending (timeB - timeA)
         merged.sort((a, b) => {
+          const isThakurdwaraA = isThakurdwaraBatch(a);
+          const isThakurdwaraB = isThakurdwaraBatch(b);
+
+          if (isThakurdwaraA && !isThakurdwaraB) return -1;
+          if (!isThakurdwaraA && isThakurdwaraB) return 1;
+          if (isThakurdwaraA && isThakurdwaraB) return 0;
+
           const timeA = getBatchLatestTimestamp(a.name, fetchedSeries);
           const timeB = getBatchLatestTimestamp(b.name, fetchedSeries);
+
           if (timeA !== timeB) {
             return timeB - timeA;
           }
-          return (a.sortOrder ?? 99) - (b.sortOrder ?? 99);
-        });
 
-        setBatches(merged);
+          // Fallback to sortOrder or creation date
+          const orderA = a.sortOrder !== undefined && a.sortOrder !== null ? Number(a.sortOrder) : 99;
+          const orderB = b.sortOrder !== undefined && b.sortOrder !== null ? Number(b.sortOrder) : 99;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime());
+        });
+      } catch (sortErr) {
+        console.error("Sorting error fallback:", sortErr);
       }
+
+      setBatches(merged);
     } catch (e) {
       console.error("Error loading steno data:", e);
+      setBatches(DEFAULT_STATIC_BATCHES);
     } finally {
       setLoading(false);
     }
@@ -198,7 +218,7 @@ export default function StudentStenoSeriesPage() {
         <div className="space-y-3 max-w-2xl z-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-amber-400/30">
-              Step 1 • Select Target Steno Batch
+              Step 1 of 4 • Select Target Steno Batch
             </span>
             <Link href="/steno">
               <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white font-bold h-7 px-3 text-[11px] rounded-full border border-white/20 gap-1 transition-all">
@@ -207,10 +227,10 @@ export default function StudentStenoSeriesPage() {
             </Link>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
-            STENO BATCHES & EXAM PORTAL
+            STENO BATCHES & EXAM PORTAL (Step 1)
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-            Select your desired Steno Batch to explore series topics, editorial passages, and official speed dictations.
+            Select your desired Steno Batch to choose your target Government Exam (UPSSSC Steno, UPSI Steno, SSC Steno, Allahabad High Court Steno) and explore official dictation series.
           </p>
         </div>
 
@@ -219,6 +239,48 @@ export default function StudentStenoSeriesPage() {
           <span>{batches.length} Official Batches Active</span>
         </div>
       </div>
+
+      {/* Trial Expired Alert Banner */}
+      {accessState?.trialExpired && !accessState.hasAccess && (
+        <div className="bg-gradient-to-r from-rose-500/15 via-red-500/10 to-orange-500/15 border-2 border-rose-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-700 flex items-center justify-center flex-shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-rose-950">
+                ⚠️ आपका 7-दिन का निःशुल्क ट्रायल समाप्त हो चुका है (Trial Expired)
+              </h3>
+              <p className="text-xs text-rose-800 font-medium">
+                डिक्टेशन टेस्ट, ट्रांसक्रिप्शन मूल्यांकन और सभी बैच अनलॉक रखने के लिए कृपया NGIT Steno प्लान सब्सक्राइब करें।
+              </p>
+            </div>
+          </div>
+          <Link href="/student/steno/subscribe" className="w-full sm:w-auto flex-shrink-0">
+            <Button className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-black text-xs h-9 px-5 rounded-xl shadow-md gap-2">
+              <Sparkles className="w-3.5 h-3.5" /> अभी सब्सक्राइब करें (₹99 से शुरू) <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Trial Active Banner */}
+      {accessState?.isTrialActive && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-orange-500/15 border border-amber-300 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+            <p className="text-xs font-bold text-amber-950">
+              🎉 <span className="font-black">7-दिन फ़्री ट्रायल सक्रिय:</span> आपके पास अभी{" "}
+              <span className="underline decoration-amber-500 font-black">{accessState.daysLeftInTrial} दिन</span> का फ्री एक्सेस शेष है। सभी बैच और डिक्टेशन टेस्ट एक्सेस कर सकते हैं।
+            </p>
+          </div>
+          <Link href="/student/steno/subscribe" className="flex-shrink-0 w-full sm:w-auto">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto h-7 text-[11px] font-black border-amber-400 text-amber-900 bg-white/90 hover:bg-white rounded-lg shadow-2xs gap-1">
+              सब्सक्रिप्शन प्लान्स देखें <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {loading ? (
         <div className="py-20 text-center text-slate-400 space-y-2">
@@ -250,20 +312,24 @@ export default function StudentStenoSeriesPage() {
             {batches.map((batch, index) => {
               const seriesCount = getBatchSeriesCount(batch.name);
               const encodeBatch = encodeURIComponent(batch.name);
-              const fallback = DEFAULT_BATCH_FALLBACKS[batch.name] || {
-                color: "from-indigo-700 to-purple-900",
-                topics: ["संपादकीय", "लीगल", "संसदीय"],
-                description: batch.description || "Steno Exam Dictation Practice Batch",
-              };
-              const batchPoster = isRealPoster(batch.thumbnailUrl) ? batch.thumbnailUrl : null;
-              const seriesForBatch = seriesList.find(
-                (s) => isRealPoster(s.thumbnailUrl) && matchBatch(s.batch, batch.name)
-              );
-              const effectiveThumbnailUrl = batchPoster || seriesForBatch?.thumbnailUrl;
-              const hasRealPoster = isRealPoster(effectiveThumbnailUrl);
-              const hasRecentDictations = seriesList.some(
-                (s) => matchBatch(s.batch, batch.name) && (isNewlyUploaded(s.updatedAt || s.createdAt) || (Array.isArray(s.passages) && s.passages.some((p: any) => isNewlyUploaded(p.createdAt))))
+              const posterUrl = batch.thumbnailUrl && typeof batch.thumbnailUrl === "string" && batch.thumbnailUrl.trim() !== ""
+                ? batch.thumbnailUrl.trim()
+                : null;
+              const batchSeries = seriesList.filter((s) => matchBatch(s.batch, batch.name));
+              const realTopics = Array.from(new Set(batchSeries.map((s) => s.title).filter(Boolean)));
+              const hasRecentDictations = batchSeries.some(
+                (s) => isNewlyUploaded(s.updatedAt || s.createdAt) || (Array.isArray(s.passages) && s.passages.some((p: any) => isNewlyUploaded(p.createdAt)))
               ) || index === 0;
+
+              const fallbackColors = [
+                "from-indigo-700 to-purple-900",
+                "from-blue-700 to-cyan-900",
+                "from-emerald-700 to-teal-900",
+                "from-amber-700 to-rose-900",
+                "from-rose-700 to-pink-900",
+                "from-violet-700 to-purple-900",
+              ];
+              const bannerBg = fallbackColors[index % fallbackColors.length];
 
               return (
                 <Card
@@ -272,50 +338,57 @@ export default function StudentStenoSeriesPage() {
                     hasRecentDictations ? "border-2 border-indigo-300 hover:border-indigo-400" : "border-slate-200 hover:border-indigo-300"
                   }`}
                 >
-                  {/* Step 1 Poster Image Rendering */}
-                  {hasRealPoster ? (
-                    <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
-                      <img
-                        src={effectiveThumbnailUrl}
-                        alt={batch.name}
-                        className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      {hasRecentDictations && (
-                        <div className="absolute top-3 left-3 z-10">
-                          <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 animate-pulse">
-                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT AVAILABLE
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    /* Fallback Styled Banner if poster is not uploaded */
-                    <div className={`w-full bg-gradient-to-br ${fallback.color} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
-                      <div className="flex justify-between items-start z-10">
-                        <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                          {batch.name}
-                        </span>
+                  {/* Step 1 Poster Image Rendering - links to Step 2 Govt Exams */}
+                  <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block">
+                    {posterUrl ? (
+                      <div className="h-44 sm:h-52 w-full bg-slate-900 overflow-hidden relative border-b border-slate-100 flex items-center justify-center p-2">
+                        <img
+                          src={posterUrl}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover blur-md opacity-35 pointer-events-none"
+                        />
+                        <img
+                          src={posterUrl}
+                          alt={batch.name}
+                          className="relative z-10 w-full h-full object-contain rounded-xl group-hover:scale-105 transition-transform duration-500"
+                        />
                         {hasRecentDictations && (
-                          <span className="bg-rose-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs animate-pulse flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT
-                          </span>
+                          <div className="absolute top-3 left-3 z-20">
+                            <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 animate-pulse">
+                              <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT AVAILABLE
+                            </span>
+                          </div>
                         )}
                       </div>
+                    ) : (
+                      /* Fallback Styled Banner if poster is not uploaded */
+                      <div className={`w-full bg-gradient-to-br ${bannerBg} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44 sm:h-52`}>
+                        <div className="flex justify-between items-start z-10">
+                          <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                            {batch.name}
+                          </span>
+                          {hasRecentDictations && (
+                            <span className="bg-rose-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs animate-pulse flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 fill-white" /> NEW CONTENT
+                            </span>
+                          )}
+                        </div>
 
-                      <div className="z-10 space-y-1">
-                        <h3 className="text-xl font-black drop-shadow-md leading-tight">
-                          {batch.hindiName || batch.name}
-                        </h3>
-                        <p className="text-[10px] font-bold text-slate-200 opacity-90">
-                          {batch.name} Official Batch
-                        </p>
+                        <div className="z-10 space-y-1">
+                          <h3 className="text-xl font-black drop-shadow-md leading-tight">
+                            {batch.hindiName || batch.name}
+                          </h3>
+                          <p className="text-[10px] font-bold text-slate-200 opacity-90">
+                            {batch.name} Official Batch
+                          </p>
+                        </div>
+
+                        <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
                       </div>
+                    )}
+                  </Link>
 
-                      <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-                    </div>
-                  )}
-
-                  {/* Batch Details & Action */}
+                  {/* Batch Details & Single Action Button */}
                   <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -325,42 +398,40 @@ export default function StudentStenoSeriesPage() {
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
-                        {batch.description || fallback.description}
-                      </p>
+                      {batch.description && (
+                        <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2">
+                          {batch.description}
+                        </p>
+                      )}
 
-                      {/* Topics Tag List */}
-                      <div className="space-y-1.5 pt-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
-                          Included Topics / Series:
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {fallback.topics.slice(0, 6).map((topic, i) => (
-                            <span
-                              key={i}
-                              className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg border border-slate-200"
-                            >
-                              {topic}
-                            </span>
-                          ))}
+                      {/* Real Topics Tag List (Only shown if real series exist in DB, no dummy fallbacks) */}
+                      {realTopics.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                            Included Topics / Series:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {realTopics.slice(0, 6).map((topic, i) => (
+                              <span
+                                key={i}
+                                className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg border border-slate-200"
+                              >
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Action Button */}
-                    {(() => {
-                      const isThakurdwara = (batch.name || "").toLowerCase().includes("thakurdwara") || (batch.name || "").includes("ठाकुरद्वारा") || (batch.name || "").toLowerCase().includes("stenoinstitute");
-                      const targetHref = isThakurdwara
-                        ? `/student/steno/exams?batch=${encodeBatch}`
-                        : `/student/steno/series/batch/${encodeBatch}`;
-                      return (
-                        <Link href={targetHref} className="block pt-2">
-                          <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.02]">
-                            <BookOpen className="w-4 h-4" /> {isThakurdwara ? "SELECT EXAM & EXPLORE SERIES" : "EXPLORE SERIES & TOPICS"} <ArrowRight className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                      );
-                    })()}
+                    {/* Single Clean Action Button leading to Step 2 Govt Exams */}
+                    <div className="pt-2">
+                      <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block">
+                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.01]">
+                          <BookOpen className="w-4 h-4" /> ओपन बैच • परीक्षाएं एवं डिक्टेशन देखें <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </Card>
               );

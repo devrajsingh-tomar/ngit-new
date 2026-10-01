@@ -40,11 +40,13 @@ const menuGroups = [
             { label: "Steno Overview", href: "/admin/steno", icon: Mic },
             { label: "Institute Students", href: "/admin/steno/students", icon: Users },
             { label: "Target Steno Batches (Step 1)", href: "/admin/steno/batches", icon: Layers },
-            { label: "Steno Exam Selection & Rules", href: "/admin/steno/exams", icon: Award },
-            { label: "Series Topics (Step 2)", href: "/admin/steno/series", icon: FileText },
-            { label: "Dictation Passages (Step 3)", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Government Exams with Poster (Step 2)", href: "/admin/steno/exams", icon: Award },
+            { label: "Series Topics & Assignment (Step 3)", href: "/admin/steno/series", icon: FileText },
+            { label: "Dictation Passages (Step 4)", href: "/admin/steno/passages", icon: Headphones },
+            { label: "Exam Evaluation Rules", href: "/admin/steno/error-rules", icon: Sliders },
             { label: "Doubt Solution Videos", href: "/admin/steno/doubt-videos", icon: Video },
             { label: "Student Results", href: "/admin/steno/results", icon: BarChart3 },
+            { label: "Subscription Plans & Pricing", href: "/admin/steno/plans", icon: CreditCard },
         ]
     },
 
