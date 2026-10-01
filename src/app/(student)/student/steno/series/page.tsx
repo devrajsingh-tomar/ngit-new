@@ -36,14 +36,29 @@ export default function StudentStenoSeriesPage() {
       let fetchedBatches: any[] = [];
       let fetchedSeries: any[] = [];
 
-      // 1. Fetch Batches safely from database (using { isPublished: undefined } like admin panel so all active batches load)
+      // 1. Fetch Batches safely from database with resilient API fallback
       try {
         const batchRes = await getStenoBatchesAction({ isPublished: undefined });
-        if (batchRes && Array.isArray(batchRes.batches)) {
+        if (batchRes && Array.isArray(batchRes.batches) && batchRes.batches.length > 0) {
           fetchedBatches = batchRes.batches.filter((b: any) => b.isPublished !== false);
+        } else {
+          const apiRes = await fetch("/api/steno/batches", { cache: "no-store" });
+          const apiData = await apiRes.json();
+          if (apiData.success && Array.isArray(apiData.batches)) {
+            fetchedBatches = apiData.batches;
+          }
         }
       } catch (err) {
-        console.error("Failed to load batches from server:", err);
+        console.error("Action error, trying /api/steno/batches fallback:", err);
+        try {
+          const apiRes = await fetch("/api/steno/batches", { cache: "no-store" });
+          const apiData = await apiRes.json();
+          if (apiData.success && Array.isArray(apiData.batches)) {
+            fetchedBatches = apiData.batches;
+          }
+        } catch (apiErr) {
+          console.error("API fallback failed:", apiErr);
+        }
       }
 
       // 2. Fetch Exams safely to check which batches have Step 2 exams
