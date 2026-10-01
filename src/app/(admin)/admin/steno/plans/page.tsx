@@ -51,6 +51,7 @@ import {
   saveStenoSettingsAction,
   getAdminStenoSubscriptionsAction,
   manualActivateStenoSubscriptionAction,
+  searchStudentsForStenoPassAction,
   DEFAULT_STENO_PLANS
 } from "@/app/actions/steno-subscription";
 
@@ -92,6 +93,12 @@ export default function AdminStenoPlansPage() {
 
   // Manual Activation Modal State
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentResults, setStudentResults] = useState<any[]>([]);
+  const [isSearchingStudents, setIsSearchingStudents] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [isActivating, setIsActivating] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
   const [manualForm, setManualForm] = useState({
     studentId: "",
     planCode: "MANUAL",
@@ -250,29 +257,101 @@ export default function AdminStenoPlansPage() {
     }
   };
 
+  const handleOpenManualModal = (preselected?: any) => {
+    if (preselected) {
+      setSelectedStudent(preselected);
+      setManualForm((prev) => ({
+        ...prev,
+        studentId: preselected._id || preselected.userId || "",
+      }));
+    } else {
+      setSelectedStudent(null);
+      setManualForm((prev) => ({
+        ...prev,
+        studentId: "",
+      }));
+    }
+    setStudentSearch("");
+    setShowManualInput(false);
+    setIsManualModalOpen(true);
+    fetchStudentsForPass("");
+  };
+
+  const fetchStudentsForPass = async (query = "") => {
+    setIsSearchingStudents(true);
+    try {
+      const res = await searchStudentsForStenoPassAction({ query });
+      if (res.success && res.data) {
+        setStudentResults(res.data.students || []);
+      } else if (res.students) {
+        setStudentResults(res.students || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSearchingStudents(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isManualModalOpen) return;
+    const timer = setTimeout(() => {
+      fetchStudentsForPass(studentSearch);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [studentSearch, isManualModalOpen]);
+
+  const handleSelectStudent = (student: any) => {
+    setSelectedStudent(student);
+    setManualForm((prev) => ({
+      ...prev,
+      studentId: student._id || student.userId,
+    }));
+  };
+
+  const handleClearSelectedStudent = () => {
+    setSelectedStudent(null);
+    setManualForm((prev) => ({
+      ...prev,
+      studentId: "",
+    }));
+    setStudentSearch("");
+  };
+
   // Manual Activate
   const handleManualActivate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualForm.studentId) {
-      toast.error("Please enter a valid Student User ID");
+    const targetStudentId = (manualForm.studentId || selectedStudent?._id || selectedStudent?.email || "").trim();
+    if (!targetStudentId) {
+      toast.error("Please search and select a student first, or enter their email ID.");
       return;
     }
 
-    const res = await manualActivateStenoSubscriptionAction({
-      studentId: manualForm.studentId.trim(),
-      planCode: manualForm.planCode,
-      planName: manualForm.planName,
-      durationDays: Number(manualForm.durationDays) || 30,
-      amount: Number(manualForm.amount) || 0,
-      notes: manualForm.notes,
-    });
+    setIsActivating(true);
+    try {
+      const res = await manualActivateStenoSubscriptionAction({
+        studentId: targetStudentId,
+        planCode: manualForm.planCode,
+        planName: manualForm.planName,
+        durationDays: Number(manualForm.durationDays) || 30,
+        amount: Number(manualForm.amount) || 0,
+        notes: manualForm.notes,
+      });
 
-    if (res.success) {
-      toast.success("Manual subscription activated successfully!");
-      setIsManualModalOpen(false);
-      loadSubscriptions();
-    } else {
-      toast.error(res.error || "Failed to activate subscription");
+      if (res.success) {
+        toast.success(`Steno Pass activated successfully for ${selectedStudent?.name || targetStudentId}!`);
+        setIsManualModalOpen(false);
+        setSelectedStudent(null);
+        setManualForm((prev) => ({ ...prev, studentId: "" }));
+        loadSubscriptions();
+        loadPlansAndSettings();
+      } else {
+        toast.error(res.error || "Failed to activate subscription");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setIsActivating(false);
     }
   };
 
@@ -309,7 +388,7 @@ export default function AdminStenoPlansPage() {
             <Plus className="w-4 h-4" /> Add New Plan
           </Button>
           <Button
-            onClick={() => setIsManualModalOpen(true)}
+            onClick={() => handleOpenManualModal()}
             variant="outline"
             className="border-slate-300 font-bold gap-2 text-xs sm:text-sm rounded-xl"
           >
@@ -578,18 +657,19 @@ export default function AdminStenoPlansPage() {
                     <th className="py-3.5 px-4">Amount</th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4">Dates</th>
+                    <th className="py-3.5 px-4 pr-6 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {subsLoading ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
                         Loading subscriptions...
                       </td>
                     </tr>
                   ) : subscriptions.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
                         No subscriptions found matching filter.
                       </td>
                     </tr>
@@ -631,6 +711,16 @@ export default function AdminStenoPlansPage() {
                         <td className="py-3.5 px-4 text-slate-600">
                           <div>Start: {new Date(sub.startDate).toLocaleDateString()}</div>
                           <div className="font-bold">Expires: {new Date(sub.endDate).toLocaleDateString()}</div>
+                        </td>
+                        <td className="py-3.5 px-4 pr-6 text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenManualModal(sub.userId)}
+                            className="rounded-xl font-bold text-[11px] h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          >
+                            Extend Pass →
+                          </Button>
                         </td>
                       </tr>
                     ))
@@ -765,26 +855,202 @@ export default function AdminStenoPlansPage() {
 
       {/* Manual Activation Modal */}
       <Dialog open={isManualModalOpen} onOpenChange={setIsManualModalOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6 sm:p-8 bg-white border-slate-200 shadow-2xl">
+        <DialogContent className="max-w-lg rounded-3xl p-6 sm:p-7 bg-white border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900">
-              Offline Manual Steno Activation
-            </DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+                <UserPlus className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg sm:text-xl font-black text-slate-900">
+                  Offline Manual Steno Activation
+                </DialogTitle>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  संस्थान के छात्र को नाम, ईमेल या मोबाइल नंबर से तुरंत स्टेनो पास जारी करें।
+                </p>
+              </div>
+            </div>
           </DialogHeader>
 
           <form onSubmit={handleManualActivate} className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-600">Student User ID (MongoDB _id) *</Label>
-              <Input
-                required
-                placeholder="Paste Student ObjectId..."
-                value={manualForm.studentId}
-                onChange={(e) => setManualForm({ ...manualForm, studentId: e.target.value })}
-                className="rounded-xl font-bold font-mono text-xs"
-              />
+            {/* Student Search & Select Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-600" /> Select Student (छात्र चुनें) *
+                </Label>
+                {selectedStudent ? (
+                  <button
+                    type="button"
+                    onClick={handleClearSelectedStudent}
+                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 underline"
+                  >
+                    बदलें (Change Student)
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowManualInput(!showManualInput)}
+                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800 underline"
+                  >
+                    {showManualInput ? "Hide Direct Input" : "Or Direct ID/Email Input"}
+                  </button>
+                )}
+              </div>
+
+              {selectedStudent ? (
+                /* Selected Student Card */
+                <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-sm shrink-0 shadow-xs">
+                      {selectedStudent.name?.[0]?.toUpperCase() || "S"}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900 truncate">{selectedStudent.name}</span>
+                        {selectedStudent.instituteCode && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-white border border-emerald-300 font-mono font-bold text-emerald-800 shrink-0">
+                            {selectedStudent.instituteCode}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-600 truncate font-medium">{selectedStudent.email}</div>
+                      {selectedStudent.mobile && (
+                        <div className="text-[11px] text-slate-500">Mob: {selectedStudent.mobile}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedStudent.activeSub ? (
+                    <div className="text-right shrink-0">
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 font-bold text-[10px]">
+                        Active: {selectedStudent.activeSub.daysLeft}d left
+                      </Badge>
+                      <div className="text-[10px] text-slate-400 mt-0.5">Will extend duration</div>
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className="bg-white text-slate-600 border-slate-200 text-[10px] font-bold shrink-0">
+                      No Active Pass
+                    </Badge>
+                  )}
+                </div>
+              ) : showManualInput ? (
+                /* Direct Input fallback */
+                <div className="space-y-1">
+                  <Input
+                    required
+                    placeholder="Enter Student Email ID or MongoDB User ID..."
+                    value={manualForm.studentId}
+                    onChange={(e) => setManualForm({ ...manualForm, studentId: e.target.value })}
+                    className="rounded-xl font-medium text-xs h-10"
+                  />
+                  <p className="text-[11px] text-slate-400">Enter student&apos;s registered email or ObjectId</p>
+                </div>
+              ) : (
+                /* Live Search & Pick list */
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Type student name, email ID, or mobile number..."
+                      value={studentSearch}
+                      onChange={(e) => setStudentSearch(e.target.value)}
+                      className="pl-9 pr-8 rounded-xl font-medium text-xs bg-slate-50 border-slate-200 focus:bg-white transition-all h-10"
+                    />
+                    {isSearchingStudents && (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin absolute right-3.5 top-3.5 text-slate-400" />
+                    )}
+                  </div>
+
+                  {/* Student list */}
+                  <div className="max-h-48 overflow-y-auto rounded-2xl border border-slate-200 divide-y divide-slate-100 bg-white shadow-xs">
+                    {studentResults.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-slate-400 font-medium">
+                        {isSearchingStudents ? "Searching students..." : "No registered student found with this name or email."}
+                      </div>
+                    ) : (
+                      studentResults.map((s) => (
+                        <button
+                          key={s._id}
+                          type="button"
+                          onClick={() => handleSelectStudent(s)}
+                          className="w-full text-left p-2.5 px-3 hover:bg-emerald-50/70 transition-colors flex items-center justify-between gap-2 group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-100 group-hover:text-emerald-700 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0 transition-colors">
+                              {s.name?.[0]?.toUpperCase() || "S"}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-xs text-slate-900 group-hover:text-emerald-900 truncate">
+                                  {s.name}
+                                </span>
+                                {s.instituteCode && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-600 shrink-0">
+                                    {s.instituteCode}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-slate-500 truncate">{s.email}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {s.activeSub ? (
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                {s.activeSub.daysLeft}d left
+                              </span>
+                            ) : s.mobile ? (
+                              <span className="text-[10px] font-medium text-slate-400">{s.mobile}</span>
+                            ) : null}
+                            <span className="text-xs font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                              Select →
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Quick Duration Presets */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">Choose Pass Duration Preset (अवधि चुनें)</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { days: 30, price: 99, label: "1 Month (30 Days)", name: "1 Month Steno Pass" },
+                  { days: 90, price: 249, label: "3 Months (90 Days)", name: "3 Months Exam Special" },
+                  { days: 180, price: 449, label: "6 Months (180 Days)", name: "6 Months Pro Pass" },
+                ].map((preset) => (
+                  <button
+                    key={preset.days}
+                    type="button"
+                    onClick={() => {
+                      setManualForm((prev) => ({
+                        ...prev,
+                        durationDays: preset.days,
+                        amount: preset.price,
+                        planName: preset.name,
+                      }));
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      manualForm.durationDays === preset.days
+                        ? "border-emerald-500 bg-emerald-50/70 shadow-2xs ring-1 ring-emerald-500"
+                        : "border-slate-200 hover:border-slate-300 bg-white"
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-slate-900">{preset.label}</div>
+                    <div className="text-xs font-black text-emerald-600 mt-0.5">₹{preset.price}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Duration & Amount */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs font-bold text-slate-600">Duration (Days)</Label>
                 <Input
@@ -792,7 +1058,7 @@ export default function AdminStenoPlansPage() {
                   min={1}
                   value={manualForm.durationDays}
                   onChange={(e) => setManualForm({ ...manualForm, durationDays: Number(e.target.value) })}
-                  className="rounded-xl font-bold"
+                  className="rounded-xl font-bold h-10"
                 />
               </div>
               <div className="space-y-1">
@@ -802,27 +1068,33 @@ export default function AdminStenoPlansPage() {
                   min={0}
                   value={manualForm.amount}
                   onChange={(e) => setManualForm({ ...manualForm, amount: Number(e.target.value) })}
-                  className="rounded-xl font-bold"
+                  className="rounded-xl font-bold h-10"
                 />
               </div>
             </div>
 
+            {/* Admin Notes */}
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-600">Admin Notes / Receipt Ref</Label>
               <Input
                 value={manualForm.notes}
                 onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })}
                 placeholder="Offline cash payment received at institute"
-                className="rounded-xl font-medium text-xs"
+                className="rounded-xl font-medium text-xs h-10"
               />
             </div>
 
-            <DialogFooter className="pt-4 border-t">
-              <Button type="button" variant="ghost" onClick={() => setIsManualModalOpen(false)}>
+            <DialogFooter className="pt-3 border-t flex items-center justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setIsManualModalOpen(false)} className="rounded-xl font-bold text-xs">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-6">
-                Activate Subscription
+              <Button
+                type="submit"
+                disabled={isActivating || (!selectedStudent && !manualForm.studentId)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-6 text-xs gap-1.5 shadow-md cursor-pointer"
+              >
+                {isActivating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                Activate Steno Subscription
               </Button>
             </DialogFooter>
           </form>

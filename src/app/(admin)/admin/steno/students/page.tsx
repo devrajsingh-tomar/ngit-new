@@ -19,20 +19,25 @@ import {
     Building2,
     CheckCircle2,
     ArrowUpRight,
+    CreditCard,
+    UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
     getStenoInstituteStudentsAction,
     seedStenoInstituteAccountAction,
 } from "@/app/actions/steno";
+import { manualActivateStenoSubscriptionAction } from "@/app/actions/steno-subscription";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogFooter,
 } from "@/components/ui/dialog";
 
 export default function AdminStenoStudentsPage() {
@@ -44,6 +49,14 @@ export default function AdminStenoStudentsPage() {
     const [totalStudents, setTotalStudents] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+
+    // Pass Modal State
+    const [passStudent, setPassStudent] = useState<any | null>(null);
+    const [passDuration, setPassDuration] = useState(30);
+    const [passAmount, setPassAmount] = useState(99);
+    const [passPlanName, setPassPlanName] = useState("1 Month Steno Pass");
+    const [passNotes, setPassNotes] = useState("Offline institute cash payment");
+    const [activatingPass, setActivatingPass] = useState(false);
 
     const loadData = async () => {
         setLoading(true);
@@ -89,6 +102,33 @@ export default function AdminStenoStudentsPage() {
         setCopied(true);
         toast.success(`Institute Code copied: ${instituteCode}`);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleGrantPass = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!passStudent) return;
+        setActivatingPass(true);
+        try {
+            const res = await manualActivateStenoSubscriptionAction({
+                studentId: passStudent._id || passStudent.email,
+                planCode: "MANUAL",
+                planName: passPlanName,
+                durationDays: Number(passDuration) || 30,
+                amount: Number(passAmount) || 0,
+                notes: passNotes,
+            });
+            if (res.success) {
+                toast.success(`Steno subscription pass activated for ${passStudent.name}!`);
+                setPassStudent(null);
+                loadData();
+            } else {
+                toast.error(res.error || "Failed to activate pass");
+            }
+        } catch (err: any) {
+            toast.error(err.message || "An error occurred");
+        } finally {
+            setActivatingPass(false);
+        }
     };
 
     const filteredStudents = students.filter(
@@ -329,15 +369,31 @@ export default function AdminStenoStudentsPage() {
                                             </span>
                                         </td>
                                         <td className="p-4 pr-6 text-right">
-                                            <Button
-                                                onClick={() => setSelectedStudent(student)}
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-9 px-4 rounded-xl font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all text-xs"
-                                            >
-                                                View Practice History
-                                                <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
-                                            </Button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button
+                                                    onClick={() => {
+                                                        setPassStudent(student);
+                                                        setPassDuration(30);
+                                                        setPassAmount(99);
+                                                        setPassPlanName("1 Month Steno Pass");
+                                                    }}
+                                                    variant="default"
+                                                    size="sm"
+                                                    className="h-9 px-3 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-2xs cursor-pointer"
+                                                >
+                                                    <CreditCard className="w-3.5 h-3.5" />
+                                                    Offline Pass दें
+                                                </Button>
+                                                <Button
+                                                    onClick={() => setSelectedStudent(student)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-9 px-3.5 rounded-xl font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all text-xs"
+                                                >
+                                                    View Practice History
+                                                    <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -418,6 +474,138 @@ export default function AdminStenoStudentsPage() {
                             </div>
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Direct Offline Steno Pass Dialog */}
+            <Dialog open={!!passStudent} onOpenChange={(open) => !open && setPassStudent(null)}>
+                <DialogContent className="max-w-lg rounded-3xl p-6 sm:p-7 bg-white border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+                                <CreditCard className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-lg sm:text-xl font-black text-slate-900">
+                                    Offline Manual Steno Activation
+                                </DialogTitle>
+                                <DialogDescription className="text-xs text-slate-500 font-medium mt-0.5">
+                                    छात्र <span className="font-bold text-slate-900">{passStudent?.name}</span> ({passStudent?.email}) को स्टेनो पोर्टल एक्सेस जारी करें।
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    {passStudent && (
+                        <form onSubmit={handleGrantPass} className="space-y-4 pt-2">
+                            {/* Selected Student Card */}
+                            <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-sm shrink-0">
+                                        {passStudent.name?.[0]?.toUpperCase() || "S"}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-sm text-slate-900 truncate">{passStudent.name}</span>
+                                            {passStudent.instituteCode && (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-md bg-white border border-emerald-300 font-mono font-bold text-emerald-800 shrink-0">
+                                                    {passStudent.instituteCode}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-slate-600 truncate font-medium">{passStudent.email}</div>
+                                        {passStudent.mobile && (
+                                            <div className="text-[11px] text-slate-500">Mob: {passStudent.mobile}</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quick Duration Presets */}
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-bold text-slate-700">Choose Pass Duration Preset (अवधि चुनें)</Label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { days: 30, price: 99, label: "1 Month (30 Days)", name: "1 Month Steno Pass" },
+                                        { days: 90, price: 249, label: "3 Months (90 Days)", name: "3 Months Exam Special" },
+                                        { days: 180, price: 449, label: "6 Months (180 Days)", name: "6 Months Pro Pass" },
+                                    ].map((preset) => (
+                                        <button
+                                            key={preset.days}
+                                            type="button"
+                                            onClick={() => {
+                                                setPassDuration(preset.days);
+                                                setPassAmount(preset.price);
+                                                setPassPlanName(preset.name);
+                                            }}
+                                            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                                passDuration === preset.days
+                                                    ? "border-emerald-500 bg-emerald-50/70 shadow-2xs ring-1 ring-emerald-500"
+                                                    : "border-slate-200 hover:border-slate-300 bg-white"
+                                            }`}
+                                        >
+                                            <div className="text-xs font-bold text-slate-900">{preset.label}</div>
+                                            <div className="text-xs font-black text-emerald-600 mt-0.5">₹{preset.price}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Custom Duration & Amount */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-bold text-slate-600">Duration (Days)</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        value={passDuration}
+                                        onChange={(e) => setPassDuration(Number(e.target.value))}
+                                        className="rounded-xl font-bold h-10"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-bold text-slate-600">Amount Paid (₹)</Label>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        value={passAmount}
+                                        onChange={(e) => setPassAmount(Number(e.target.value))}
+                                        className="rounded-xl font-bold h-10"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Admin Notes */}
+                            <div className="space-y-1">
+                                <Label className="text-xs font-bold text-slate-600">Admin Notes / Receipt Ref</Label>
+                                <Input
+                                    value={passNotes}
+                                    onChange={(e) => setPassNotes(e.target.value)}
+                                    placeholder="Offline cash payment received at institute"
+                                    className="rounded-xl font-medium text-xs h-10"
+                                />
+                            </div>
+
+                            <DialogFooter className="pt-3 border-t flex items-center justify-end gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setPassStudent(null)}
+                                    className="rounded-xl font-bold text-xs"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={activatingPass}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-6 text-xs gap-1.5 shadow-md cursor-pointer"
+                                >
+                                    {activatingPass ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                    Activate Steno Pass
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

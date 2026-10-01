@@ -5,6 +5,8 @@ import StenoSubscription, { IStenoSubscription } from "@/models/StenoSubscriptio
 import StenoSubscriptionPlan, { IStenoSubscriptionPlan } from "@/models/StenoSubscriptionPlan";
 import StenoSetting from "@/models/StenoSetting";
 import User, { UserRole } from "@/models/User";
+import StudentProfile from "@/models/StudentProfile";
+import mongoose from "mongoose";
 import { createRazorpayOrder, verifyRazorpaySignature } from "@/services/RazorpayService";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
@@ -617,7 +619,121 @@ export const getAdminStenoSubscriptionsAction = createSafeAction(
 );
 
 /**
- * 10. Manual Subscription Activation / Extension by Admin
+ * 10. Search Students for Manual Steno Pass (By Name, Email, Mobile, Institute ID)
+ */
+export const searchStudentsForStenoPassAction = createSafeAction(
+  {
+    schema: z.object({
+      query: z.string().optional().default(""),
+    }),
+    requireAuth: true,
+    roles: [UserRole.ADMIN, "STENO_ADMIN", "CONTENT_MANAGER"],
+  },
+  async ({ query }) => {
+    await connectDB();
+
+    const cleanQuery = (query || "").trim();
+    let users: any[] = [];
+
+    if (cleanQuery) {
+      const regex = new RegExp(cleanQuery, "i");
+      // Search users matching name, email, mobile, or instituteCode
+      users = await User.find({
+        role: UserRole.STUDENT,
+        $or: [
+          { name: regex },
+          { email: regex },
+          { mobile: regex },
+          { instituteCode: regex },
+        ],
+      })
+        .select("_id name email mobile instituteCode image createdAt")
+        .limit(20)
+        .lean();
+
+      // Also check StudentProfile for matching idNo or phones
+      if (users.length < 20) {
+        const matchedProfiles = await StudentProfile.find({
+          $or: [
+            { idNo: regex },
+            { name: regex },
+            { localPhone: regex },
+            { permanentPhone: regex },
+            { whatsappNo: regex },
+          ],
+        })
+          .limit(20)
+          .populate("userId", "_id name email mobile instituteCode image createdAt")
+          .lean();
+
+        const existingIds = new Set(users.map((u: any) => u._id.toString()));
+        for (const p of matchedProfiles) {
+          const u: any = p.userId;
+          if (u && !existingIds.has(u._id.toString())) {
+            users.push(u);
+            existingIds.add(u._id.toString());
+          }
+        }
+      }
+    } else {
+      // Return 25 latest registered students
+      users = await User.find({ role: UserRole.STUDENT })
+        .select("_id name email mobile instituteCode image createdAt")
+        .sort({ createdAt: -1 })
+        .limit(25)
+        .lean();
+    }
+
+    const userIds = users.map((u: any) => u._id);
+
+    // Fetch active steno subscriptions for these students to provide instant context
+    const now = new Date();
+    const activeSubs = await StenoSubscription.find({
+      userId: { $in: userIds },
+      status: "ACTIVE",
+      endDate: { $gt: now },
+    })
+      .select("userId planName endDate status")
+      .sort({ endDate: -1 })
+      .lean();
+
+    const subMap: Record<string, any> = {};
+    activeSubs.forEach((sub: any) => {
+      const uid = sub.userId.toString();
+      if (!subMap[uid]) {
+        const daysLeft = Math.ceil(
+          (new Date(sub.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        subMap[uid] = {
+          planName: sub.planName,
+          endDate: sub.endDate,
+          daysLeft,
+        };
+      }
+    });
+
+    const students = users.map((u: any) => {
+      const uid = u._id.toString();
+      return {
+        _id: uid,
+        name: u.name || "Student",
+        email: u.email,
+        mobile: u.mobile || "",
+        instituteCode: u.instituteCode || "",
+        activeSub: subMap[uid] || null,
+      };
+    });
+
+    return {
+      success: true,
+      students: JSON.parse(JSON.stringify(students)),
+    };
+  }
+);
+
+/**
+ * 11. Manual Subscription Activation / Extension by Admin
+ * Supports resolving student by MongoDB ObjectId, Email ID, Mobile, or Student Roll ID
  */
 const ManualActivateStenoSubSchema = z.object({
   studentId: z.string().min(1),
@@ -633,9 +749,41 @@ export const manualActivateStenoSubscriptionAction = createSafeAction(
   async ({ studentId, planCode, planName, durationDays, amount, notes }) => {
     await connectDB();
 
-    const student = await User.findById(studentId);
+    const cleanId = studentId.trim();
+    let student: any = null;
+
+    // 1. Try finding by MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(cleanId)) {
+      student = await User.findById(cleanId);
+    }
+
+    // 2. Try finding by email or mobile
     if (!student) {
-      throw new Error("Student account not found.");
+      student = await User.findOne({
+        $or: [
+          { email: cleanId.toLowerCase() },
+          { mobile: cleanId },
+        ],
+      });
+    }
+
+    // 3. Try finding in StudentProfile by idNo or phone
+    if (!student) {
+      const profile = await StudentProfile.findOne({
+        $or: [
+          { idNo: cleanId.toUpperCase() },
+          { localPhone: cleanId },
+          { permanentPhone: cleanId },
+          { whatsappNo: cleanId },
+        ],
+      }).populate("userId");
+      if (profile?.userId) {
+        student = profile.userId;
+      }
+    }
+
+    if (!student) {
+      throw new Error(`Student account "${studentId}" not found. Please select a valid student from the list.`);
     }
 
     const now = new Date();
