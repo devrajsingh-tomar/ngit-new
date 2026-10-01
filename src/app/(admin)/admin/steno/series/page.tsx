@@ -22,9 +22,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus, ArrowRight, ArrowLeft, Headphones, FileText, Award, Search } from "lucide-react";
+import { Layers, Plus, RefreshCw, Trash2, Edit, Image as ImageIcon, CheckCircle2, FolderPlus, FolderOpen, ArrowRight, ArrowLeft, Headphones, FileText, Award, Search } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { MediaLibraryModal } from "@/components/admin/cms/MediaLibraryModal";
 import Link from "next/link";
 
 function AdminStenoSeriesContent() {
@@ -39,6 +40,7 @@ function AdminStenoSeriesContent() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<any | null>(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   // Filters State
   const [filterBatch, setFilterBatch] = useState(initialBatchParam);
@@ -603,14 +605,15 @@ function AdminStenoSeriesContent() {
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                     <ImageIcon className="w-4 h-4 text-emerald-600" /> Series Topic / Step 3 Poster Thumbnail
                   </label>
-                  <a
-                    href="/admin/gallery"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[10px] text-indigo-600 hover:underline font-bold"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="text-xs font-extrabold h-7 px-2.5 rounded-lg border-indigo-200 text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 flex items-center gap-1.5 shadow-2xs"
                   >
-                    Browse Gallery ↗
-                  </a>
+                    <FolderOpen className="w-3.5 h-3.5 text-indigo-600" /> Select from Gallery Manager
+                  </Button>
                 </div>
                 <ImageUpload
                   value={formData.thumbnailUrl}
@@ -618,12 +621,25 @@ function AdminStenoSeriesContent() {
                   onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
                   label="Upload Series Poster"
                 />
-                <Input
-                  value={formData.thumbnailUrl}
-                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="Or paste direct image URL (https://...)"
-                  className="text-xs rounded-xl bg-white"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={formData.thumbnailUrl}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                    placeholder="Or paste direct image URL (https://...)"
+                    className="rounded-xl text-xs font-medium bg-white"
+                  />
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 px-3.5 rounded-xl text-xs gap-1.5 shrink-0 shadow-xs"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" /> Quick Select
+                  </Button>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  यह पोस्टर इमेज छात्र पोर्टल पर Step 3 में सीरीज़/टॉपिक कार्ड पर दिखाई देगी। खाली रखने पर डिफ़ॉल्ट कार्ड स्टाइल दिखेगा।
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -761,6 +777,16 @@ function AdminStenoSeriesContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <MediaLibraryModal
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => {
+          setFormData((prev) => ({ ...prev, thumbnailUrl: url }));
+          setIsMediaModalOpen(false);
+          toast.success("Series poster selected from Gallery Manager!");
+        }}
+      />
     </div>
   );
 }

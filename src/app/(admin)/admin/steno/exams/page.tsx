@@ -33,9 +33,11 @@ import {
   Zap,
   Layers,
   Filter,
+  FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { MediaLibraryModal } from "@/components/admin/cms/MediaLibraryModal";
 import Link from "next/link";
 
 function AdminStenoExamsContent() {
@@ -48,6 +50,7 @@ function AdminStenoExamsContent() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<any | null>(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   // Form State - Clean initial values (No dummy links or fallback data)
   const [formData, setFormData] = useState({
@@ -437,21 +440,42 @@ function AdminStenoExamsContent() {
 
               {/* Poster Image Upload & Live Preview */}
               <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-amber-600" /> Government Exam Card Poster (Step 2 Thumbnail)
-                </label>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-amber-600" /> Government Exam Card Poster (Step 2 Thumbnail)
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="text-xs font-extrabold h-7 px-2.5 rounded-lg border-indigo-200 text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-indigo-600" /> Select from Gallery Manager
+                  </Button>
+                </div>
                 <ImageUpload
                   value={formData.thumbnailUrl}
                   onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                   onRemove={() => setFormData({ ...formData, thumbnailUrl: "" })}
                   label="Upload Exam Poster Image"
                 />
-                <Input
-                  value={formData.thumbnailUrl}
-                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  placeholder="Or paste poster image URL (https://...)"
-                  className="rounded-xl text-xs font-medium bg-white"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={formData.thumbnailUrl}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                    placeholder="Or paste poster image URL (https://...)"
+                    className="rounded-xl text-xs font-medium bg-white"
+                  />
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 px-3.5 rounded-xl text-xs gap-1.5 shrink-0 shadow-xs"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" /> Quick Select
+                  </Button>
+                </div>
                 <p className="text-[10px] text-slate-400 font-medium">
                   यह पोस्टर इमेज छात्र पोर्टल पर Step 2 में परीक्षा चयन कार्ड पर दिखाई देगी। खाली रखने पर डिफ़ॉल्ट कार्ड स्टाइल दिखेगा।
                 </p>
@@ -540,6 +564,16 @@ function AdminStenoExamsContent() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <MediaLibraryModal
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => {
+          setFormData((prev) => ({ ...prev, thumbnailUrl: url }));
+          setIsMediaModalOpen(false);
+          toast.success("Exam poster selected from Gallery Manager!");
+        }}
+      />
     </div>
   );
 }
