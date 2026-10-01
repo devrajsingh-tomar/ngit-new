@@ -13,14 +13,14 @@ export function matchBatch(seriesBatch?: string | null, targetBatch?: string | n
   if (!targetBatch) return true;
   const tBatch = targetBatch.toLowerCase().trim();
 
-  if (tBatch.includes("ठाकुरद्वारा") || tBatch.includes("thakurdwara")) {
-    return sBatch.includes("ठाकुरद्वारा") || sBatch.includes("thakurdwara");
-  }
-
   if (!seriesBatch) return true;
   const sBatch = seriesBatch.toLowerCase().trim();
 
   if (sBatch === tBatch) return true;
+
+  if (tBatch.includes("ठाकुरद्वारा") || tBatch.includes("thakurdwara")) {
+    return sBatch.includes("ठाकुरद्वारा") || sBatch.includes("thakurdwara");
+  }
 
   if (tBatch.includes("upsssc") && sBatch.includes("upsssc")) return true;
   if (tBatch.includes("ssc") && !tBatch.includes("upsssc") && sBatch.includes("ssc") && !sBatch.includes("upsssc")) return true;

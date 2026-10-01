@@ -1342,7 +1342,7 @@ export async function createStenoBatchAction(data: {
 
     const batchName = data.name.trim();
 
-    let batch = await StenoBatch.findOne({ name: batchName });
+    let batch: any = await StenoBatch.findOne({ name: batchName });
     if (batch) {
       batch = await StenoBatch.findByIdAndUpdate(
         batch._id,

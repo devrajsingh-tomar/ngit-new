@@ -119,12 +119,29 @@ export default function AdminStenoPassagesPage() {
   };
 
   const loadBatches = async () => {
-    const res = await getStenoBatchesAction({ isPublished: undefined });
-    if (res.success && res.batches) {
-      setTargetBatches(res.batches);
-      if (res.batches.length > 0 && !quickSeriesBatch) {
-        setQuickSeriesBatch(res.batches[0].name);
+    try {
+      const res = await getStenoBatchesAction({ isPublished: undefined });
+      if (res && res.success && Array.isArray(res.batches) && res.batches.length > 0) {
+        setTargetBatches(res.batches);
+        if (!quickSeriesBatch) {
+          setQuickSeriesBatch(res.batches[0].name);
+        }
+        return;
       }
+    } catch (e) {
+      console.error("Action error, trying /api/steno/batches:", e);
+    }
+    try {
+      const apiRes = await fetch("/api/steno/batches", { cache: "no-store" });
+      const apiData = await apiRes.json();
+      if (apiData.success && Array.isArray(apiData.batches)) {
+        setTargetBatches(apiData.batches);
+        if (apiData.batches.length > 0 && !quickSeriesBatch) {
+          setQuickSeriesBatch(apiData.batches[0].name);
+        }
+      }
+    } catch (apiErr) {
+      console.error("API fallback failed:", apiErr);
     }
   };
 

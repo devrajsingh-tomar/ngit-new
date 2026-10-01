@@ -78,9 +78,23 @@ function AdminStenoExamsContent() {
   }, [initialBatchParam]);
 
   const loadBatches = async () => {
-    const res = await getStenoBatchesAction();
-    if (res.success && res.batches) {
-      setBatches(res.batches);
+    try {
+      const res = await getStenoBatchesAction();
+      if (res && res.success && Array.isArray(res.batches) && res.batches.length > 0) {
+        setBatches(res.batches);
+        return;
+      }
+    } catch (e) {
+      console.error("Action error, trying /api/steno/batches:", e);
+    }
+    try {
+      const apiRes = await fetch("/api/steno/batches", { cache: "no-store" });
+      const apiData = await apiRes.json();
+      if (apiData.success && Array.isArray(apiData.batches)) {
+        setBatches(apiData.batches);
+      }
+    } catch (apiErr) {
+      console.error("API fallback failed:", apiErr);
     }
   };
 

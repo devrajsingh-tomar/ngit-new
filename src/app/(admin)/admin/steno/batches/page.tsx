@@ -59,11 +59,32 @@ export default function AdminStenoBatchesPage() {
 
   const loadBatches = async () => {
     setLoading(true);
-    const res = await getStenoBatchesAction({ isPublished: undefined });
-    if (res.success && res.batches) {
-      setBatches(res.batches);
-    } else {
-      toast.error(res.error || "Failed to load target steno batches");
+    let loaded = false;
+    try {
+      const res = await getStenoBatchesAction({ isPublished: undefined });
+      if (res && res.success && Array.isArray(res.batches) && res.batches.length > 0) {
+        setBatches(res.batches);
+        loaded = true;
+      }
+    } catch (err) {
+      console.error("Action error, trying /api/steno/batches:", err);
+    }
+
+    if (!loaded) {
+      try {
+        const apiRes = await fetch("/api/steno/batches", { cache: "no-store" });
+        const apiData = await apiRes.json();
+        if (apiData.success && Array.isArray(apiData.batches)) {
+          setBatches(apiData.batches);
+          loaded = true;
+        }
+      } catch (apiErr) {
+        console.error("API fallback failed:", apiErr);
+      }
+    }
+
+    if (!loaded) {
+      toast.error("Failed to load target steno batches");
     }
     setLoading(false);
   };
@@ -110,34 +131,122 @@ export default function AdminStenoBatchesPage() {
     }
 
     if (editingBatch) {
-      const res = await updateStenoBatchAction(editingBatch._id, formData);
-      if (res.success) {
+      let success = false;
+      let errorMsg = "";
+      try {
+        const res = await updateStenoBatchAction(editingBatch._id, formData);
+        if (res.success) {
+          success = true;
+        } else {
+          errorMsg = res.error || "";
+        }
+      } catch (err: any) {
+        errorMsg = err.message || "";
+      }
+
+      if (!success) {
+        try {
+          const apiRes = await fetch(`/api/steno/batches/${editingBatch._id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+          const apiData = await apiRes.json();
+          if (apiData.success) {
+            success = true;
+          } else {
+            errorMsg = apiData.error || errorMsg;
+          }
+        } catch (apiErr: any) {
+          console.error("API update error:", apiErr);
+        }
+      }
+
+      if (success) {
         toast.success("Target Steno Batch updated successfully");
         setIsDialogOpen(false);
         loadBatches();
       } else {
-        toast.error(res.error || "Failed to update batch");
+        toast.error(errorMsg || "Failed to update batch");
       }
     } else {
-      const res = await createStenoBatchAction(formData);
-      if (res.success) {
+      let success = false;
+      let errorMsg = "";
+      try {
+        const res = await createStenoBatchAction(formData);
+        if (res.success) {
+          success = true;
+        } else {
+          errorMsg = res.error || "";
+        }
+      } catch (err: any) {
+        errorMsg = err.message || "";
+      }
+
+      if (!success) {
+        try {
+          const apiRes = await fetch("/api/steno/batches", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+          const apiData = await apiRes.json();
+          if (apiData.success) {
+            success = true;
+          } else {
+            errorMsg = apiData.error || errorMsg;
+          }
+        } catch (apiErr: any) {
+          console.error("API create error:", apiErr);
+        }
+      }
+
+      if (success) {
         toast.success("New Target Steno Batch created successfully");
         setIsDialogOpen(false);
         loadBatches();
       } else {
-        toast.error(res.error || "Failed to create batch");
+        toast.error(errorMsg || "Failed to create batch");
       }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this target batch?")) return;
-    const res = await deleteStenoBatchAction(id);
-    if (res.success) {
+    let success = false;
+    let errorMsg = "";
+    try {
+      const res = await deleteStenoBatchAction(id);
+      if (res.success) {
+        success = true;
+      } else {
+        errorMsg = res.error || "";
+      }
+    } catch (err: any) {
+      errorMsg = err.message || "";
+    }
+
+    if (!success) {
+      try {
+        const apiRes = await fetch(`/api/steno/batches/${id}`, {
+          method: "DELETE",
+        });
+        const apiData = await apiRes.json();
+        if (apiData.success) {
+          success = true;
+        } else {
+          errorMsg = apiData.error || errorMsg;
+        }
+      } catch (apiErr: any) {
+        console.error("API delete error:", apiErr);
+      }
+    }
+
+    if (success) {
       toast.success("Target batch deleted");
       loadBatches();
     } else {
-      toast.error(res.error || "Failed to delete batch");
+      toast.error(errorMsg || "Failed to delete batch");
     }
   };
 
