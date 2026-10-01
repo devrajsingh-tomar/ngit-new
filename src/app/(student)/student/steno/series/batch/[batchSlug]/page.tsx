@@ -10,13 +10,18 @@ import { ArrowLeft, ArrowRight, Layers, PlayCircle, RefreshCw, Sparkles, BookOpe
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 function getFilteredDeduplicatedSeries(allSeries: any[], batchName: string, examName?: string | null) {
-  let matched = allSeries.filter((s: any) => matchBatch(s.batch, batchName));
+  const bLower = (batchName || "").toLowerCase().trim();
+  let matched = allSeries.filter((s: any) => {
+    const sBatch = (s.batch || "").toLowerCase().trim();
+    if (sBatch === bLower) return true;
+    return matchBatch(s.batch, batchName);
+  });
 
-  if (examName) {
+  if (examName && examName !== "all") {
     const examLower = examName.toLowerCase().trim();
     matched = matched.filter((s: any) => {
       const sExam = (s.exam || "").toLowerCase().trim();
-      return sExam === examLower;
+      return sExam === examLower || sExam === "all exams" || (!sExam && s.title?.toLowerCase().includes(examLower));
     });
   }
 
@@ -89,17 +94,24 @@ function StudentStenoBatchSeriesContent({ params }: { params: Promise<{ batchSlu
   const loadSeriesForBatch = async () => {
     setLoading(true);
     try {
+      let fetched: any[] = [];
       const res = await getStenoSeriesListAction({
         isPublished: true,
         batch: rawBatchName,
         exam: examParam || undefined,
       });
-      if (res.success && res.series) {
-        const deduplicated = getFilteredDeduplicatedSeries(res.series, rawBatchName, examParam);
-        setSeriesList(deduplicated);
+      if (res.success && Array.isArray(res.series) && res.series.length > 0) {
+        fetched = res.series;
       } else {
-        setSeriesList([]);
+        // Resilient fallback: fetch all published series and filter in-memory (identically to Admin panel)
+        const allRes = await getStenoSeriesListAction({ isPublished: true });
+        if (allRes.success && Array.isArray(allRes.series)) {
+          fetched = allRes.series;
+        }
       }
+
+      const deduplicated = getFilteredDeduplicatedSeries(fetched, rawBatchName, examParam);
+      setSeriesList(deduplicated);
     } catch (e) {
       console.error("Error loading batch series:", e);
       setSeriesList([]);
