@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getStenoBatchesAction, getStenoSeriesListAction } from "@/app/actions/steno";
+import { getStenoBatchesAction, getStenoSeriesListAction, getStenoExamsAction } from "@/app/actions/steno";
 import { checkStenoAccessAction } from "@/app/actions/steno-subscription";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus, Lock } from "lucide-react";
+import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlus, Lock, Award } from "lucide-react";
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 
@@ -15,6 +15,7 @@ export default function StudentStenoSeriesPage() {
   const router = useRouter();
   const [batches, setBatches] = useState<any[]>([]);
   const [seriesList, setSeriesList] = useState<any[]>([]);
+  const [examsList, setExamsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessState, setAccessState] = useState<{
     hasAccess: boolean;
@@ -35,14 +36,24 @@ export default function StudentStenoSeriesPage() {
       let fetchedBatches: any[] = [];
       let fetchedSeries: any[] = [];
 
-      // 1. Fetch Batches safely from database (matches published batches created in Admin panel)
+      // 1. Fetch Batches safely from database (using { isPublished: undefined } like admin panel so all active batches load)
       try {
-        const batchRes = await getStenoBatchesAction({ isPublished: true });
+        const batchRes = await getStenoBatchesAction({ isPublished: undefined });
         if (batchRes && Array.isArray(batchRes.batches)) {
-          fetchedBatches = batchRes.batches;
+          fetchedBatches = batchRes.batches.filter((b: any) => b.isPublished !== false);
         }
       } catch (err) {
         console.error("Failed to load batches from server:", err);
+      }
+
+      // 2. Fetch Exams safely to check which batches have Step 2 exams
+      try {
+        const examRes = await getStenoExamsAction({ isActive: true });
+        if (examRes?.success && Array.isArray(examRes.exams)) {
+          setExamsList(examRes.exams);
+        }
+      } catch (err) {
+        console.error("Failed to load exams from server:", err);
       }
 
       // 2. Fetch Series list safely
@@ -268,6 +279,12 @@ export default function StudentStenoSeriesPage() {
                 (s) => isNewlyUploaded(s.updatedAt || s.createdAt) || (Array.isArray(s.passages) && s.passages.some((p: any) => isNewlyUploaded(p.createdAt)))
               ) || index === 0;
 
+              const batchExams = examsList.filter((e) => matchBatch(e.batch, batch.name));
+              const hasExams = batchExams.length > 0;
+              const targetUrl = hasExams
+                ? `/student/steno/exams?batch=${encodeBatch}`
+                : `/student/steno/series/batch/${encodeBatch}`;
+
               const fallbackColors = [
                 "from-indigo-700 to-purple-900",
                 "from-blue-700 to-cyan-900",
@@ -285,8 +302,8 @@ export default function StudentStenoSeriesPage() {
                     hasRecentDictations ? "border-2 border-indigo-300 hover:border-indigo-400" : "border-slate-200 hover:border-indigo-300"
                   }`}
                 >
-                  {/* Step 1 Poster Image Rendering - links to Step 2 Govt Exams */}
-                  <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block">
+                  {/* Step 1 Poster Image Rendering - links to Step 2 Govt Exams or Step 3 Series */}
+                  <Link href={targetUrl} className="block">
                     {posterUrl ? (
                       <div className="h-44 sm:h-52 w-full bg-slate-900 overflow-hidden relative border-b border-slate-100 flex items-center justify-center p-2">
                         <img
@@ -341,7 +358,11 @@ export default function StudentStenoSeriesPage() {
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-black text-slate-900">{batch.name}</h3>
                         <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">
-                          {seriesCount > 0 ? `${seriesCount} Series Topics` : "Official Batch"}
+                          {hasExams
+                            ? `${batchExams.length} Govt Exams (Step 2)`
+                            : seriesCount > 0
+                            ? `${seriesCount} Series Topics`
+                            : "Official Batch"}
                         </span>
                       </div>
 
@@ -371,11 +392,19 @@ export default function StudentStenoSeriesPage() {
                       )}
                     </div>
 
-                    {/* Single Clean Action Button leading to Step 2 Govt Exams */}
+                    {/* Single Clean Action Button leading to Step 2 Govt Exams or Step 3 Series */}
                     <div className="pt-2">
-                      <Link href={`/student/steno/exams?batch=${encodeBatch}`} className="block">
+                      <Link href={targetUrl} className="block">
                         <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.01]">
-                          <BookOpen className="w-4 h-4" /> ओपन बैच • परीक्षाएं एवं डिक्टेशन देखें <ArrowRight className="w-4 h-4" />
+                          {hasExams ? (
+                            <>
+                              <Award className="w-4 h-4 text-amber-300" /> ओपन बैच • सरकारी परीक्षाएं देखें (Step 2) <ArrowRight className="w-4 h-4" />
+                            </>
+                          ) : (
+                            <>
+                              <BookOpen className="w-4 h-4" /> ओपन बैच • सीरीज एवं डिक्टेशन देखें <ArrowRight className="w-4 h-4" />
+                            </>
+                          )}
                         </Button>
                       </Link>
                     </div>
