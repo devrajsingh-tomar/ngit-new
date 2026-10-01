@@ -248,6 +248,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
                                         isSelected={selectedAsset?._id === img._id}
                                         isMultiSelected={selection.includes(img._id)}
                                         onSelect={() => setSelectedAsset(img)}
+                                        onSelectDirect={(url: string) => onSelect(url)}
                                         onToggleSelect={(e: React.MouseEvent) => toggleSelection(img._id, e)}
                                         onDelete={(e: React.MouseEvent) => handleDelete(img._id, e)}
                                         onCopy={(e: React.MouseEvent) => handleCopyUrl(img.url, e)}
@@ -319,16 +320,18 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
 
                                 <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-3">
                                     <button 
-                                        onClick={() => handleCopyUrl(selectedAsset.url)}
-                                        className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all"
+                                        type="button"
+                                        onClick={() => onSelect(selectedAsset.url)}
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg cursor-pointer"
                                     >
-                                        <Copy className="w-3.5 h-3.5" /> Copy Resource URL
+                                        <CheckCircle2 className="w-4 h-4" /> Quick Select This Poster
                                     </button>
                                     <button 
-                                        onClick={() => onSelect(selectedAsset.url)}
-                                        className="w-full flex items-center justify-center gap-2 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg"
+                                        type="button"
+                                        onClick={() => handleCopyUrl(selectedAsset.url)}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all cursor-pointer"
                                     >
-                                        Integrate Asset <ChevronRight className="w-3.5 h-3.5" />
+                                        <Copy className="w-3.5 h-3.5" /> Copy Resource URL
                                     </button>
                                 </div>
                             </motion.aside>
@@ -363,11 +366,12 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
                             Cancel
                         </Button>
                         <Button 
+                            type="button"
                             onClick={() => selectedAsset ? onSelect(selectedAsset.url) : (selection.length > 0 && onSelect(images.find(i => i._id === selection[0])?.url))}
                             disabled={!selectedAsset && selection.length === 0}
-                            className="rounded-xl px-8 h-11 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-100 transition-all hover:scale-[1.02]"
+                            className="rounded-xl px-8 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] cursor-pointer"
                         >
-                            Execute Integration
+                            <CheckCircle2 className="w-4 h-4 mr-1.5" /> Quick Select Poster
                         </Button>
                     </div>
                 </footer>
@@ -386,16 +390,17 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
 
 // --- SUB-COMPONENTS ---
 
-function AssetCard({ img, isSelected, isMultiSelected, onSelect, onToggleSelect, onDelete, onCopy }: any) {
+function AssetCard({ img, isSelected, isMultiSelected, onSelect, onSelectDirect, onToggleSelect, onDelete, onCopy }: any) {
     return (
         <motion.div 
             whileHover={{ y: -4 }}
             className={cn(
                 "group relative bg-white border rounded-[1.5rem] overflow-hidden transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl",
-                isSelected ? "border-slate-900 ring-4 ring-slate-900/5 shadow-2xl" : "border-slate-100",
+                isSelected ? "border-emerald-600 ring-4 ring-emerald-600/10 shadow-2xl" : "border-slate-100",
                 isMultiSelected ? "bg-slate-50" : ""
             )}
             onClick={onSelect}
+            onDoubleClick={() => onSelectDirect && onSelectDirect(img.url)}
         >
             {/* Multi-select checkmark */}
             <button 
@@ -420,27 +425,53 @@ function AssetCard({ img, isSelected, isMultiSelected, onSelect, onToggleSelect,
                 />
                 
                 {/* Actions Overlay */}
-                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={onCopy} className="p-2 bg-white rounded-lg text-slate-900 hover:scale-110 transition-all shadow-lg" title="Copy URL">
-                        <Copy className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => window.open(img.url, '_blank')} className="p-2 bg-white rounded-lg text-slate-900 hover:scale-110 transition-all shadow-lg" title="Preview">
-                        <Maximize2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={onDelete} className="p-2 bg-white rounded-lg text-red-500 hover:scale-110 transition-all shadow-lg" title="Delete">
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                    {onSelectDirect && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectDirect(img.url);
+                            }}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-xl flex items-center gap-1.5 cursor-pointer transform hover:scale-105 transition-all"
+                            title="Quick Select"
+                        >
+                            <Check className="w-3.5 h-3.5" /> Quick Select
+                        </button>
+                    )}
+                    <div className="flex items-center gap-1.5">
+                        <button onClick={onCopy} className="p-2 bg-white rounded-lg text-slate-900 hover:scale-110 transition-all shadow-lg" title="Copy URL">
+                            <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => window.open(img.url, '_blank')} className="p-2 bg-white rounded-lg text-slate-900 hover:scale-110 transition-all shadow-lg" title="Preview">
+                            <Maximize2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={onDelete} className="p-2 bg-white rounded-lg text-red-500 hover:scale-110 transition-all shadow-lg" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Metadata Footer */}
-            <div className="p-3">
+            <div className="p-3 bg-white border-t border-slate-100 flex flex-col justify-between gap-1.5">
                 <p className="text-[10px] font-black text-slate-900 truncate leading-tight group-hover:text-indigo-600 transition-colors">
                     {img.title || img.filename}
                 </p>
-                <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{img.category}</span>
-                    <span className="text-[8px] font-bold text-slate-300">{formatFileSize(img.size)}</span>
+                <div className="flex items-center justify-between mt-1 gap-2">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate">{img.category}</span>
+                    {onSelectDirect && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectDirect(img.url);
+                            }}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs cursor-pointer shrink-0 transition-all"
+                        >
+                            <Check className="w-3 h-3" /> Quick Select
+                        </button>
+                    )}
                 </div>
             </div>
 

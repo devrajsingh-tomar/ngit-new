@@ -1113,14 +1113,20 @@ export async function getStenoExamsAction(query?: { batch?: string; isActive?: b
 
     const filter: any = {};
     if (query?.isActive !== undefined) {
-      filter.isActive = query.isActive;
+      if (query.isActive === true) {
+        filter.isActive = { $ne: false };
+      } else {
+        filter.isActive = query.isActive;
+      }
     }
 
     if (query?.batch && query.batch !== "all") {
-      const escaped = query.batch.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const cleanBatch = query.batch.trim();
+      const escaped = cleanBatch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.$or = [
-        { batch: query.batch.trim() },
+        { batch: cleanBatch },
         { batch: { $regex: new RegExp(`^${escaped}$`, "i") } },
+        { batch: { $regex: new RegExp(escaped, "i") } },
       ];
     }
 
@@ -1279,66 +1285,6 @@ export async function getAdminStenoOverviewAction() {
    STENO TARGET BATCHES (STEP 1 BATCH) ACTIONS
    ========================================================================== */
 
-const DEFAULT_INITIAL_BATCHES = [
-  {
-    name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
-    hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
-    description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
-    thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
-    coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
-    instituteCode: "THAKURDWARA_STENO",
-    sortOrder: 0,
-    isPublished: true,
-  },
-  {
-    name: "UPSSSC Steno",
-    hindiName: "यूपीएसएसएससी स्टेनो बैच",
-    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
-    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
-    sortOrder: 1,
-    isPublished: true,
-  },
-  {
-    name: "UPSI Steno",
-    hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
-    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-    thumbnailUrl: "",
-    sortOrder: 2,
-    isPublished: true,
-  },
-  {
-    name: "SSC Steno Grade C & D",
-    hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
-    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-    thumbnailUrl: "",
-    sortOrder: 3,
-    isPublished: true,
-  },
-  {
-    name: "Allahabad High Court Steno",
-    hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
-    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-    thumbnailUrl: "",
-    sortOrder: 4,
-    isPublished: true,
-  },
-  {
-    name: "रामधारी खण्ड 1",
-    hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
-    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "",
-    sortOrder: 5,
-    isPublished: true,
-  },
-  {
-    name: "रामधारी खण्ड 2",
-    hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
-    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "",
-    sortOrder: 6,
-    isPublished: true,
-  },
-];
 
 export async function getStenoBatchesAction(query?: any): Promise<{ success: boolean; batches: any[]; error?: string }> {
   try {
@@ -1369,52 +1315,10 @@ export async function getStenoBatchesAction(query?: any): Promise<{ success: boo
       batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
     }
 
-    if (!batches || batches.length === 0) {
-      // Seed default initial batches if DB is empty
-      try {
-        await StenoBatch.insertMany(DEFAULT_INITIAL_BATCHES);
-        batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
-      } catch {
-        batches = DEFAULT_INITIAL_BATCHES as any[];
-      }
-    }
-
-    // Ensure Thakurdwara batch exists with banner
-    const thakurdwaraBatch = batches.find((b: any) => 
-      b.name && (b.name.includes("ठाकुरद्वारा") || b.name.toLowerCase().includes("thakurdwara"))
-    );
-    if (!thakurdwaraBatch) {
-      try {
-        const existingThakurdwara = await StenoBatch.findOne({
-          name: { $regex: /ठाकुरद्वारा|thakurdwara/i }
-        }).lean();
-
-        if (!existingThakurdwara) {
-          await StenoBatch.create({
-            name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
-            hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
-            description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
-            thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
-            coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
-            instituteCode: "THAKURDWARA_STENO",
-            sortOrder: 0,
-            isPublished: true,
-          });
-        }
-        batches = await StenoBatch.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
-      } catch {
-        // ignore duplicate or creation errors
-      }
-    }
-
-    if (!batches || batches.length === 0) {
-      batches = DEFAULT_INITIAL_BATCHES as any[];
-    }
-
-    return { success: true, batches: JSON.parse(JSON.stringify(batches)) };
+    return { success: true, batches: JSON.parse(JSON.stringify(batches || [])) };
   } catch (err: any) {
     console.error("getStenoBatchesAction error:", err);
-    return { success: true, batches: DEFAULT_INITIAL_BATCHES, error: err.message };
+    return { success: false, batches: [], error: err.message };
   }
 }
 
@@ -1439,7 +1343,26 @@ export async function createStenoBatchAction(data: {
     const batchName = data.name.trim();
 
     let batch = await StenoBatch.findOne({ name: batchName });
-    if (!batch) {
+    if (batch) {
+      batch = await StenoBatch.findByIdAndUpdate(
+        batch._id,
+        {
+          $set: {
+            name: batchName,
+            hindiName: data.hindiName || "",
+            description: data.description || "",
+            thumbnailUrl: data.thumbnailUrl || "",
+            examPresetId: data.examPresetId ? data.examPresetId : null,
+            coachingName: data.coachingName || "",
+            instituteCode: data.instituteCode || "",
+            managedByEmail: data.managedByEmail || "",
+            sortOrder: data.sortOrder !== undefined ? data.sortOrder : 0,
+            isPublished: data.isPublished !== undefined ? data.isPublished : true,
+          }
+        },
+        { new: true }
+      ).lean();
+    } else {
       batch = await StenoBatch.create({
         name: batchName,
         hindiName: data.hindiName || "",
@@ -1449,18 +1372,18 @@ export async function createStenoBatchAction(data: {
         coachingName: data.coachingName || "",
         instituteCode: data.instituteCode || "",
         managedByEmail: data.managedByEmail || "",
-        sortOrder: data.sortOrder || 0,
-        isPublished: data.isPublished ?? true,
+        sortOrder: data.sortOrder !== undefined ? data.sortOrder : 0,
+        isPublished: data.isPublished !== undefined ? data.isPublished : true,
       });
     }
 
-
-
     revalidatePath("/admin/steno/batches");
+    revalidatePath("/admin/steno/exams");
     revalidatePath("/admin/steno/series");
     revalidatePath("/admin/steno/passages");
     revalidatePath("/steno");
     revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/exams");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     return { success: true, batch: JSON.parse(JSON.stringify(batch)) };
   } catch (err: any) {
@@ -1477,8 +1400,12 @@ export async function updateStenoBatchAction(id: string, data: any) {
     }
     const updated = await StenoBatch.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
     revalidatePath("/admin/steno/batches");
+    revalidatePath("/admin/steno/exams");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/admin/steno/passages");
     revalidatePath("/steno");
     revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/exams");
     revalidatePath("/student/steno/series/batch/[batchSlug]", "page");
     return { success: true, batch: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {

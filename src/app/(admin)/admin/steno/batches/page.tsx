@@ -417,7 +417,7 @@ export default function AdminStenoBatchesPage() {
                     onChange={(e) => setFormData({ ...formData, isPublished: e.target.value === "true" })}
                     className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
                   >
-                    <option value="true font-bold">Active / Published</option>
+                    <option value="true">Active / Published</option>
                     <option value="false">Disabled / Draft</option>
                   </select>
                 </div>

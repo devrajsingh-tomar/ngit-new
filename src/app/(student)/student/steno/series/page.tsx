@@ -11,70 +11,9 @@ import { Layers, ArrowRight, ArrowLeft, RefreshCw, Sparkles, BookOpen, FolderPlu
 import { isRealPoster, matchBatch, isNewlyUploaded } from "@/lib/steno/stenoUtils";
 
 
-const DEFAULT_STATIC_BATCHES = [
-  {
-    name: "हिंदी स्टेनो स्पेशल बैच (ठाकुरद्वारा)",
-    hindiName: "हिंदी स्टेनो स्पेशल बैच • ठाकुरद्वारा (दिलबहार सर)",
-    description: "ठाकुरद्वारा आशुलिपि केंद्र स्पेशल बैच • NGIT Institute के साथ तगड़ी तैयारी व दमदार गाइडेंस",
-    thumbnailUrl: "/images/thakurdwara-steno-batch-banner.jpg",
-    coachingName: "Dilbahar Sir Steno Institute Thakurdwara",
-    instituteCode: "THAKURDWARA_STENO",
-    sortOrder: 0,
-    isPublished: true,
-  },
-  {
-    name: "UPSSSC Steno",
-    hindiName: "यूपीएसएसएससी स्टेनो बैच",
-    description: "संपादकीय, निबन्ध, साहित्य, कहानी, संसदीय, लीगल, रामधारी खण्ड 1 व 2, कुरुक्षेत्र पत्रिका संग्रह",
-    thumbnailUrl: "https://ngitedu.com/uploads/gallery/1787956467734-3fe88938-2d9d-4471-9a0d-e24dac83cdf4.jpg",
-    sortOrder: 1,
-    isPublished: true,
-  },
-  {
-    name: "UPSI Steno",
-    hindiName: "यूपीएसआई सब-इंस्पेक्टर स्टेनो बैच",
-    description: "पुलिस एवं उत्तर प्रदेश उप निरीक्षक आशुलिपि परीक्षा स्पेशल डिक्टेशन",
-    thumbnailUrl: "",
-    sortOrder: 2,
-    isPublished: true,
-  },
-  {
-    name: "SSC Steno Grade C & D",
-    hindiName: "एसएससी स्टेनो ग्रेड C & D बैच",
-    description: "SSC Grade C (100 WPM) & Grade D (80 WPM) ऑफिशियल प्रीवियस ईयर डिक्टेशंस",
-    thumbnailUrl: "",
-    sortOrder: 3,
-    isPublished: true,
-  },
-  {
-    name: "Allahabad High Court Steno",
-    hindiName: "इलाहाबाद हाईकोर्ट स्टेनो बैच",
-    description: "हाईकोर्ट एवं जिला न्यायालय लीगल जजमेंट एवं कोर्ट रूम डिक्टेशन संग्रह",
-    thumbnailUrl: "",
-    sortOrder: 4,
-    isPublished: true,
-  },
-  {
-    name: "रामधारी खण्ड 1",
-    hindiName: "रामधारी गुप्ता खण्ड-1 विशेष अभ्यास",
-    description: "रामधारी गुप्ता खण्ड-1 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "",
-    sortOrder: 5,
-    isPublished: true,
-  },
-  {
-    name: "रामधारी खण्ड 2",
-    hindiName: "रामधारी गुप्ता खण्ड-2 विशेष अभ्यास",
-    description: "रामधारी गुप्ता खण्ड-2 अभ्यास पुस्तिका के संपूर्ण 100+ डिक्टेशन ऑडियो",
-    thumbnailUrl: "",
-    sortOrder: 6,
-    isPublished: true,
-  },
-];
-
 export default function StudentStenoSeriesPage() {
   const router = useRouter();
-  const [batches, setBatches] = useState<any[]>(DEFAULT_STATIC_BATCHES);
+  const [batches, setBatches] = useState<any[]>([]);
   const [seriesList, setSeriesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessState, setAccessState] = useState<{
@@ -96,10 +35,10 @@ export default function StudentStenoSeriesPage() {
       let fetchedBatches: any[] = [];
       let fetchedSeries: any[] = [];
 
-      // 1. Fetch Batches safely (using { isPublished: undefined } like admin panel to get all active batches)
+      // 1. Fetch Batches safely from database (matches published batches created in Admin panel)
       try {
-        const batchRes = await getStenoBatchesAction({ isPublished: undefined });
-        if (batchRes && Array.isArray(batchRes.batches) && batchRes.batches.length > 0) {
+        const batchRes = await getStenoBatchesAction({ isPublished: true });
+        if (batchRes && Array.isArray(batchRes.batches)) {
           fetchedBatches = batchRes.batches;
         }
       } catch (err) {
@@ -127,9 +66,8 @@ export default function StudentStenoSeriesPage() {
         console.error("Failed to check steno access:", err);
       }
 
-      // If server returned batches, use them; otherwise use default static batches
-      const baseBatches = fetchedBatches.length > 0 ? fetchedBatches : DEFAULT_STATIC_BATCHES;
-      const merged = [...baseBatches];
+      // Only use real batches from database (strictly no dummy fallbacks)
+      const merged = [...fetchedBatches];
 
       // Helper to check if a batch is Thakurdwara Special Batch
       const isThakurdwaraBatch = (b: any) => {
@@ -162,7 +100,7 @@ export default function StudentStenoSeriesPage() {
 
       try {
         // Sort Batches:
-        // 1. Thakurdwara Special Batch ALWAYS stays hardcoded at first position (index 0)
+        // 1. Thakurdwara Special Batch ALWAYS stays hardcoded at first position (index 0) if it exists in DB
         // 2. All other batches sorted by newest uploaded content timestamp descending (timeB - timeA)
         merged.sort((a, b) => {
           const isThakurdwaraA = isThakurdwaraBatch(a);
@@ -194,7 +132,7 @@ export default function StudentStenoSeriesPage() {
       setBatches(merged);
     } catch (e) {
       console.error("Error loading steno data:", e);
-      setBatches(DEFAULT_STATIC_BATCHES);
+      setBatches([]);
     } finally {
       setLoading(false);
     }
@@ -308,8 +246,17 @@ export default function StudentStenoSeriesPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {batches.map((batch, index) => {
+          {batches.length === 0 ? (
+            <Card className="p-16 text-center text-slate-400 rounded-3xl border-dashed bg-white space-y-3">
+              <Layers className="w-12 h-12 text-slate-300 mx-auto" />
+              <h3 className="text-base font-black text-slate-700">कोई स्टेनो बैच अभी उपलब्ध नहीं है</h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                प्रशासक द्वारा बनाए गए सभी सक्रिय बैच यहां प्रदर्शित होंगे।
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {batches.map((batch, index) => {
               const seriesCount = getBatchSeriesCount(batch.name);
               const encodeBatch = encodeURIComponent(batch.name);
               const posterUrl = batch.thumbnailUrl && typeof batch.thumbnailUrl === "string" && batch.thumbnailUrl.trim() !== ""
@@ -437,6 +384,7 @@ export default function StudentStenoSeriesPage() {
               );
             })}
           </div>
+          )}
         </div>
       )}
     </div>
