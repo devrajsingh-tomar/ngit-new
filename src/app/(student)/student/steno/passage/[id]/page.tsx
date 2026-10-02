@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, use, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import { getStenoPassageByIdAction, submitStenoResultAction } from "@/app/actions/steno";
 import { checkStenoAccessAction } from "@/app/actions/steno-subscription";
@@ -10,12 +10,21 @@ import { StenoSessionConfigModal, StenoSessionConfig } from "@/components/steno/
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Play, Pause, Keyboard, Info, Volume2, RefreshCw, Lock, Sparkles, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Keyboard,
+  Info,
+  RefreshCw,
+  Lock,
+  Sparkles,
+  ArrowRight,
+  Headphones,
+  CheckCircle2,
+} from "lucide-react";
 import { toast } from "sonner";
-
 import StenoDictationPlayer from "@/components/steno/StenoDictationPlayer";
 
-function PassagePlayerContent({ id }: { id: string }) {
+function PassagePlayerContent({ passageId }: { passageId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryBatch = searchParams.get("batch");
@@ -38,38 +47,81 @@ function PassagePlayerContent({ id }: { id: string }) {
   const [startEngine, setStartEngine] = useState(false);
 
   useEffect(() => {
-    loadPassage();
-  }, [id]);
-
-  const loadPassage = async () => {
-    setLoading(true);
-    const [res, access] = await Promise.all([
-      getStenoPassageByIdAction(id),
-      checkStenoAccessAction({}),
-    ]);
-    if (access.success && access.data) {
-      setAccessState(access.data as any);
+    if (passageId) {
+      loadPassageData(passageId);
     }
-    if (res.success && res.passage) {
-      setPassage(res.passage);
-    } else {
-      // Fallback passage for test-1 to test-5 if ID is placeholder
-      setPassage({
-        _id: id,
-        title: "Test - 1",
-        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        transcriptText: "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ। देश में जिस प्रकार की परिस्थितियाँ बन रही हैं, उनमें इस प्रकार के कानून की अत्यंत आवश्यकता थी। हमारे समाज में विकास के साथ-साथ कई नई चुनौतियाँ भी उत्पन्न हुई हैं...",
+  }, [passageId]);
+
+  const loadPassageData = async (targetId: string) => {
+    setLoading(true);
+    try {
+      // 6-second timeout safety to prevent infinite loading in mobile/slow networks
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Passage fetch timeout")), 6000)
+      );
+
+      const fetchPromise = Promise.all([
+        getStenoPassageByIdAction(targetId).catch((err) => ({
+          success: false,
+          error: err.message,
+          passage: null,
+        })),
+        checkStenoAccessAction({}).catch((err) => ({
+          success: false,
+          error: err.message,
+          data: null,
+        })),
+      ]);
+
+      const [res, access]: any = await Promise.race([fetchPromise, timeoutPromise]).catch(() => [
+        { success: false },
+        { success: false },
+      ]);
+
+      if (access?.success && access?.data) {
+        setAccessState(access.data);
+      }
+
+      if (res?.success && res?.passage) {
+        setPassage(res.passage);
+      } else {
+        // Safe fallback passage so the player is always functional
+        setPassage((prev: any) => prev || {
+          _id: targetId,
+          title: "Steno Practice Dictation",
+          audioUrl: "",
+          videoUrl: "",
+          transcriptText:
+            "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ। देश में जिस प्रकार की परिस्थितियाँ बन रही हैं, उनमें इस प्रकार के कानून की अत्यंत आवश्यकता थी। हमारे समाज में विकास के साथ-साथ कई नई चुनौतियाँ भी उत्पन्न हुई हैं...",
+          targetWpm: 80,
+          language: "Hindi",
+          wordCount: 391,
+          durationMinutes: 35,
+        });
+      }
+    } catch (err) {
+      console.warn("Passage load error:", err);
+      setPassage((prev: any) => prev || {
+        _id: targetId,
+        title: "Steno Practice Dictation",
+        audioUrl: "",
+        transcriptText:
+          "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ। देश में जिस प्रकार की परिस्थितियाँ बन रही हैं, उनमें इस प्रकार के कानून की अत्यंत आवश्यकता थी।",
         targetWpm: 80,
         language: "Hindi",
-        wordCount: 391,
+        wordCount: 350,
+        durationMinutes: 35,
       });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleStartTranscriptionClicked = () => {
     if (accessState && !accessState.hasAccess && accessState.trialExpired) {
-      toast.error("आपका 7-दिन का फ़्री ट्रायल समाप्त हो चुका है। आगे अभ्यास के लिए कृपया सब्सक्राइब करें।");
+      toast.error(
+        "आपका 7-दिन का फ़्री ट्रायल समाप्त हो चुका है। आगे अभ्यास के लिए कृपया सब्सक्राइब करें।"
+      );
       router.push("/student/steno/subscribe");
       return;
     }
@@ -87,16 +139,21 @@ function PassagePlayerContent({ id }: { id: string }) {
     const toastId = toast.loading("Submitting evaluation attempt...");
     try {
       const submitRes = await submitStenoResultAction({
-        passageId: passage?._id || id,
+        passageId: passage?._id || passageId,
         typedTranscription: evaluationResult.userTranscription || "",
         speedWpm: evaluationResult.netWpm || 0,
         accuracy: evaluationResult.accuracy || 0,
-        fullErrors: (evaluationResult.spellingErrors || 0) + (evaluationResult.addedWords || 0) + (evaluationResult.skippedWords || 0),
-        halfErrors: (evaluationResult.matraErrors || 0) + (evaluationResult.punctuationErrors || 0),
+        fullErrors:
+          (evaluationResult.spellingErrors || 0) +
+          (evaluationResult.addedWords || 0) +
+          (evaluationResult.skippedWords || 0),
+        halfErrors:
+          (evaluationResult.matraErrors || 0) + (evaluationResult.punctuationErrors || 0),
         totalErrors: evaluationResult.totalErrors || 0,
         score: evaluationResult.finalScore || 0,
         status: evaluationResult.status || "Evaluated",
         timeSpentSeconds: evaluationResult.timeSpentSeconds || 60,
+        fontUsed: sessionConfig?.selectedFont || "Mangal",
       });
 
       toast.dismiss(toastId);
@@ -112,16 +169,25 @@ function PassagePlayerContent({ id }: { id: string }) {
     }
   };
 
-
-
+  // Safe navigation back to Series (Step 4) or Batches
   const handleBack = () => {
-    if (passage?.seriesId) {
+    const seriesId = passage?.seriesId?._id
+      ? passage.seriesId._id.toString()
+      : passage?.seriesId
+      ? passage.seriesId.toString()
+      : null;
+
+    if (seriesId) {
       router.replace(
-        `/student/steno/series/${passage.seriesId}${queryBatch ? `?batch=${encodeURIComponent(queryBatch)}` : ""}${queryExam ? `&exam=${encodeURIComponent(queryExam)}` : ""}`
+        `/student/steno/series/${seriesId}${queryBatch ? `?batch=${encodeURIComponent(queryBatch)}` : ""}${
+          queryExam ? `&exam=${encodeURIComponent(queryExam)}` : ""
+        }`
       );
     } else if (queryBatch) {
       router.replace(
-        `/student/steno/series/batch/${encodeURIComponent(queryBatch)}${queryExam ? `?exam=${encodeURIComponent(queryExam)}` : ""}`
+        `/student/steno/series/batch/${encodeURIComponent(queryBatch)}${
+          queryExam ? `?exam=${encodeURIComponent(queryExam)}` : ""
+        }`
       );
     } else {
       router.replace("/student/steno/series");
@@ -130,8 +196,11 @@ function PassagePlayerContent({ id }: { id: string }) {
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-slate-400">
-        <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Dictation Player...
+      <div className="py-24 text-center text-slate-500 space-y-3">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+        <p className="text-xs font-black uppercase tracking-wider text-slate-600">
+          Loading Dictation Player...
+        </p>
       </div>
     );
   }
@@ -188,15 +257,40 @@ function PassagePlayerContent({ id }: { id: string }) {
     );
   }
 
-  // If student configured session and clicked Start Transcription, show Final Exam Workspace
+  // If student configured session and clicked Start Transcription, show Exam Workspace
   if (startEngine) {
     const presetRulesObj = sessionConfig
       ? {
-          spellingErrorWeight: sessionConfig.spellingMistake === "Full" ? 1.0 : sessionConfig.spellingMistake === "Half" ? 0.5 : 0.0,
-          matraErrorWeight: sessionConfig.capitalizationMistake === "Full" ? 1.0 : sessionConfig.capitalizationMistake === "Half" ? 0.5 : 0.0,
-          punctuationErrorWeight: sessionConfig.punctuationMistake === "Full" ? 1.0 : sessionConfig.punctuationMistake === "Half" ? 0.5 : 0.0,
-          addedWordWeight: sessionConfig.addedWordMistake === "Full" ? 1.0 : sessionConfig.addedWordMistake === "Half" ? 0.5 : 0.0,
-          skippedWordWeight: sessionConfig.skippedWordMistake === "Full" ? 1.0 : sessionConfig.skippedWordMistake === "Half" ? 0.5 : 0.0,
+          spellingErrorWeight:
+            sessionConfig.spellingMistake === "Full"
+              ? 1.0
+              : sessionConfig.spellingMistake === "Half"
+              ? 0.5
+              : 0.0,
+          matraErrorWeight:
+            sessionConfig.capitalizationMistake === "Full"
+              ? 1.0
+              : sessionConfig.capitalizationMistake === "Half"
+              ? 0.5
+              : 0.0,
+          punctuationErrorWeight:
+            sessionConfig.punctuationMistake === "Full"
+              ? 1.0
+              : sessionConfig.punctuationMistake === "Half"
+              ? 0.5
+              : 0.0,
+          addedWordWeight:
+            sessionConfig.addedWordMistake === "Full"
+              ? 1.0
+              : sessionConfig.addedWordMistake === "Half"
+              ? 0.5
+              : 0.0,
+          skippedWordWeight:
+            sessionConfig.skippedWordMistake === "Full"
+              ? 1.0
+              : sessionConfig.skippedWordMistake === "Half"
+              ? 0.5
+              : 0.0,
         }
       : undefined;
 
@@ -204,7 +298,8 @@ function PassagePlayerContent({ id }: { id: string }) {
       <div className="space-y-6 p-1 sm:p-2">
         <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <span className="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase px-3 py-1 rounded-md">
-            Exam Preset: {sessionConfig?.examPresetName || "Manual"} • Font: {sessionConfig?.selectedFont}
+            Exam Preset: {sessionConfig?.examPresetName || "Manual"} • Font:{" "}
+            {sessionConfig?.selectedFont}
           </span>
           <Button
             onClick={() => setStartEngine(false)}
@@ -222,7 +317,9 @@ function PassagePlayerContent({ id }: { id: string }) {
           initialFont={sessionConfig?.selectedFont}
           typingMode={sessionConfig?.typingMode}
           initialDurationMinutes={sessionConfig?.durationMinutes}
-          presetName={sessionConfig?.mode === "exam" ? sessionConfig.examPresetName : "Manual Setup"}
+          presetName={
+            sessionConfig?.mode === "exam" ? sessionConfig.examPresetName : "Manual Setup"
+          }
           backspaceStatus={sessionConfig?.backspaceStatus}
           onComplete={handleComplete}
         />
@@ -240,11 +337,18 @@ function PassagePlayerContent({ id }: { id: string }) {
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
             <p className="font-bold text-amber-950">
               🎉 <span className="font-black">फ़्री 7-दिन ट्रायल सक्रिय:</span> आपके पास अभी{" "}
-              <span className="underline decoration-amber-500 font-black">{accessState.daysLeftInTrial} दिन</span> का फ्री एक्सेस शेष है।
+              <span className="underline decoration-amber-500 font-black">
+                {accessState.daysLeftInTrial} दिन
+              </span>{" "}
+              का फ्री एक्सेस शेष है।
             </p>
           </div>
           <Link href="/student/steno/subscribe" className="flex-shrink-0 w-full sm:w-auto">
-            <Button size="sm" variant="outline" className="w-full sm:w-auto h-7 text-[11px] font-black border-amber-400 text-amber-900 bg-white/90 hover:bg-white rounded-lg shadow-2xs gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full sm:w-auto h-7 text-[11px] font-black border-amber-400 text-amber-900 bg-white/90 hover:bg-white rounded-lg shadow-2xs gap-1"
+            >
               सब्सक्रिप्शन प्लान्स <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
@@ -257,14 +361,19 @@ function PassagePlayerContent({ id }: { id: string }) {
           <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">
             {queryBatch ? `${queryBatch} Batch` : "Dictation Test"}
           </span>
-          <h1 className="text-xl font-black text-slate-900">{passage.title || "Test - 1"}</h1>
+          <h1 className="text-xl font-black text-slate-900">{passage?.title || "Test - 1"}</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={handleBack}
             className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold h-9 px-4 text-xs rounded-xl gap-2 shadow-xs"
           >
-            <ArrowLeft className="w-4 h-4" /> {passage?.seriesId ? "Back to Passages (Step 4)" : queryBatch ? `Back to ${queryBatch} (Step 3)` : "Back to Batches"}
+            <ArrowLeft className="w-4 h-4" />{" "}
+            {passage?.seriesId
+              ? "Back to Passages (Step 4)"
+              : queryBatch
+              ? `Back to ${queryBatch} (Step 3)`
+              : "Back to Batches"}
           </Button>
         </div>
       </div>
@@ -278,44 +387,67 @@ function PassagePlayerContent({ id }: { id: string }) {
       {/* Instructions Box */}
       <div className="p-6 rounded-3xl bg-indigo-50/60 border border-indigo-100 space-y-3">
         <h4 className="text-sm font-black text-indigo-950 flex items-center gap-2">
-          <Info className="w-4 h-4 text-indigo-600" /> Instructions
+          <Info className="w-4 h-4 text-indigo-600" /> Instructions (निर्देश)
         </h4>
         <ol className="text-xs text-slate-700 font-medium space-y-2 pl-2">
-          <li>1. पहले <strong className="text-indigo-900 font-bold">Play Dictation</strong> पर क्लिक करें और 3 सेकंड तक प्रतीक्षा करें। इसके बाद Dictation Play हो जाएगा।</li>
-          <li>2. यदि <strong className="text-indigo-900 font-bold">Dictation Play</strong> नहीं हो रहा है, तो आपके इंटरनेट कनेक्शन में समस्या हो सकती है। पहले अपना इंटरनेट कनेक्शन जाँचें।</li>
-          <li>3. यदि फिर भी समस्या बनी रहती है, तो इस नंबर पर संपर्क करें: <strong className="text-indigo-900 font-bold">+91 80049 58441</strong></li>
+          <li>
+            1. पहले <strong className="text-indigo-900 font-bold">Play Dictation</strong> पर क्लिक करें और 3 सेकंड तक प्रतीक्षा करें। 3 सेकंड का काउंटडाउन पूरा होने के बाद Dictation Play हो जाएगा।
+          </li>
+          <li>
+            2. यदि <strong className="text-indigo-900 font-bold">Dictation Play</strong> नहीं हो रहा है, तो स्क्रीन पर दिए गए वीडियो प्लेयर पर सीधे टैप करें अथवा वॉइस मोड (TTS) का उपयोग करें।
+          </li>
+          <li>
+            3. डिक्टेशन सुनने के बाद <strong className="text-indigo-900 font-bold">START TRANSCRIPTION</strong> बटन दबाएं और परीक्षा इंटरफ़ेस में टाइपिंग शुरू करें।
+          </li>
+          <li>
+            4. किसी भी तकनीकी सहायता के लिए संपर्क करें:{" "}
+            <strong className="text-indigo-900 font-bold">+91 80049 58441</strong>
+          </li>
         </ol>
         <div className="pt-2 border-t border-indigo-100 text-[11px] font-bold text-slate-500">
-          सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v2.1.0 — यदि यह न दिखे, तो <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।
+          सॉफ्टवेयर वर्जन (नवीनतम अपडेट): v2.2.0 — यदि यह न दिखे, तो{" "}
+          <strong className="text-indigo-900">'Ctrl + F5'</strong> दबाकर पेज रीफ्रेश करें।
         </div>
       </div>
 
       {/* Session Configuration Modal */}
-      <StenoSessionConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        onSave={handleSaveConfig}
-        totalWords={passage.wordCount || 391}
-        typingMode={passage.typingMode || (passage.language === "English" ? "english" : "unicode_hindi")}
-        defaultExam={passage?.examType || "UPSSSC Steno"}
-        defaultDurationMinutes={passage.durationMinutes || (passage.durationSeconds ? Math.round(passage.durationSeconds / 60) : 35)}
-      />
+      {passage && (
+        <StenoSessionConfigModal
+          isOpen={isConfigModalOpen}
+          onClose={() => setIsConfigModalOpen(false)}
+          onSave={handleSaveConfig}
+          totalWords={passage.wordCount || 391}
+          typingMode={
+            passage.typingMode ||
+            (passage.language === "English" ? "english" : "unicode_hindi")
+          }
+          defaultExam={passage?.examType || "UPSSSC Steno"}
+          defaultDurationMinutes={
+            passage.durationMinutes ||
+            (passage.durationSeconds ? Math.round(passage.durationSeconds / 60) : 35)
+          }
+        />
+      )}
     </div>
   );
 }
 
-export default function StudentStenoPassagePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+export default function StudentStenoPassagePage() {
+  const params = useParams();
+  const passageId = (params?.id as string) || "";
 
   return (
     <Suspense
       fallback={
-        <div className="py-20 text-center text-slate-400">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Dictation Player...
+        <div className="py-24 text-center text-slate-500 space-y-3">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+          <p className="text-xs font-black uppercase tracking-wider text-slate-600">
+            Loading Dictation Player...
+          </p>
         </div>
       }
     >
-      <PassagePlayerContent id={resolvedParams.id} />
+      <PassagePlayerContent passageId={passageId} />
     </Suspense>
   );
 }

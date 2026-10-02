@@ -17,6 +17,11 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
+  ArrowLeft,
+  Layers,
+  Trophy,
+  Play,
 } from "lucide-react";
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -585,6 +590,62 @@ export default function StenoResultView({ result }: StenoResultViewProps) {
             {result.typedTranscription || "Typed transcription text unavailable."}
           </div>
         </Card>
+      </div>
+
+      {/* Action Footer Navigation Bar (Post-Result Flow) */}
+      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md flex flex-wrap items-center justify-between gap-4" data-html2canvas-ignore="true">
+        <div className="flex flex-wrap items-center gap-3">
+          {result?.passageId && (
+            <Link
+              href={`/student/steno/passage/${
+                result.passageId?._id ? result.passageId._id.toString() : result.passageId.toString()
+              }`}
+            >
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md gap-2 h-11 px-5">
+                <RotateCcw className="w-4 h-4" /> पुनः अभ्यास करें (Re-attempt Test)
+              </Button>
+            </Link>
+          )}
+
+          <Link
+            href={
+              result.passageId?.seriesId
+                ? `/student/steno/series/${
+                    result.passageId.seriesId?._id
+                      ? result.passageId.seriesId._id.toString()
+                      : result.passageId.seriesId.toString()
+                  }`
+                : "/student/steno/series"
+            }
+          >
+            <Button
+              variant="outline"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs rounded-xl h-11 px-5 gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Passages (Step 4)
+            </Button>
+          </Link>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/student/steno/results">
+            <Button
+              variant="outline"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs rounded-xl h-11 px-5 gap-2"
+            >
+              <FileText className="w-4 h-4 text-indigo-600" /> Result History (सभी परिणाम)
+            </Button>
+          </Link>
+
+          <Link href="/student/steno/leaderboard">
+            <Button
+              variant="outline"
+              className="border-amber-300 text-amber-900 bg-amber-50/50 hover:bg-amber-100 font-bold text-xs rounded-xl h-11 px-5 gap-2"
+            >
+              <Trophy className="w-4 h-4 text-amber-600" /> Leaderboard
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

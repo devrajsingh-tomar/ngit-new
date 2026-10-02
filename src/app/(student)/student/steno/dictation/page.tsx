@@ -3,56 +3,63 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getStenoPassagesAction } from "@/app/actions/steno";
-import { StenoEngineModule } from "@/modules/steno/StenoEngineModule";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Headphones, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { Headphones, RefreshCw, Layers, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function StudentStenoDictationPage() {
   const router = useRouter();
-  const [passage, setPassage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSamplePassage();
+    loadAndRedirect();
   }, []);
 
-  const loadSamplePassage = async () => {
+  const loadAndRedirect = async () => {
     setLoading(true);
-    const res = await getStenoPassagesAction();
-    if (res.success && res.passages && res.passages.length > 0) {
-      setPassage(res.passages[0]);
-    } else {
-      toast.error("No dictation passages available right now");
+    try {
+      const res = await getStenoPassagesAction();
+      if (res.success && res.passages && res.passages.length > 0) {
+        router.replace(`/student/steno/passage/${res.passages[0]._id}`);
+        return;
+      }
+    } catch (err) {
+      console.warn("Failed to load initial passage:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
-
-  const handleEvaluationComplete = (result: any) => {
-    toast.success("Transcription evaluated! Saving result...");
   };
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-slate-400">
-        <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" /> Loading Dictation Player Engine...
+      <div className="py-24 text-center text-slate-500 space-y-3">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+        <p className="text-xs font-black uppercase tracking-wider text-slate-600">
+          Loading Dictation Player...
+        </p>
       </div>
     );
   }
 
-  if (!passage) {
-    return (
-      <Card className="p-8 text-center text-slate-400 rounded-3xl border-dashed bg-white">
-        No active dictation passages found. Please contact admin to upload dictations.
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-6 p-1 sm:p-2">
-      <StenoEngineModule passage={passage} onComplete={handleEvaluationComplete} />
+    <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-4">
+      <Card className="p-8 sm:p-12 rounded-3xl border border-slate-200 bg-white shadow-xl space-y-4">
+        <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
+          <Headphones className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+          Steno Dictation Portal
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+          कृपया अभ्यास करने के लिए अपने लक्ष्य बैच और डिक्टेशन पैसेज का चयन करें।
+        </p>
+        <Link href="/student/steno/series" className="inline-block pt-2">
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-11 px-6 rounded-xl shadow-md gap-2">
+            <Layers className="w-4 h-4" /> Browse Steno Batches (Step 1) <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+      </Card>
     </div>
   );
 }
