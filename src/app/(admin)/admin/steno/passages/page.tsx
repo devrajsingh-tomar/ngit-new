@@ -230,8 +230,11 @@ export default function AdminStenoPassagesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.audioUrl.trim() || !formData.transcriptText.trim()) {
-      toast.error("Title, Audio URL, and Transcript Text are required!");
+    const hasAudio = Boolean(formData.audioUrl.trim() && formData.audioUrl.trim() !== "0" && formData.audioUrl.trim() !== "#");
+    const hasVideo = Boolean(formData.videoUrl.trim() && formData.videoUrl.trim() !== "0" && formData.videoUrl.trim() !== "#");
+
+    if (!formData.title.trim() || (!hasAudio && !hasVideo) || !formData.transcriptText.trim()) {
+      toast.error("Title, Audio URL या Video URL, और Transcript Text आवश्यक हैं!");
       return;
     }
 
@@ -248,7 +251,7 @@ export default function AdminStenoPassagesPage() {
       wordCount: Number(formData.wordCount),
       durationMinutes: durationMins,
       durationSeconds: durationMins * 60,
-      audioUrl: formData.audioUrl.trim(),
+      audioUrl: formData.audioUrl.trim() || formData.videoUrl.trim() || "#",
       videoUrl: formData.videoUrl.trim() || undefined,
       availableSpeeds: formData.availableSpeeds
         .split(",")
@@ -850,22 +853,25 @@ export default function AdminStenoPassagesPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Audio URL *</label>
+                <label className="text-xs font-bold text-slate-700">
+                  Audio URL {formData.videoUrl?.trim() ? "(वैकल्पिक - वीडियो दिया गया है)" : "*"}
+                </label>
                 <Input
                   value={formData.audioUrl}
                   onChange={(e) => setFormData({ ...formData, audioUrl: e.target.value })}
-                  placeholder="https://domain.com/audio/dictation-1.mp3"
+                  placeholder="https://domain.com/audio/dictation-1.mp3 (या वीडियो URL होने पर खाली छोड़ें)"
                   className="rounded-xl text-xs font-semibold"
-                  required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Video URL (Optional)</label>
+                <label className="text-xs font-bold text-slate-700">
+                  Video URL (YouTube URL / Direct Video)
+                </label>
                 <Input
                   value={formData.videoUrl}
                   onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                  placeholder="https://youtube.com/..."
+                  placeholder="https://youtu.be/... (यूट्यूब डिक्टेशन वीडियो लिंक)"
                   className="rounded-xl text-xs font-semibold"
                 />
               </div>

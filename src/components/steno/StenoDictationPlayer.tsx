@@ -10,17 +10,13 @@ import {
   Keyboard,
   Info,
   Volume2,
-  VolumeX,
   RotateCcw,
   RotateCw,
   Sparkles,
-  Clock,
-  Mic,
   AlertCircle,
-  CheckCircle2,
-  ExternalLink,
   Flame,
   Radio,
+  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,10 +27,28 @@ declare global {
   }
 }
 
+/**
+ * Extracts YouTube 11-character video ID from any YouTube URL format:
+ * - youtu.be/ID
+ * - youtube.com/watch?v=ID
+ * - youtube.com/embed/ID
+ * - youtube.com/shorts/ID
+ * - m.youtube.com/watch?v=ID
+ * Handles query parameters like ?si=..., ?t=..., &feature=...
+ */
 export function getYouTubeVideoId(url?: string): string | null {
   if (!url || typeof url !== "string") return null;
   const trimmed = url.trim();
-  if (trimmed === "#" || trimmed === "" || trimmed === "none") return null;
+  if (
+    trimmed === "" ||
+    trimmed === "0" ||
+    trimmed === "#" ||
+    trimmed.toLowerCase() === "none" ||
+    trimmed.toLowerCase() === "null" ||
+    trimmed.toLowerCase() === "undefined"
+  ) {
+    return null;
+  }
 
   const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
   const match = trimmed.match(regExp);
@@ -61,6 +75,33 @@ export function getGoogleDriveStreamUrl(url?: string): string | null {
     return `https://drive.google.com/file/d/${id}/preview`;
   }
   return null;
+}
+
+/**
+ * Validates if an audio URL points to a real audio file (not "0", "#", empty, or a video link)
+ */
+export function isValidAudioUrl(url?: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (
+    trimmed === "" ||
+    trimmed === "0" ||
+    trimmed === "#" ||
+    trimmed.toLowerCase() === "none" ||
+    trimmed.toLowerCase() === "null" ||
+    trimmed.toLowerCase() === "undefined" ||
+    trimmed.toLowerCase() === "na" ||
+    trimmed.toLowerCase() === "n/a"
+  ) {
+    return false;
+  }
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://") && !trimmed.startsWith("/")) {
+    return false;
+  }
+  if (getYouTubeVideoId(trimmed) || getGoogleDriveId(trimmed)) {
+    return false;
+  }
+  return true;
 }
 
 interface StenoDictationPlayerProps {
@@ -91,42 +132,35 @@ export default function StenoDictationPlayer({
   const [countdown, setCountdown] = useState<number | null>(null);
 
   // Fallback TTS (SpeechSynthesis) State
-  const [isUsingTTS, setIsUsingTTS] = useState(false);
-  const [mediaError, setMediaError] = useState<string | null>(null);
   const [ttsVoices, setTtsVoices] = useState<SpeechSynthesisVoice[]>([]);
 
-  // Media source resolution
+  // ── Source Resolution Hierarchy ──
+  // 1. YouTube Video (HIGHEST PRIORITY if present in videoUrl or audioUrl)
   const youtubeVideoId =
     getYouTubeVideoId(passage?.videoUrl) || getYouTubeVideoId(passage?.audioUrl);
-  const googleDrivePreviewUrl =
-    getGoogleDriveStreamUrl(passage?.videoUrl) || getGoogleDriveStreamUrl(passage?.audioUrl);
 
+  // 2. Google Drive preview (if present and not YouTube)
+  const googleDrivePreviewUrl = !youtubeVideoId
+    ? getGoogleDriveStreamUrl(passage?.videoUrl) || getGoogleDriveStreamUrl(passage?.audioUrl)
+    : null;
+
+  // 3. Direct Audio URL (only if real audio link and no YouTube/Drive)
   const rawAudioUrl = (passage?.audioUrl || "").trim();
+  const hasDirectAudio = !youtubeVideoId && !googleDrivePreviewUrl && isValidAudioUrl(rawAudioUrl);
+
+  // 4. Direct Video URL (.mp4/.webm)
   const rawVideoUrl = (passage?.videoUrl || "").trim();
-
-  const isAudioUrlValid =
-    rawAudioUrl &&
-    rawAudioUrl !== "#" &&
-    rawAudioUrl !== "none" &&
-    !getYouTubeVideoId(rawAudioUrl) &&
-    !getGoogleDriveId(rawAudioUrl);
-
-  const isVideoUrlValid =
+  const hasDirectVideo =
+    !youtubeVideoId &&
+    !googleDrivePreviewUrl &&
+    !hasDirectAudio &&
     rawVideoUrl &&
     rawVideoUrl !== "#" &&
-    rawVideoUrl !== "none" &&
-    !getYouTubeVideoId(rawVideoUrl) &&
-    !getGoogleDriveId(rawVideoUrl) &&
+    rawVideoUrl !== "0" &&
     (rawVideoUrl.endsWith(".mp4") || rawVideoUrl.endsWith(".webm") || rawVideoUrl.includes("/video/"));
 
-  // Check if we should automatically enable TTS if no valid audio or video is found
-  useEffect(() => {
-    if (!youtubeVideoId && !googleDrivePreviewUrl && !isAudioUrlValid && !isVideoUrlValid) {
-      if (passage?.transcriptText) {
-        setIsUsingTTS(true);
-      }
-    }
-  }, [youtubeVideoId, googleDrivePreviewUrl, isAudioUrlValid, isVideoUrlValid, passage]);
+  // 5. AI Voice (TTS) - ONLY active if NO YouTube, NO Google Drive, NO Direct Audio, NO Direct Video
+  const isUsingTTS = !youtubeVideoId && !googleDrivePreviewUrl && !hasDirectAudio && !hasDirectVideo;
 
   // Load available speech synthesis voices for Hindi/English
   useEffect(() => {
@@ -157,7 +191,36 @@ export default function StenoDictationPlayer({
     }
   }, []);
 
-  // YouTube IFrame API Initialization
+  // Listen to postMessage events from YouTube iframe to sync playing/paused state
+  useEffect(() => {
+    if (!youtubeVideoId) return;
+
+    const handleWindowMessage = (event: MessageEvent) => {
+      try {
+        if (typeof event.data === "string") {
+          const data = JSON.parse(event.data);
+          if (data.event === "infoDelivery" && data.info) {
+            if (data.info.playerState === 1) {
+              setIsPlaying(true);
+            } else if (data.info.playerState === 2 || data.info.playerState === 0) {
+              setIsPlaying(false);
+            }
+            if (typeof data.info.currentTime === "number") {
+              setCurrentTime(data.info.currentTime);
+            }
+            if (typeof data.info.duration === "number" && data.info.duration > 0) {
+              setDuration(data.info.duration);
+            }
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("message", handleWindowMessage);
+    return () => window.removeEventListener("message", handleWindowMessage);
+  }, [youtubeVideoId]);
+
+  // YouTube IFrame API Initialization (Secondary bridge)
   useEffect(() => {
     if (!youtubeVideoId) return;
 
@@ -173,7 +236,6 @@ export default function StenoDictationPlayer({
             } catch (e) {}
           }
 
-          // Attach to existing iframe without passing videoId/width/height (API standard)
           ytPlayerRef.current = new window.YT.Player(iframeRef.current, {
             events: {
               onReady: (event: any) => {
@@ -184,10 +246,8 @@ export default function StenoDictationPlayer({
               onStateChange: (event: any) => {
                 if (!isSubscribed) return;
                 if (event.data === 1) {
-                  // Playing
                   setIsPlaying(true);
                 } else if (event.data === 2 || event.data === 0) {
-                  // Paused or Ended
                   setIsPlaying(false);
                 }
               },
@@ -218,7 +278,6 @@ export default function StenoDictationPlayer({
       };
     }
 
-    // Sync YouTube Progress Bar and Current Time via Polling & postMessage
     timerRef.current = setInterval(() => {
       if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === "function") {
         try {
@@ -253,7 +312,6 @@ export default function StenoDictationPlayer({
       fluctuationLevel === "Low" ? 0.05 : fluctuationLevel === "Medium" ? 0.1 : 0.18;
 
     fluctuationIntervalRef.current = setInterval(() => {
-      // Random delta between -variance and +variance
       const delta = (Math.random() * 2 - 1) * variance;
       const newSpeed = Math.max(0.6, Math.min(1.6, playbackSpeed + delta));
 
@@ -272,26 +330,51 @@ export default function StenoDictationPlayer({
     };
   }, [fluctuationLevel, isPlaying, playbackSpeed, youtubeVideoId, sendYouTubeCommand]);
 
-  // Actual Play Execution (called after 3-second countdown or directly)
+  // Actual Play Execution
   const executePlay = () => {
     setCountdown(null);
 
-    // 1. YouTube Playback
+    // ── PRIORITY 1: YOUTUBE PLAYBACK ──
     if (youtubeVideoId) {
       setIsPlaying(true);
+      let started = false;
+
+      // Try YT API
       if (ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === "function") {
         try {
           ytPlayerRef.current.playVideo();
-        } catch (e) {
-          sendYouTubeCommand("playVideo");
-        }
-      } else {
-        sendYouTubeCommand("playVideo");
+          started = true;
+        } catch (e) {}
+      }
+
+      // Try postMessage bridge
+      sendYouTubeCommand("playVideo");
+
+      // Auto-focus the YouTube iframe so keyboard / space controls work
+      if (iframeRef.current) {
+        try {
+          iframeRef.current.focus();
+        } catch (e) {}
       }
       return;
     }
 
-    // 2. Speech Synthesis (TTS) Fallback
+    // ── PRIORITY 2: HTML5 DIRECT AUDIO / VIDEO ──
+    if (mediaRef.current) {
+      mediaRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          console.warn("HTML5 Media Play Error:", err);
+          setIsPlaying(false);
+          toast.error("ऑडियो प्ले नहीं हो सका। कृपया इंटरनेट जांचें।");
+        });
+      return;
+    }
+
+    // ── PRIORITY 3: AI SPEECH SYNTHESIS (ONLY IF NO YOUTUBE & NO AUDIO) ──
     if (isUsingTTS && passage?.transcriptText) {
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
@@ -321,39 +404,14 @@ export default function StenoDictationPlayer({
         utterance.onerror = (e) => {
           console.error("TTS Error:", e);
           setIsPlaying(false);
-          toast.error("Text-to-Speech Error. Please check speaker/audio settings.");
+          toast.error("Text-to-Speech Error. Please check speaker settings.");
         };
 
         window.speechSynthesis.speak(utterance);
         setIsPlaying(true);
-        toast.success("आवाज़ डिक्टेशन शुरू हो गया (TTS Dictation Playing)");
+        toast.success("AI आवाज़ डिक्टेशन शुरू हो गया (AI Voice Dictation Playing)");
         return;
       }
-    }
-
-    // 3. HTML5 Audio / Video Playback
-    if (mediaRef.current) {
-      mediaRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setMediaError(null);
-        })
-        .catch((err) => {
-          console.warn("HTML5 Media Play Error:", err);
-          setIsPlaying(false);
-          setMediaError("ऑडियो लोड नहीं हुआ। सिस्टम वॉइस डिक्टेशन सक्रिय कर रहा है...");
-          // Fallback to TTS automatically if transcriptText exists
-          if (passage?.transcriptText) {
-            setIsUsingTTS(true);
-            toast.info("ऑडियो स्रोत अनुपलब्ध होने पर AI वॉइस डिक्टेशन सक्रिय कर दिया गया है।");
-            setTimeout(() => {
-              executePlay();
-            }, 300);
-          } else {
-            toast.error("डिक्टेशन प्ले नहीं हो सका। कृपया इंटरनेट जांचें।");
-          }
-        });
     }
   };
 
@@ -370,12 +428,9 @@ export default function StenoDictationPlayer({
       if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
         try {
           ytPlayerRef.current.pauseVideo();
-        } catch (e) {
-          sendYouTubeCommand("pauseVideo");
-        }
-      } else {
-        sendYouTubeCommand("pauseVideo");
+        } catch (e) {}
       }
+      sendYouTubeCommand("pauseVideo");
       return;
     }
 
@@ -391,24 +446,23 @@ export default function StenoDictationPlayer({
     }
   };
 
-  // Start 3-Second Countdown or Pause
+  // Toggle Play / Pause with 3-Second Countdown Buffer
   const handlePlayToggle = () => {
     if (isPlaying) {
       executePause();
       return;
     }
 
-    // If countdown is already running, cancel it
+    // Cancel existing countdown if running
     if (countdown !== null) {
       executePause();
       return;
     }
 
-    // Start 3-second countdown (as documented in instruction #1)
+    // Start 3-second countdown
     let secondsLeft = 3;
     setCountdown(secondsLeft);
 
-    // Audio cue beep for countdown using AudioContext
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
@@ -545,39 +599,46 @@ export default function StenoDictationPlayer({
         </div>
       )}
 
-      {/* HTML5 Audio element for direct audio URLs */}
-      {!youtubeVideoId && !isVideoUrlValid && isAudioUrlValid && !isUsingTTS && (
+      {/* HTML5 Audio element for valid audio files */}
+      {hasDirectAudio && (
         <audio
           ref={mediaRef as any}
           src={rawAudioUrl}
           preload="auto"
           onTimeUpdate={handleTimeUpdate}
           onEnded={() => setIsPlaying(false)}
-          onError={() => {
-            setMediaError("ऑडियो लोड नहीं हुआ। सिस्टम वॉइस डिक्टेशन सक्रिय कर रहा है...");
-            if (passage?.transcriptText) {
-              setIsUsingTTS(true);
-            }
-          }}
         />
       )}
 
-      {/* 1. MEDIA DISPLAY PLAYER BOX */}
+      {/* ── 1. MEDIA DISPLAY PLAYER BOX ── */}
       {youtubeVideoId ? (
-        <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative group">
-          <iframe
-            ref={iframeRef}
-            id={containerIdRef.current}
-            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&rel=0&modestbranding=1&origin=${
-              typeof window !== "undefined" ? window.location.origin : ""
-            }`}
-            title={passage?.title || "Steno Dictation YouTube Video"}
-            className="w-full h-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
+        /* YouTube Video Player (Always active if YouTube URL exists) */
+        <div className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <Badge className="bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs flex items-center gap-1.5">
+              <Video className="w-3.5 h-3.5 fill-white" /> YouTube Official Dictation Video
+            </Badge>
+            <span className="text-[11px] font-bold text-slate-500">
+              {isPlaying ? "Playing..." : "Tap video or click button below to play"}
+            </span>
+          </div>
+
+          <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-800 bg-black relative group">
+            <iframe
+              ref={iframeRef}
+              id={containerIdRef.current}
+              src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&rel=0&modestbranding=1&origin=${
+                typeof window !== "undefined" ? window.location.origin : ""
+              }`}
+              title={passage?.title || "Steno Dictation YouTube Video"}
+              className="w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
         </div>
       ) : googleDrivePreviewUrl ? (
+        /* Google Drive Embed Preview */
         <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative">
           <iframe
             src={googleDrivePreviewUrl}
@@ -586,7 +647,8 @@ export default function StenoDictationPlayer({
             allow="autoplay"
           />
         </div>
-      ) : isVideoUrlValid ? (
+      ) : hasDirectVideo ? (
+        /* Direct Video Element */
         <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative">
           <video
             ref={mediaRef as any}
@@ -598,7 +660,7 @@ export default function StenoDictationPlayer({
           />
         </div>
       ) : (
-        /* Audio Waveform / TTS Player Box */
+        /* AI Voice (SpeechSynthesis) Fallback Box (ONLY WHEN NO VIDEO OR AUDIO IS PRESENT) */
         <div className="w-full h-48 sm:h-64 rounded-2xl bg-gradient-to-br from-[#0b132b] via-[#1c2541] to-[#0b132b] text-white flex flex-col items-center justify-center relative overflow-hidden shadow-lg p-6">
           <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none" />
 
@@ -608,7 +670,7 @@ export default function StenoDictationPlayer({
               <span
                 key={i}
                 style={{
-                  height: isPlaying ? `${Math.max(15, (h * (i % 2 === 0 ? 1 : 0.8)))}%` : "20%",
+                  height: isPlaying ? `${Math.max(15, h * (i % 2 === 0 ? 1 : 0.8))}%` : "20%",
                   transition: "height 0.3s ease",
                 }}
                 className={`w-1.5 sm:w-2 rounded-full ${
@@ -620,41 +682,20 @@ export default function StenoDictationPlayer({
 
           <p className="text-sm font-black tracking-wider text-amber-300 uppercase flex items-center gap-2">
             <Volume2 className="w-4 h-4 text-amber-400" />
-            {isUsingTTS ? "AI VOICE STENO DICTATION" : "OFFICIAL AUDIO PLAYER"}
+            AI SHORTHAND VOICE DICTATION
           </p>
           <p className="text-xs text-slate-300 mt-1 font-medium">
             {passage?.wordCount || 400} Words • Target: {passage?.targetWpm || 80} WPM •{" "}
             {passage?.language || "Hindi"}
           </p>
 
-          {isUsingTTS && (
-            <Badge className="mt-2 bg-indigo-500/20 text-indigo-300 border-indigo-400/40 text-[10px] font-bold">
-              Speech Synthesis Active
-            </Badge>
-          )}
+          <Badge className="mt-2 bg-indigo-500/20 text-indigo-300 border-indigo-400/40 text-[10px] font-bold">
+            Speech Synthesis Active (वीडियो उपलब्ध नहीं होने पर AI आवाज़)
+          </Badge>
         </div>
       )}
 
-      {/* Media Error Notice */}
-      {mediaError && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            {mediaError}
-          </span>
-          {passage?.transcriptText && !isUsingTTS && (
-            <Button
-              size="sm"
-              onClick={() => setIsUsingTTS(true)}
-              className="h-7 text-[10px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold shrink-0"
-            >
-              वॉइस मोड चालू करें (Use TTS)
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* 2. PLAYER PROGRESS BAR & REAL-TIME TIMER */}
+      {/* ── 2. PLAYER PROGRESS BAR & REAL-TIME TIMER ── */}
       <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
         <input
           type="range"
@@ -675,7 +716,7 @@ export default function StenoDictationPlayer({
         </div>
       </div>
 
-      {/* 3. MAIN CONTROLS ROW */}
+      {/* ── 3. MAIN CONTROLS ROW ── */}
       <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {/* Main Play/Pause Button */}
@@ -696,7 +737,9 @@ export default function StenoDictationPlayer({
               ? `Starting in ${countdown}s...`
               : isPlaying
               ? "Pause Dictation"
-              : "Play Dictation (3s Countdown)"}
+              : youtubeVideoId
+              ? "Play Video Dictation (3s Prep)"
+              : "Play Dictation (3s Prep)"}
           </Button>
 
           {/* Quick Skip Buttons */}
@@ -755,7 +798,7 @@ export default function StenoDictationPlayer({
         </div>
       </div>
 
-      {/* 4. MAIN ACTION BUTTON: START TRANSCRIPTION */}
+      {/* ── 4. MAIN ACTION BUTTON: START TRANSCRIPTION ── */}
       <Button
         onClick={onStartTranscription}
         className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white font-black h-14 sm:h-16 text-sm sm:text-base rounded-2xl shadow-xl tracking-wider gap-3 transition-transform hover:scale-[1.01]"
