@@ -63,10 +63,19 @@ export default function StudentStenoSeriesPage() {
 
       // 2. Fetch Exams safely to check which batches have Step 2 exams
       try {
+        let exams: any[] = [];
         const examRes = await getStenoExamsAction({ isActive: true });
-        if (examRes?.success && Array.isArray(examRes.exams)) {
-          setExamsList(examRes.exams);
+        if (examRes?.success && Array.isArray(examRes.exams) && examRes.exams.length > 0) {
+          exams = examRes.exams;
+        } else {
+          const apiRes = await fetch("/api/steno/exams?isActive=true", { cache: "no-store" });
+          const apiData = await apiRes.json();
+          const list = apiData.data || apiData.exams || [];
+          if (Array.isArray(list)) {
+            exams = list;
+          }
         }
+        setExamsList(exams);
       } catch (err) {
         console.error("Failed to load exams from server:", err);
       }
@@ -295,10 +304,7 @@ export default function StudentStenoSeriesPage() {
               ) || index === 0;
 
               const batchExams = examsList.filter((e) => matchBatch(e.batch, batch.name));
-              const hasExams = batchExams.length > 0;
-              const targetUrl = hasExams
-                ? `/student/steno/exams?batch=${encodeBatch}`
-                : `/student/steno/series/batch/${encodeBatch}`;
+              const targetUrl = `/student/steno/exams?batch=${encodeBatch}`;
 
               const fallbackColors = [
                 "from-indigo-700 to-purple-900",
@@ -372,12 +378,11 @@ export default function StudentStenoSeriesPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-black text-slate-900">{batch.name}</h3>
-                        <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">
-                          {hasExams
+                        <span className="text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <Award className="w-3 h-3 text-amber-600" />
+                          {batchExams.length > 0
                             ? `${batchExams.length} Govt Exams (Step 2)`
-                            : seriesCount > 0
-                            ? `${seriesCount} Series Topics`
-                            : "Official Batch"}
+                            : "Target Govt Exams (Step 2)"}
                         </span>
                       </div>
 
@@ -407,19 +412,11 @@ export default function StudentStenoSeriesPage() {
                       )}
                     </div>
 
-                    {/* Single Clean Action Button leading to Step 2 Govt Exams or Step 3 Series */}
+                    {/* Single Clean Action Button leading directly to Step 2 Govt Exams */}
                     <div className="pt-2">
                       <Link href={targetUrl} className="block">
                         <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-11 text-xs rounded-2xl gap-2 transition-all shadow-md group-hover:scale-[1.01]">
-                          {hasExams ? (
-                            <>
-                              <Award className="w-4 h-4 text-amber-300" /> ओपन बैच • सरकारी परीक्षाएं देखें (Step 2) <ArrowRight className="w-4 h-4" />
-                            </>
-                          ) : (
-                            <>
-                              <BookOpen className="w-4 h-4" /> ओपन बैच • सीरीज एवं डिक्टेशन देखें <ArrowRight className="w-4 h-4" />
-                            </>
-                          )}
+                          <Award className="w-4 h-4 text-amber-300" /> ओपन बैच • सरकारी परीक्षाएं देखें (Step 2) <ArrowRight className="w-4 h-4" />
                         </Button>
                       </Link>
                     </div>

@@ -22,15 +22,44 @@ function StudentStenoExamsContent() {
   const loadExams = async () => {
     setLoading(true);
     try {
+      let fetchedExams: any[] = [];
       const res = await getStenoExamsAction({
         batch: rawBatch || undefined,
         isActive: true,
       });
-      if (res.success && Array.isArray(res.exams)) {
-        setExams(res.exams);
+      if (res.success && Array.isArray(res.exams) && res.exams.length > 0) {
+        fetchedExams = res.exams;
       } else {
-        setExams([]);
+        // Fallback 1: fetch all active exams and filter in-memory with matchBatch
+        const allRes = await getStenoExamsAction({ isActive: true });
+        if (allRes.success && Array.isArray(allRes.exams) && allRes.exams.length > 0) {
+          if (rawBatch) {
+            fetchedExams = allRes.exams.filter((e: any) => matchBatch(e.batch, rawBatch));
+          } else {
+            fetchedExams = allRes.exams;
+          }
+        }
       }
+
+      // Fallback 2: resilient API endpoint fetch if action returned empty
+      if (fetchedExams.length === 0) {
+        try {
+          const apiRes = await fetch("/api/steno/exams?isActive=true", { cache: "no-store" });
+          const apiData = await apiRes.json();
+          const list = apiData.data || apiData.exams || [];
+          if (Array.isArray(list) && list.length > 0) {
+            if (rawBatch) {
+              fetchedExams = list.filter((e: any) => matchBatch(e.batch, rawBatch));
+            } else {
+              fetchedExams = list;
+            }
+          }
+        } catch (apiErr) {
+          console.error("API fallback for exams failed:", apiErr);
+        }
+      }
+
+      setExams(fetchedExams);
     } catch (e) {
       console.error("Failed to load exams:", e);
       setExams([]);
@@ -127,48 +156,52 @@ function StudentStenoExamsContent() {
               ];
               const fallbackGradient = gradients[index % gradients.length];
 
+              const step3Url = `/student/steno/series/batch/${encodeURIComponent(rawBatch || exam.batch || "")}?exam=${encodeURIComponent(exam.name)}`;
+
               return (
                 <Card
                   key={exam._id || exam.name}
                   className="p-0 rounded-3xl bg-white shadow-md overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group border border-slate-200 hover:border-indigo-400"
                 >
-                  {/* Step 2 Poster Image Rendering */}
-                  {hasPoster ? (
-                    <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
-                      <img
-                        src={exam.thumbnailUrl}
-                        alt={exam.name}
-                        className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3 z-10">
-                        <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 fill-white" /> TARGET GOVT EXAM
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Fallback Styled Banner */
-                    <div className={`w-full bg-gradient-to-br ${fallbackGradient} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
-                      <div className="flex justify-between items-start z-10">
-                        <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                          Target Govt Exam
-                        </span>
-                        {exam.authorityName && (
-                          <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-xs">
-                            {exam.authorityName}
+                  {/* Step 2 Poster Image Rendering - Links to Step 3 */}
+                  <Link href={step3Url} className="block cursor-pointer">
+                    {hasPoster ? (
+                      <div className="w-full bg-slate-950 overflow-hidden relative border-b border-slate-100 flex items-center justify-center">
+                        <img
+                          src={exam.thumbnailUrl}
+                          alt={exam.name}
+                          className="w-full h-auto max-h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute top-3 left-3 z-10">
+                          <span className="text-[10px] font-black uppercase bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 fill-white" /> TARGET GOVT EXAM
                           </span>
-                        )}
+                        </div>
                       </div>
+                    ) : (
+                      /* Fallback Styled Banner */
+                      <div className={`w-full bg-gradient-to-br ${fallbackGradient} text-white p-6 relative overflow-hidden flex flex-col justify-between h-44`}>
+                        <div className="flex justify-between items-start z-10">
+                          <span className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                            Target Govt Exam
+                          </span>
+                          {exam.authorityName && (
+                            <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-xs">
+                              {exam.authorityName}
+                            </span>
+                          )}
+                        </div>
 
-                      <div className="z-10 space-y-1">
-                        <h3 className="text-xl font-black drop-shadow-md leading-tight">
-                          {exam.name}
-                        </h3>
+                        <div className="z-10 space-y-1">
+                          <h3 className="text-xl font-black drop-shadow-md leading-tight">
+                            {exam.name}
+                          </h3>
+                        </div>
+
+                        <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
                       </div>
-
-                      <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-                    </div>
-                  )}
+                    )}
+                  </Link>
 
                   {/* Body Details */}
                   <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
