@@ -247,13 +247,16 @@ export const StenoEngineModule: React.FC<StenoEngineModuleProps> = ({
     }
 
     if (onComplete) {
+      if (isAutoSubmit) {
+        toast.info("Time's up! Submitting examination...");
+      }
       onComplete(res);
-    }
-
-    if (isAutoSubmit) {
-      toast.success("Time's up! Examination automatically submitted.");
     } else {
-      toast.success("Steno Examination Submitted & Evaluated Successfully!");
+      if (isAutoSubmit) {
+        toast.success("Time's up! Examination automatically submitted.");
+      } else {
+        toast.success("Steno Examination Submitted & Evaluated Successfully!");
+      }
     }
   };
 

@@ -19,10 +19,6 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 await connectDB();
-                try {
-                  const { seedStenoInstituteAccountAction } = await import("@/app/actions/steno");
-                  await seedStenoInstituteAccountAction();
-                } catch (e) {}
 
                 const normalizedEmail = credentials.email.trim().toLowerCase();
                 const user = await User.findOne({ email: normalizedEmail })

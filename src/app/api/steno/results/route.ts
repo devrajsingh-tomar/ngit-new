@@ -71,3 +71,43 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    let userId = session?.user?.id;
+    if (!userId && session?.user?.email) {
+      const User = (await import("@/models/User")).default;
+      const dbUser = await User.findOne({ email: session.user.email.toLowerCase() }).select("_id").lean();
+      if (dbUser) userId = (dbUser as any)._id.toString();
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Student login session required" },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { processAndSaveStenoResult } = await import("@/lib/steno/stenoSubmission");
+    const result = await processAndSaveStenoResult(body, userId);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error || "Failed to evaluate steno test" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true, resultId: result.resultId });
+  } catch (err: any) {
+    console.error("POST /api/steno/results error:", err);
+    return NextResponse.json(
+      { success: false, error: err.message || "Internal server error during steno test submission" },
+      { status: 500 }
+    );
+  }
+}
+

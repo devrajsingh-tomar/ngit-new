@@ -152,7 +152,7 @@ function PassagePlayerContent({ passageId }: { passageId: string }) {
   const handleComplete = async (evaluationResult: any) => {
     const toastId = toast.loading("Submitting evaluation attempt...");
     try {
-      const submitRes = await submitStenoResultAction({
+      const payload = {
         passageId: passage?._id || passageId,
         typedTranscription: evaluationResult.userTranscription || "",
         speedWpm: evaluationResult.netWpm || 0,
@@ -168,14 +168,40 @@ function PassagePlayerContent({ passageId }: { passageId: string }) {
         status: evaluationResult.status || "Evaluated",
         timeSpentSeconds: evaluationResult.timeSpentSeconds || 60,
         fontUsed: sessionConfig?.selectedFont || "Mangal",
-      });
+      };
+
+      let submitRes: any = null;
+
+      // 1. Primary submission via Server Action
+      try {
+        submitRes = await submitStenoResultAction(payload);
+      } catch (actionErr: any) {
+        console.warn("Server action submission failed, falling back to REST API:", actionErr);
+      }
+
+      // 2. Resilient fallback via direct REST API
+      if (!submitRes?.success) {
+        try {
+          const apiRes = await fetch("/api/steno/results", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }).then((r) => r.json());
+
+          if (apiRes?.success) {
+            submitRes = apiRes;
+          }
+        } catch (apiErr: any) {
+          console.warn("REST API fallback failed:", apiErr);
+        }
+      }
 
       toast.dismiss(toastId);
-      if (submitRes.success && submitRes.resultId) {
-        toast.success("Attempt saved successfully!");
+      if (submitRes?.success && submitRes?.resultId) {
+        toast.success("Examination submitted and evaluated successfully!");
         router.push(`/student/steno/result/${submitRes.resultId}`);
       } else {
-        toast.error(submitRes.error || "Failed to submit attempt");
+        toast.error(submitRes?.error || "Failed to submit attempt. Please retry.");
       }
     } catch (e: any) {
       toast.dismiss(toastId);

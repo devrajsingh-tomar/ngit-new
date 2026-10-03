@@ -88,11 +88,11 @@ const StenoResultSchema = new Schema<IStenoResult>(
       punctuation: { type: Number, default: 0 },
     },
     frozenWeights: {
-      spellingWeight: { type: String, default: "full" },
-      matraWeight: { type: String, default: "half" },
-      punctuationWeight: { type: String, default: "half" },
-      addedWordWeight: { type: String, default: "full" },
-      missingWordWeight: { type: String, default: "full" },
+      spellingWeight: { type: Schema.Types.Mixed, default: 1.0 },
+      matraWeight: { type: Schema.Types.Mixed, default: 0.5 },
+      punctuationWeight: { type: Schema.Types.Mixed, default: 0.5 },
+      addedWordWeight: { type: Schema.Types.Mixed, default: 1.0 },
+      missingWordWeight: { type: Schema.Types.Mixed, default: 1.0 },
     },
     wordBreakdown: [
       {

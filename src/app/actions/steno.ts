@@ -17,6 +17,7 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { isRealPoster } from "@/lib/steno/stenoUtils";
 import { evaluateStenoTranscription, ExamRules } from "@/lib/steno/evaluation";
+import { processAndSaveStenoResult } from "@/lib/steno/stenoSubmission";
 
 // ── PUBLIC & STUDENT STENO DATA ──
 
@@ -921,104 +922,34 @@ export async function submitStenoResultAction(data: {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    let userId = session?.user?.id;
+    if (!userId && session?.user?.email) {
+      const dbUser = await User.findOne({ email: session.user.email.toLowerCase() }).select("_id").lean();
+      if (dbUser) userId = (dbUser as any)._id.toString();
+    }
+    if (!userId) {
       return { success: false, error: "Unauthorized: Student login required" };
     }
 
-    let passageDoc: any = null;
-    if (data.passageId && mongoose.Types.ObjectId.isValid(data.passageId)) {
-      passageDoc = await StenoPassage.findById(data.passageId).lean();
-    }
-    if (!passageDoc) {
-      passageDoc = await StenoPassage.findOne().lean();
+    const saveRes = await processAndSaveStenoResult(data, userId);
+    if (!saveRes.success || !saveRes.resultId) {
+      return { success: false, error: saveRes.error || "Failed to save steno evaluation result" };
     }
 
-    let examDoc: any = null;
-    let examRules: Partial<ExamRules> = {};
-
-    const presetId = data.examId || passageDoc?.examPresetId;
-    if (presetId && mongoose.Types.ObjectId.isValid(presetId)) {
-      examDoc = await StenoExam.findById(presetId).lean();
+    // Safely revalidate student pages without throwing if route components perform internal redirects
+    try {
+      revalidatePath("/student/steno/my-tests");
+      revalidatePath("/student/steno/dashboard");
+      revalidatePath("/student/steno/leaderboard");
+      revalidatePath("/student/steno/results");
+    } catch (revalErr) {
+      console.warn("revalidatePath warning in submitStenoResultAction:", revalErr);
     }
 
-    if (!examDoc && passageDoc?.seriesId) {
-      const seriesDoc: any = await StenoSeries.findById(passageDoc.seriesId).lean();
-      if (seriesDoc?.batch) {
-        const batchDoc: any = await StenoBatch.findOne({ name: seriesDoc.batch }).lean();
-        if (batchDoc?.examPresetId) {
-          examDoc = await StenoExam.findById(batchDoc.examPresetId).lean();
-        }
-      }
-    }
-
-    if (!examDoc) {
-      examDoc = await StenoExam.findOne({ isActive: true }).lean();
-    }
-
-    if (examDoc) {
-      examRules = {
-        spellingWeight: examDoc.spellingErrorWeight ?? 1.0,
-        matraWeight: examDoc.matraErrorWeight ?? 0.5,
-        punctuationWeight: examDoc.punctuationErrorWeight ?? 0.5,
-        addedWordWeight: examDoc.addedWordWeight ?? 1.0,
-        missingWordWeight: examDoc.skippedWordWeight ?? 1.0,
-        spacingTranspositionWeight: examDoc.spacingTranspositionWeight ?? 0.5,
-        mistakeExemptionCount: examDoc.mistakeExemptionCount ?? 20,
-        ignoreChandrabindu: examDoc.ignoreChandrabindu ?? true,
-        maxErrorPercentAllowed: examDoc.maxErrorPercentAllowed ?? 5.0,
-      };
-    }
-
-    const originalText = passageDoc?.transcriptText || passageDoc?.text || "माननीय न्यायाधीश महोदय, अभियुक्त के विरुद्ध प्रस्तुत साक्ष्य और गवाहों के बयानों से यह स्पष्ट है कि घटना के समय वह घटनास्थल पर मौजूद नहीं था।";
-    const targetWpm = passageDoc?.targetWpm || examDoc?.targetWpm || 80;
-
-    // Authoritative Server-Side Result Evaluation
-    const evaluation = evaluateStenoTranscription(
-      originalText,
-      data.typedTranscription || "",
-      data.timeSpentSeconds || 1,
-      targetWpm,
-      examRules
-    );
-
-    const validPassageId = (data.passageId && mongoose.Types.ObjectId.isValid(data.passageId)) ? data.passageId : (passageDoc?._id || null);
-    const validExamId = (data.examId && mongoose.Types.ObjectId.isValid(data.examId)) ? data.examId : (examDoc?._id || null);
-
-    const resultDoc = await StenoResult.create({
-      userId: session.user.id,
-      passageId: validPassageId,
-      examId: validExamId,
-      passageTitle: passageDoc?.title || "Steno Practice Passage",
-      examTitle: examDoc?.title || "Standard Practice",
-      language: passageDoc?.language || "Hindi",
-      originalText,
-      typedTranscription: data.typedTranscription || "",
-      originalWordCount: evaluation.originalWordCount,
-      typedWordCount: evaluation.typedWordCount,
-      grossWpm: evaluation.grossWpm,
-      netWpm: evaluation.netWpm,
-      speedWpm: evaluation.netWpm,
-      accuracy: evaluation.accuracy,
-      score: evaluation.score,
-      targetWpm,
-      totalMistakes: evaluation.totalMistakes,
-      totalErrors: evaluation.totalMistakes,
-      totalPenalty: evaluation.totalPenalty,
-      status: evaluation.isPassed ? "Passed" : "Failed",
-      timeSpentSeconds: data.timeSpentSeconds || 1,
-      fontUsed: data.fontUsed || "Mangal",
-      mistakeBreakdown: evaluation.mistakeBreakdown,
-      frozenWeights: evaluation.frozenWeights,
-      wordBreakdown: evaluation.wordBreakdown,
-      errorLog: evaluation.errorLog,
-    });
-
-    revalidatePath("/steno/my-tests");
-    revalidatePath("/steno/dashboard");
-    revalidatePath("/steno/leaderboard");
-    return { success: true, resultId: resultDoc._id.toString() };
+    return { success: true, resultId: saveRes.resultId };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    console.error("submitStenoResultAction error:", err);
+    return { success: false, error: err.message || "Failed to submit steno examination" };
   }
 }
 
@@ -1026,7 +957,13 @@ export async function getStenoResultByIdAction(attemptId: string) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    let currentUserIdStr = session?.user?.id;
+    if (!currentUserIdStr && session?.user?.email) {
+      const dbUser = await User.findOne({ email: session.user.email.toLowerCase() }).select("_id").lean();
+      if (dbUser) currentUserIdStr = (dbUser as any)._id.toString();
+    }
+
+    if (!currentUserIdStr) {
       return { success: false, error: "Authentication required to view results" };
     }
 
@@ -1041,8 +978,18 @@ export async function getStenoResultByIdAction(attemptId: string) {
 
     if (!resultDoc) return { success: false, error: "Result record not found" };
 
-    const userRole = (session.user as any).role;
-    const isOwner = resultDoc.userId?._id?.toString() === session.user.id;
+    const userRole = (session?.user as any)?.role || "STUDENT";
+    const resultUserIdStr =
+      (resultDoc.userId as any)?._id?.toString() ||
+      (resultDoc.userId as any)?.toString() ||
+      resultDoc.userId;
+
+    const sessionEmail = session?.user?.email?.toLowerCase();
+    const resultUserEmail = (resultDoc.userId as any)?.email?.toLowerCase();
+
+    const isOwner =
+      resultUserIdStr === currentUserIdStr ||
+      (sessionEmail && resultUserEmail && sessionEmail === resultUserEmail);
     const isStaff = ["ADMIN", "STENO_ADMIN", "CONTENT_MANAGER", "TYPING_ADMIN"].includes(userRole);
 
     if (!isOwner && !isStaff) {
@@ -1051,7 +998,8 @@ export async function getStenoResultByIdAction(attemptId: string) {
 
     return { success: true, result: JSON.parse(JSON.stringify(resultDoc)) };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    console.error("getStenoResultByIdAction error:", err);
+    return { success: false, error: err.message || "Failed to retrieve steno result" };
   }
 }
 
