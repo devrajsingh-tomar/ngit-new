@@ -45,9 +45,16 @@ export function getYouTubeVideoId(url?: string): string | null {
     trimmed === "#" ||
     trimmed.toLowerCase() === "none" ||
     trimmed.toLowerCase() === "null" ||
-    trimmed.toLowerCase() === "undefined"
+    trimmed.toLowerCase() === "undefined" ||
+    trimmed.toLowerCase() === "na" ||
+    trimmed.toLowerCase() === "n/a"
   ) {
     return null;
+  }
+
+  // Support direct 11-char YouTube ID (e.g. Jo_Ij6yPZy0)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+    return trimmed;
   }
 
   const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -135,9 +142,12 @@ export default function StenoDictationPlayer({
   const [ttsVoices, setTtsVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // ── Source Resolution Hierarchy ──
-  // 1. YouTube Video (HIGHEST PRIORITY if present in videoUrl or audioUrl)
+  // 1. YouTube Video (HIGHEST PRIORITY if present in videoUrl, audioUrl, or youtubeUrl)
   const youtubeVideoId =
-    getYouTubeVideoId(passage?.videoUrl) || getYouTubeVideoId(passage?.audioUrl);
+    getYouTubeVideoId(passage?.videoUrl) ||
+    getYouTubeVideoId(passage?.audioUrl) ||
+    getYouTubeVideoId(passage?.youtubeUrl) ||
+    getYouTubeVideoId(passage?.youtubeVideoId);
 
   // 2. Google Drive preview (if present and not YouTube)
   const googleDrivePreviewUrl = !youtubeVideoId
@@ -159,8 +169,24 @@ export default function StenoDictationPlayer({
     rawVideoUrl !== "0" &&
     (rawVideoUrl.endsWith(".mp4") || rawVideoUrl.endsWith(".webm") || rawVideoUrl.includes("/video/"));
 
-  // 5. AI Voice (TTS) - ONLY active if NO YouTube, NO Google Drive, NO Direct Audio, NO Direct Video
-  const isUsingTTS = !youtubeVideoId && !googleDrivePreviewUrl && !hasDirectAudio && !hasDirectVideo;
+  // Default mode:
+  // If YouTube is available: Default is ALWAYS "youtube" (YouTube Video Player)
+  // If no YouTube: Default is "voice" (AI Voice / Speech Synthesis)
+  const [activeMode, setActiveMode] = useState<"youtube" | "voice" | "media">(
+    youtubeVideoId ? "youtube" : hasDirectAudio || hasDirectVideo || googleDrivePreviewUrl ? "media" : "voice"
+  );
+
+  useEffect(() => {
+    if (youtubeVideoId) {
+      setActiveMode("youtube");
+    } else if (hasDirectAudio || hasDirectVideo || googleDrivePreviewUrl) {
+      setActiveMode("media");
+    } else {
+      setActiveMode("voice");
+    }
+  }, [youtubeVideoId, hasDirectAudio, hasDirectVideo, googleDrivePreviewUrl]);
+
+  const isUsingTTS = activeMode === "voice" || (!youtubeVideoId && !googleDrivePreviewUrl && !hasDirectAudio && !hasDirectVideo);
 
   // Load available speech synthesis voices for Hindi/English
   useEffect(() => {
@@ -334,8 +360,8 @@ export default function StenoDictationPlayer({
   const executePlay = () => {
     setCountdown(null);
 
-    // ── PRIORITY 1: YOUTUBE PLAYBACK ──
-    if (youtubeVideoId) {
+    // ── PRIORITY 1: YOUTUBE PLAYBACK (DEFAULT) ──
+    if (activeMode === "youtube" && youtubeVideoId) {
       setIsPlaying(true);
       let started = false;
 
@@ -360,7 +386,7 @@ export default function StenoDictationPlayer({
     }
 
     // ── PRIORITY 2: HTML5 DIRECT AUDIO / VIDEO ──
-    if (mediaRef.current) {
+    if (activeMode === "media" && mediaRef.current) {
       mediaRef.current
         .play()
         .then(() => {
@@ -374,43 +400,45 @@ export default function StenoDictationPlayer({
       return;
     }
 
-    // ── PRIORITY 3: AI SPEECH SYNTHESIS (ONLY IF NO YOUTUBE & NO AUDIO) ──
-    if (isUsingTTS && passage?.transcriptText) {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const textToRead = passage.transcriptText;
-        const utterance = new SpeechSynthesisUtterance(textToRead);
+    // ── PRIORITY 3: AI SPEECH SYNTHESIS (VOICE MODE / WHEN NO VIDEO) ──
+    if (activeMode === "voice" || (!youtubeVideoId && !hasDirectAudio)) {
+      if (passage?.transcriptText) {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const textToRead = passage.transcriptText;
+          const utterance = new SpeechSynthesisUtterance(textToRead);
 
-        const isHindi =
-          passage?.language === "Hindi" || /[\u0900-\u097F]/.test(textToRead);
+          const isHindi =
+            passage?.language === "Hindi" || /[\u0900-\u097F]/.test(textToRead);
 
-        if (isHindi) {
-          utterance.lang = "hi-IN";
-          const hiVoice = ttsVoices.find(
-            (v) => v.lang.includes("hi") || v.lang.includes("HI")
-          );
-          if (hiVoice) utterance.voice = hiVoice;
-        } else {
-          utterance.lang = "en-IN";
-          const enVoice = ttsVoices.find(
-            (v) => v.lang.includes("en-IN") || v.lang.includes("en-US")
-          );
-          if (enVoice) utterance.voice = enVoice;
+          if (isHindi) {
+            utterance.lang = "hi-IN";
+            const hiVoice = ttsVoices.find(
+              (v) => v.lang.includes("hi") || v.lang.includes("HI")
+            );
+            if (hiVoice) utterance.voice = hiVoice;
+          } else {
+            utterance.lang = "en-IN";
+            const enVoice = ttsVoices.find(
+              (v) => v.lang.includes("en-IN") || v.lang.includes("en-US")
+            );
+            if (enVoice) utterance.voice = enVoice;
+          }
+
+          utterance.rate = playbackSpeed;
+          utterance.onstart = () => setIsPlaying(true);
+          utterance.onend = () => setIsPlaying(false);
+          utterance.onerror = (e) => {
+            console.error("TTS Error:", e);
+            setIsPlaying(false);
+            toast.error("Text-to-Speech Error. Please check speaker settings.");
+          };
+
+          window.speechSynthesis.speak(utterance);
+          setIsPlaying(true);
+          toast.success("AI आवाज़ डिक्टेशन शुरू हो गया (AI Voice Dictation Playing)");
+          return;
         }
-
-        utterance.rate = playbackSpeed;
-        utterance.onstart = () => setIsPlaying(true);
-        utterance.onend = () => setIsPlaying(false);
-        utterance.onerror = (e) => {
-          console.error("TTS Error:", e);
-          setIsPlaying(false);
-          toast.error("Text-to-Speech Error. Please check speaker settings.");
-        };
-
-        window.speechSynthesis.speak(utterance);
-        setIsPlaying(true);
-        toast.success("AI आवाज़ डिक्टेशन शुरू हो गया (AI Voice Dictation Playing)");
-        return;
       }
     }
   };
@@ -423,7 +451,7 @@ export default function StenoDictationPlayer({
       countdownIntervalRef.current = null;
     }
 
-    if (youtubeVideoId) {
+    if (activeMode === "youtube" && youtubeVideoId) {
       setIsPlaying(false);
       if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
         try {
@@ -434,8 +462,10 @@ export default function StenoDictationPlayer({
       return;
     }
 
-    if (isUsingTTS && typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
+    if (activeMode === "voice" || isUsingTTS) {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
       setIsPlaying(false);
       return;
     }
@@ -599,8 +629,63 @@ export default function StenoDictationPlayer({
         </div>
       )}
 
+      {/* ── MODE SELECTION TABS & FALLBACK NOTIFICATION ── */}
+      {youtubeVideoId ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-2 bg-slate-100/90 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                executePause();
+                setActiveMode("youtube");
+                toast.info("YouTube वीडियो प्लेयर सक्रिय (YouTube Player Active)");
+              }}
+              className={`rounded-xl h-8 px-3 text-xs font-black transition-all ${
+                activeMode === "youtube"
+                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
+                  : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
+              }`}
+            >
+              <Video className="w-3.5 h-3.5 mr-1.5 fill-current" /> YouTube Video Player (Default)
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                executePause();
+                setActiveMode("voice");
+                toast.info("AI आवाज़ मोड सक्रिय (AI Voice Mode Selected)");
+              }}
+              className={`rounded-xl h-8 px-3 text-xs font-black transition-all ${
+                activeMode === "voice"
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                  : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-200"
+              }`}
+            >
+              <Volume2 className="w-3.5 h-3.5 mr-1.5 text-indigo-500" /> Play with AI Voice (वैकल्पिक)
+            </Button>
+          </div>
+          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5">
+            ✓ YouTube Video Ready
+          </Badge>
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-amber-50/90 rounded-2xl border border-amber-200/90 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="font-bold text-amber-950 text-xs">
+              एडमिन पैनल से YouTube लिंक उपलब्ध नहीं है — नीचे AI Voice (आवाज़) से डिक्टेशन सुनें।
+            </span>
+          </div>
+          <Badge className="bg-indigo-600 text-white font-black text-[10px] uppercase px-2.5 py-0.5 shadow-2xs shrink-0">
+            <Volume2 className="w-3 h-3 mr-1 inline" /> AI Voice Active
+          </Badge>
+        </div>
+      )}
+
       {/* HTML5 Audio element for valid audio files */}
-      {hasDirectAudio && (
+      {hasDirectAudio && activeMode === "media" && (
         <audio
           ref={mediaRef as any}
           src={rawAudioUrl}
@@ -611,15 +696,15 @@ export default function StenoDictationPlayer({
       )}
 
       {/* ── 1. MEDIA DISPLAY PLAYER BOX ── */}
-      {youtubeVideoId ? (
-        /* YouTube Video Player (Always active if YouTube URL exists) */
+      {activeMode === "youtube" && youtubeVideoId ? (
+        /* YouTube Video Player (Always active by default if YouTube URL exists) */
         <div className="space-y-2">
           <div className="flex items-center justify-between px-1">
             <Badge className="bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md shadow-xs flex items-center gap-1.5">
               <Video className="w-3.5 h-3.5 fill-white" /> YouTube Official Dictation Video
             </Badge>
             <span className="text-[11px] font-bold text-slate-500">
-              {isPlaying ? "Playing..." : "Tap video or click button below to play"}
+              {isPlaying ? "🔴 Playing..." : "Tap video or click button below to play"}
             </span>
           </div>
 
@@ -627,9 +712,7 @@ export default function StenoDictationPlayer({
             <iframe
               ref={iframeRef}
               id={containerIdRef.current}
-              src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&rel=0&modestbranding=1&origin=${
-                typeof window !== "undefined" ? window.location.origin : ""
-              }`}
+              src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&rel=0&modestbranding=1&playsinline=1`}
               title={passage?.title || "Steno Dictation YouTube Video"}
               className="w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -637,7 +720,7 @@ export default function StenoDictationPlayer({
             />
           </div>
         </div>
-      ) : googleDrivePreviewUrl ? (
+      ) : activeMode === "media" && googleDrivePreviewUrl ? (
         /* Google Drive Embed Preview */
         <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative">
           <iframe
@@ -647,7 +730,7 @@ export default function StenoDictationPlayer({
             allow="autoplay"
           />
         </div>
-      ) : hasDirectVideo ? (
+      ) : activeMode === "media" && hasDirectVideo ? (
         /* Direct Video Element */
         <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black relative">
           <video
@@ -660,7 +743,7 @@ export default function StenoDictationPlayer({
           />
         </div>
       ) : (
-        /* AI Voice (SpeechSynthesis) Fallback Box (ONLY WHEN NO VIDEO OR AUDIO IS PRESENT) */
+        /* AI Voice (SpeechSynthesis) Fallback Box (Active when no video, or selected as alternative) */
         <div className="w-full h-48 sm:h-64 rounded-2xl bg-gradient-to-br from-[#0b132b] via-[#1c2541] to-[#0b132b] text-white flex flex-col items-center justify-center relative overflow-hidden shadow-lg p-6">
           <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none" />
 
@@ -690,7 +773,9 @@ export default function StenoDictationPlayer({
           </p>
 
           <Badge className="mt-2 bg-indigo-500/20 text-indigo-300 border-indigo-400/40 text-[10px] font-bold">
-            Speech Synthesis Active (वीडियो उपलब्ध नहीं होने पर AI आवाज़)
+            {youtubeVideoId
+              ? "AI Voice Dictation (वैकल्पिक वॉइस मोड सक्रिय)"
+              : "वीडियो उपलब्ध नहीं होने पर AI आवाज़ विकल्प सक्रिय"}
           </Badge>
         </div>
       )}
@@ -737,9 +822,9 @@ export default function StenoDictationPlayer({
               ? `Starting in ${countdown}s...`
               : isPlaying
               ? "Pause Dictation"
-              : youtubeVideoId
+              : activeMode === "youtube" && youtubeVideoId
               ? "Play Video Dictation (3s Prep)"
-              : "Play Dictation (3s Prep)"}
+              : "Play with AI Voice (3s Prep)"}
           </Button>
 
           {/* Quick Skip Buttons */}

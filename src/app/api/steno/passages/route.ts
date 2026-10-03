@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
+import mongoose from "mongoose";
 import StenoPassage from "@/models/StenoPassage";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -8,6 +9,27 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (id) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        let passage: any = null;
+        try {
+          passage = await StenoPassage.findById(id).populate("seriesId").populate("examPresetId").lean();
+        } catch {
+          passage = await StenoPassage.findById(id).lean();
+        }
+        if (passage) {
+          return NextResponse.json({
+            success: true,
+            passage: JSON.parse(JSON.stringify(passage)),
+            data: JSON.parse(JSON.stringify(passage)),
+          });
+        }
+      }
+      return NextResponse.json({ success: false, error: "Passage not found" }, { status: 404 });
+    }
+
     const language = searchParams.get("language");
     const category = searchParams.get("category");
     const targetWpm = searchParams.get("targetWpm");

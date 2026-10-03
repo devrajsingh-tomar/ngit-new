@@ -239,6 +239,15 @@ export default function AdminStenoPassagesPage() {
     }
 
     const durationMins = Number(formData.durationMinutes) || 35;
+    const cleanAudio = formData.audioUrl.trim();
+    const cleanVideo = formData.videoUrl.trim();
+    const resolvedAudio = (cleanAudio && cleanAudio !== "0" && cleanAudio !== "#")
+      ? cleanAudio
+      : (cleanVideo && cleanVideo !== "0" && cleanVideo !== "#" ? cleanVideo : "#");
+    const resolvedVideo = (cleanVideo && cleanVideo !== "0" && cleanVideo !== "#")
+      ? cleanVideo
+      : undefined;
+
     const payload = {
       title: formData.title.trim(),
       language: formData.language as any,
@@ -251,8 +260,8 @@ export default function AdminStenoPassagesPage() {
       wordCount: Number(formData.wordCount),
       durationMinutes: durationMins,
       durationSeconds: durationMins * 60,
-      audioUrl: formData.audioUrl.trim() || formData.videoUrl.trim() || "#",
-      videoUrl: formData.videoUrl.trim() || undefined,
+      audioUrl: resolvedAudio,
+      videoUrl: resolvedVideo,
       availableSpeeds: formData.availableSpeeds
         .split(",")
         .map((s) => Number(s.trim()))

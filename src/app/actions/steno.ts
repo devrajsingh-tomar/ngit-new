@@ -123,13 +123,18 @@ export async function getStenoSeriesByIdAction(id: string) {
 export async function getStenoPassageByIdAction(id: string) {
   try {
     await connectDB();
-    let passage = null;
+    let passage: any = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
-      passage = await StenoPassage.findById(id).populate("seriesId").lean();
+      try {
+        passage = await StenoPassage.findById(id).populate("seriesId").populate("examPresetId").lean();
+      } catch {
+        passage = await StenoPassage.findById(id).lean();
+      }
     }
     if (!passage) return { success: false, error: "Passage not found" };
     return { success: true, passage: JSON.parse(JSON.stringify(passage)) };
   } catch (err: any) {
+    console.error("getStenoPassageByIdAction error:", err);
     return { success: false, error: err.message };
   }
 }
@@ -260,8 +265,16 @@ export async function createStenoPassageAction(data: {
     const durationMins = Number(data.durationMinutes || (data.durationSeconds ? Math.round(data.durationSeconds / 60) : 35));
     const durationSecs = Number(data.durationSeconds || durationMins * 60);
 
+    const cleanAudio = (data.audioUrl || "").trim();
+    const cleanVideo = (data.videoUrl || "").trim();
+    const finalAudio = cleanAudio && cleanAudio !== "0" && cleanAudio !== "#"
+      ? cleanAudio
+      : (cleanVideo && cleanVideo !== "0" && cleanVideo !== "#" ? cleanVideo : "#");
+
     const passage = await StenoPassage.create({
       ...data,
+      audioUrl: finalAudio,
+      videoUrl: cleanVideo && cleanVideo !== "0" && cleanVideo !== "#" ? cleanVideo : undefined,
       durationMinutes: durationMins,
       durationSeconds: durationSecs,
       seriesId: data.seriesId ? data.seriesId : null,
@@ -276,6 +289,8 @@ export async function createStenoPassageAction(data: {
 
     revalidatePath("/admin/steno/passages");
     revalidatePath("/steno/dictation");
+    revalidatePath("/student/steno/series");
+    revalidatePath("/student/steno/passage/[id]", "page");
     return { success: true, passage: JSON.parse(JSON.stringify(passage)) };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -297,6 +312,17 @@ export async function updateStenoPassageAction(id: string, data: any) {
       payload.durationSeconds = payload.durationMinutes * 60;
     } else if (payload.durationSeconds !== undefined) {
       payload.durationMinutes = Math.round(Number(payload.durationSeconds) / 60);
+    }
+
+    const cleanAudio = (payload.audioUrl || "").trim();
+    const cleanVideo = (payload.videoUrl || "").trim();
+    if (cleanAudio === "0" || cleanAudio === "#" || !cleanAudio) {
+      if (cleanVideo && cleanVideo !== "0" && cleanVideo !== "#") {
+        payload.audioUrl = cleanVideo;
+      }
+    }
+    if (cleanVideo === "0" || cleanVideo === "#") {
+      payload.videoUrl = undefined;
     }
 
     if (payload.seriesId === "" || payload.seriesId === undefined) {
@@ -327,6 +353,8 @@ export async function updateStenoPassageAction(id: string, data: any) {
     revalidatePath("/admin/steno/series");
     revalidatePath("/steno/dictation");
     revalidatePath("/student/steno/series");
+    revalidatePath(`/student/steno/passage/${id}`);
+    revalidatePath("/student/steno/passage/[id]", "page");
     return { success: true, passage: JSON.parse(JSON.stringify(updated)) };
   } catch (err: any) {
     return { success: false, error: err.message };

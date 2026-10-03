@@ -55,37 +55,62 @@ function PassagePlayerContent({ passageId }: { passageId: string }) {
   const loadPassageData = async (targetId: string) => {
     setLoading(true);
     try {
-      // 6-second timeout safety to prevent infinite loading in mobile/slow networks
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Passage fetch timeout")), 6000)
-      );
+      // 1. Fetch access check in background without blocking passage loading
+      checkStenoAccessAction({})
+        .then((access) => {
+          if (access?.success && access?.data) {
+            setAccessState(access.data);
+          }
+        })
+        .catch((e) => {
+          console.warn("Access check warning:", e);
+        });
 
-      const fetchPromise = Promise.all([
-        getStenoPassageByIdAction(targetId).catch((err) => ({
-          success: false,
-          error: err.message,
-          passage: null,
-        })),
-        checkStenoAccessAction({}).catch((err) => ({
-          success: false,
-          error: err.message,
-          data: null,
-        })),
-      ]);
-
-      const [res, access]: any = await Promise.race([fetchPromise, timeoutPromise]).catch(() => [
-        { success: false },
-        { success: false },
-      ]);
-
-      if (access?.success && access?.data) {
-        setAccessState(access.data);
+      // 2. Fetch Passage from Server Action with generous timeout
+      let fetchedPassage: any = null;
+      try {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Server action timeout")), 12000)
+        );
+        const res: any = await Promise.race([
+          getStenoPassageByIdAction(targetId),
+          timeoutPromise,
+        ]);
+        if (res?.success && res?.passage) {
+          fetchedPassage = res.passage;
+        }
+      } catch (err) {
+        console.warn("Server action fetch failed/timed out, attempting REST API fallback:", err);
       }
 
-      if (res?.success && res?.passage) {
-        setPassage(res.passage);
+      // 3. Fallback: Fetch directly from REST API (/api/steno/passages/[id] or ?id=...)
+      if (!fetchedPassage) {
+        try {
+          const apiRes = await fetch(`/api/steno/passages/${encodeURIComponent(targetId)}`, {
+            cache: "no-store",
+          }).then((r) => r.json());
+          if (apiRes?.success && (apiRes?.passage || apiRes?.data)) {
+            fetchedPassage = apiRes.passage || apiRes.data;
+          }
+        } catch (apiErr) {
+          try {
+            const apiRes2 = await fetch(`/api/steno/passages?id=${encodeURIComponent(targetId)}`, {
+              cache: "no-store",
+            }).then((r) => r.json());
+            if (apiRes2?.success && (apiRes2?.passage || apiRes2?.data)) {
+              fetchedPassage = apiRes2.passage || apiRes2.data;
+            }
+          } catch (apiErr2) {
+            console.warn("REST API fallback failed:", apiErr2);
+          }
+        }
+      }
+
+      if (fetchedPassage) {
+        setPassage(fetchedPassage);
       } else {
-        // Safe fallback passage so the player is always functional
+        toast.error("डिक्टेशन लोड नहीं हो सका। कृपया इंटरनेट जांचें अथवा पुनः प्रयास करें।");
+        // Safe fallback passage so student can still practice if offline
         setPassage((prev: any) => prev || {
           _id: targetId,
           title: "Steno Practice Dictation",
@@ -101,17 +126,6 @@ function PassagePlayerContent({ passageId }: { passageId: string }) {
       }
     } catch (err) {
       console.warn("Passage load error:", err);
-      setPassage((prev: any) => prev || {
-        _id: targetId,
-        title: "Steno Practice Dictation",
-        audioUrl: "",
-        transcriptText:
-          "माननीय अध्यक्ष महोदय, मैं इस विधेयक का समर्थन करने के लिए खड़ा हुआ हूँ। देश में जिस प्रकार की परिस्थितियाँ बन रही हैं, उनमें इस प्रकार के कानून की अत्यंत आवश्यकता थी।",
-        targetWpm: 80,
-        language: "Hindi",
-        wordCount: 350,
-        durationMinutes: 35,
-      });
     } finally {
       setLoading(false);
     }

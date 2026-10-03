@@ -67,6 +67,14 @@ const nextConfig = {
         optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
         serverActions: {
             bodySizeLimit: "60mb",
+            allowedOrigins: [
+                "45.196.5.64:3000",
+                "localhost:3000",
+                "127.0.0.1:3000",
+                "ngitedu.com",
+                "www.ngitedu.com",
+                "*.ngitedu.com",
+            ],
         },
     },
 } as any;
