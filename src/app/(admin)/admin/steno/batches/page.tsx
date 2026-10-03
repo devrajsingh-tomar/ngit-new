@@ -383,7 +383,15 @@ export default function AdminStenoBatchesPage() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+        <DialogContent 
+          onPointerDownOutside={(e) => {
+            if (isMediaModalOpen) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (isMediaModalOpen) e.preventDefault();
+          }}
+          className="max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden"
+        >
           <DialogHeader className="p-5 pb-3.5 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-lg font-black text-slate-900">
               {editingBatch ? "Edit Target Steno Batch (Step 1)" : "Create Target Steno Batch (Step 1)"}

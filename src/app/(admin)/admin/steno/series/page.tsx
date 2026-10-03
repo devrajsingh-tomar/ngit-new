@@ -479,7 +479,15 @@ function AdminStenoSeriesContent() {
 
       {/* Modal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+        <DialogContent 
+          onPointerDownOutside={(e) => {
+            if (isMediaModalOpen) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (isMediaModalOpen) e.preventDefault();
+          }}
+          className="max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden"
+        >
           <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-slate-100 shrink-0 bg-white z-10">
             <DialogTitle className="text-xl font-black text-slate-900">
               {editingSeries ? "Edit Steno Series Topic" : "Create New Steno Series Topic (Step 3)"}

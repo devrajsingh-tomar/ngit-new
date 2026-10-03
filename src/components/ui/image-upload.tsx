@@ -77,12 +77,15 @@ export function ImageUpload({
                 onChange={handleUpload}
             />
 
-            {value ? (
-                <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-inner group">
+            {value && value.trim() !== "" ? (
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-inner group bg-slate-50">
                     <img
-                        src={value}
+                        src={value.trim()}
                         alt="Uploaded preview"
-                        className="w-full h-full object-contain p-4 bg-slate-50"
+                        className="w-full h-full object-contain p-2"
+                        onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).classList.add("opacity-40");
+                        }}
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Button
