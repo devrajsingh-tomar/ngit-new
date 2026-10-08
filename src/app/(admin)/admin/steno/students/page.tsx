@@ -61,15 +61,37 @@ export default function AdminStenoStudentsPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await getStenoInstituteStudentsAction("NGIT-STENO");
-            if (res.success) {
-                setStudents(res.students || []);
-                setTotalStudents(res.totalStudents || 0);
-                if (res.instituteCode) setInstituteCode(res.instituteCode);
+            let data: any = null;
+
+            // 1. Try Server Action first
+            try {
+                const res = await getStenoInstituteStudentsAction(instituteCode || "NGIT-STENO");
+                if (res && res.success) {
+                    data = res;
+                }
+            } catch (actionErr) {
+                console.warn("getStenoInstituteStudentsAction failed, trying API fallback:", actionErr);
+            }
+
+            // 2. If Server Action failed or threw Next.js digest error, use REST API fallback
+            if (!data) {
+                const apiRes = await fetch(`/api/admin/steno/students?code=${encodeURIComponent(instituteCode || "NGIT-STENO")}`)
+                    .then((r) => r.json())
+                    .catch((err) => ({ success: false, error: err.message }));
+                if (apiRes && apiRes.success) {
+                    data = apiRes;
+                }
+            }
+
+            if (data && data.success) {
+                setStudents(data.students || []);
+                setTotalStudents(data.totalStudents || 0);
+                if (data.instituteCode) setInstituteCode(data.instituteCode);
             } else {
-                toast.error(res.error || "Failed to load institute students");
+                toast.error(data?.error || "Failed to load institute students");
             }
         } catch (err: any) {
+            console.error("loadData error:", err);
             toast.error(err.message || "An error occurred");
         } finally {
             setLoading(false);
@@ -83,12 +105,26 @@ export default function AdminStenoStudentsPage() {
     const handleSeedAccount = async () => {
         setSeeding(true);
         try {
-            const res = await seedStenoInstituteAccountAction();
-            if (res.success) {
+            let res: any = null;
+            try {
+                res = await seedStenoInstituteAccountAction();
+            } catch (actionErr) {
+                console.warn("seedStenoInstituteAccountAction failed, trying API fallback:", actionErr);
+            }
+
+            if (!res?.success) {
+                res = await fetch("/api/admin/steno/students", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "seed" }),
+                }).then((r) => r.json()).catch(() => null);
+            }
+
+            if (res?.success) {
                 toast.success("Steno Institute Account verified and ready (stenoinstitute@ngitedu.com)");
                 loadData();
             } else {
-                toast.error(res.error || "Failed to initialize institute account");
+                toast.error(res?.error || "Failed to initialize institute account");
             }
         } catch (err: any) {
             toast.error(err.message || "Error seeding account");

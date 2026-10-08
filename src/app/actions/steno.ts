@@ -11,6 +11,7 @@ import StenoFont from "@/models/StenoFont";
 import StenoErrorRule from "@/models/StenoErrorRule";
 import StenoCustomTest from "@/models/StenoCustomTest";
 import User, { UserRole } from "@/models/User";
+import StudentProfile from "@/models/StudentProfile";
 import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -1674,30 +1675,42 @@ export async function deleteStenoBatchAction(id: string) {
 export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
   try {
     await connectDB();
-    const targetCode = instCode.trim().toUpperCase();
+    const targetCode = (instCode || "NGIT-STENO").trim().toUpperCase();
 
-    // 1. Find users with matching instituteCode or whose StudentProfile has this code
+    // 1. Find profile userIds with matching instituteCode
+    let profileUserIds: any[] = [];
+    try {
+      profileUserIds = await StudentProfile.find({
+        instituteCode: { $regex: new RegExp(`^${targetCode}$`, "i") }
+      }).distinct("userId");
+    } catch (profileErr) {
+      console.warn("StudentProfile lookup warning:", profileErr);
+    }
+
+    // 2. Find users with matching instituteCode directly or via profile
     const users = await User.find({
       $or: [
+        { instituteCode: { $regex: new RegExp(`^${targetCode}$`, "i") } },
         { instituteCode: targetCode },
+        { _id: { $in: profileUserIds } },
         { email: "stenoinstitute@ngitedu.com" }
       ]
     }).select("name email mobile instituteCode createdAt isActive role").lean();
 
-    const userIds = users.filter((u: any) => u.role === UserRole.STUDENT).map((u: any) => u._id);
+    const studentUsers = users.filter((u: any) => !u.role || String(u.role).toUpperCase() === "STUDENT" || u.role === UserRole.STUDENT);
+    const userIds = studentUsers.map((u: any) => u._id);
 
-    // 2. Fetch results for these students
-    const StenoResult = (await import("@/models/StenoResult")).default;
+    // 3. Fetch results for these students
     const results = await StenoResult.find({ userId: { $in: userIds } })
       .select("userId speedWpm netWpm accuracy createdAt score")
       .sort({ createdAt: -1 })
       .lean();
 
-    // 3. Aggregate per student stats
+    // 4. Aggregate per student stats
     const studentDataMap: Record<string, any> = {};
-    for (const u of users) {
-      if (u.role !== UserRole.STUDENT) continue;
-      const uidStr = u._id.toString();
+    for (const u of studentUsers) {
+      const uidStr = u._id ? u._id.toString() : "";
+      if (!uidStr) continue;
       studentDataMap[uidStr] = {
         _id: uidStr,
         name: u.name,
@@ -1715,7 +1728,7 @@ export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
     let accSumMap: Record<string, number> = {};
 
     for (const r of results) {
-      const uidStr = r.userId?.toString();
+      const uidStr = r.userId ? r.userId.toString() : "";
       if (studentDataMap[uidStr]) {
         studentDataMap[uidStr].totalAttempts += 1;
         const wpm = r.netWpm || r.speedWpm || 0;
@@ -1741,7 +1754,8 @@ export async function getStenoInstituteStudentsAction(instCode = "NGIT-STENO") {
       students: JSON.parse(JSON.stringify(studentList)),
     };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    console.error("getStenoInstituteStudentsAction error:", err);
+    return { success: false, error: err.message || "Failed to load institute students" };
   }
 }
 
