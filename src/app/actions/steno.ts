@@ -33,28 +33,54 @@ export async function getStenoPassagesAction(query?: any) {
     if (query?.language) filter.language = query.language;
     if (query?.category) filter.category = query.category;
     if (query?.targetWpm) filter.targetWpm = Number(query.targetWpm);
-    if (query?.seriesId) filter.seriesId = query.seriesId;
-
-    if (query?.typingMode) {
-      if (query.typingMode === "unicode_hindi") {
-        filter.$or = [
-          { typingMode: "unicode_hindi" },
-          { typingMode: { $exists: false }, language: "Hindi" },
-        ];
-      } else if (query.typingMode === "krutidev_010") {
-        filter.typingMode = "krutidev_010";
-      } else if (query.typingMode === "english") {
-        filter.$or = [
-          { typingMode: "english" },
-          { language: "English" },
-        ];
+    if (query?.seriesId) {
+      const seriesCondition = [
+        { seriesId: query.seriesId },
+        { seriesIds: query.seriesId },
+      ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: seriesCondition }];
+        delete filter.$or;
+      } else {
+        filter.$or = seriesCondition;
       }
     }
 
-
+    if (query?.typingMode) {
+      if (query.typingMode === "unicode_hindi") {
+        const modeCond = [
+          { typingMode: "unicode_hindi" },
+          { typingMode: { $exists: false }, language: "Hindi" },
+        ];
+        if (filter.$and) {
+          filter.$and.push({ $or: modeCond });
+        } else if (filter.$or) {
+          filter.$and = [{ $or: filter.$or }, { $or: modeCond }];
+          delete filter.$or;
+        } else {
+          filter.$or = modeCond;
+        }
+      } else if (query.typingMode === "krutidev_010") {
+        filter.typingMode = "krutidev_010";
+      } else if (query.typingMode === "english") {
+        const modeCond = [
+          { typingMode: "english" },
+          { language: "English" },
+        ];
+        if (filter.$and) {
+          filter.$and.push({ $or: modeCond });
+        } else if (filter.$or) {
+          filter.$and = [{ $or: filter.$or }, { $or: modeCond }];
+          delete filter.$or;
+        } else {
+          filter.$or = modeCond;
+        }
+      }
+    }
 
     const passages = await StenoPassage.find(filter)
       .populate("seriesId")
+      .populate("seriesIds")
       .sort({ createdAt: -1, _id: -1 })
       .lean();
     return { success: true, passages: JSON.parse(JSON.stringify(passages)) };
@@ -127,7 +153,7 @@ export async function getStenoPassageByIdAction(id: string) {
     let passage: any = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
       try {
-        passage = await StenoPassage.findById(id).populate("seriesId").populate("examPresetId").lean();
+        passage = await StenoPassage.findById(id).populate("seriesId").populate("seriesIds").populate("examPresetId").lean();
       } catch {
         passage = await StenoPassage.findById(id).lean();
       }
@@ -241,6 +267,7 @@ export async function createStenoPassageAction(data: {
   typingMode?: "unicode_hindi" | "krutidev_010" | "english";
   category: string;
   seriesId?: string;
+  seriesIds?: string[];
   examPresetId?: string;
   examType?: string;
   transcriptText: string;
@@ -272,23 +299,34 @@ export async function createStenoPassageAction(data: {
       ? cleanAudio
       : (cleanVideo && cleanVideo !== "0" && cleanVideo !== "#" ? cleanVideo : "#");
 
+    let finalSeriesIds: string[] = [];
+    if (Array.isArray(data.seriesIds) && data.seriesIds.length > 0) {
+      finalSeriesIds = data.seriesIds.filter(Boolean);
+    } else if (data.seriesId) {
+      finalSeriesIds = [data.seriesId];
+    }
+    const primarySeriesId = finalSeriesIds[0] || null;
+
     const passage = await StenoPassage.create({
       ...data,
       audioUrl: finalAudio,
       videoUrl: cleanVideo && cleanVideo !== "0" && cleanVideo !== "#" ? cleanVideo : undefined,
       durationMinutes: durationMins,
       durationSeconds: durationSecs,
-      seriesId: data.seriesId ? data.seriesId : null,
+      seriesId: primarySeriesId,
+      seriesIds: finalSeriesIds,
       examPresetId: data.examPresetId ? data.examPresetId : null,
     });
 
-    if (data.seriesId) {
-      await StenoSeries.findByIdAndUpdate(data.seriesId, {
-        $addToSet: { passages: passage._id },
-      });
+    if (finalSeriesIds.length > 0) {
+      await StenoSeries.updateMany(
+        { _id: { $in: finalSeriesIds } },
+        { $addToSet: { passages: passage._id } }
+      );
     }
 
     revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
     revalidatePath("/steno/dictation");
     revalidatePath("/student/steno/series");
     revalidatePath("/student/steno/passage/[id]", "page");
@@ -326,9 +364,20 @@ export async function updateStenoPassageAction(id: string, data: any) {
       payload.videoUrl = undefined;
     }
 
-    if (payload.seriesId === "" || payload.seriesId === undefined) {
-      payload.seriesId = null;
+    let newSeriesIds: string[] = [];
+    if (Array.isArray(payload.seriesIds)) {
+      newSeriesIds = payload.seriesIds.filter(Boolean);
+      payload.seriesId = newSeriesIds[0] || null;
+    } else if (payload.seriesId !== undefined) {
+      if (payload.seriesId) {
+        newSeriesIds = [payload.seriesId];
+      } else {
+        newSeriesIds = [];
+        payload.seriesId = null;
+      }
+      payload.seriesIds = newSeriesIds;
     }
+
     if (payload.examPresetId === "" || payload.examPresetId === undefined) {
       payload.examPresetId = null;
     }
@@ -337,17 +386,31 @@ export async function updateStenoPassageAction(id: string, data: any) {
     const updated = await StenoPassage.findByIdAndUpdate(id, { $set: payload }, { new: true }).lean();
 
     // Sync StenoSeries.passages:
-    if (oldPassage && String(oldPassage.seriesId || "") !== String(payload.seriesId || "")) {
-      if (oldPassage.seriesId) {
-        await StenoSeries.findByIdAndUpdate(oldPassage.seriesId, {
-          $pull: { passages: id },
-        });
+    const oldSeriesIds: string[] = [];
+    if (oldPassage) {
+      if (Array.isArray(oldPassage.seriesIds) && oldPassage.seriesIds.length > 0) {
+        for (const s of oldPassage.seriesIds) {
+          if (s) oldSeriesIds.push(String(s._id || s));
+        }
+      } else if (oldPassage.seriesId) {
+        oldSeriesIds.push(String(oldPassage.seriesId._id || oldPassage.seriesId));
       }
-      if (payload.seriesId) {
-        await StenoSeries.findByIdAndUpdate(payload.seriesId, {
-          $addToSet: { passages: id },
-        });
-      }
+    }
+
+    const removedSeriesIds = oldSeriesIds.filter((sId) => !newSeriesIds.includes(sId));
+    const addedSeriesIds = newSeriesIds.filter((sId) => !oldSeriesIds.includes(sId));
+
+    if (removedSeriesIds.length > 0) {
+      await StenoSeries.updateMany(
+        { _id: { $in: removedSeriesIds } },
+        { $pull: { passages: id } }
+      );
+    }
+    if (addedSeriesIds.length > 0) {
+      await StenoSeries.updateMany(
+        { _id: { $in: addedSeriesIds } },
+        { $addToSet: { passages: id } }
+      );
     }
 
     revalidatePath("/admin/steno/passages");
@@ -386,6 +449,7 @@ export async function deleteStenoPassageAction(id: string) {
 export async function bulkAssignStenoPassagesAction(data: {
   passageIds: string[];
   seriesId?: string;
+  seriesIds?: string[];
   examPresetId?: string;
   examType?: string;
   category?: string;
@@ -402,31 +466,48 @@ export async function bulkAssignStenoPassagesAction(data: {
       return { success: false, error: "No dictation passages selected" };
     }
 
+    let targetSeriesIds: string[] = [];
+    if (Array.isArray(data.seriesIds) && data.seriesIds.length > 0) {
+      targetSeriesIds = data.seriesIds.filter(Boolean);
+    } else if (data.seriesId) {
+      targetSeriesIds = [data.seriesId];
+    }
+
     const updatePayload: any = {};
-    if (data.seriesId) updatePayload.seriesId = data.seriesId;
     if (data.examPresetId) updatePayload.examPresetId = data.examPresetId;
     if (data.examType) updatePayload.examType = data.examType;
     if (data.category) updatePayload.category = data.category;
 
-    if (Object.keys(updatePayload).length === 0) {
-      return { success: false, error: "Please select a Series, Exam Rules Preset, or Category to assign" };
+    if (targetSeriesIds.length === 0 && Object.keys(updatePayload).length === 0) {
+      return { success: false, error: "Please select Series Topics, Exam Rules Preset, or Category to assign" };
     }
 
-    await StenoPassage.updateMany(
-      { _id: { $in: data.passageIds } },
-      { $set: updatePayload }
-    );
-
-    if (data.seriesId) {
-      // Remove these passages from any other series first
-      await StenoSeries.updateMany(
-        { passages: { $in: data.passageIds } },
-        { $pull: { passages: { $in: data.passageIds } } }
+    if (Object.keys(updatePayload).length > 0) {
+      await StenoPassage.updateMany(
+        { _id: { $in: data.passageIds } },
+        { $set: updatePayload }
       );
-      // Then assign to target series
-      await StenoSeries.findByIdAndUpdate(data.seriesId, {
-        $addToSet: { passages: { $each: data.passageIds } },
-      });
+    }
+
+    if (targetSeriesIds.length > 0) {
+      // Add seriesIds to each passage
+      await StenoPassage.updateMany(
+        { _id: { $in: data.passageIds } },
+        {
+          $addToSet: { seriesIds: { $each: targetSeriesIds } },
+        }
+      );
+      // For any passage that doesn't have seriesId set yet, set the first targetSeriesId as primary seriesId
+      await StenoPassage.updateMany(
+        { _id: { $in: data.passageIds }, $or: [{ seriesId: null }, { seriesId: { $exists: false } }] },
+        { $set: { seriesId: targetSeriesIds[0] } }
+      );
+
+      // Add these passages to all selected series
+      await StenoSeries.updateMany(
+        { _id: { $in: targetSeriesIds } },
+        { $addToSet: { passages: { $each: data.passageIds } } }
+      );
     }
 
     revalidatePath("/admin/steno/passages");

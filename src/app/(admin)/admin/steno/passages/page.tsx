@@ -42,6 +42,10 @@ import {
   CheckCircle2,
   FileText,
   FolderPlus,
+  Check,
+  X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,7 +66,9 @@ export default function AdminStenoPassagesPage() {
 
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkSeriesId, setBulkSeriesId] = useState("");
+  const [bulkSeriesIds, setBulkSeriesIds] = useState<string[]>([]);
+  const [isBulkSeriesDropdownOpen, setIsBulkSeriesDropdownOpen] = useState(false);
+  const [bulkSeriesSearch, setBulkSeriesSearch] = useState("");
   const [bulkExamPresetId, setBulkExamPresetId] = useState("");
   const [bulkExamType, setBulkExamType] = useState("");
   const [bulkCategory, setBulkCategory] = useState("");
@@ -73,6 +79,10 @@ export default function AdminStenoPassagesPage() {
   const [filterSeries, setFilterSeries] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Modal Series Multi-Select State
+  const [modalSeriesSearch, setModalSeriesSearch] = useState("");
+  const [isModalSeriesDropdownOpen, setIsModalSeriesDropdownOpen] = useState(false);
+
   // Form State
   const [formData, setFormData] = useState({
     title: "",
@@ -80,6 +90,7 @@ export default function AdminStenoPassagesPage() {
     typingMode: "unicode_hindi",
     category: "General Dictation",
     seriesId: "",
+    seriesIds: [] as string[],
     examPresetId: "",
     examType: "SSC Steno",
     transcriptText: "",
@@ -174,7 +185,12 @@ export default function AdminStenoPassagesPage() {
       setQuickSeriesTitle("");
       setIsQuickSeriesDialogOpen(false);
       await loadSeries();
-      setFormData((prev) => ({ ...prev, seriesId: res.series._id }));
+      const newId = String(res.series._id);
+      setFormData((prev) => ({
+        ...prev,
+        seriesId: prev.seriesId || newId,
+        seriesIds: prev.seriesIds.includes(newId) ? prev.seriesIds : [...prev.seriesIds, newId],
+      }));
     } else {
       toast.error(res.error || "Failed to create series topic");
     }
@@ -182,12 +198,15 @@ export default function AdminStenoPassagesPage() {
 
   const handleOpenCreateModal = () => {
     setEditingPassage(null);
+    setModalSeriesSearch("");
+    setIsModalSeriesDropdownOpen(false);
     setFormData({
       title: "",
       language: "Hindi",
       typingMode: "unicode_hindi",
       category: "General Dictation",
       seriesId: "",
+      seriesIds: [],
       examPresetId: "",
       examType: "SSC Steno",
       transcriptText: "",
@@ -205,12 +224,29 @@ export default function AdminStenoPassagesPage() {
 
   const handleOpenEditModal = (p: any) => {
     setEditingPassage(p);
+    setModalSeriesSearch("");
+    setIsModalSeriesDropdownOpen(false);
+
+    const extractedSeriesIds: string[] = [];
+    if (Array.isArray(p.seriesIds) && p.seriesIds.length > 0) {
+      p.seriesIds.forEach((s: any) => {
+        const idStr = s?._id ? String(s._id) : s ? String(s) : "";
+        if (idStr && !extractedSeriesIds.includes(idStr)) {
+          extractedSeriesIds.push(idStr);
+        }
+      });
+    } else if (p.seriesId) {
+      const idStr = p.seriesId?._id ? String(p.seriesId._id) : String(p.seriesId);
+      if (idStr) extractedSeriesIds.push(idStr);
+    }
+
     setFormData({
       title: p.title || "",
       language: p.language || "Hindi",
       typingMode: p.typingMode || (p.language === "English" ? "english" : "unicode_hindi"),
       category: p.category || "General Dictation",
-      seriesId: p.seriesId?._id || p.seriesId || "",
+      seriesId: extractedSeriesIds[0] || "",
+      seriesIds: extractedSeriesIds,
       examPresetId: p.examPresetId?._id || p.examPresetId || "",
       examType: p.examType || "SSC Steno",
       transcriptText: p.transcriptText || "",
@@ -226,6 +262,28 @@ export default function AdminStenoPassagesPage() {
       sortOrder: p.sortOrder || 0,
     });
     setIsDialogOpen(true);
+  };
+
+  const toggleFormDataSeries = (seriesId: string) => {
+    setFormData((prev) => {
+      const exists = prev.seriesIds.includes(seriesId);
+      const updated = exists
+        ? prev.seriesIds.filter((id) => id !== seriesId)
+        : [...prev.seriesIds, seriesId];
+      return {
+        ...prev,
+        seriesIds: updated,
+        seriesId: updated[0] || "",
+      };
+    });
+  };
+
+  const toggleBulkSeries = (seriesId: string) => {
+    setBulkSeriesIds((prev) =>
+      prev.includes(seriesId)
+        ? prev.filter((id) => id !== seriesId)
+        : [...prev, seriesId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -253,7 +311,8 @@ export default function AdminStenoPassagesPage() {
       language: formData.language as any,
       typingMode: formData.typingMode as any,
       category: formData.category.trim(),
-      seriesId: formData.seriesId || undefined,
+      seriesId: formData.seriesIds[0] || undefined,
+      seriesIds: formData.seriesIds,
       examPresetId: formData.examPresetId || undefined,
       examType: formData.examType.trim(),
       transcriptText: formData.transcriptText.trim(),
@@ -315,8 +374,18 @@ export default function AdminStenoPassagesPage() {
     }
 
     if (filterSeries !== "all") {
-      const sId = p.seriesId?._id || p.seriesId;
-      if (sId !== filterSeries) return false;
+      const allAssignedIds: string[] = [];
+      if (Array.isArray(p.seriesIds)) {
+        p.seriesIds.forEach((s: any) => {
+          const idStr = s?._id ? String(s._id) : s ? String(s) : "";
+          if (idStr) allAssignedIds.push(idStr);
+        });
+      }
+      const primaryId = p.seriesId?._id ? String(p.seriesId._id) : p.seriesId ? String(p.seriesId) : "";
+      if (primaryId && !allAssignedIds.includes(primaryId)) {
+        allAssignedIds.push(primaryId);
+      }
+      if (!allAssignedIds.includes(filterSeries)) return false;
     }
 
     if (searchQuery.trim()) {
@@ -366,8 +435,8 @@ export default function AdminStenoPassagesPage() {
       toast.error("Please select at least one dictation passage");
       return;
     }
-    if (!bulkSeriesId && !bulkExamPresetId && !bulkExamType && !bulkCategory) {
-      toast.error("Please select a Series Topic, Exam Rules Preset, or Exam Name to assign");
+    if (bulkSeriesIds.length === 0 && !bulkExamPresetId && !bulkExamType && !bulkCategory) {
+      toast.error("Please select at least one Series Topic, Exam Rules Preset, or Exam Tag to assign");
       return;
     }
 
@@ -376,7 +445,8 @@ export default function AdminStenoPassagesPage() {
 
     const res = await bulkAssignStenoPassagesAction({
       passageIds: selectedIds,
-      seriesId: bulkSeriesId || undefined,
+      seriesIds: bulkSeriesIds,
+      seriesId: bulkSeriesIds[0] || undefined,
       examPresetId: bulkExamPresetId || undefined,
       examType: bulkExamType || undefined,
       category: bulkCategory || undefined,
@@ -386,9 +456,12 @@ export default function AdminStenoPassagesPage() {
     setIsBulkAssigning(false);
 
     if (res.success) {
-      toast.success(`Successfully assigned ${res.count} dictations to government exam rules!`);
+      const seriesMsg = bulkSeriesIds.length > 0 ? ` and added to ${bulkSeriesIds.length} series topic(s)` : "";
+      toast.success(`Successfully assigned ${res.count} dictation passages${seriesMsg}!`);
       setSelectedIds([]);
-      setBulkSeriesId("");
+      setBulkSeriesIds([]);
+      setBulkSeriesSearch("");
+      setIsBulkSeriesDropdownOpen(false);
       setBulkExamPresetId("");
       setBulkExamType("");
       setBulkCategory("");
@@ -458,23 +531,126 @@ export default function AdminStenoPassagesPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1 border-t border-indigo-800/60">
-            {/* Assign Series Topic */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-indigo-200 flex items-center gap-1">
-                <BookOpen className="w-3.5 h-3.5 text-indigo-300" /> Series Topic (Step 2)
+            {/* Assign Series Topic Multi-Select */}
+            <div className="space-y-1 relative">
+              <label className="text-[11px] font-bold text-indigo-200 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-300" /> Series Topic(s) (Step 3)
+                </span>
+                {bulkSeriesIds.length > 0 && (
+                  <span className="text-[10px] font-black text-amber-400 bg-amber-400/20 px-1.5 py-0.5 rounded">
+                    {bulkSeriesIds.length} selected
+                  </span>
+                )}
               </label>
-              <select
-                value={bulkSeriesId}
-                onChange={(e) => setBulkSeriesId(e.target.value)}
-                className="w-full bg-slate-800 border border-indigo-700 text-white rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400"
+
+              <button
+                type="button"
+                onClick={() => setIsBulkSeriesDropdownOpen(!isBulkSeriesDropdownOpen)}
+                className="w-full bg-slate-800 border border-indigo-700 text-white rounded-xl p-2.5 text-xs font-semibold flex items-center justify-between hover:border-amber-400 transition-all text-left h-9 cursor-pointer"
               >
-                <option value="">-- Assign Series Topic --</option>
-                {seriesList.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.batch ? `${s.batch} • ` : ""}{s.title}
-                  </option>
-                ))}
-              </select>
+                <span className="truncate">
+                  {bulkSeriesIds.length === 0
+                    ? "-- Select Series Topic(s) --"
+                    : `${bulkSeriesIds.length} Series Topic(s) Selected`}
+                </span>
+                {isBulkSeriesDropdownOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-indigo-300 shrink-0 ml-1" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-indigo-300 shrink-0 ml-1" />
+                )}
+              </button>
+
+              {isBulkSeriesDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-slate-900 border border-indigo-600 rounded-2xl shadow-2xl p-3 space-y-2 z-50 text-white animate-in fade-in duration-150">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="w-3 h-3 absolute left-2 top-2 text-slate-400" />
+                      <Input
+                        value={bulkSeriesSearch}
+                        onChange={(e) => setBulkSeriesSearch(e.target.value)}
+                        placeholder="Search series..."
+                        className="h-7 pl-7 text-[11px] rounded-lg bg-slate-800 border-indigo-700 text-white"
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (bulkSeriesIds.length === seriesList.length) {
+                          setBulkSeriesIds([]);
+                        } else {
+                          setBulkSeriesIds(seriesList.map((s) => s._id));
+                        }
+                      }}
+                      className="text-[10px] font-bold text-amber-400 hover:underline shrink-0 cursor-pointer"
+                    >
+                      {bulkSeriesIds.length === seriesList.length ? "Deselect" : "Select All"}
+                    </button>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                    {seriesList
+                      .filter((s) => {
+                        if (!bulkSeriesSearch.trim()) return true;
+                        const q = bulkSeriesSearch.toLowerCase();
+                        return (
+                          (s.title || "").toLowerCase().includes(q) ||
+                          (s.batch || "").toLowerCase().includes(q) ||
+                          (s.exam || "").toLowerCase().includes(q)
+                        );
+                      })
+                      .map((s) => {
+                        const isChecked = bulkSeriesIds.includes(s._id);
+                        return (
+                          <label
+                            key={s._id}
+                            onClick={() => toggleBulkSeries(s._id)}
+                            className={`flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer transition-all ${
+                              isChecked
+                                ? "bg-indigo-600/70 text-white font-bold"
+                                : "hover:bg-slate-800 text-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate pr-1">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {}}
+                                className="w-3.5 h-3.5 rounded text-amber-400"
+                              />
+                              <span className="truncate">
+                                {s.batch ? `${s.batch} • ` : ""}
+                                {s.title}
+                              </span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    {seriesList.length === 0 && (
+                      <p className="text-xs text-slate-400 py-2 text-center">No series topics found</p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setBulkSeriesIds([])}
+                      className="text-[10px] font-bold text-rose-400 hover:underline cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => setIsBulkSeriesDropdownOpen(false)}
+                      className="h-6 text-[11px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg px-2.5"
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Assign Government Exam Preset Rules */}
@@ -676,12 +852,53 @@ export default function AdminStenoPassagesPage() {
 
                   {/* Assignments Tags */}
                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">
-                    <p className="flex items-center justify-between">
-                      <span className="text-slate-400 font-bold text-[11px]">Series Topic:</span>
-                      <strong className="font-bold text-slate-800 truncate max-w-[170px]">
-                        {p.seriesId?.title || "Standalone / Unassigned"}
-                      </strong>
-                    </p>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-slate-400 font-bold text-[11px] shrink-0 mt-0.5">Series Topic(s):</span>
+                      <div className="text-right max-w-[190px]">
+                        {(() => {
+                          const passageSeries: any[] = [];
+                          if (Array.isArray(p.seriesIds) && p.seriesIds.length > 0) {
+                            p.seriesIds.forEach((s: any) => {
+                              if (s && typeof s === "object" && s.title) passageSeries.push(s);
+                              else if (s) {
+                                const matched = seriesList.find((sl) => sl._id === (s._id || s));
+                                if (matched) passageSeries.push(matched);
+                              }
+                            });
+                          }
+                          if (passageSeries.length === 0 && p.seriesId) {
+                            if (typeof p.seriesId === "object" && p.seriesId.title) passageSeries.push(p.seriesId);
+                            else {
+                              const matched = seriesList.find((sl) => sl._id === p.seriesId);
+                              if (matched) passageSeries.push(matched);
+                            }
+                          }
+
+                          if (passageSeries.length === 0) {
+                            return <span className="font-bold text-slate-400 text-[11px]">Standalone / Unassigned</span>;
+                          }
+
+                          if (passageSeries.length === 1) {
+                            return (
+                              <strong className="font-bold text-slate-800 text-[11px] truncate block" title={passageSeries[0].title}>
+                                {passageSeries[0].title}
+                              </strong>
+                            );
+                          }
+
+                          return (
+                            <div className="flex flex-wrap justify-end gap-1">
+                              <span className="font-bold text-slate-800 bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded-md text-[10px] border border-indigo-100 truncate max-w-[120px]" title={passageSeries[0].title}>
+                                {passageSeries[0].title}
+                              </span>
+                              <span className="text-[10px] font-black bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md" title={passageSeries.slice(1).map((s) => s.title).join(", ")}>
+                                +{passageSeries.length - 1} more
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
                     <p className="flex items-center justify-between">
                       <span className="text-slate-400 font-bold text-[11px]">Govt Exam Rules:</span>
                       <strong className="font-bold text-indigo-700 truncate max-w-[170px]">
@@ -750,32 +967,182 @@ export default function AdminStenoPassagesPage() {
                   <Award className="w-4 h-4 text-amber-600" /> Dictation Government Exam & Series Assignment
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700">Assign Series Topic (Step 3)</label>
-                      <button
-                        type="button"
-                        onClick={() => setIsQuickSeriesDialogOpen(true)}
-                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <FolderPlus className="w-3.5 h-3.5" /> + New Series Topic
-                      </button>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs font-bold text-slate-700">Assign Series Topic(s) (Step 3)</label>
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                        {formData.seriesIds.length === 0
+                          ? "Standalone"
+                          : `${formData.seriesIds.length} Series Selected`}
+                      </span>
                     </div>
-                    <select
-                      value={formData.seriesId}
-                      onChange={(e) => setFormData({ ...formData, seriesId: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
+                    <button
+                      type="button"
+                      onClick={() => setIsQuickSeriesDialogOpen(true)}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <option value="">No Series (Standalone Dictation)</option>
-                      {seriesList.map((s) => (
-                        <option key={s._id} value={s._id}>
-                          {s.batch ? `${s.batch} • ` : ""}{s.exam ? `[${s.exam}] • ` : ""}{s.title}
-                        </option>
-                      ))}
-                    </select>
+                      <FolderPlus className="w-3.5 h-3.5" /> + New Series Topic
+                    </button>
                   </div>
 
+                  {/* Selected Series Chips */}
+                  {formData.seriesIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-white rounded-xl border border-indigo-200 max-h-24 overflow-y-auto">
+                      {formData.seriesIds.map((sId) => {
+                        const found = seriesList.find((s) => s._id === sId);
+                        return (
+                          <span
+                            key={sId}
+                            className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-900 border border-indigo-200 px-2 py-0.5 rounded-lg text-xs font-bold shadow-2xs"
+                          >
+                            <span className="truncate max-w-[200px]">
+                              {found?.batch ? `${found.batch} • ` : ""}
+                              {found?.title || sId}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => toggleFormDataSeries(sId)}
+                              className="text-slate-400 hover:text-rose-600 ml-0.5 cursor-pointer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Multi-Select Dropdown Trigger */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalSeriesDropdownOpen(!isModalSeriesDropdownOpen)}
+                      className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold flex items-center justify-between hover:border-indigo-400 transition-all text-left cursor-pointer"
+                    >
+                      <span className="text-slate-700 truncate">
+                        {formData.seriesIds.length === 0
+                          ? "No Series (Standalone Dictation) — Click to assign series"
+                          : `✓ ${formData.seriesIds.length} Series Topic(s) Selected — Click to modify`}
+                      </span>
+                      {isModalSeriesDropdownOpen ? (
+                        <ChevronUp className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-1" />
+                      )}
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {isModalSeriesDropdownOpen && (
+                      <div className="mt-2 bg-white rounded-2xl border border-indigo-200 shadow-xl p-3 space-y-2 z-20">
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                            <Input
+                              value={modalSeriesSearch}
+                              onChange={(e) => setModalSeriesSearch(e.target.value)}
+                              placeholder="Search series by title or batch..."
+                              className="h-8 pl-8 text-xs rounded-lg"
+                              autoFocus
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (formData.seriesIds.length === seriesList.length) {
+                                setFormData((prev) => ({ ...prev, seriesIds: [], seriesId: "" }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  seriesIds: seriesList.map((s) => s._id),
+                                  seriesId: seriesList[0]?._id || "",
+                                }));
+                              }
+                            }}
+                            className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 shrink-0 px-2 py-1 bg-indigo-50 rounded-lg cursor-pointer"
+                          >
+                            {formData.seriesIds.length === seriesList.length ? "Deselect All" : "Select All"}
+                          </button>
+                        </div>
+
+                        <div className="max-h-48 overflow-y-auto space-y-1 divide-y divide-slate-100 pr-1">
+                          {seriesList
+                            .filter((s) => {
+                              if (!modalSeriesSearch.trim()) return true;
+                              const q = modalSeriesSearch.toLowerCase();
+                              return (
+                                (s.title || "").toLowerCase().includes(q) ||
+                                (s.batch || "").toLowerCase().includes(q) ||
+                                (s.exam || "").toLowerCase().includes(q)
+                              );
+                            })
+                            .map((s) => {
+                              const isChecked = formData.seriesIds.includes(s._id);
+                              return (
+                                <label
+                                  key={s._id}
+                                  onClick={() => toggleFormDataSeries(s._id)}
+                                  className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-all ${
+                                    isChecked
+                                      ? "bg-indigo-50/80 text-indigo-950 font-bold"
+                                      : "hover:bg-slate-50 text-slate-700"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 truncate pr-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {}}
+                                      className="w-4 h-4 rounded text-indigo-600"
+                                    />
+                                    <div className="truncate">
+                                      <span className="font-bold">{s.title}</span>
+                                      {s.batch && (
+                                        <span className="text-[10px] text-slate-400 ml-1.5">
+                                          • {s.batch}
+                                        </span>
+                                      )}
+                                      {s.exam && (
+                                        <span className="text-[10px] text-amber-600 ml-1">
+                                          [{s.exam}]
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-semibold text-slate-400 shrink-0">
+                                    {s.passages?.length || 0} tracks
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          {seriesList.length === 0 && (
+                            <p className="text-xs text-slate-400 py-3 text-center">No series topics found</p>
+                          )}
+                        </div>
+
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => setFormData((prev) => ({ ...prev, seriesIds: [], seriesId: "" }))}
+                            className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                          >
+                            Clear All (Standalone)
+                          </button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setIsModalSeriesDropdownOpen(false)}
+                            className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 cursor-pointer"
+                          >
+                            Done
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700">Government Exam Rules Preset</label>
                     <select
@@ -791,7 +1158,6 @@ export default function AdminStenoPassagesPage() {
                       ))}
                     </select>
                   </div>
-                </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Exam Tag / Authority Name</label>
@@ -803,6 +1169,7 @@ export default function AdminStenoPassagesPage() {
                   />
                 </div>
               </div>
+            </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">

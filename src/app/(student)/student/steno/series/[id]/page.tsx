@@ -111,7 +111,10 @@ function SeriesDetailContent({ id }: { id: string }) {
     for (const p of series.passages) {
       if (p && p._id) {
         const pSeriesId = p.seriesId?._id ? p.seriesId._id.toString() : p.seriesId ? p.seriesId.toString() : null;
-        if (!pSeriesId || pSeriesId === stringId) {
+        const pSeriesIds = Array.isArray(p.seriesIds)
+          ? p.seriesIds.map((s: any) => (s?._id ? s._id.toString() : s?.toString()))
+          : [];
+        if (!pSeriesId || pSeriesId === stringId || pSeriesIds.includes(stringId)) {
           if (!allPassages.some((ap) => ap._id?.toString() === p._id?.toString())) {
             allPassages.push(p);
           }
