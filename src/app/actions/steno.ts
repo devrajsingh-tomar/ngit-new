@@ -446,6 +446,102 @@ export async function deleteStenoPassageAction(id: string) {
   }
 }
 
+export async function bulkDeleteStenoPassagesAction(passageIds: string[]) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    if (!passageIds || !passageIds.length) {
+      return { success: false, error: "No passages selected to delete" };
+    }
+
+    await StenoPassage.deleteMany({ _id: { $in: passageIds } });
+    await StenoSeries.updateMany({}, { $pull: { passages: { $in: passageIds } } });
+
+    revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/steno/dictation");
+    revalidatePath("/student/steno/series");
+    return { success: true, count: passageIds.length };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function bulkRemoveStenoPassagesFromSeriesAction(data: {
+  passageIds: string[];
+  seriesIds?: string[];
+  clearAll?: boolean;
+}) {
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    if (!session || (userRole !== "ADMIN" && userRole !== "STENO_ADMIN" && userRole !== "CONTENT_MANAGER")) {
+      return { success: false, error: "Admin authorization required" };
+    }
+
+    if (!data.passageIds || !data.passageIds.length) {
+      return { success: false, error: "No dictation passages selected" };
+    }
+
+    if (data.clearAll) {
+      // Clear all series references from selected passages
+      await StenoPassage.updateMany(
+        { _id: { $in: data.passageIds } },
+        { $set: { seriesId: null, seriesIds: [] } }
+      );
+      // Pull these passages from all series
+      await StenoSeries.updateMany(
+        { passages: { $in: data.passageIds } },
+        { $pull: { passages: { $in: data.passageIds } } }
+      );
+      revalidatePath("/admin/steno/passages");
+      revalidatePath("/admin/steno/series");
+      revalidatePath("/student/steno/series");
+      return { success: true, count: data.passageIds.length, clearedAll: true };
+    }
+
+    if (!data.seriesIds || data.seriesIds.length === 0) {
+      return { success: false, error: "Please select series topic(s) to remove" };
+    }
+
+    // Remove selected series from passages.seriesIds
+    await StenoPassage.updateMany(
+      { _id: { $in: data.passageIds } },
+      { $pull: { seriesIds: { $in: data.seriesIds } } }
+    );
+
+    // If primary seriesId was one of the removed series, reassign or set null
+    const passages = await StenoPassage.find({ _id: { $in: data.passageIds } });
+    for (const p of passages) {
+      const sIdStr = p.seriesId ? String(p.seriesId) : null;
+      if (sIdStr && data.seriesIds.includes(sIdStr)) {
+        const remaining = (p.seriesIds || []).filter((id: any) => !data.seriesIds!.includes(String(id)));
+        p.seriesId = remaining[0] || null;
+        await p.save();
+      }
+    }
+
+    // Pull passages from target series
+    await StenoSeries.updateMany(
+      { _id: { $in: data.seriesIds } },
+      { $pull: { passages: { $in: data.passageIds } } }
+    );
+
+    revalidatePath("/admin/steno/passages");
+    revalidatePath("/admin/steno/series");
+    revalidatePath("/student/steno/series");
+    return { success: true, count: data.passageIds.length, removedCount: data.seriesIds.length };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 export async function bulkAssignStenoPassagesAction(data: {
   passageIds: string[];
   seriesId?: string;

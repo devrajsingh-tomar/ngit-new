@@ -6,6 +6,8 @@ import {
   createStenoPassageAction,
   updateStenoPassageAction,
   deleteStenoPassageAction,
+  bulkDeleteStenoPassagesAction,
+  bulkRemoveStenoPassagesFromSeriesAction,
   getStenoSeriesListAction,
   getStenoExamsAction,
   bulkAssignStenoPassagesAction,
@@ -471,6 +473,87 @@ export default function AdminStenoPassagesPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      toast.error("Please select at least one dictation passage to delete");
+      return;
+    }
+
+    const confirmMsg = `Are you sure you want to permanently delete all ${selectedIds.length} selected dictation passage(s)? This action cannot be undone.`;
+    if (!confirm(confirmMsg)) return;
+
+    setIsBulkAssigning(true);
+    const toastId = toast.loading(`Deleting ${selectedIds.length} dictation passages...`);
+    const res = await bulkDeleteStenoPassagesAction(selectedIds);
+    toast.dismiss(toastId);
+    setIsBulkAssigning(false);
+
+    if (res.success) {
+      toast.success(`Successfully deleted ${res.count} dictation passage(s)!`);
+      setSelectedIds([]);
+      loadPassages();
+    } else {
+      toast.error(res.error || "Failed to delete selected passages");
+    }
+  };
+
+  const handleBulkRemoveFromSeries = async () => {
+    if (selectedIds.length === 0) {
+      toast.error("Please select at least one dictation passage");
+      return;
+    }
+    if (bulkSeriesIds.length === 0) {
+      toast.error("Please select the Series Topic(s) above that you want to remove from the selected dictations");
+      return;
+    }
+
+    setIsBulkAssigning(true);
+    const toastId = toast.loading(`Removing ${selectedIds.length} passages from ${bulkSeriesIds.length} series topic(s)...`);
+    const res = await bulkRemoveStenoPassagesFromSeriesAction({
+      passageIds: selectedIds,
+      seriesIds: bulkSeriesIds,
+    });
+    toast.dismiss(toastId);
+    setIsBulkAssigning(false);
+
+    if (res.success) {
+      toast.success(`Removed ${selectedIds.length} dictation(s) from ${bulkSeriesIds.length} series topic(s)!`);
+      setBulkSeriesIds([]);
+      setIsBulkSeriesDropdownOpen(false);
+      loadPassages();
+    } else {
+      toast.error(res.error || "Failed to remove from series");
+    }
+  };
+
+  const handleBulkClearAllSeries = async () => {
+    if (selectedIds.length === 0) {
+      toast.error("Please select at least one dictation passage");
+      return;
+    }
+
+    const confirmMsg = `Are you sure you want to remove ALL series topics from ${selectedIds.length} selected dictation passage(s) (make them Standalone)?`;
+    if (!confirm(confirmMsg)) return;
+
+    setIsBulkAssigning(true);
+    const toastId = toast.loading(`Clearing all series assignments for ${selectedIds.length} passages...`);
+    const res = await bulkRemoveStenoPassagesFromSeriesAction({
+      passageIds: selectedIds,
+      clearAll: true,
+    });
+    toast.dismiss(toastId);
+    setIsBulkAssigning(false);
+
+    if (res.success) {
+      toast.success(`Cleared all series assignments for ${selectedIds.length} dictation passage(s)!`);
+      setBulkSeriesIds([]);
+      setIsBulkSeriesDropdownOpen(false);
+      loadPassages();
+    } else {
+      toast.error(res.error || "Failed to clear series assignments");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Bar */}
@@ -517,17 +600,30 @@ export default function AdminStenoPassagesPage() {
                 <Zap className="w-4 h-4 fill-slate-950" /> {selectedIds.length} Dictation(s) Selected
               </span>
               <p className="text-xs text-indigo-200 font-semibold hidden sm:block">
-                Assign selected dictations to Government Exam Rules or Series Topics:
+                Assign or remove selected dictations from Government Exam Rules or Series Topics:
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setSelectedIds([])}
-              className="bg-slate-800 hover:bg-rose-600 text-white font-black text-xs px-4 py-1.5 rounded-xl border border-slate-700 transition-all shrink-0 self-end lg:self-auto flex items-center gap-1 cursor-pointer shadow-sm"
-            >
-              Clear Selection (सिलेक्शन हटाएं)
-            </button>
+            <div className="flex items-center gap-2 flex-wrap self-end lg:self-auto">
+              {/* Bulk Delete Passages Button */}
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-black text-xs px-3.5 py-1.5 rounded-xl border border-rose-500 transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected ({selectedIds.length} डिक्टेशन हटाएं)</span>
+              </button>
+
+              {/* Clear Selection Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl border border-slate-700 transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+              >
+                Clear Selection (सिलेक्शन हटाएं)
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1 border-t border-indigo-800/60">
@@ -683,16 +779,40 @@ export default function AdminStenoPassagesPage() {
               />
             </div>
 
-            {/* Apply Button */}
-            <div className="flex items-end">
+            {/* Action Buttons: Add, Remove Selected Series, Clear All Series */}
+            <div className="flex flex-col gap-1.5 justify-end">
               <Button
                 onClick={handleApplyBulkAssign}
                 disabled={isBulkAssigning}
-                className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black h-9 text-xs rounded-xl gap-2 shadow-md"
+                className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black h-9 text-xs rounded-xl gap-1.5 shadow-md cursor-pointer"
               >
-                {isBulkAssigning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                APPLY BULK ASSIGNMENT
+                {isBulkAssigning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                + APPLY BULK ASSIGNMENT
               </Button>
+
+              <div className="flex gap-1.5">
+                <Button
+                  type="button"
+                  onClick={handleBulkRemoveFromSeries}
+                  disabled={isBulkAssigning || bulkSeriesIds.length === 0}
+                  variant="outline"
+                  className="flex-1 bg-slate-800 hover:bg-rose-950 hover:border-rose-500 hover:text-rose-200 text-slate-300 border-indigo-700 font-bold h-7 text-[10px] rounded-lg gap-1 cursor-pointer disabled:opacity-40"
+                  title="Remove selected dictations from the chosen series topics above"
+                >
+                  <X className="w-3 h-3 text-rose-400" /> सीरीज़ से हटाएं
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={handleBulkClearAllSeries}
+                  disabled={isBulkAssigning}
+                  variant="outline"
+                  className="flex-1 bg-slate-800 hover:bg-amber-950 hover:border-amber-500 hover:text-amber-200 text-slate-300 border-indigo-700 font-bold h-7 text-[10px] rounded-lg gap-1 cursor-pointer"
+                  title="Clear all series assignments for selected dictations (make them Standalone)"
+                >
+                  <Trash2 className="w-3 h-3 text-amber-400" /> सभी सीरीज़ हटाएं
+                </Button>
+              </div>
             </div>
           </div>
         </Card>
