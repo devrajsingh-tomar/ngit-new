@@ -131,13 +131,17 @@ function SeriesDetailContent({ id }: { id: string }) {
   });
 
   const filteredTests = allPassages.filter((t) => {
+    const modes: string[] = Array.isArray(t.typingModes) && t.typingModes.length > 0
+      ? t.typingModes
+      : [t.typingMode || (t.language === "English" ? "english" : "unicode_hindi")];
+
     if (selectedMode === "unicode_hindi") {
-      if (t.language !== "Hindi" && t.typingMode !== "unicode_hindi") return false;
-      if (t.typingMode === "krutidev_010") return false;
+      if (!modes.includes("unicode_hindi") && t.language !== "Hindi") return false;
+      if (!modes.includes("unicode_hindi") && modes.includes("krutidev_010")) return false;
     } else if (selectedMode === "krutidev_010") {
-      if (t.typingMode !== "krutidev_010") return false;
+      if (!modes.includes("krutidev_010")) return false;
     } else if (selectedMode === "english") {
-      if (t.language !== "English" && t.typingMode !== "english") return false;
+      if (!modes.includes("english") && t.language !== "English") return false;
     }
 
     if (searchQuery.trim()) {
@@ -303,6 +307,29 @@ function SeriesDetailContent({ id }: { id: string }) {
                   <h3 className="text-base font-black text-slate-900 line-clamp-2 group-hover:text-indigo-600 transition-colors leading-snug">
                     {test.title}
                   </h3>
+                  {(() => {
+                    const modes: string[] = Array.isArray(test.typingModes) && test.typingModes.length > 0
+                      ? test.typingModes
+                      : [test.typingMode || (test.language === "English" ? "english" : "unicode_hindi")];
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-1.5 items-center">
+                        {modes.map((m) => (
+                          <span
+                            key={m}
+                            className={`text-[9.5px] font-black px-2 py-0.5 rounded-md border ${
+                              m === "krutidev_010"
+                                ? "bg-amber-50 text-amber-900 border-amber-200"
+                                : m === "english"
+                                ? "bg-emerald-50 text-emerald-900 border-emerald-200"
+                                : "bg-indigo-50 text-indigo-900 border-indigo-200"
+                            }`}
+                          >
+                            {m === "krutidev_010" ? "कृतिदेव 010" : m === "english" ? "English" : "मंगल फॉन्ट"}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">

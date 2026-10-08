@@ -461,6 +461,11 @@ function PassagePlayerContent({ passageId }: { passageId: string }) {
             passage.typingMode ||
             (passage.language === "English" ? "english" : "unicode_hindi")
           }
+          availableModes={
+            Array.isArray(passage.typingModes) && passage.typingModes.length > 0
+              ? passage.typingModes
+              : undefined
+          }
           defaultExam={passage?.examType || "UPSSSC Steno"}
           defaultDurationMinutes={
             passage.durationMinutes ||

@@ -51,6 +51,30 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+const TYPING_MODE_OPTIONS = [
+  {
+    id: "unicode_hindi",
+    label: "Unicode Hindi / Mangal Font",
+    hindiName: "मंगल फॉन्ट (यूनिकोड हिंदी)",
+    badge: "InScript / Remington",
+    desc: "SSC, Allahabad HC, UPSSSC, CRPF, DSSSB व सभी सरकारी भर्ती परीक्षाएं (Mangal)",
+  },
+  {
+    id: "krutidev_010",
+    label: "Kruti Dev 010 / Legacy Hindi",
+    hindiName: "कृतिदेव 010 (लीगेसी हिंदी)",
+    badge: "Kruti Dev 010",
+    desc: "विधानसभा, सचिवालय, कोर्ट व लीगेसी फॉन्ट भर्ती परीक्षाएं (Kruti Dev 010)",
+  },
+  {
+    id: "english",
+    label: "English Steno",
+    hindiName: "अंग्रेजी आशुलिपि (English)",
+    badge: "English",
+    desc: "SSC Grade C&D, Parliament & All English Steno Exams",
+  },
+];
+
 export default function AdminStenoPassagesPage() {
   const [passages, setPassages] = useState<any[]>([]);
   const [seriesList, setSeriesList] = useState<any[]>([]);
@@ -89,7 +113,9 @@ export default function AdminStenoPassagesPage() {
   const [formData, setFormData] = useState({
     title: "",
     language: "Hindi",
+    languages: ["Hindi"] as string[],
     typingMode: "unicode_hindi",
+    typingModes: ["unicode_hindi"] as string[],
     category: "General Dictation",
     seriesId: "",
     seriesIds: [] as string[],
@@ -205,7 +231,9 @@ export default function AdminStenoPassagesPage() {
     setFormData({
       title: "",
       language: "Hindi",
+      languages: ["Hindi"],
       typingMode: "unicode_hindi",
+      typingModes: ["unicode_hindi"],
       category: "General Dictation",
       seriesId: "",
       seriesIds: [],
@@ -242,10 +270,34 @@ export default function AdminStenoPassagesPage() {
       if (idStr) extractedSeriesIds.push(idStr);
     }
 
+    const initialTypingModes: string[] = [];
+    if (Array.isArray(p.typingModes) && p.typingModes.length > 0) {
+      initialTypingModes.push(...p.typingModes);
+    } else if (p.typingMode) {
+      initialTypingModes.push(p.typingMode);
+    } else {
+      initialTypingModes.push(p.language === "English" ? "english" : "unicode_hindi");
+    }
+
+    const initialLanguages: string[] = [];
+    if (Array.isArray(p.languages) && p.languages.length > 0) {
+      initialLanguages.push(...p.languages);
+    } else {
+      if (initialTypingModes.some((m) => m === "unicode_hindi" || m === "krutidev_010")) {
+        initialLanguages.push("Hindi");
+      }
+      if (initialTypingModes.includes("english")) {
+        initialLanguages.push("English");
+      }
+      if (initialLanguages.length === 0) initialLanguages.push(p.language || "Hindi");
+    }
+
     setFormData({
       title: p.title || "",
-      language: p.language || "Hindi",
-      typingMode: p.typingMode || (p.language === "English" ? "english" : "unicode_hindi"),
+      language: (initialLanguages[0] || p.language || "Hindi") as any,
+      languages: initialLanguages,
+      typingMode: initialTypingModes[0] || "unicode_hindi",
+      typingModes: initialTypingModes,
       category: p.category || "General Dictation",
       seriesId: extractedSeriesIds[0] || "",
       seriesIds: extractedSeriesIds,
@@ -264,6 +316,38 @@ export default function AdminStenoPassagesPage() {
       sortOrder: p.sortOrder || 0,
     });
     setIsDialogOpen(true);
+  };
+
+  const toggleFormDataTypingMode = (mode: string) => {
+    setFormData((prev) => {
+      let updatedModes: string[];
+      if (prev.typingModes.includes(mode)) {
+        if (prev.typingModes.length <= 1) {
+          toast.error("कम से कम एक भाषा / टाइपिंग मोड चुना होना आवश्यक है (At least one typing mode required)");
+          return prev;
+        }
+        updatedModes = prev.typingModes.filter((m) => m !== mode);
+      } else {
+        updatedModes = [...prev.typingModes, mode];
+      }
+
+      const derivedLanguages: string[] = [];
+      if (updatedModes.some((m) => m === "unicode_hindi" || m === "krutidev_010")) {
+        derivedLanguages.push("Hindi");
+      }
+      if (updatedModes.includes("english")) {
+        derivedLanguages.push("English");
+      }
+      if (derivedLanguages.length === 0) derivedLanguages.push("Hindi");
+
+      return {
+        ...prev,
+        typingModes: updatedModes,
+        typingMode: updatedModes[0] || "unicode_hindi",
+        language: derivedLanguages[0] || "Hindi",
+        languages: derivedLanguages,
+      };
+    });
   };
 
   const toggleFormDataSeries = (seriesId: string) => {
@@ -298,6 +382,11 @@ export default function AdminStenoPassagesPage() {
       return;
     }
 
+    if (!formData.typingModes || formData.typingModes.length === 0) {
+      toast.error("कृपया कम से कम एक भाषा / टाइपिंग फॉन्ट मोड चुनें (Select at least one typing mode)");
+      return;
+    }
+
     const durationMins = Number(formData.durationMinutes) || 35;
     const cleanAudio = formData.audioUrl.trim();
     const cleanVideo = formData.videoUrl.trim();
@@ -311,7 +400,9 @@ export default function AdminStenoPassagesPage() {
     const payload = {
       title: formData.title.trim(),
       language: formData.language as any,
-      typingMode: formData.typingMode as any,
+      languages: formData.languages,
+      typingMode: (formData.typingModes[0] || formData.typingMode) as any,
+      typingModes: formData.typingModes,
       category: formData.category.trim(),
       seriesId: formData.seriesIds[0] || undefined,
       seriesIds: formData.seriesIds,
@@ -366,13 +457,17 @@ export default function AdminStenoPassagesPage() {
 
   // Filter Passages
   const filteredPassages = passages.filter((p) => {
+    const modes: string[] = Array.isArray(p.typingModes) && p.typingModes.length > 0
+      ? p.typingModes
+      : [p.typingMode || (p.language === "English" ? "english" : "unicode_hindi")];
+
     if (filterMode === "unicode_hindi") {
-      if (p.language !== "Hindi" && p.typingMode !== "unicode_hindi") return false;
-      if (p.typingMode === "krutidev_010") return false;
+      if (!modes.includes("unicode_hindi") && p.language !== "Hindi") return false;
+      if (!modes.includes("unicode_hindi") && modes.includes("krutidev_010")) return false;
     } else if (filterMode === "krutidev_010") {
-      if (p.typingMode !== "krutidev_010") return false;
+      if (!modes.includes("krutidev_010")) return false;
     } else if (filterMode === "english") {
-      if (p.language !== "English" && p.typingMode !== "english") return false;
+      if (!modes.includes("english") && p.language !== "English") return false;
     }
 
     if (filterSeries !== "all") {
@@ -956,19 +1051,42 @@ export default function AdminStenoPassagesPage() {
                   </div>
 
                   {/* Title & Font Badge */}
-                  <div>
-                    <h3 className="text-base font-black text-slate-900 line-clamp-2 leading-snug">
-                      {p.title}
-                    </h3>
-                    <p className="text-[11px] font-bold text-indigo-700 mt-1 flex items-center gap-1">
-                      <Type className="w-3.5 h-3.5" />
-                      {p.typingMode === "krutidev_010"
-                        ? "Kruti Dev 010 (कृतिदेव)"
-                        : p.typingMode === "english"
-                        ? "English Steno"
-                        : "Unicode Hindi (मंगल)"}
-                    </p>
-                  </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 line-clamp-2 leading-snug">
+                        {p.title}
+                      </h3>
+                      {(() => {
+                        const modes: string[] = Array.isArray(p.typingModes) && p.typingModes.length > 0
+                          ? p.typingModes
+                          : [p.typingMode || (p.language === "English" ? "english" : "unicode_hindi")];
+                        return (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 shrink-0">
+                              <Type className="w-3.5 h-3.5 text-indigo-600" />
+                              मोड:
+                            </span>
+                            {modes.map((m) => (
+                              <span
+                                key={m}
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                                  m === "krutidev_010"
+                                    ? "bg-amber-50 text-amber-900 border-amber-200"
+                                    : m === "english"
+                                    ? "bg-emerald-50 text-emerald-900 border-emerald-200"
+                                    : "bg-indigo-50 text-indigo-900 border-indigo-200"
+                                }`}
+                              >
+                                {m === "krutidev_010"
+                                  ? "कृतिदेव 010 (Kruti Dev)"
+                                  : m === "english"
+                                  ? "English Steno"
+                                  : "मंगल (Unicode)"}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
 
                   {/* Assignments Tags */}
                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">
@@ -1291,27 +1409,70 @@ export default function AdminStenoPassagesPage() {
               </div>
             </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Typing Mode & Font Standard *</label>
-                  <select
-                    value={formData.typingMode}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData({
-                        ...formData,
-                        typingMode: val,
-                        language: val === "english" ? "English" : "Hindi",
-                      });
-                    }}
-                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold"
-                  >
-                    <option value="unicode_hindi">Unicode Hindi / Mangal Font</option>
-                    <option value="krutidev_010">Kruti Dev 010 / Legacy Hindi Font</option>
-                    <option value="english">English Steno</option>
-                  </select>
+              {/* Multi-Language & Typing Mode Tick (Checkbox) Selection */}
+              <div className="space-y-2 p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div>
+                    <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                      <Type className="w-3.5 h-3.5 text-indigo-600" />
+                      Assign Language & Typing Font Standard (भाषा और टाइपिंग मोड चुनें) *
+                    </label>
+                    <p className="text-[11px] font-medium text-slate-500">
+                      डिक्टेशन को एक या अधिक भाषाओं/फ़ॉन्ट्स में असाइन करने के लिए टिक (✓) करें (Multi-Language Support):
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                    <span className="text-[10px] font-black text-indigo-700 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-md">
+                      {formData.typingModes.length} चयनित (Selected)
+                    </span>
+                  </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  {TYPING_MODE_OPTIONS.map((opt) => {
+                    const isChecked = formData.typingModes.includes(opt.id);
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => toggleFormDataTypingMode(opt.id)}
+                        className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between select-none ${
+                          isChecked
+                            ? "border-indigo-600 bg-indigo-50/60 shadow-xs ring-1 ring-indigo-500"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-black text-slate-900 leading-tight block">
+                              {opt.hindiName}
+                            </span>
+                            <span className="text-[10.5px] font-bold text-slate-500 block leading-tight">
+                              {opt.label}
+                            </span>
+                          </div>
+
+                          {/* Tick Checkbox */}
+                          <div
+                            className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-all ${
+                              isChecked
+                                ? "bg-indigo-600 text-white shadow-xs"
+                                : "border-2 border-slate-300 bg-white"
+                            }`}
+                          >
+                            {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          </div>
+                        </div>
+
+                        <p className="text-[10px] text-slate-500 mt-2 font-medium line-clamp-2">
+                          {opt.desc}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Category</label>
                   <Input
@@ -1321,9 +1482,7 @@ export default function AdminStenoPassagesPage() {
                     className="rounded-xl text-xs font-semibold"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Word Count</label>
                   <Input
@@ -1384,7 +1543,7 @@ export default function AdminStenoPassagesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">
-                  Passage Reference Text * ({formData.typingMode === "krutidev_010" ? "Kruti Dev 010 Format" : "Unicode Hindi / English Format"})
+                  Passage Reference Text * ({formData.typingModes.includes("krutidev_010") ? "Kruti Dev 010 / Unicode Compatible Format" : "Standard Unicode Format"})
                 </label>
                 <textarea
                   value={formData.transcriptText}

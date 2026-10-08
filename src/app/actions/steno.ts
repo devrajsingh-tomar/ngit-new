@@ -30,7 +30,20 @@ export async function getStenoPassagesAction(query?: any) {
     } else {
       filter.isPublished = true;
     }
-    if (query?.language) filter.language = query.language;
+    if (query?.language) {
+      const langCond = [
+        { language: query.language },
+        { languages: query.language },
+      ];
+      if (filter.$and) {
+        filter.$and.push({ $or: langCond });
+      } else if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: langCond }];
+        delete filter.$or;
+      } else {
+        filter.$or = langCond;
+      }
+    }
     if (query?.category) filter.category = query.category;
     if (query?.targetWpm) filter.targetWpm = Number(query.targetWpm);
     if (query?.seriesId) {
@@ -38,7 +51,9 @@ export async function getStenoPassagesAction(query?: any) {
         { seriesId: query.seriesId },
         { seriesIds: query.seriesId },
       ];
-      if (filter.$or) {
+      if (filter.$and) {
+        filter.$and.push({ $or: seriesCondition });
+      } else if (filter.$or) {
         filter.$and = [{ $or: filter.$or }, { $or: seriesCondition }];
         delete filter.$or;
       } else {
@@ -50,6 +65,7 @@ export async function getStenoPassagesAction(query?: any) {
       if (query.typingMode === "unicode_hindi") {
         const modeCond = [
           { typingMode: "unicode_hindi" },
+          { typingModes: "unicode_hindi" },
           { typingMode: { $exists: false }, language: "Hindi" },
         ];
         if (filter.$and) {
@@ -61,11 +77,24 @@ export async function getStenoPassagesAction(query?: any) {
           filter.$or = modeCond;
         }
       } else if (query.typingMode === "krutidev_010") {
-        filter.typingMode = "krutidev_010";
+        const modeCond = [
+          { typingMode: "krutidev_010" },
+          { typingModes: "krutidev_010" },
+        ];
+        if (filter.$and) {
+          filter.$and.push({ $or: modeCond });
+        } else if (filter.$or) {
+          filter.$and = [{ $or: filter.$or }, { $or: modeCond }];
+          delete filter.$or;
+        } else {
+          filter.$or = modeCond;
+        }
       } else if (query.typingMode === "english") {
         const modeCond = [
           { typingMode: "english" },
+          { typingModes: "english" },
           { language: "English" },
+          { languages: "English" },
         ];
         if (filter.$and) {
           filter.$and.push({ $or: modeCond });
@@ -263,8 +292,10 @@ export async function deleteStenoCustomTestAction(id: string) {
 
 export async function createStenoPassageAction(data: {
   title: string;
-  language: "Hindi" | "English";
+  language?: "Hindi" | "English";
+  languages?: string[];
   typingMode?: "unicode_hindi" | "krutidev_010" | "english";
+  typingModes?: string[];
   category: string;
   seriesId?: string;
   seriesIds?: string[];
@@ -307,8 +338,38 @@ export async function createStenoPassageAction(data: {
     }
     const primarySeriesId = finalSeriesIds[0] || null;
 
+    let finalTypingModes: string[] = [];
+    if (Array.isArray(data.typingModes) && data.typingModes.length > 0) {
+      finalTypingModes = data.typingModes.filter(Boolean);
+    } else if (data.typingMode) {
+      finalTypingModes = [data.typingMode];
+    } else {
+      finalTypingModes = ["unicode_hindi"];
+    }
+    const primaryTypingMode = (finalTypingModes[0] || "unicode_hindi") as "unicode_hindi" | "krutidev_010" | "english";
+
+    let finalLanguages: ("Hindi" | "English")[] = [];
+    if (Array.isArray(data.languages) && data.languages.length > 0) {
+      finalLanguages = data.languages.filter(Boolean) as any;
+    } else {
+      if (finalTypingModes.some((m) => m === "unicode_hindi" || m === "krutidev_010")) {
+        finalLanguages.push("Hindi");
+      }
+      if (finalTypingModes.includes("english")) {
+        finalLanguages.push("English");
+      }
+      if (finalLanguages.length === 0) {
+        finalLanguages.push(data.language || "Hindi");
+      }
+    }
+    const primaryLanguage = (finalLanguages[0] || data.language || "Hindi") as "Hindi" | "English";
+
     const passage = await StenoPassage.create({
       ...data,
+      typingMode: primaryTypingMode,
+      typingModes: finalTypingModes,
+      language: primaryLanguage,
+      languages: finalLanguages,
       audioUrl: finalAudio,
       videoUrl: cleanVideo && cleanVideo !== "0" && cleanVideo !== "#" ? cleanVideo : undefined,
       durationMinutes: durationMins,
@@ -362,6 +423,36 @@ export async function updateStenoPassageAction(id: string, data: any) {
     }
     if (cleanVideo === "0" || cleanVideo === "#") {
       payload.videoUrl = undefined;
+    }
+
+    if (payload.typingModes !== undefined || payload.typingMode !== undefined) {
+      let finalTypingModes: string[] = [];
+      if (Array.isArray(payload.typingModes) && payload.typingModes.length > 0) {
+        finalTypingModes = payload.typingModes.filter(Boolean);
+      } else if (payload.typingMode) {
+        finalTypingModes = [payload.typingMode];
+      }
+      if (finalTypingModes.length > 0) {
+        payload.typingModes = finalTypingModes;
+        payload.typingMode = finalTypingModes[0];
+
+        let finalLanguages: ("Hindi" | "English")[] = [];
+        if (Array.isArray(payload.languages) && payload.languages.length > 0) {
+          finalLanguages = payload.languages.filter(Boolean);
+        } else {
+          if (finalTypingModes.some((m) => m === "unicode_hindi" || m === "krutidev_010")) {
+            finalLanguages.push("Hindi");
+          }
+          if (finalTypingModes.includes("english")) {
+            finalLanguages.push("English");
+          }
+          if (finalLanguages.length === 0) {
+            finalLanguages.push(payload.language || "Hindi");
+          }
+        }
+        payload.languages = finalLanguages;
+        payload.language = finalLanguages[0];
+      }
     }
 
     let newSeriesIds: string[] = [];

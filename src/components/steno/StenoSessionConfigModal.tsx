@@ -31,6 +31,7 @@ interface StenoSessionConfigModalProps {
   onSave: (config: StenoSessionConfig) => void;
   totalWords?: number;
   typingMode?: string;
+  availableModes?: string[];
   defaultExam?: string;
   defaultDurationMinutes?: number;
 }
@@ -41,6 +42,7 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
   onSave,
   totalWords = 391,
   typingMode,
+  availableModes,
   defaultExam,
   defaultDurationMinutes,
 }) => {
@@ -156,6 +158,38 @@ export const StenoSessionConfigModal: React.FC<StenoSessionConfigModalProps> = (
 
         {/* Scrollable Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          {/* Mode / Font Selector if passage supports multiple modes */}
+          {availableModes && availableModes.length > 1 && (
+            <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl space-y-2">
+              <label className="text-[11px] font-black uppercase text-indigo-900 tracking-wider flex items-center justify-between">
+                <span>Transcription Font Standard / फॉन्ट चुनें</span>
+                <span className="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
+                  {availableModes.length} फॉन्ट विकल्प उपलब्ध
+                </span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {availableModes.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setSelectedMode(mode)}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border text-left cursor-pointer ${
+                      selectedMode === mode
+                        ? "bg-indigo-600 text-white border-indigo-700 shadow-sm"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-indigo-300"
+                    }`}
+                  >
+                    {mode === "krutidev_010"
+                      ? "कृतिदेव 010 (Kruti Dev)"
+                      : mode === "english"
+                      ? "English Steno"
+                      : "मंगल (Mangal / Unicode)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Tab Toggle Bar */}
           <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
             <button
