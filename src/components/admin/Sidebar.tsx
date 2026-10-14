@@ -23,6 +23,8 @@ import {
     BarChart3,
     Clock,
     Video,
+    Share2,
+    Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -73,6 +75,23 @@ const menuGroups = [
             { label: "Attendance", href: "/admin/attendance", icon: ClipboardList },
             { label: "Payments & Invoices", href: "/admin/payments", icon: CreditCard },
             { label: "Certificates", href: "/admin/certificates", icon: GraduationCap },
+        ]
+    },
+    {
+        groupLabel: "Promotions & Growth",
+        items: [
+            {
+                label: "Referrals & Partners",
+                href: "/admin/referrals",
+                icon: Share2,
+                subItems: [
+                    { label: "Overview", href: "/admin/referrals" },
+                    { label: "Partner Institutes", href: "/admin/referrals/institutes" },
+                    { label: "Referral Codes", href: "/admin/referrals/codes" },
+                    { label: "Referred Students", href: "/admin/referrals/students" },
+                    { label: "Activity Reports", href: "/admin/referrals/reports" },
+                ]
+            }
         ]
     },
     {

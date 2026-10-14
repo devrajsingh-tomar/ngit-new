@@ -124,8 +124,8 @@ export function alignWords(
     const o = normOrig[i];
     const t = normTyped[j];
 
-    // 1. Direct Match (Exact or Punctuation-tolerant)
-    if (o === t || (cleanPunctuation(o) !== "" && cleanPunctuation(o) === cleanPunctuation(t))) {
+    // 1. Direct Match (Exact character match after normalization)
+    if (o === t) {
       statuses[i] = "correct";
       correctCount++;
       i++;
@@ -133,8 +133,21 @@ export function alignWords(
       continue;
     }
 
+    // 1b. Punctuation or Case Mismatch (e.g. forgot comma, missing/extra punctuation, or case difference)
+    // The base word matches so alignment advances without cascading desync,
+    // but missing or incorrect punctuation MUST be marked as an error and counted as a mistake.
+    const cleanO = cleanPunctuation(o);
+    const cleanT = cleanPunctuation(t);
+    if (cleanO !== "" && (cleanO === cleanT || cleanO.toLowerCase() === cleanT.toLowerCase())) {
+      statuses[i] = "error";
+      mistakes += 1;
+      i++;
+      j++;
+      continue;
+    }
+
     // 2. Accidental Space in the middle of a word (Split word: e.g. "भा" + "रत" === "भारत")
-    if (j + 1 < committedTypedWords.length && normTyped[j] + normTyped[j + 1] === o) {
+    if (j + 1 < committedTypedWords.length && (normTyped[j] + normTyped[j + 1] === o || (cleanO !== "" && cleanPunctuation(normTyped[j] + normTyped[j + 1]) === cleanO))) {
       mistakes += 1; // single mistake for the accidental space
       statuses[i] = "error";
       i++;
@@ -145,7 +158,7 @@ export function alignWords(
     // 2b. Accidental 3-part split
     if (
       j + 2 < committedTypedWords.length &&
-      normTyped[j] + normTyped[j + 1] + normTyped[j + 2] === o
+      (normTyped[j] + normTyped[j + 1] + normTyped[j + 2] === o || (cleanO !== "" && cleanPunctuation(normTyped[j] + normTyped[j + 1] + normTyped[j + 2]) === cleanO))
     ) {
       mistakes += 1;
       statuses[i] = "error";
@@ -318,15 +331,19 @@ export function alignFullPassage(
       const isCaseOrPunctDiff = (o !== t);
       if (isCaseOrPunctDiff && allowHalfMistakes) {
         halfMistakes++;
+        wrongWords++;
+        correctStrokes += typedWord.length + 1;
         transcriptWords.push({ word: typedWord, isCorrect: true, isHalf: true });
       } else if (isCaseOrPunctDiff) {
         fullMistakes++;
-        transcriptWords.push({ word: typedWord, isCorrect: true, isHalf: true });
+        wrongWords++;
+        wrongStrokes += typedWord.length + 1;
+        transcriptWords.push({ word: typedWord, isCorrect: false, isHalf: false });
       } else {
+        correctWords++;
+        correctStrokes += typedWord.length + 1;
         transcriptWords.push({ word: typedWord, isCorrect: true });
       }
-      correctWords++;
-      correctStrokes += typedWord.length + 1;
       i++;
       j++;
       continue;

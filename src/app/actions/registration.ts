@@ -3,6 +3,9 @@
 import connectDB from "@/lib/db";
 import User, { UserRole } from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
+import ReferralCode from "@/models/ReferralCode";
+import PartnerInstitute from "@/models/PartnerInstitute";
+import StudentReferral from "@/models/StudentReferral";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -197,6 +200,8 @@ const SimpleRegistrationSchema = z.object({
     password: z.string().min(8),
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
     instituteCode: z.string().optional(),
+    referralCode: z.string().optional(),
+    attributionSource: z.enum(["URL_LINK", "MANUAL_ENTRY", "QR_CODE", "SYSTEM"]).optional(),
 });
 
 export const registerUser = createSafeAction(
@@ -204,24 +209,95 @@ export const registerUser = createSafeAction(
     async (formData) => {
         await connectDB();
 
-        const existing = await User.findOne({ email: formData.email }).lean();
+        const normalizedEmail = formData.email.trim().toLowerCase();
+        const existing = await User.findOne({ email: normalizedEmail }).lean();
         if (existing) {
             throw new Error("An account with this email already exists.");
         }
 
+        let validatedReferralDoc: any = null;
+        let finalInstituteCode: string | undefined = formData.instituteCode?.trim().toUpperCase() || undefined;
+
+        // 1. Process Referral Code if provided
+        const submittedCode = (formData.referralCode || formData.instituteCode)?.trim().toUpperCase();
+        if (submittedCode) {
+            // First check if it matches a ReferralCode
+            const refDoc = await ReferralCode.findOne({ code: submittedCode }).populate("partnerInstituteId");
+            if (refDoc) {
+                const institute = refDoc.partnerInstituteId as any;
+                if (!institute || institute.status !== "ACTIVE") {
+                    throw new Error("The associated partner institute is currently not active.");
+                }
+
+                if (refDoc.status !== "ACTIVE") {
+                    throw new Error("This referral code is not currently active.");
+                }
+
+                const now = new Date();
+                if (refDoc.startsAt && new Date(refDoc.startsAt) > now) {
+                    throw new Error("This referral campaign has not started yet.");
+                }
+                if (refDoc.expiresAt && new Date(refDoc.expiresAt) < now) {
+                    throw new Error("This referral code has expired.");
+                }
+
+                // Atomic usage count increment to prevent concurrent registrations exceeding limit
+                const query: any = {
+                    _id: refDoc._id,
+                    status: "ACTIVE",
+                };
+                if (refDoc.usageLimit && refDoc.usageLimit > 0) {
+                    query.usageCount = { $lt: refDoc.usageLimit };
+                }
+
+                const updatedRef = await ReferralCode.findOneAndUpdate(
+                    query,
+                    { $inc: { usageCount: 1 } },
+                    { new: true }
+                );
+
+                if (!updatedRef) {
+                    throw new Error("This referral code has reached its maximum registration limit.");
+                }
+
+                validatedReferralDoc = updatedRef;
+                finalInstituteCode = institute.code;
+            } else {
+                // Check if it was directly an institute code
+                const directInst = await PartnerInstitute.findOne({ code: submittedCode, status: "ACTIVE" }).lean();
+                if (directInst) {
+                    finalInstituteCode = directInst.code;
+                } else if (formData.referralCode) {
+                    throw new Error("Invalid or inactive referral code.");
+                }
+            }
+        }
+
         const hashedPassword = await bcrypt.hash(formData.password, 12);
-        const cleanInstCode = formData.instituteCode?.trim().toUpperCase() || undefined;
 
         // Simple user registration creates active user directly
         const user = await User.create({
-            name: formData.name,
-            email: formData.email,
+            name: formData.name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
-            mobile: formData.mobile,
+            mobile: formData.mobile.trim(),
             role: UserRole.STUDENT,
-            instituteCode: cleanInstCode,
-            isActive: true, 
+            instituteCode: finalInstituteCode,
+            isActive: true,
         });
+
+        // Record StudentReferral attribution if referral code was validated
+        if (validatedReferralDoc) {
+            await StudentReferral.create({
+                studentId: user._id,
+                partnerInstituteId: validatedReferralDoc.partnerInstituteId,
+                referralCodeId: validatedReferralDoc._id,
+                codeUsed: validatedReferralDoc.code,
+                attributedAt: new Date(),
+                attributionSource: formData.attributionSource || "URL_LINK",
+                attributionStatus: "ATTRIBUTED",
+            });
+        }
 
         return { success: true, userId: user._id.toString() };
     }
