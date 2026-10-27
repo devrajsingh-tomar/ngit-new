@@ -22,6 +22,11 @@ export default function QuickActionsGrid({ blocks }: { blocks?: any[] }) {
             href: "/student/login"
         },
         {
+            title: "O Level Books (NIELIT)",
+            image: "/images/books/nielit-o-level-m1-r5-it-tools.png",
+            href: "/nielit-o-level-books-prayagraj"
+        },
+        {
             title: "Typing Software",
             image: "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?q=80&w=600", // Neon backlit keyboard image
             href: "/typing"

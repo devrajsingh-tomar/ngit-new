@@ -19,6 +19,7 @@ export async function getHeaderFooterData() {
         const requiredNavigation = [
             { label: "Home", href: "/" },
             { label: "Courses", href: "https://student.ngitedu.com/" },
+            { label: "O Level Books", href: "/nielit-o-level-books-prayagraj" },
             { label: "Typing Tests", href: "/typing" },
             { label: "ShortHand", href: "/steno" },
             { label: "Practical Tools", href: "/tools" },

@@ -16,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { route: '/about', priority: 0.8, changeFrequency: 'monthly' as const },
     { route: '/contact', priority: 0.8, changeFrequency: 'monthly' as const },
     { route: '/courses', priority: 0.9, changeFrequency: 'weekly' as const },
+    { route: '/nielit-o-level-books-prayagraj', priority: 0.9, changeFrequency: 'weekly' as const },
     { route: '/typing', priority: 0.9, changeFrequency: 'daily' as const },
     { route: '/typing-software', priority: 0.9, changeFrequency: 'weekly' as const },
     { route: '/typing-software-prayagraj', priority: 0.9, changeFrequency: 'weekly' as const },

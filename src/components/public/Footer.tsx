@@ -143,6 +143,9 @@ export default async function Footer() {
                                     <a href="https://student.ngitedu.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors">Courses</a>
                                 </li>
                                 <li>
+                                    <Link href="/nielit-o-level-books-prayagraj" className="hover:text-slate-900 transition-colors text-indigo-600 font-bold">O Level Books</Link>
+                                </li>
+                                <li>
                                     <Link href="/enroll" className="text-indigo-600 font-bold hover:text-slate-900 transition-colors">Online Admission</Link>
                                 </li>
                                 <li>
@@ -180,6 +183,9 @@ export default async function Footer() {
                                 </li>
                                 <li>
                                     <Link href="/steno" className="hover:text-slate-900 transition-colors">Online Steno Practice</Link>
+                                </li>
+                                <li>
+                                    <Link href="/nielit-o-level-books-prayagraj" className="hover:text-slate-900 transition-colors text-indigo-600 font-bold">O Level Books Prayagraj</Link>
                                 </li>
                             </ul>
                         </div>
