@@ -93,14 +93,52 @@ export default function NielitOLevelBooksPrayagrajPage() {
     <div className="min-h-screen bg-slate-50 pt-28 pb-20">
       <JsonLd data={[breadcrumbSchema, organizationSchema, ...productSchemas]} />
 
-      {/* ─── PHASE 3: HERO SECTION ────────────────────────────────────────── */}
-      <section className="container mx-auto px-4 lg:px-10 mb-16">
-        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-8 sm:p-12 lg:p-16 overflow-hidden shadow-2xl border border-indigo-900/40">
+      {/* ─── PHASE 3: HERO SECTION (FULL-WIDTH TOP BANNER & HERO DESK) ── */}
+      <section className="container mx-auto px-4 lg:px-10 mb-16 space-y-8">
+        {/* 1. TOP FULL-WIDTH PANORAMIC SHOWCASE BANNER */}
+        <div className="relative rounded-3xl sm:rounded-[2.5rem] overflow-hidden border-2 border-indigo-500/30 shadow-2xl bg-slate-950 group">
+          <Image
+            src="/images/books/nielit-o-level-infinity-series-banner.png"
+            alt="NGIT NIELIT O Level Books Series in Prayagraj - M1, M2, M3, M4 Practice Books by Javed Sir"
+            width={1086}
+            height={362}
+            priority
+            className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.01]"
+          />
+          {/* Subtle bottom info bar */}
+          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 px-6 py-3.5 border-t border-indigo-900/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-black text-amber-300 uppercase tracking-wider">
+                NGIT Infinity Book Series • O Level All 4 Modules (M1, M2, M3 & M4)
+              </span>
+            </div>
+            <div className="flex items-center gap-4 text-slate-300">
+              <span className="font-semibold text-emerald-400">
+                Special Offer: ₹299 / Book • All 4 Combo @ ₹999/-
+              </span>
+              <span className="hidden md:inline text-slate-600">•</span>
+              <span className="hidden md:inline text-slate-300 font-medium">
+                Academic Direction: Javed Sir (Director, NGIT)
+              </span>
+              <span className="hidden lg:inline text-slate-600">•</span>
+              <a
+                href={`tel:${O_LEVEL_WHATSAPP_CONFIG.phoneNumber}`}
+                className="hidden lg:flex items-center gap-1.5 text-white font-bold hover:text-emerald-300 transition-colors"
+              >
+                <Phone className="w-3.5 h-3.5 text-emerald-400" /> +91 88403 41525
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. HERO CONTENT & QUICK-ORDER CARD */}
+        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-8 sm:p-12 lg:p-14 overflow-hidden shadow-2xl border border-indigo-900/40">
           {/* Subtle background glow */}
           <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="grid lg:grid-cols-12 gap-10 items-center relative z-10">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
             {/* Left Column: Headings, Text & CTAs */}
             <div className="lg:col-span-7 space-y-6">
               <div className="flex flex-wrap items-center gap-2">
@@ -123,11 +161,11 @@ export default function NielitOLevelBooksPrayagrajPage() {
               {/* Supporting Text */}
               <p className="text-slate-300 text-base sm:text-lg leading-relaxed font-normal">
                 Prepare for the NIELIT O Level examination with NGIT&apos;s module-wise books and learning resources for
-                IT Tools and Network Basics, Web Designing and Publishing, Python Programming, and Internet of Things.
+                IT Tools and Network Basics (M1-R5.1), Web Designing and Publishing (M2-R5.1), Python Programming (M3-R5.1), and Internet of Things (M4-R5.1).
               </p>
 
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-normal">
-                Now available at a special student discounted price of <strong className="text-emerald-400 font-black">₹299 per book</strong> (Printed MRP up to ₹490), or get the <strong className="text-amber-300 font-black">complete 4-book combo for just ₹999</strong> (Save ₹681). Contact NGIT on WhatsApp for instant booking and delivery.
+                Authored under the academic guidance of Director Javed Sir. Now available at an exclusive student discounted price of <strong className="text-emerald-400 font-black">₹299 per book</strong> (Printed MRP up to ₹490), or get the <strong className="text-amber-300 font-black">complete 4-book combo for just ₹999</strong> (Save ₹681 / 40% OFF).
               </p>
 
               {/* Trust Badges */}
@@ -173,27 +211,95 @@ export default function NielitOLevelBooksPrayagrajPage() {
               </div>
             </div>
 
-            {/* Right Column: Authentic Book Showcase Graphic */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-indigo-500/30 shadow-2xl bg-slate-900 group">
-                <Image
-                  src="/images/books/nielit-o-level-infinity-series-banner.png"
-                  alt="NGIT NIELIT O Level Books Series in Prayagraj - M1, M2, M3, M4 Practice Books"
-                  width={1086}
-                  height={362}
-                  priority
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-102"
-                />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-4 text-center space-y-1">
-                  <p className="text-xs font-black uppercase tracking-wider text-amber-300">
-                    NGIT Infinity Book Series • O Level All 4 Modules
-                  </p>
-                  <p className="text-xs font-black text-emerald-400">
-                    Special Offer: ₹299 per book • Complete 4-Book Combo at ₹999
-                  </p>
-                  <p className="text-[11px] text-slate-300 font-medium">
-                    Hindi + English Bilingual Edition • Guidance: Javed Sir • Call / WhatsApp: +91 88403 41525
-                  </p>
+            {/* Right Column: Instant Student Order & Pricing Desk */}
+            <div className="lg:col-span-5">
+              <div className="rounded-3xl bg-slate-900/80 border border-indigo-500/30 p-6 sm:p-7 shadow-2xl backdrop-blur-md space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+                      OFFICIAL NGIT STUDENT DESK
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-400">Prayagraj</span>
+                </div>
+
+                {/* Offer Price Highlight Box */}
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/30 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Single Module Book</span>
+                      <div className="flex items-baseline gap-2 mt-0.5">
+                        <span className="text-2xl font-black text-emerald-400">₹299/-</span>
+                        <span className="text-xs text-slate-400 line-through">MRP up to ₹490</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
+                      Save up to ₹191
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/80 via-indigo-900/60 to-slate-900 border-2 border-amber-400/40 relative overflow-hidden">
+                    <div className="absolute top-2 right-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full shadow-xs">
+                        BEST VALUE
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 block">Complete 4-Book Combo</span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-3xl font-black text-amber-300">₹999/-</span>
+                      <span className="text-sm text-slate-400 line-through font-semibold">MRP ₹1,680</span>
+                    </div>
+                    <p className="text-xs text-emerald-300 font-bold mt-1">
+                      Save ₹681 (40% OFF) • All 4 Modules Included
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick Delivery / Pickup Info */}
+                <div className="space-y-2 pt-1 text-xs text-slate-300">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Center Pickup:</strong> Sainik Market, Sanjay Dryers Chauraha, Rasulabad, Prayagraj</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Home Delivery:</strong> Postal / Courier Dispatch across India</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Academic Support:</strong> Direct Doubt Guidance by Director Javed Sir</span>
+                  </div>
+                </div>
+
+                {/* Direct Action Buttons in Card */}
+                <div className="space-y-2.5 pt-2">
+                  <a
+                    href={generalWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full"
+                  >
+                    <Button
+                      size="lg"
+                      className="w-full bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black h-12 rounded-xl shadow-lg gap-2 text-xs uppercase tracking-wider transition-all duration-300 hover:scale-102"
+                    >
+                      <WhatsAppIcon className="w-4 h-4 fill-current" /> Order 4-Book Combo (₹999)
+                    </Button>
+                  </a>
+
+                  <a
+                    href={`tel:${O_LEVEL_WHATSAPP_CONFIG.phoneNumber}`}
+                    className="block w-full"
+                  >
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-white font-bold h-12 rounded-xl gap-2 text-xs"
+                    >
+                      <Phone className="w-4 h-4 text-emerald-400" /> Call {O_LEVEL_WHATSAPP_CONFIG.displayNumber}
+                    </Button>
+                  </a>
                 </div>
               </div>
             </div>
