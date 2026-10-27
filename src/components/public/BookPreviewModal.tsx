@@ -30,8 +30,11 @@ export default function BookPreviewModal({ book }: { book: OLevelBook }) {
             <Badge className="bg-indigo-600 text-white font-black text-xs px-2.5 py-0.5">
               {book.moduleCode}
             </Badge>
-            <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-xs">
-              Printed MRP: ₹{book.mrp}/-
+            <Badge className="bg-emerald-400 text-slate-950 font-black text-xs px-2.5 py-0.5">
+              Special Offer: ₹{book.discountedPrice}/-
+            </Badge>
+            <Badge variant="outline" className="text-slate-400 border-slate-700 line-through text-xs">
+              MRP: ₹{book.mrp}/-
             </Badge>
             <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-xs">
               NGIT Infinity Series

@@ -14,6 +14,7 @@ export interface OLevelBook {
   language: string;
   syllabus: string;
   mrp: number;
+  discountedPrice: number;
   author: string;
   keyTopics: string[];
   seoKeywords: string[];
@@ -22,6 +23,14 @@ export interface OLevelBook {
   priceNote: string;
   availability: string;
 }
+
+export const O_LEVEL_PRICING = {
+  individualPrice: 299,
+  comboPrice: 999,
+  totalMrp: 1680,
+  savings: 681,
+  discountPercent: "40% OFF",
+};
 
 export const O_LEVEL_WHATSAPP_CONFIG = {
   phoneNumber: "8840341525", // Direct NGIT book desk number as printed on book covers
@@ -38,7 +47,7 @@ export function buildWhatsAppUrl(message: string, phone: string = O_LEVEL_WHATSA
 }
 
 export const GENERAL_O_LEVEL_ENQUIRY_MESSAGE =
-  "Hello NGIT, I would like to enquire about the complete set of NIELIT O Level books (M1-R5.1, M2-R5.1, M3-R5.1, and M4-R5.1 - Combo MRP ₹1,680). Please share the combo discounted price, syllabus coverage, availability, and home delivery details in Prayagraj.";
+  "Hello NGIT, I would like to order the complete 4-book combo set of NIELIT O Level books (M1, M2, M3, and M4) at the special offer price of ₹999 (Total MRP ₹1,680 - Save ₹681). Please share payment, availability, and home delivery details in Prayagraj.";
 
 export const O_LEVEL_BOOKS: OLevelBook[] = [
   {
@@ -58,6 +67,7 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
     language: "Hindi + English (Bilingual)",
     syllabus: "NIELIT O Level Revised Syllabus R5.1",
     mrp: 380,
+    discountedPrice: 299,
     author: "Javed Sir (Director, NGIT Institute)",
     keyTopics: [
       "Introduction to Computer & OS (Windows / Linux)",
@@ -74,9 +84,9 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
       "Best O Level M1 book in Prayagraj",
     ],
     enquiryMessage:
-      "Hello NGIT, I would like to enquire about the NIELIT O Level M1-R5.1 book, Information Technology Tools and Network Basics (Printed MRP ₹380). Please share current student discount, availability, book contents, and ordering details.",
+      "Hello NGIT, I would like to order the NIELIT O Level M1-R5.1 book, Information Technology Tools and Network Basics at the discounted offer price of ₹299 (Printed MRP ₹380). Please share payment, availability, and ordering details.",
     courseLink: "/courses/o-level-nielit-certified",
-    priceNote: "Printed MRP: ₹380/- (Contact for Student Discount)",
+    priceNote: "Offer Price: ₹299/- (MRP: ₹380/-)",
     availability: "Available for Center Pickup & Postal Delivery",
   },
   {
@@ -96,6 +106,7 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
     language: "Hindi + English (Bilingual)",
     syllabus: "NIELIT O Level Revised Syllabus R5.1",
     mrp: 430,
+    discountedPrice: 299,
     author: "Javed Sir (Director, NGIT Institute)",
     keyTopics: [
       "Web Design & HTML5 Semantic Structure",
@@ -112,9 +123,9 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
       "Best O Level M2 book in Prayagraj",
     ],
     enquiryMessage:
-      "Hello NGIT, I would like to enquire about the NIELIT O Level M2-R5.1 book, Web Designing and Publishing (Printed MRP ₹430). Please share current student discount, availability, book contents, and ordering details.",
+      "Hello NGIT, I would like to order the NIELIT O Level M2-R5.1 book, Web Designing and Publishing at the discounted offer price of ₹299 (Printed MRP ₹430). Please share payment, availability, and ordering details.",
     courseLink: "/courses/o-level-nielit-certified",
-    priceNote: "Printed MRP: ₹430/- (Contact for Student Discount)",
+    priceNote: "Offer Price: ₹299/- (MRP: ₹430/-)",
     availability: "Available for Center Pickup & Postal Delivery",
   },
   {
@@ -134,6 +145,7 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
     language: "Hindi + English (Bilingual)",
     syllabus: "NIELIT O Level Revised Syllabus R5.1",
     mrp: 490,
+    discountedPrice: 299,
     author: "Javed Sir (Director, NGIT Institute)",
     keyTopics: [
       "Flowcharts, Algorithms & Problem Solving",
@@ -150,9 +162,9 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
       "Best O Level Python book in Prayagraj",
     ],
     enquiryMessage:
-      "Hello NGIT, I would like to enquire about the NIELIT O Level M3-R5.1 book, Programming and Problem Solving through Python (Printed MRP ₹490). Please share current student discount, availability, book contents, and ordering details.",
+      "Hello NGIT, I would like to order the NIELIT O Level M3-R5.1 book, Programming and Problem Solving through Python at the discounted offer price of ₹299 (Printed MRP ₹490). Please share payment, availability, and ordering details.",
     courseLink: "/courses/o-level-nielit-certified",
-    priceNote: "Printed MRP: ₹490/- (Contact for Student Discount)",
+    priceNote: "Offer Price: ₹299/- (MRP: ₹490/-)",
     availability: "Available for Center Pickup & Postal Delivery",
   },
   {
@@ -172,6 +184,7 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
     language: "Hindi + English (Bilingual)",
     syllabus: "NIELIT O Level Revised Syllabus R5.1",
     mrp: 380,
+    discountedPrice: 299,
     author: "Javed Sir (Director, NGIT Institute)",
     keyTopics: [
       "Introduction to IoT & Ecosystem Building Blocks",
@@ -188,9 +201,9 @@ export const O_LEVEL_BOOKS: OLevelBook[] = [
       "Best O Level IoT book in Prayagraj",
     ],
     enquiryMessage:
-      "Hello NGIT, I would like to enquire about the NIELIT O Level M4-R5.1 book, Internet of Things and Its Applications (Printed MRP ₹380). Please share current student discount, availability, book contents, and ordering details.",
+      "Hello NGIT, I would like to order the NIELIT O Level M4-R5.1 book, Internet of Things and Its Applications at the discounted offer price of ₹299 (Printed MRP ₹380). Please share payment, availability, and ordering details.",
     courseLink: "/courses/o-level-nielit-certified",
-    priceNote: "Printed MRP: ₹380/- (Contact for Student Discount)",
+    priceNote: "Offer Price: ₹299/- (MRP: ₹380/-)",
     availability: "Available for Center Pickup & Postal Delivery",
   },
 ];
@@ -199,26 +212,26 @@ export const O_LEVEL_FAQS = [
   {
     question: "Which books are covered for the NIELIT O Level examination?",
     answer:
-      "NGIT covers all four core theory modules defined under the NIELIT O Level R5.1 syllabus: M1-R5.1 (Information Technology Tools and Network Basics - MRP ₹380), M2-R5.1 (Web Designing and Publishing - MRP ₹430), M3-R5.1 (Programming and Problem Solving through Python - MRP ₹490), and M4-R5.1 (Internet of Things and Its Applications - MRP ₹380). Each book is tailored to help students prepare for theory MCQs and practical examination requirements.",
+      "NGIT covers all four core theory modules defined under the NIELIT O Level R5.1 syllabus: M1-R5.1 (Information Technology Tools and Network Basics), M2-R5.1 (Web Designing and Publishing), M3-R5.1 (Programming and Problem Solving through Python), and M4-R5.1 (Internet of Things and Its Applications). Each book is available at a discounted offer price of ₹299 (MRP ₹380–₹490), or the complete 4-book combo at just ₹999.",
   },
   {
     question: "Where can students enquire about O Level books in Prayagraj?",
     answer:
-      "Students in Prayagraj can visit NGIT (National Genius Institute of Technology) at Sainik Market, Sanjay Dryers Chauraha, Rasulabad, Prayagraj, UP 211004. You can also enquire or place an order directly over WhatsApp at +91 88403 41525 or phone +91 80049 58441 for home delivery or desk pickup.",
+      "Students in Prayagraj can visit NGIT (National Genius Institute of Technology) at Sainik Market, Sanjay Dryers Chauraha, Rasulabad, Prayagraj, UP 211004. You can also order directly over WhatsApp at +91 88403 41525 or call +91 80049 58441 for institute pickup or postal home delivery across India.",
   },
   {
     question: "Does NGIT offer books for M1-R5.1, M2-R5.1, M3-R5.1, and M4-R5.1?",
     answer:
-      "Yes, NGIT provides books and learning resources for all four modules (M1-R5.1, M2-R5.1, M3-R5.1, and M4-R5.1). The books are authored under the guidance of Javed Sir (Director, NGIT Institute), featuring bilingual (Hindi + English) explanations, syllabus-aligned theory, and practice question sets.",
+      "Yes, NGIT provides books and learning resources for all four modules (M1-R5.1, M2-R5.1, M3-R5.1, and M4-R5.1). Authored under the guidance of Javed Sir (Director, NGIT Institute), each book features bilingual (Hindi + English) explanations, syllabus-aligned theory, and practice question sets.",
   },
   {
     question: "How can students check prices and availability?",
     answer:
-      "Printed MRPs are ₹380 for M1, ₹430 for M2, ₹490 for M3, and ₹380 for M4 (Total Combo MRP ₹1,680). Students can click the 'Enquire on WhatsApp' button on any book card or contact the NGIT desk directly at +91 88403 41525 for special student discount rates, combo offers, and postal or courier delivery options.",
+      "Special discount offer: individual books are available at just ₹299 each (Printed MRP up to ₹490), and the complete 4-book combo pack is available at a mega offer price of ₹999 (Total MRP ₹1,680 - Save ₹681 / 40% OFF). Click the 'Enquire on WhatsApp' button on any book card or WhatsApp +91 88403 41525 to confirm your order.",
   },
   {
     question: "Can students enquire about a particular book through WhatsApp?",
     answer:
-      "Yes. Every book card features a dedicated WhatsApp enquiry button that automatically prefills a message specifying that exact module and printed price (e.g. M1-R5.1, M2-R5.1, M3-R5.1, or M4-R5.1). You only need to tap the button, and WhatsApp will open ready for you to send the query.",
+      "Yes. Every book card features a dedicated WhatsApp button that automatically prefills a message specifying the module and the offer price of ₹299 (or ₹999 for the complete 4-book combo). Simply click the button and send your query on WhatsApp.",
   },
 ];

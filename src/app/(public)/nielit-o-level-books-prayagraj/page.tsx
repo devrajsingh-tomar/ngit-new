@@ -10,6 +10,7 @@ import BookPreviewModal from "@/components/public/BookPreviewModal";
 import {
   O_LEVEL_BOOKS,
   O_LEVEL_FAQS,
+  O_LEVEL_PRICING,
   O_LEVEL_WHATSAPP_CONFIG,
   buildWhatsAppUrl,
   GENERAL_O_LEVEL_ENQUIRY_MESSAGE,
@@ -28,6 +29,7 @@ import {
   Clock,
   Tag,
   UserCheck,
+  Percent,
 } from "lucide-react";
 
 // WhatsApp Brand SVG Icon for consistent high-quality display
@@ -43,7 +45,7 @@ function WhatsAppIcon({ className = "w-5 h-5 fill-current" }: { className?: stri
 export const metadata = constructMetadata({
   title: "Best O Level Books in Prayagraj | NGIT NIELIT Books",
   description:
-    "Explore NGIT O Level books in Prayagraj for NIELIT M1-R5.1, M2-R5.1, M3-R5.1 and M4-R5.1. Find module-wise study and practice resources.",
+    "Explore NGIT O Level books in Prayagraj for NIELIT M1-R5.1, M2-R5.1, M3-R5.1 and M4-R5.1 at special offer price of ₹299 per book or ₹999 for complete 4-book combo.",
   path: "/nielit-o-level-books-prayagraj",
   ogImage: "/images/books/nielit-o-level-infinity-series-banner.png",
 });
@@ -75,7 +77,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
       "@type": "Offer",
       url: `https://ngitedu.com/nielit-o-level-books-prayagraj#${book.id}`,
       priceCurrency: "INR",
-      price: book.mrp.toString(),
+      price: book.discountedPrice.toString(),
       priceValidUntil: "2027-12-31",
       availability: "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
@@ -83,7 +85,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
         "@type": "EducationalOrganization",
         name: "National Genius Institute of Technology",
       },
-      description: `Official printed MRP ₹${book.mrp}. Contact NGIT Prayagraj on WhatsApp for student discount pricing.`,
+      description: `Discounted Offer Price ₹${book.discountedPrice} (Printed MRP ₹${book.mrp}). Contact NGIT Prayagraj on WhatsApp to order.`,
     },
   }));
 
@@ -101,9 +103,16 @@ export default function NielitOLevelBooksPrayagrajPage() {
           <div className="grid lg:grid-cols-12 gap-10 items-center relative z-10">
             {/* Left Column: Headings, Text & CTAs */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-black text-xs uppercase tracking-widest shadow-sm">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>PRAYAGRAJ (ALLAHABAD) • NIELIT O LEVEL BOOKS</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-black text-xs uppercase tracking-widest shadow-sm">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>PRAYAGRAJ (ALLAHABAD) • NIELIT O LEVEL BOOKS</span>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 font-black text-xs uppercase tracking-wider">
+                  <Percent className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>SPECIAL OFFER: ₹299 / BOOK • COMBO ₹999</span>
+                </div>
               </div>
 
               {/* Primary H1 */}
@@ -117,9 +126,8 @@ export default function NielitOLevelBooksPrayagrajPage() {
                 IT Tools and Network Basics, Web Designing and Publishing, Python Programming, and Internet of Things.
               </p>
 
-              <p className="text-slate-400 text-sm sm:text-base leading-relaxed font-normal">
-                Explore available books, check module details, and contact NGIT on WhatsApp for information about price,
-                availability, and ordering.
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-normal">
+                Now available at a special student discounted price of <strong className="text-emerald-400 font-black">₹299 per book</strong> (Printed MRP up to ₹490), or get the <strong className="text-amber-300 font-black">complete 4-book combo for just ₹999</strong> (Save ₹681). Contact NGIT on WhatsApp for instant booking and delivery.
               </p>
 
               {/* Trust Badges */}
@@ -131,7 +139,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                   <BookOpen className="w-3.5 h-3.5 mr-1 text-indigo-400" /> Bilingual (Hindi + English)
                 </Badge>
                 <Badge variant="outline" className="bg-slate-900/80 text-amber-300 border-amber-500/30 py-1 px-3 text-xs">
-                  <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-400" /> Theory MCQs & Lab Practice
+                  <Tag className="w-3.5 h-3.5 mr-1 text-amber-400" /> ₹299 Each / ₹999 Combo Pack
                 </Badge>
                 <Badge variant="outline" className="bg-slate-900/80 text-blue-300 border-blue-500/30 py-1 px-3 text-xs">
                   <MapPin className="w-3.5 h-3.5 mr-1 text-blue-400" /> Center Pickup & Home Delivery
@@ -145,7 +153,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                     size="lg"
                     className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-13 px-8 text-sm sm:text-base rounded-2xl shadow-lg shadow-indigo-600/30 gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
                   >
-                    <BookOpen className="w-5 h-5" /> Explore O Level Books
+                    <BookOpen className="w-5 h-5" /> Explore Books (₹299)
                   </Button>
                 </a>
 
@@ -159,7 +167,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                     size="lg"
                     className="bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black h-13 px-8 text-sm sm:text-base rounded-2xl shadow-lg shadow-[#25D366]/25 gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
                   >
-                    <WhatsAppIcon className="w-5 h-5 fill-current" /> Enquire on WhatsApp
+                    <WhatsAppIcon className="w-5 h-5 fill-current" /> Order on WhatsApp (₹999 Combo)
                   </Button>
                 </a>
               </div>
@@ -176,9 +184,12 @@ export default function NielitOLevelBooksPrayagrajPage() {
                   priority
                   className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-102"
                 />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-4 text-center">
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-4 text-center space-y-1">
                   <p className="text-xs font-black uppercase tracking-wider text-amber-300">
                     NGIT Infinity Book Series • O Level All 4 Modules
+                  </p>
+                  <p className="text-xs font-black text-emerald-400">
+                    Special Offer: ₹299 per book • Complete 4-Book Combo at ₹999
                   </p>
                   <p className="text-[11px] text-slate-300 font-medium">
                     Hindi + English Bilingual Edition • Guidance: Javed Sir • Call / WhatsApp: +91 88403 41525
@@ -203,18 +214,18 @@ export default function NielitOLevelBooksPrayagrajPage() {
 
           <Card className="p-5 rounded-2xl border-slate-200 bg-white shadow-xs text-center space-y-1">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2 font-black">
-              <CheckCircle2 className="w-5 h-5" />
+              <Tag className="w-5 h-5" />
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900">100% R5.1</p>
-            <p className="text-xs text-slate-500 font-semibold">Syllabus-Aligned Material</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-700">₹299 Only</p>
+            <p className="text-xs text-slate-500 font-semibold">Per Book Offer Price</p>
           </Card>
 
           <Card className="p-5 rounded-2xl border-slate-200 bg-white shadow-xs text-center space-y-1">
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-2 font-black">
-              <BookOpen className="w-5 h-5" />
+              <Sparkles className="w-5 h-5" />
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900">Bilingual</p>
-            <p className="text-xs text-slate-500 font-semibold">Hindi + English Explanations</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-900">₹999 Combo</p>
+            <p className="text-xs text-slate-500 font-semibold">Save ₹681 on 4 Books</p>
           </Card>
 
           <Card className="p-5 rounded-2xl border-slate-200 bg-white shadow-xs text-center space-y-1">
@@ -238,13 +249,14 @@ export default function NielitOLevelBooksPrayagrajPage() {
           </h2>
           <p className="text-slate-600 text-base sm:text-lg font-medium leading-relaxed">
             Authentic module books published by NGIT Institute under the guidance of Javed Sir.
-            View the book cover previews below and enquire directly on WhatsApp for order discounts.
+            Each book is now available at a discounted offer price of <strong className="text-emerald-700 font-black">₹299</strong> (or all 4 for <strong className="text-indigo-700 font-black">₹999</strong>).
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
           {O_LEVEL_BOOKS.map((book) => {
             const whatsAppUrl = buildWhatsAppUrl(book.enquiryMessage);
+            const savings = book.mrp - book.discountedPrice;
 
             return (
               <Card
@@ -252,7 +264,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                 id={book.id}
                 className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden relative group"
               >
-                {/* Top Header Row with Module Code & Language */}
+                {/* Top Header Row with Module Code, Language & Price Badge */}
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
                     <div className="flex items-center gap-2">
@@ -263,9 +275,14 @@ export default function NielitOLevelBooksPrayagrajPage() {
                         {book.language}
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-700 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-lg flex items-center gap-1">
-                      <Tag className="w-3.5 h-3.5 text-amber-600" /> MRP: ₹{book.mrp}/-
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-600 line-through">
+                        MRP ₹{book.mrp}
+                      </span>
+                      <span className="text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-lg flex items-center gap-1 shadow-xs">
+                        <Tag className="w-3.5 h-3.5 text-emerald-700" /> Offer: ₹{book.discountedPrice}/-
+                      </span>
+                    </div>
                   </div>
 
                   {/* Book Card Layout: Thumbnail + Details */}
@@ -343,16 +360,26 @@ export default function NielitOLevelBooksPrayagrajPage() {
 
                 {/* Bottom Row: Price, Availability & Action Buttons */}
                 <div className="pt-4 border-t border-slate-100 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between text-xs gap-2">
+                  <div className="flex flex-wrap items-end justify-between gap-3 bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100">
                     <div>
-                      <span className="text-slate-500 font-medium block">Official Price:</span>
-                      <span className="font-bold text-slate-900">{book.priceNote}</span>
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Special Offer Price:</span>
+                      <div className="flex items-baseline gap-2 mt-0.5">
+                        <span className="text-2xl sm:text-3xl font-black text-emerald-700">
+                          ₹{book.discountedPrice}
+                        </span>
+                        <span className="text-sm font-semibold text-slate-500 line-through">
+                          MRP ₹{book.mrp}
+                        </span>
+                        <span className="text-[11px] font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-md">
+                          Save ₹{savings}
+                        </span>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-slate-500 font-medium block">Availability:</span>
-                      <span className="font-bold text-emerald-700 flex items-center gap-1">
+                      <span className="text-slate-500 font-medium text-[11px] block">Availability:</span>
+                      <span className="font-bold text-emerald-800 text-xs flex items-center gap-1 justify-end">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        In Stock & Dispatching
+                        In Stock • Immediate Dispatch
                       </span>
                     </div>
                   </div>
@@ -368,7 +395,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                       <Button
                         className="w-full bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black h-12 rounded-xl shadow-md gap-2 text-xs uppercase tracking-wider transition-all duration-300 hover:scale-102 active:scale-98"
                       >
-                        <WhatsAppIcon className="w-4 h-4 fill-current" /> Enquire on WhatsApp
+                        <WhatsAppIcon className="w-4 h-4 fill-current" /> Order on WhatsApp (₹299)
                       </Button>
                     </a>
 
@@ -388,18 +415,37 @@ export default function NielitOLevelBooksPrayagrajPage() {
         </div>
 
         {/* ─── ALL-IN-ONE 4-BOOK COMBO CARD ─────────────────────────────────── */}
-        <div className="mt-12 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden">
+        <div className="mt-12 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden border border-indigo-800/50">
           <div className="grid lg:grid-cols-12 gap-8 items-center relative z-10">
             <div className="lg:col-span-8 space-y-4">
-              <Badge className="bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest px-3 py-1">
-                COMPLETE NIELIT O LEVEL PACKAGE • COMBINED MRP ₹1,680
-              </Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest px-3 py-1">
+                  MEGA COMBO OFFER • 40% OFF
+                </Badge>
+                <Badge variant="outline" className="text-emerald-300 border-emerald-400/40 text-xs font-bold py-1 px-3">
+                  SAVE ₹681 INSTANTLY
+                </Badge>
+              </div>
+
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
                 Order All 4 Books Combo (M1, M2, M3 & M4)
               </h3>
+
+              <div className="flex flex-wrap items-baseline gap-3 pt-1">
+                <span className="text-3xl sm:text-4xl font-black text-amber-300">
+                  ₹{O_LEVEL_PRICING.comboPrice}/-
+                </span>
+                <span className="text-lg text-slate-400 line-through font-semibold">
+                  Total MRP ₹{O_LEVEL_PRICING.totalMrp}/-
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-lg">
+                  You Save ₹{O_LEVEL_PRICING.savings} ({O_LEVEL_PRICING.discountPercent})
+                </span>
+              </div>
+
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
                 Save time and streamline your preparation with the complete 4-book study kit by Javed Sir.
-                Includes all module theory, practical exercises, and previous exam question analysis in a single bundle.
+                Includes all module theory, practical exercises, and previous exam question analysis in a single bundle for only ₹999.
               </p>
               <p className="text-xs text-slate-400">
                 Direct institute pickup available at Sainik Market, Sanjay Dryers Chauraha, Rasulabad, Prayagraj. Home courier delivery available across India.
@@ -415,9 +461,9 @@ export default function NielitOLevelBooksPrayagrajPage() {
               >
                 <Button
                   size="lg"
-                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black h-13 rounded-2xl shadow-lg gap-2 text-sm uppercase tracking-wider"
+                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black h-13 rounded-2xl shadow-lg gap-2 text-sm uppercase tracking-wider transition-all duration-300 hover:scale-102"
                 >
-                  <WhatsAppIcon className="w-5 h-5 fill-current" /> Enquire for 4-Book Combo
+                  <WhatsAppIcon className="w-5 h-5 fill-current" /> Order 4-Book Combo (₹999)
                 </Button>
               </a>
 
@@ -448,7 +494,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
               Why Explore NGIT O Level Books?
             </h2>
             <p className="text-slate-600 text-sm sm:text-base font-medium">
-              Effective NIELIT preparation requires clear, structured explanations and focused practice material.
+              Effective NIELIT preparation requires clear, structured explanations and focused practice material at student-friendly prices.
             </p>
           </div>
 
@@ -557,10 +603,10 @@ export default function NielitOLevelBooksPrayagrajPage() {
                 4
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Confirm Current Availability & Direct Support</h3>
+                <h3 className="text-base font-bold text-slate-900">Affordable Student Pricing & Direct Support</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal mt-0.5">
-                  Always confirm stock status, latest printing, and direct enquiry channels. With NGIT Prayagraj,
-                  you can chat directly via WhatsApp to verify contents, book availability, and collection details before ordering.
+                  Check value for money. NGIT offers books directly to students at a discounted price of ₹299 per book
+                  (or ₹999 for all 4 books combo) with direct WhatsApp guidance from the faculty.
                 </p>
               </div>
             </div>
@@ -573,10 +619,10 @@ export default function NielitOLevelBooksPrayagrajPage() {
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="text-center space-y-1">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              NIELIT O Level Theory Examination Structure (R5.1)
+              NIELIT O Level Examination & Price Matrix (R5.1)
             </h2>
             <p className="text-slate-600 text-xs sm:text-sm font-medium">
-              Standard module breakdown for candidates appearing in the NIELIT O Level certification:
+              Standard module breakdown and discounted student pricing for NIELIT O Level candidates:
             </p>
           </div>
 
@@ -587,6 +633,8 @@ export default function NielitOLevelBooksPrayagrajPage() {
                   <th className="py-3.5 px-4">Module Code</th>
                   <th className="py-3.5 px-4">Module Name</th>
                   <th className="py-3.5 px-4">Printed MRP</th>
+                  <th className="py-3.5 px-4 text-emerald-800">Offer Price</th>
+                  <th className="py-3.5 px-4 text-emerald-800">You Save</th>
                   <th className="py-3.5 px-4">Language</th>
                   <th className="py-3.5 px-4">Exam Mode</th>
                 </tr>
@@ -595,30 +643,47 @@ export default function NielitOLevelBooksPrayagrajPage() {
                 <tr className="hover:bg-slate-50/80">
                   <td className="py-3 px-4 font-black text-indigo-700">M1-R5.1</td>
                   <td className="py-3 px-4 font-semibold">Information Technology Tools and Network Basics</td>
-                  <td className="py-3 px-4 font-bold text-slate-900">₹380</td>
+                  <td className="py-3 px-4 text-slate-500 line-through">₹380</td>
+                  <td className="py-3 px-4 font-black text-emerald-700">₹299</td>
+                  <td className="py-3 px-4 font-bold text-emerald-700">₹81 (21% OFF)</td>
                   <td className="py-3 px-4">Hindi + English</td>
-                  <td className="py-3 px-4">Online OMR/CBT + Lab Practical</td>
+                  <td className="py-3 px-4">Online CBT + Lab Practical</td>
                 </tr>
                 <tr className="hover:bg-slate-50/80">
                   <td className="py-3 px-4 font-black text-indigo-700">M2-R5.1</td>
                   <td className="py-3 px-4 font-semibold">Web Designing and Publishing</td>
-                  <td className="py-3 px-4 font-bold text-slate-900">₹430</td>
+                  <td className="py-3 px-4 text-slate-500 line-through">₹430</td>
+                  <td className="py-3 px-4 font-black text-emerald-700">₹299</td>
+                  <td className="py-3 px-4 font-bold text-emerald-700">₹131 (30% OFF)</td>
                   <td className="py-3 px-4">Hindi + English</td>
-                  <td className="py-3 px-4">Online OMR/CBT + Lab Practical</td>
+                  <td className="py-3 px-4">Online CBT + Lab Practical</td>
                 </tr>
                 <tr className="hover:bg-slate-50/80">
                   <td className="py-3 px-4 font-black text-indigo-700">M3-R5.1</td>
                   <td className="py-3 px-4 font-semibold">Programming and Problem Solving through Python</td>
-                  <td className="py-3 px-4 font-bold text-slate-900">₹490</td>
+                  <td className="py-3 px-4 text-slate-500 line-through">₹490</td>
+                  <td className="py-3 px-4 font-black text-emerald-700">₹299</td>
+                  <td className="py-3 px-4 font-bold text-emerald-700">₹191 (39% OFF)</td>
                   <td className="py-3 px-4">Hindi + English</td>
-                  <td className="py-3 px-4">Online OMR/CBT + Lab Practical</td>
+                  <td className="py-3 px-4">Online CBT + Lab Practical</td>
                 </tr>
                 <tr className="hover:bg-slate-50/80">
                   <td className="py-3 px-4 font-black text-indigo-700">M4-R5.1</td>
                   <td className="py-3 px-4 font-semibold">Internet of Things and Its Applications</td>
-                  <td className="py-3 px-4 font-bold text-slate-900">₹380</td>
+                  <td className="py-3 px-4 text-slate-500 line-through">₹380</td>
+                  <td className="py-3 px-4 font-black text-emerald-700">₹299</td>
+                  <td className="py-3 px-4 font-bold text-emerald-700">₹81 (21% OFF)</td>
                   <td className="py-3 px-4">Hindi + English</td>
-                  <td className="py-3 px-4">Online OMR/CBT + Lab Practical</td>
+                  <td className="py-3 px-4">Online CBT + Lab Practical</td>
+                </tr>
+                <tr className="bg-amber-50/70 font-bold border-t-2 border-amber-200">
+                  <td className="py-3.5 px-4 font-black text-amber-900">ALL 4 COMBO</td>
+                  <td className="py-3.5 px-4 font-black text-amber-950">Complete 4-Book Set (M1 + M2 + M3 + M4)</td>
+                  <td className="py-3.5 px-4 text-slate-500 line-through">₹1,680</td>
+                  <td className="py-3.5 px-4 font-black text-amber-900 text-base">₹999</td>
+                  <td className="py-3.5 px-4 font-black text-emerald-800">₹681 (40% OFF)</td>
+                  <td className="py-3.5 px-4">Hindi + English</td>
+                  <td className="py-3.5 px-4">Complete Set</td>
                 </tr>
               </tbody>
             </table>
@@ -634,7 +699,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-slate-600 text-xs sm:text-sm font-medium">
-              Common queries regarding NIELIT O Level books, modules, and availability in Prayagraj:
+              Common queries regarding NIELIT O Level books, modules, and offer pricing in Prayagraj:
             </p>
           </div>
 
@@ -666,12 +731,11 @@ export default function NielitOLevelBooksPrayagrajPage() {
             </Badge>
 
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">
-              Explore NGIT O Level Books
+              Order Your NIELIT O Level Books Today
             </h2>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-normal">
-              Browse available module-wise resources for NIELIT O Level preparation and contact NGIT for current book
-              details, pricing, and availability.
+              Get authentic books for M1, M2, M3, and M4 at the special student offer price of <strong className="text-emerald-400 font-bold">₹299 each</strong>, or save big with the complete 4-book combo at <strong className="text-amber-300 font-bold">₹999</strong> (Save ₹681).
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center pt-2">
@@ -680,7 +744,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                   size="lg"
                   className="bg-indigo-600 hover:bg-indigo-500 text-white font-black h-13 px-8 text-sm sm:text-base rounded-2xl shadow-lg gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
                 >
-                  <BookOpen className="w-5 h-5" /> View Available Books
+                  <BookOpen className="w-5 h-5" /> View Books (₹299)
                 </Button>
               </a>
 
@@ -693,7 +757,7 @@ export default function NielitOLevelBooksPrayagrajPage() {
                   size="lg"
                   className="bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black h-13 px-8 text-sm sm:text-base rounded-2xl shadow-lg gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
                 >
-                  <WhatsAppIcon className="w-5 h-5 fill-current" /> Enquire on WhatsApp
+                  <WhatsAppIcon className="w-5 h-5 fill-current" /> Order on WhatsApp (₹999 Combo)
                 </Button>
               </a>
             </div>
