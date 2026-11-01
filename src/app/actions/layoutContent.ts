@@ -28,14 +28,14 @@ export async function getHeaderFooterData() {
         ];
 
         const defaultHeader = {
-            logoImage: "",
+            logoImage: "/images/logo.png",
             logoText: "NGIT",
             navigation: requiredNavigation,
             ctaButton: { label: "Login", href: "/student/login" },
         };
 
         const defaultFooter = {
-            logoImage: "",
+            logoImage: "/images/logo.png",
             logoText: "NGIT",
             description: "Leading coaching institute providing quality education.",
             sections: [

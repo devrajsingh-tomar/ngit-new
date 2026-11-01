@@ -37,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { route: '/terms-and-conditions', priority: 0.3, changeFrequency: 'yearly' as const },
     { route: '/refund-policy', priority: 0.3, changeFrequency: 'yearly' as const },
     { route: '/verify', priority: 0.5, changeFrequency: 'monthly' as const },
+    { route: '/sitemap', priority: 0.5, changeFrequency: 'monthly' as const },
   ]
 
   const staticRoutes = staticPaths.map(({ route, priority, changeFrequency }) => ({
@@ -81,11 +82,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamic Blog Posts
   let blogRoutes: MetadataRoute.Sitemap = []
   try {
-    const blogRes = await listBlogPosts({ status: 'PUBLISHED', limit: 100, page: 1 })
+    const blogRes = await listBlogPosts({ status: 'PUBLISHED', limit: 500, page: 1 })
     if (blogRes.success && blogRes.data && Array.isArray(blogRes.data.posts)) {
       blogRoutes = blogRes.data.posts.map((post: any) => ({
         url: `${baseUrl}/blog/${post.slug}`,
-        lastModified: new Date(post.updatedAt || post.publishedAt || new Date()),
+        lastModified: new Date(post.updatedAt || post.publishedAt || post.createdAt || new Date()),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       }))

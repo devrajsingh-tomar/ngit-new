@@ -95,7 +95,7 @@ export default function PublicNavbar({ initialData }: PublicNavbarProps) {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-3 group">
                         {headerData?.logoImage ? (
-                            <img src={headerData.logoImage} alt="Logo" className="h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
+                            <img src={headerData.logoImage || "/images/logo.png"} alt="NGIT - National Genius Institute of Technology" className="h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
                         ) : (
                             <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center font-bold text-white text-2xl shadow-md group-hover:scale-105 transition-transform duration-300">
                                 N

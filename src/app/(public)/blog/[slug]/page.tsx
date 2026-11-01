@@ -5,11 +5,13 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { constructMetadata, getArticleSchema, getBreadcrumbSchema } from "@/lib/seo";
 import JsonLd from "@/components/seo/JsonLd";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const res = await getBlogPost({ slug });
-    if (!res.success) return constructMetadata({ title: "Post Not Found", description: "The requested blog post was not found on NGIT.", path: `/blog/${slug}`, noindex: true });
+    if (!res.success || !res.data || res.data.status !== "PUBLISHED") return constructMetadata({ title: "Post Not Found", description: "The requested blog post was not found on NGIT.", path: `/blog/${slug}`, noindex: true });
     const post = res.data;
     
     return constructMetadata({
@@ -34,6 +36,14 @@ export default async function PublicBlogPostPage({ params }: { params: Promise<{
     }
 
     const post = res.data;
+
+    if (post.status !== "PUBLISHED") {
+        const session = await getServerSession(authOptions);
+        const isAdmin = session?.user?.role === "ADMIN";
+        if (!isAdmin) {
+            notFound();
+        }
+    }
 
     const articleSchema = getArticleSchema({
       title: post.title,

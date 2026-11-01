@@ -89,8 +89,8 @@ export default async function Footer() {
                         <Link href="/" className="inline-flex items-center gap-3 group">
                             {footerData.logoImage || headerData?.logoImage ? (
                                 <img 
-                                    src={footerData.logoImage || headerData?.logoImage} 
-                                    alt="NGIT Logo" 
+                                    src={footerData.logoImage || headerData?.logoImage || "/images/logo.png"} 
+                                    alt="NGIT - National Genius Institute of Technology" 
                                     className="h-16 md:h-20 w-auto object-contain opacity-95 group-hover:opacity-100 transition-all duration-300" 
                                 />
                             ) : (
@@ -144,6 +144,9 @@ export default async function Footer() {
                                 </li>
                                 <li>
                                     <Link href="/nielit-o-level-books-prayagraj" className="hover:text-slate-900 transition-colors text-indigo-600 font-bold">O Level Books</Link>
+                                </li>
+                                <li>
+                                    <Link href="/blog" className="hover:text-slate-900 transition-colors font-bold text-slate-700">Blog</Link>
                                 </li>
                                 <li>
                                     <Link href="/enroll" className="text-indigo-600 font-bold hover:text-slate-900 transition-colors">Online Admission</Link>
@@ -246,6 +249,10 @@ export default async function Footer() {
                             <Link href="/privacy-policy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
                             <span>•</span>
                             <Link href="/refund-policy" className="hover:text-indigo-600 transition-colors">Refund Policy</Link>
+                            <span>•</span>
+                            <Link href="/sitemap" className="hover:text-indigo-600 transition-colors font-bold text-slate-500">Sitemap</Link>
+                            <span>•</span>
+                            <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors font-bold text-slate-500">XML Sitemap</a>
                         </div>
                     </div>
 
